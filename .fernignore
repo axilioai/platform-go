@@ -1,7 +1,0 @@
-# Files Fern must NOT touch on regen. Everything else at the module root is
-# generated wholesale from the OpenAPI spec on each `fern generate --local`.
-# The hand-written mobile driver (AXI-1253) will live under drivers/, mirroring
-# platform-python's Fern-REST + hand-written drivers/ shape.
-.fernignore
-drivers/
-README.md

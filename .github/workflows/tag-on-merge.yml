@@ -1,0 +1,63 @@
+name: Tag on Version Bump
+
+# Fires when a push to main moves the VERSION file. Reads the version out of it
+# and creates an annotated `vX.Y.Z` tag pointing at the merge commit, plus a
+# GitHub release. The Go twin of platform-python's tag-on-merge.yml.
+#
+# For a Go module the tag IS the release: `go get github.com/axilioai/platform-go@vX.Y.Z`
+# resolves straight off the tag via the module proxy, so there is no separate
+# publish step (unlike platform-python -> PyPI).
+#
+# The SDK owns its own SemVer, independent of any service's spec version (regen
+# PRs refresh generated code but never move VERSION). A release is a deliberate
+# edit to VERSION; this workflow turns that edit into a tag + release.
+#
+# Idempotent: if a tag for the current version already exists on origin, the
+# workflow skips quietly (a docs-only PR can re-touch VERSION without moving it).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - VERSION
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    name: Tag vX.Y.Z
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version from VERSION
+        id: ver
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          if [[ -z "$VERSION" ]]; then
+            echo "::error::VERSION file is empty"; exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Read version: $VERSION"
+
+      - name: Create tag + release (idempotent)
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${VERSION}"
+          if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "${TAG}"; then
+            echo "tag ${TAG} already exists on origin; nothing to do"
+            exit 0
+          fi
+          git config user.name "axilio-bot"
+          git config user.email "bot@axilio.ai"
+          git tag -a "${TAG}" -m "platform-go ${VERSION}"
+          git push origin "${TAG}"
+          gh release create "${TAG}" \
+            --title "${TAG}" \
+            --generate-notes
+          echo "released ${TAG} on $(git rev-parse HEAD)"

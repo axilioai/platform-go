@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: build
+        run: go build ./...
+      - name: vet
+        run: go vet ./...
+      - name: test
+        # The generated WireMock integration packages (the six */*_test dirs)
+        # need a live WireMock server on :8080 that Fern's own test harness
+        # provisions; they are not runnable under plain `go test`. Run the real
+        # unit tests (pointer/types/client) and skip those integration packages.
+        run: go test $(go list ./... | grep -v '_test$')

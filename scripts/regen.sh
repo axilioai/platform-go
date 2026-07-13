@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Regenerate the platform-go SDK from specs/production/openapi.json.
+#
+# fern-go-sdk's --local generation WIPES every non-generated file in its output
+# directory (verified: it deletes drivers/, .github/, VERSION even when they are
+# .fernignore-listed). So we generate into a throwaway ./.gen and rsync the
+# result up to the repo root, preserving hand-written paths: the Go MobileDriver
+# (drivers/, AXI-1253), CI (.github/), the release VERSION, the fern config, and
+# the spec. Run from the repo root.
+set -euo pipefail
+
+command -v fern >/dev/null || { echo "fern CLI not found: npm i -g fern-api" >&2; exit 1; }
+
+rm -rf .gen
+fern generate --local --group go-sdk --api backend --force --log-level warn
+
+# --delete prunes generated files that no longer exist upstream, while the
+# excludes keep every hand-written / scaffolding path off-limits.
+rsync -a --delete \
+  --exclude='.git' \
+  --exclude='.gen' \
+  --exclude='fern' \
+  --exclude='specs' \
+  --exclude='scripts' \
+  --exclude='drivers' \
+  --exclude='.github' \
+  --exclude='VERSION' \
+  --exclude='.gitignore' \
+  --exclude='.fernignore' \
+  .gen/ ./
+
+rm -rf .gen
+echo "platform-go regenerated from specs/production/openapi.json"

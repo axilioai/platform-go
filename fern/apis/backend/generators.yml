@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://schema.buildwithfern.dev/generators-yml.json
+#
+# Backend API -> the platform-go SDK. The Go twin of platform-python's
+# fern/apis/backend/generators.yml (same production spec; fern-go-sdk instead of
+# fern-python-sdk). Generation is `fern generate --local` (Docker), no Fern
+# account / FERN_TOKEN.
+#
+# IMPORTANT: output is a throwaway ./.gen dir, NOT the repo root. fern-go-sdk's
+# --local generation *wipes* every non-generated file in its output directory
+# (verified: it deletes drivers/, .github/, VERSION even when .fernignore-listed;
+# it only preserves files it generates itself). Generating into .gen keeps fern's
+# destructive clean off the repo root; scripts/regen.sh then rsyncs the generated
+# tree up to root, excluding hand-written paths (drivers/, .github/, VERSION, the
+# fern config, the spec). This is what lets the hand-written Go MobileDriver
+# (AXI-1253) and CI live in the same repo.
+api:
+  specs:
+    - openapi: ../../../specs/production/openapi.json
+default-group: go-sdk
+groups:
+  go-sdk:
+    generators:
+      - name: fern-go-sdk
+        version: 1.47.2
+        output:
+          location: local-file-system
+          path: ../../../.gen
+        config:
+          module:
+            path: github.com/axilioai/platform-go
