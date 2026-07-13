@@ -1,0 +1,1407 @@
+{
+  "mappings": [
+    {
+      "id": "04772be9-372d-4795-ac20-95f3d2f4663c",
+      "name": "List API keys - default",
+      "request": {
+        "urlPathTemplate": "/api-keys",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/APIKeyListResponse.json\",\n  \"api_keys\": [\n    {\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"created_by\": \"created_by\",\n      \"created_by_id\": \"created_by_id\",\n      \"id\": \"id\",\n      \"key_preview\": \"key_preview\",\n      \"last_used_at\": \"2024-01-15T09:30:00Z\",\n      \"name\": \"name\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "04772be9-372d-4795-ac20-95f3d2f4663c",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "ff45f6ea-8dd0-4f96-96e3-9037d6b8da79",
+      "name": "Create an API key - default",
+      "request": {
+        "urlPathTemplate": "/api-keys",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": "{\n  \"$schema\": \"/api/v1/APIKeyCreateResponse.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"key_value\": \"key_value\",\n  \"name\": \"name\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "ff45f6ea-8dd0-4f96-96e3-9037d6b8da79",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "4a5d0052-054e-4f52-bc0d-450a9a9160bd",
+      "name": "Delete an API key - default",
+      "request": {
+        "urlPathTemplate": "/api-keys/{key_id}",
+        "method": "DELETE",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "key_id": {
+            "equalTo": "key_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/DeleteAPIKeyOutputBody.json\",\n  \"message\": \"message\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "4a5d0052-054e-4f52-bc0d-450a9a9160bd",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "6c495156-c35d-4389-8d95-43d76341496e",
+      "name": "Regenerate an API key - default",
+      "request": {
+        "urlPathTemplate": "/api-keys/{key_id}/regenerate",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "key_id": {
+            "equalTo": "key_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/APIKeyRegenerateResponse.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"key_value\": \"key_value\",\n  \"name\": \"name\",\n  \"regenerated_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "6c495156-c35d-4389-8d95-43d76341496e",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "6a6a1fb7-60d0-4f89-b2ec-537fb714ba5e",
+      "name": "Get auto-recharge settings - default",
+      "request": {
+        "urlPathTemplate": "/billing/auto-recharge",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionAutoRechargeSettingsResponse.json\",\n  \"disabled_reason\": \"payment_failed\",\n  \"enabled\": true,\n  \"target_cents\": 1000000,\n  \"threshold_cents\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "6a6a1fb7-60d0-4f89-b2ec-537fb714ba5e",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "17a5fcc4-ccc8-4e7a-9ca3-bdc00a3942e1",
+      "name": "Get account balance - default",
+      "request": {
+        "urlPathTemplate": "/billing/balance",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionBalanceResponse.json\",\n  \"balance_display\": \"balance_display\",\n  \"balance_microdollars\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "17a5fcc4-ccc8-4e7a-9ca3-bdc00a3942e1",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "519ccf45-58a9-424c-8544-4f562e54a521",
+      "name": "List billing history - default",
+      "request": {
+        "urlPathTemplate": "/billing/history",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/BillingHistoryResponse.json\",\n  \"items\": [\n    {\n      \"amount_cents\": 1000000,\n      \"amount_dollars\": 1.1,\n      \"billing_cycle\": \"billing_cycle\",\n      \"currency\": \"currency\",\n      \"description\": \"description\",\n      \"due_date\": \"2024-01-15T09:30:00Z\",\n      \"formatted_amount\": \"formatted_amount\",\n      \"hosted_invoice_url\": \"hosted_invoice_url\",\n      \"id\": \"id\",\n      \"invoice_date\": \"2024-01-15T09:30:00Z\",\n      \"invoice_number\": \"invoice_number\",\n      \"invoice_pdf_url\": \"invoice_pdf_url\",\n      \"paid_at\": \"2024-01-15T09:30:00Z\",\n      \"plan_name\": \"plan_name\",\n      \"status\": \"status\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "519ccf45-58a9-424c-8544-4f562e54a521",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "17583982-4f3d-40b4-ada2-db87a1a5e208",
+      "name": "List phone rentals - default",
+      "request": {
+        "urlPathTemplate": "/billing/phone-rental-subscriptions",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneRentalSubscriptionListResponse.json\",\n  \"subscriptions\": [\n    {\n      \"cancel_at_period_end\": true,\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"current_period_end\": \"2024-01-15T09:30:00Z\",\n      \"current_period_start\": \"2024-01-15T09:30:00Z\",\n      \"id\": \"id\",\n      \"organization_id\": \"organization_id\",\n      \"payment_status\": \"payment_status\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_nickname\": \"phone_nickname\",\n      \"plan_id\": \"plan_id\",\n      \"plan_interval\": \"plan_interval\",\n      \"plan_name\": \"plan_name\",\n      \"plan_price_cents\": 1000000,\n      \"status\": \"status\"\n    }\n  ],\n  \"summary\": {\n    \"active_count\": 1000000,\n    \"combined_monthly_cents\": 1000000,\n    \"per_interval\": [\n      {\n        \"count\": 1000000,\n        \"interval\": \"interval\",\n        \"monthly_cents\": 1000000\n      }\n    ],\n    \"upcoming_charges\": [\n      {\n        \"amount_cents\": 1000000,\n        \"count\": 1000000,\n        \"date\": \"2024-01-15T09:30:00Z\"\n      }\n    ]\n  },\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "17583982-4f3d-40b4-ada2-db87a1a5e208",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "2de34bdb-a6a3-4370-8995-6c30c7035045",
+      "name": "Get current plan - default",
+      "request": {
+        "urlPathTemplate": "/billing/subscription",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionResponse.json\",\n  \"balance_display\": \"balance_display\",\n  \"balance_microdollars\": 1000000,\n  \"billing_cycle\": \"monthly\",\n  \"cancel_at_period_end\": true,\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"current_period_end\": \"2024-01-15T09:30:00Z\",\n  \"current_period_start\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"included_balance_display\": \"included_balance_display\",\n  \"included_balance_microdollars\": 1000000,\n  \"max_concurrent_runs\": 1000000,\n  \"monthly_price\": 1.1,\n  \"pending_downgrade_effective_date\": \"2024-01-15T09:30:00Z\",\n  \"pending_downgrade_plan_id\": \"pending_downgrade_plan_id\",\n  \"plan_id\": \"plan_id\",\n  \"plan_name\": \"plan_name\",\n  \"price_per_second_microdollars\": 1000000,\n  \"status\": \"active\",\n  \"trial_end\": \"2024-01-15T09:30:00Z\",\n  \"yearly_price\": 1.1\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "2de34bdb-a6a3-4370-8995-6c30c7035045",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "c09e1221-3090-4fba-88c6-d5c1e167cbdd",
+      "name": "Allocate a phone - default",
+      "request": {
+        "urlPathTemplate": "/phones/allocate",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneAllocateResponse.json\",\n  \"control_url\": \"control_url\",\n  \"live_view_url\": \"live_view_url\",\n  \"phone_id\": \"phone_id\",\n  \"region\": \"region\",\n  \"session_id\": \"session_id\",\n  \"telemetry_url\": \"telemetry_url\",\n  \"workflow_started_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "c09e1221-3090-4fba-88c6-d5c1e167cbdd",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "474d64fe-d16f-4e65-8c6e-3d8c0da2e7fa",
+      "name": "List supported apps - default",
+      "request": {
+        "urlPathTemplate": "/phones/apps/supported",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSupportedAppsResponse.json\",\n  \"phone_apps\": [\n    {\n      \"android_package_name\": \"android_package_name\",\n      \"app_metadata\": {\n        \"key\": \"value\"\n      },\n      \"category\": \"category\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"description\": \"description\",\n      \"icon_url\": \"icon_url\",\n      \"id\": \"id\",\n      \"ios_app_store_id\": \"ios_app_store_id\",\n      \"is_supported\": true,\n      \"model_datasets\": [\n        \"model_datasets\"\n      ],\n      \"model_status\": \"model_status\",\n      \"model_trained_at\": \"2024-01-15T09:30:00Z\",\n      \"name\": \"name\",\n      \"platform\": \"android\",\n      \"slug\": \"slug\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"version\": \"version\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "474d64fe-d16f-4e65-8c6e-3d8c0da2e7fa",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "aa8ea857-f614-4c91-8f52-dc696ee7d1ff",
+      "name": "List available phones - default",
+      "request": {
+        "urlPathTemplate": "/phones/available",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneAvailableListResponse.json\",\n  \"android_count\": 1000000,\n  \"iphone_count\": 1000000,\n  \"phones\": [\n    {\n      \"$schema\": \"/api/v1/PhoneSummary.json\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"current_session_id\": \"current_session_id\",\n      \"last_heartbeat\": \"2024-01-15T09:30:00Z\",\n      \"last_interaction_timestamp\": \"2024-01-15T09:30:00Z\",\n      \"location\": \"location\",\n      \"model_id\": \"model_id\",\n      \"model_name\": \"model_name\",\n      \"nickname\": \"nickname\",\n      \"owner_organization_id\": \"owner_organization_id\",\n      \"ownership_type\": \"shared\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_type\": \"android\",\n      \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"active\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "aa8ea857-f614-4c91-8f52-dc696ee7d1ff",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "b39f422c-08a7-4143-818f-10719f5dd459",
+      "name": "Release a phone - default",
+      "request": {
+        "urlPathTemplate": "/phones/deallocate",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "queryParameters": {
+          "phone_id": {
+            "equalTo": "phone_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneDeallocateResponse.json\",\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"phone_id\": \"phone_id\",\n  \"session_id\": \"session_id\",\n  \"workflow_id\": \"workflow_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "b39f422c-08a7-4143-818f-10719f5dd459",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "e3b3c716-8c03-4b7b-bfc7-7c9c40bfb0e4",
+      "name": "List your phones - default",
+      "request": {
+        "urlPathTemplate": "/phones/my",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhonePrivateListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"phones\": [\n    {\n      \"$schema\": \"/api/v1/PhoneSummary.json\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"current_session_id\": \"current_session_id\",\n      \"last_heartbeat\": \"2024-01-15T09:30:00Z\",\n      \"last_interaction_timestamp\": \"2024-01-15T09:30:00Z\",\n      \"location\": \"location\",\n      \"model_id\": \"model_id\",\n      \"model_name\": \"model_name\",\n      \"nickname\": \"nickname\",\n      \"owner_organization_id\": \"owner_organization_id\",\n      \"ownership_type\": \"shared\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_type\": \"android\",\n      \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"active\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "e3b3c716-8c03-4b7b-bfc7-7c9c40bfb0e4",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "09b0d18f-02e0-4090-995c-f84b96e420cc",
+      "name": "List sessions - default",
+      "request": {
+        "urlPathTemplate": "/phones/sessions",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"sessions\": [\n    {\n      \"allocated_at\": \"2024-01-15T09:30:00Z\",\n      \"allocated_by\": \"workflow_editor\",\n      \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n      \"duration_seconds\": 1000000,\n      \"is_dedicated_phone\": true,\n      \"location\": \"location\",\n      \"model_name\": \"model_name\",\n      \"name\": \"name\",\n      \"nickname\": \"nickname\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_type\": \"android\",\n      \"session_id\": \"session_id\",\n      \"source\": \"workflow\",\n      \"status\": \"active\",\n      \"tags\": {\n        \"key\": \"value\"\n      },\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "09b0d18f-02e0-4090-995c-f84b96e420cc",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "423c7fe8-9b7a-4c0a-9e85-d945ad099203",
+      "name": "List active sessions - default",
+      "request": {
+        "urlPathTemplate": "/phones/sessions/active",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneActiveSessionsResponse.json\",\n  \"sessions\": [\n    {\n      \"allocated_at\": \"2024-01-15T09:30:00Z\",\n      \"allocated_by\": \"workflow_editor\",\n      \"is_dedicated_phone\": true,\n      \"location\": \"location\",\n      \"model_name\": \"model_name\",\n      \"name\": \"name\",\n      \"nickname\": \"nickname\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_status\": \"active\",\n      \"phone_type\": \"android\",\n      \"session_id\": \"session_id\",\n      \"tags\": {\n        \"key\": \"value\"\n      },\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "423c7fe8-9b7a-4c0a-9e85-d945ad099203",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "cec100b4-2e02-4040-b09d-a48afb84c0b9",
+      "name": "Get a session - default",
+      "request": {
+        "urlPathTemplate": "/phones/sessions/{session_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "session_id": {
+            "equalTo": "session_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionDetailResponse.json\",\n  \"allocated_at\": \"2024-01-15T09:30:00Z\",\n  \"allocated_by\": \"workflow_editor\",\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"is_dedicated_phone\": true,\n  \"location\": \"location\",\n  \"model_name\": \"model_name\",\n  \"name\": \"name\",\n  \"nickname\": \"nickname\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_status\": \"active\",\n  \"phone_type\": \"android\",\n  \"recording_status\": \"ready\",\n  \"recording_url\": \"recording_url\",\n  \"session_id\": \"session_id\",\n  \"source\": \"workflow\",\n  \"status\": \"active\",\n  \"tags\": {\n    \"key\": \"value\"\n  },\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "cec100b4-2e02-4040-b09d-a48afb84c0b9",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "234538ab-c1d5-4e91-adeb-b3e93c17d983",
+      "name": "Get a session recording - default",
+      "request": {
+        "urlPathTemplate": "/phones/sessions/{session_id}/recording",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "session_id": {
+            "equalTo": "session_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionRecordingResponse.json\",\n  \"status\": \"ready\",\n  \"url\": \"url\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "234538ab-c1d5-4e91-adeb-b3e93c17d983",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "aac83306-2fa9-47bd-a995-ecd66fe5d094",
+      "name": "Get a session's live thumbnail - default",
+      "request": {
+        "urlPathTemplate": "/phones/sessions/{session_id}/thumbnail",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "session_id": {
+            "equalTo": "session_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionThumbnailResponse.json\",\n  \"status\": \"ready\",\n  \"url\": \"url\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "aac83306-2fa9-47bd-a995-ecd66fe5d094",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "fe41c550-efa5-47bd-be5d-c4a0dc45e953",
+      "name": "Get a phone - default",
+      "request": {
+        "urlPathTemplate": "/phones/{phone_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "phone_id": {
+            "equalTo": "phone_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSummary.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"current_session_id\": \"current_session_id\",\n  \"last_heartbeat\": \"2024-01-15T09:30:00Z\",\n  \"last_interaction_timestamp\": \"2024-01-15T09:30:00Z\",\n  \"location\": \"location\",\n  \"model_id\": \"model_id\",\n  \"model_name\": \"model_name\",\n  \"nickname\": \"nickname\",\n  \"owner_organization_id\": \"owner_organization_id\",\n  \"ownership_type\": \"shared\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_type\": \"android\",\n  \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"active\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "fe41c550-efa5-47bd-be5d-c4a0dc45e953",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "cabacafb-0e5b-4627-99e2-211e1bcf561a",
+      "name": "Rename a phone - default",
+      "request": {
+        "urlPathTemplate": "/phones/{phone_id}/nickname",
+        "method": "PATCH",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "phone_id": {
+            "equalTo": "phone_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSummary.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"current_session_id\": \"current_session_id\",\n  \"last_heartbeat\": \"2024-01-15T09:30:00Z\",\n  \"last_interaction_timestamp\": \"2024-01-15T09:30:00Z\",\n  \"location\": \"location\",\n  \"model_id\": \"model_id\",\n  \"model_name\": \"model_name\",\n  \"nickname\": \"nickname\",\n  \"owner_organization_id\": \"owner_organization_id\",\n  \"ownership_type\": \"shared\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_type\": \"android\",\n  \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"active\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "cabacafb-0e5b-4627-99e2-211e1bcf561a",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "3724f300-9adf-4aa0-9aa6-b1e223837589",
+      "name": "Wipe a phone - default",
+      "request": {
+        "urlPathTemplate": "/phones/{phone_id}/wipe",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "phone_id": {
+            "equalTo": "phone_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSuccessResponse.json\",\n  \"message\": \"message\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "3724f300-9adf-4aa0-9aa6-b1e223837589",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "7023dfd0-2556-4ccb-920b-1e64c89adfc0",
+      "name": "List runs - default",
+      "request": {
+        "urlPathTemplate": "/runs",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/RunListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"$schema\": \"/api/v1/RunResponse.json\",\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"logs\": \"logs\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"start_timeout_seconds\": 1000000,\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"success\": true,\n      \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n      \"trigger\": \"manual\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"user_id\": \"user_id\",\n      \"variables\": {\n        \"key\": \"value\"\n      },\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "7023dfd0-2556-4ccb-920b-1e64c89adfc0",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "17f98d0d-6a5a-44d3-964f-b2db69dd74c2",
+      "name": "List run events - default",
+      "request": {
+        "urlPathTemplate": "/runs/events",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/RunEventsResponse.json\",\n  \"events\": [\n    {\n      \"body\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"timestamp\": \"2024-01-15T09:30:00Z\",\n      \"type\": \"type\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"retention_expired\": true,\n  \"sdk_call_costs\": {\n    \"key\": 1000000\n  },\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "17f98d0d-6a5a-44d3-964f-b2db69dd74c2",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "af3b2869-5755-43a6-9ada-a864c9d934ad",
+      "name": "List run history - default",
+      "request": {
+        "urlPathTemplate": "/runs/history",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/RunHistoryResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"org_id\": \"org_id\",\n      \"phone_id\": \"phone_id\",\n      \"run_id\": \"run_id\",\n      \"run_metadata\": \"run_metadata\",\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"success\": true,\n      \"trigger\": \"manual\",\n      \"user_id\": \"user_id\",\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "af3b2869-5755-43a6-9ada-a864c9d934ad",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "4c7adf14-a385-4548-a5c9-96ba87e661bf",
+      "name": "Get workflow stats - default",
+      "request": {
+        "urlPathTemplate": "/runs/stats/{workflow_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/RunStatsResponse.json\",\n  \"success_rate\": 1.1,\n  \"total_runs\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "4c7adf14-a385-4548-a5c9-96ba87e661bf",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "96af7e2e-2501-4d8c-8047-889cc3f10852",
+      "name": "Get a run - default",
+      "request": {
+        "urlPathTemplate": "/runs/{run_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "run_id": {
+            "equalTo": "run_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"logs\": \"logs\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "96af7e2e-2501-4d8c-8047-889cc3f10852",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "a369fdc1-53bc-4f75-8912-086e0cb42963",
+      "name": "Cancel a run - default",
+      "request": {
+        "urlPathTemplate": "/runs/{run_id}",
+        "method": "PATCH",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "run_id": {
+            "equalTo": "run_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/RunSuccessResponse.json\",\n  \"message\": \"message\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "a369fdc1-53bc-4f75-8912-086e0cb42963",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "ba32ce89-9e3d-413e-96cd-636f7e589186",
+      "name": "Start a run - default",
+      "request": {
+        "urlPathTemplate": "/runs/{workflow_id}",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": "{\n  \"$schema\": \"/api/v1/RunCreateResponse.json\",\n  \"run_ids\": [\n    \"run_ids\"\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "ba32ce89-9e3d-413e-96cd-636f7e589186",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "1f289714-f8a5-4ec9-8c03-6f50853a7429",
+      "name": "List inference calls - default",
+      "request": {
+        "urlPathTemplate": "/usage/inferences",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/UsageInferencesResponse.json\",\n  \"inferences\": [\n    {\n      \"api_key_id\": \"api_key_id\",\n      \"cost_microdollars\": 1000000,\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"endpoint\": \"detect\",\n      \"inference_id\": \"inference_id\",\n      \"latency_ms\": 1000000,\n      \"model\": \"model\",\n      \"ocr_engine\": \"free\",\n      \"ocr_pages\": 1000000,\n      \"session_id\": \"session_id\",\n      \"vlm_model\": \"vlm_model\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "1f289714-f8a5-4ec9-8c03-6f50853a7429",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "b6af1a5a-f171-4e5c-b965-683e4848c016",
+      "name": "Get usage metrics - default",
+      "request": {
+        "urlPathTemplate": "/usage/metrics",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "queryParameters": {
+          "start_date": {
+            "equalTo": "2024-01-15T09:30:00.000Z"
+          },
+          "end_date": {
+            "equalTo": "2024-01-15T09:30:00.000Z"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/UsageMetricsResponse.json\",\n  \"compute_minutes\": {\n    \"change\": 1.1,\n    \"chart_data\": [\n      {\n        \"is_current\": true,\n        \"period\": \"period\",\n        \"timestamp\": \"2024-01-15T09:30:00Z\",\n        \"value\": 1.1\n      }\n    ],\n    \"total_minutes\": 1.1\n  },\n  \"cost_by_product\": {\n    \"inference\": 1.1,\n    \"other\": 1.1,\n    \"sessions\": 1.1\n  },\n  \"granularity\": \"hourly\",\n  \"inference_chart_data\": [\n    {\n      \"is_current\": true,\n      \"period\": \"period\",\n      \"timestamp\": \"2024-01-15T09:30:00Z\",\n      \"value\": 1.1\n    }\n  ],\n  \"infra_costs\": {\n    \"change\": 1.1,\n    \"chart_data\": [\n      {\n        \"is_current\": true,\n        \"period\": \"period\",\n        \"timestamp\": \"2024-01-15T09:30:00Z\",\n        \"value\": 1.1\n      }\n    ],\n    \"this_period\": 1.1,\n    \"total\": 1.1\n  },\n  \"period_end\": \"2024-01-15T09:30:00Z\",\n  \"period_start\": \"2024-01-15T09:30:00Z\",\n  \"session_chart_data\": [\n    {\n      \"is_current\": true,\n      \"period\": \"period\",\n      \"timestamp\": \"2024-01-15T09:30:00Z\",\n      \"value\": 1.1\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "b6af1a5a-f171-4e5c-b965-683e4848c016",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "9cba0546-1960-443c-b6b0-7b501e094658",
+      "name": "List workflows - default",
+      "request": {
+        "urlPathTemplate": "/workflows",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000,\n  \"workflows\": [\n    {\n      \"$schema\": \"/api/v1/WorkflowResponse.json\",\n      \"stats\": {\n        \"success_rate\": 1.1,\n        \"total_runs\": 1000000\n      },\n      \"workflow\": {\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"id\": \"id\",\n        \"last_run_at\": null,\n        \"name\": \"name\",\n        \"ocr_engine\": \"free\",\n        \"organization_id\": null,\n        \"platform\": \"android\",\n        \"status\": \"ready\",\n        \"updated_at\": \"2024-01-15T09:30:00Z\",\n        \"user_id\": \"user_id\"\n      }\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "9cba0546-1960-443c-b6b0-7b501e094658",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "27e9325d-9076-4c54-9b74-f3e71a093b0c",
+      "name": "Create a workflow - default",
+      "request": {
+        "urlPathTemplate": "/workflows",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowCreateResponse.json\",\n  \"revision\": 1000000,\n  \"revision_id\": \"revision_id\",\n  \"workflow_id\": \"workflow_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "27e9325d-9076-4c54-9b74-f3e71a093b0c",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "8acd01dc-8fe8-4647-9b5d-310f5dd3f1a8",
+      "name": "Get a workflow - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"status\": \"ready\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "8acd01dc-8fe8-4647-9b5d-310f5dd3f1a8",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "b7e0f7d6-7b6c-4a1e-b6e9-fbe43d5e28db",
+      "name": "Update a workflow - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}",
+        "method": "PUT",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"status\": \"ready\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "b7e0f7d6-7b6c-4a1e-b6e9-fbe43d5e28db",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "9ecc95c2-60eb-495c-8188-df04b9925d3d",
+      "name": "Delete a workflow - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}",
+        "method": "DELETE",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/MessageOutputBody.json\",\n  \"message\": \"message\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "9ecc95c2-60eb-495c-8188-df04b9925d3d",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "3b9b6095-cf07-4764-826b-b8e15800a375",
+      "name": "Get current workflow code - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}/code",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowGetCodeResponse.json\",\n  \"revision\": 1000000,\n  \"revision_id\": \"revision_id\",\n  \"source\": \"source\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "3b9b6095-cf07-4764-826b-b8e15800a375",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "c1d9aa59-9f89-4cc7-bfc6-dce8f1cc9319",
+      "name": "Save workflow code - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}/code",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowSaveCodeResponse.json\",\n  \"no_op\": true,\n  \"revision\": 1000000,\n  \"revision_id\": \"revision_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "c1d9aa59-9f89-4cc7-bfc6-dce8f1cc9319",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "5c6553b4-a397-45a7-9116-4462f19a5384",
+      "name": "Restore a workflow revision - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}/code/restore",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowSaveCodeResponse.json\",\n  \"no_op\": true,\n  \"revision\": 1000000,\n  \"revision_id\": \"revision_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "5c6553b4-a397-45a7-9116-4462f19a5384",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "9f1c2b52-723e-4a9f-bc21-a18a18f51c89",
+      "name": "List workflow revisions - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}/revisions",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowListRevisionsResponse.json\",\n  \"revisions\": [\n    {\n      \"author_user_id\": \"author_user_id\",\n      \"bytes\": 1000000,\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"id\": \"id\",\n      \"message\": \"message\",\n      \"revision\": 1000000,\n      \"sha256\": \"sha256\"\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "9f1c2b52-723e-4a9f-bc21-a18a18f51c89",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "7d05b69a-29b7-44da-a698-0e3d5c94f703",
+      "name": "Get a workflow revision - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}/revisions/{revision_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          },
+          "revision_id": {
+            "equalTo": "revision_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowRevisionDetail.json\",\n  \"author_user_id\": \"author_user_id\",\n  \"bytes\": 1000000,\n  \"code_source\": \"code_source\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"message\": \"message\",\n  \"revision\": 1000000,\n  \"sha256\": \"sha256\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "7d05b69a-29b7-44da-a698-0e3d5c94f703",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    }
+  ],
+  "meta": {
+    "total": 41
+  }
+}
