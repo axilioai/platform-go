@@ -44,6 +44,7 @@ jobs:
           echo "Read version: $VERSION"
 
       - name: Create tag + release (idempotent)
+        id: tag
         env:
           VERSION: ${{ steps.ver.outputs.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -51,6 +52,7 @@ jobs:
           TAG="v${VERSION}"
           if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "${TAG}"; then
             echo "tag ${TAG} already exists on origin; nothing to do"
+            echo "released=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "axilio-bot"
@@ -61,3 +63,30 @@ jobs:
             --title "${TAG}" \
             --generate-notes
           echo "released ${TAG} on $(git rev-parse HEAD)"
+          echo "released=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open CLI version-bump PR
+        # Only on a fresh release (not the idempotent skip). Fires a
+        # repository_dispatch at axilioai/cli so its bump-sdk.yml opens a PR
+        # pinning github.com/axilioai/platform-go to the version just published.
+        # This is the last link of the release chain: platform-python regen ->
+        # platform-go regen -> platform-go release (here) -> CLI bump PR.
+        #
+        # Needs CLI_DISPATCH_TOKEN: a PAT with Contents:write on axilioai/cli
+        # (the /dispatches endpoint requires it), since the default GITHUB_TOKEN
+        # cannot dispatch into another repo. Best-effort: a missing token warns +
+        # skips rather than failing an otherwise-successful release.
+        if: steps.tag.outputs.released == 'true'
+        env:
+          CLI_DISPATCH_TOKEN: ${{ secrets.CLI_DISPATCH_TOKEN }}
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          TAG="v${VERSION}"
+          if [[ -z "${CLI_DISPATCH_TOKEN:-}" ]]; then
+            echo "::warning title=CLI bump not triggered::CLI_DISPATCH_TOKEN is not set; skipping the axilioai/cli version-bump dispatch. Set a PAT with Contents:write + repository_dispatch on axilioai/cli to enable it. The release itself is unaffected."
+            exit 0
+          fi
+          GH_TOKEN="$CLI_DISPATCH_TOKEN" gh api repos/axilioai/cli/dispatches \
+            -f event_type=platform-go-released \
+            -F "client_payload[version]=${TAG}"
+          echo "dispatched platform-go-released (${TAG}) to axilioai/cli"
