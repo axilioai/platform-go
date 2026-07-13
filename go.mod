@@ -1,10 +1,13 @@
 module github.com/axilioai/platform-go
 
-go 1.21
+go 1.23
 
 require github.com/google/uuid v1.6.0
 
-require github.com/stretchr/testify v1.8.4
+require (
+	github.com/coder/websocket v1.8.15
+	github.com/stretchr/testify v1.8.4
+)
 
 require gopkg.in/yaml.v3 v3.0.1 // indirect
 

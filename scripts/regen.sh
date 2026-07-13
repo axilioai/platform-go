@@ -30,4 +30,11 @@ rsync -a --delete \
   .gen/ ./
 
 rm -rf .gen
+
+# fern-go-sdk regenerates go.mod/go.sum from the *generated* code's imports only,
+# which drops the hand-written driver's deps (drivers/mobile pulls in
+# coder/websocket). Re-tidy against the full tree (generated code + drivers/) so
+# those deps survive every regen. Needs network (CI has it).
+go mod tidy
+
 echo "platform-go regenerated from specs/production/openapi.json"
