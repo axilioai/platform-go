@@ -73,7 +73,14 @@ jobs:
         # Single reused branch (regen/backend) — successive dispatches update the
         # same PR rather than stacking duplicates. add-paths scopes the commit to
         # the generated SDK + spec; hand-written paths (drivers/, .github/,
-        # VERSION) are never touched. The regen does NOT bump VERSION.
+        # VERSION, CONTRIBUTING.md) are never touched. The regen does NOT bump
+        # VERSION.
+        #
+        # CONTRIBUTING.md is repo-owned (also rsync-excluded in scripts/regen.sh):
+        # Fern's generated version documents .fernignore, which this generator
+        # ignores in --local mode, so regenerating it re-introduces instructions
+        # that get a contributor's code deleted. README.md stays generated — it is
+        # mostly API reference that should track the spec.
         uses: peter-evans/create-pull-request@v6
         env:
           AXILIO_SHA: ${{ github.event.client_payload.axilio_sha || 'manual' }}
@@ -89,7 +96,6 @@ jobs:
             reference.md
             wiremock/**
             README.md
-            CONTRIBUTING.md
             specs/production/openapi.json
           title: "chore(sdk): regenerate Go client (Fern)"
           commit-message: |
