@@ -2,8 +2,9 @@
 // twin of platform-python's axilio.drivers.mobile. It drives a paired phone
 // through a Transport (the DCP control WebSocket), turning an ergonomic
 // observe/find/tap/type API into literal CDP method frames. It lives alongside
-// the Fern-generated REST client and is preserved across regen by the repo-root
-// .fernignore.
+// the Fern-generated REST client and is preserved across regen by the rsync
+// exclude list in scripts/regen.sh — .fernignore does not work here (see that
+// script's header).
 package mobile
 
 import (
