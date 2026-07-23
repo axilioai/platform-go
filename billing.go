@@ -185,7 +185,7 @@ type BillingHistoryItem struct {
 	// Billing plan associated with this invoice.
 	PlanName string `json:"plan_name" url:"plan_name"`
 	// Current payment status of the invoice.
-	Status string `json:"status" url:"status"`
+	Status BillingHistoryItemStatus `json:"status" url:"status"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -292,7 +292,7 @@ func (b *BillingHistoryItem) GetPlanName() string {
 	return b.PlanName
 }
 
-func (b *BillingHistoryItem) GetStatus() string {
+func (b *BillingHistoryItem) GetStatus() BillingHistoryItemStatus {
 	if b == nil {
 		return ""
 	}
@@ -413,7 +413,7 @@ func (b *BillingHistoryItem) SetPlanName(planName string) {
 
 // SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingHistoryItem) SetStatus(status string) {
+func (b *BillingHistoryItem) SetStatus(status BillingHistoryItemStatus) {
 	b.Status = status
 	b.require(billingHistoryItemFieldStatus)
 }
@@ -474,6 +474,35 @@ func (b *BillingHistoryItem) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", b)
+}
+
+// Current payment status of the invoice.
+type BillingHistoryItemStatus string
+
+const (
+	BillingHistoryItemStatusPaid    BillingHistoryItemStatus = "paid"
+	BillingHistoryItemStatusPending BillingHistoryItemStatus = "pending"
+	BillingHistoryItemStatusFailed  BillingHistoryItemStatus = "failed"
+	BillingHistoryItemStatusVoid    BillingHistoryItemStatus = "void"
+)
+
+func NewBillingHistoryItemStatusFromString(s string) (BillingHistoryItemStatus, error) {
+	switch s {
+	case "paid":
+		return BillingHistoryItemStatusPaid, nil
+	case "pending":
+		return BillingHistoryItemStatusPending, nil
+	case "failed":
+		return BillingHistoryItemStatusFailed, nil
+	case "void":
+		return BillingHistoryItemStatusVoid, nil
+	}
+	var t BillingHistoryItemStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (b BillingHistoryItemStatus) Ptr() *BillingHistoryItemStatus {
+	return &b
 }
 
 // One page of billing history items, using the API's standard list envelope (items, total, limit, offset).
@@ -750,7 +779,7 @@ func (p *PhoneRentalIntervalSummary) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// One page of an org's active device rental subscriptions, plus an org-wide summary that ignores the page facets.
+// An org's device rental subscriptions, plus an org-wide summary. The summary counts only active rentals regardless of which statuses the subscriptions list contains.
 var (
 	phoneRentalSubscriptionListResponseFieldSchema        = big.NewInt(1 << 0)
 	phoneRentalSubscriptionListResponseFieldSubscriptions = big.NewInt(1 << 1)
@@ -765,7 +794,7 @@ type PhoneRentalSubscriptionListResponse struct {
 	Subscriptions []*PhoneRentalSubscriptionResponse `json:"subscriptions,omitempty" url:"subscriptions,omitempty"`
 	// Org-wide rollup (active count, combined monthly spend, per-interval breakdown, upcoming charges), independent of the page facets.
 	Summary *PhoneRentalSummary `json:"summary" url:"summary"`
-	// Filtered count of active rentals (for pagination; has_more is derivable as offset+len(subscriptions) < total).
+	// Count of rentals matching the request (for pagination; has_more is derivable as offset+len(subscriptions) < total).
 	Total int64 `json:"total" url:"total"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -920,7 +949,7 @@ type PhoneRentalSubscriptionResponse struct {
 	// Subscribing organization's identifier.
 	OrganizationID string `json:"organization_id" url:"organization_id"`
 	// Billing health ('healthy' or 'past_due'). Orthogonal to status: a past_due rental stays active while payment is retried.
-	PaymentStatus string `json:"payment_status" url:"payment_status"`
+	PaymentStatus PhoneRentalSubscriptionResponsePaymentStatus `json:"payment_status" url:"payment_status"`
 	// Rented phone's public identifier (matches PhoneSummary.phone_id), if a phone is assigned.
 	PhoneID *string `json:"phone_id,omitempty" url:"phone_id,omitempty"`
 	// Display name of the rented device.
@@ -936,7 +965,7 @@ type PhoneRentalSubscriptionResponse struct {
 	// Plan price in cents per interval.
 	PlanPriceCents int64 `json:"plan_price_cents" url:"plan_price_cents"`
 	// Current subscription lifecycle state.
-	Status string `json:"status" url:"status"`
+	Status PhoneRentalSubscriptionResponseStatus `json:"status" url:"status"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -987,7 +1016,7 @@ func (p *PhoneRentalSubscriptionResponse) GetOrganizationID() string {
 	return p.OrganizationID
 }
 
-func (p *PhoneRentalSubscriptionResponse) GetPaymentStatus() string {
+func (p *PhoneRentalSubscriptionResponse) GetPaymentStatus() PhoneRentalSubscriptionResponsePaymentStatus {
 	if p == nil {
 		return ""
 	}
@@ -1043,7 +1072,7 @@ func (p *PhoneRentalSubscriptionResponse) GetPlanPriceCents() int64 {
 	return p.PlanPriceCents
 }
 
-func (p *PhoneRentalSubscriptionResponse) GetStatus() string {
+func (p *PhoneRentalSubscriptionResponse) GetStatus() PhoneRentalSubscriptionResponseStatus {
 	if p == nil {
 		return ""
 	}
@@ -1108,7 +1137,7 @@ func (p *PhoneRentalSubscriptionResponse) SetOrganizationID(organizationID strin
 
 // SetPaymentStatus sets the PaymentStatus field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalSubscriptionResponse) SetPaymentStatus(paymentStatus string) {
+func (p *PhoneRentalSubscriptionResponse) SetPaymentStatus(paymentStatus PhoneRentalSubscriptionResponsePaymentStatus) {
 	p.PaymentStatus = paymentStatus
 	p.require(phoneRentalSubscriptionResponseFieldPaymentStatus)
 }
@@ -1164,7 +1193,7 @@ func (p *PhoneRentalSubscriptionResponse) SetPlanPriceCents(planPriceCents int64
 
 // SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalSubscriptionResponse) SetStatus(status string) {
+func (p *PhoneRentalSubscriptionResponse) SetStatus(status PhoneRentalSubscriptionResponseStatus) {
 	p.Status = status
 	p.require(phoneRentalSubscriptionResponseFieldStatus)
 }
@@ -1225,6 +1254,52 @@ func (p *PhoneRentalSubscriptionResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", p)
+}
+
+// Billing health ('healthy' or 'past_due'). Orthogonal to status: a past_due rental stays active while payment is retried.
+type PhoneRentalSubscriptionResponsePaymentStatus string
+
+const (
+	PhoneRentalSubscriptionResponsePaymentStatusHealthy PhoneRentalSubscriptionResponsePaymentStatus = "healthy"
+	PhoneRentalSubscriptionResponsePaymentStatusPastDue PhoneRentalSubscriptionResponsePaymentStatus = "past_due"
+)
+
+func NewPhoneRentalSubscriptionResponsePaymentStatusFromString(s string) (PhoneRentalSubscriptionResponsePaymentStatus, error) {
+	switch s {
+	case "healthy":
+		return PhoneRentalSubscriptionResponsePaymentStatusHealthy, nil
+	case "past_due":
+		return PhoneRentalSubscriptionResponsePaymentStatusPastDue, nil
+	}
+	var t PhoneRentalSubscriptionResponsePaymentStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneRentalSubscriptionResponsePaymentStatus) Ptr() *PhoneRentalSubscriptionResponsePaymentStatus {
+	return &p
+}
+
+// Current subscription lifecycle state.
+type PhoneRentalSubscriptionResponseStatus string
+
+const (
+	PhoneRentalSubscriptionResponseStatusActive   PhoneRentalSubscriptionResponseStatus = "active"
+	PhoneRentalSubscriptionResponseStatusCanceled PhoneRentalSubscriptionResponseStatus = "canceled"
+)
+
+func NewPhoneRentalSubscriptionResponseStatusFromString(s string) (PhoneRentalSubscriptionResponseStatus, error) {
+	switch s {
+	case "active":
+		return PhoneRentalSubscriptionResponseStatusActive, nil
+	case "canceled":
+		return PhoneRentalSubscriptionResponseStatusCanceled, nil
+	}
+	var t PhoneRentalSubscriptionResponseStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneRentalSubscriptionResponseStatus) Ptr() *PhoneRentalSubscriptionResponseStatus {
+	return &p
 }
 
 // Org-wide rollup shown above the rentals table.

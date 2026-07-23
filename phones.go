@@ -204,12 +204,12 @@ func (p *PhoneAllocateRequest) MarshalJSON() ([]byte, error) {
 }
 
 var (
-	phonesAvailableRequestFieldDeviceType = big.NewInt(1 << 0)
+	phonesAvailableRequestFieldPhoneType = big.NewInt(1 << 0)
 )
 
 type PhonesAvailableRequest struct {
-	// filter by device type (iphone/android)
-	DeviceType *string `json:"-" url:"device_type,omitempty"`
+	// only return phones of this type
+	PhoneType *PhonesAvailableRequestPhoneType `json:"-" url:"phone_type,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -222,11 +222,11 @@ func (p *PhonesAvailableRequest) require(field *big.Int) {
 	p.explicitFields.Or(p.explicitFields, field)
 }
 
-// SetDeviceType sets the DeviceType field and marks it as non-optional;
+// SetPhoneType sets the PhoneType field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesAvailableRequest) SetDeviceType(deviceType *string) {
-	p.DeviceType = deviceType
-	p.require(phonesAvailableRequestFieldDeviceType)
+func (p *PhonesAvailableRequest) SetPhoneType(phoneType *PhonesAvailableRequestPhoneType) {
+	p.PhoneType = phoneType
+	p.require(phonesAvailableRequestFieldPhoneType)
 }
 
 var (
@@ -305,6 +305,52 @@ func (p *PhonesGetSessionRequest) require(field *big.Int) {
 func (p *PhonesGetSessionRequest) SetSessionID(sessionID string) {
 	p.SessionID = sessionID
 	p.require(phonesGetSessionRequestFieldSessionID)
+}
+
+var (
+	phonesListFilesRequestFieldPhoneID = big.NewInt(1 << 0)
+	phonesListFilesRequestFieldLimit   = big.NewInt(1 << 1)
+	phonesListFilesRequestFieldOffset  = big.NewInt(1 << 2)
+)
+
+type PhonesListFilesRequest struct {
+	// phone to list deliveries for
+	PhoneID string `json:"-" url:"-"`
+	// max items per page
+	Limit *int64 `json:"-" url:"limit,omitempty"`
+	// pagination offset
+	Offset *int64 `json:"-" url:"offset,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (p *PhonesListFilesRequest) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListFilesRequest) SetPhoneID(phoneID string) {
+	p.PhoneID = phoneID
+	p.require(phonesListFilesRequestFieldPhoneID)
+}
+
+// SetLimit sets the Limit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListFilesRequest) SetLimit(limit *int64) {
+	p.Limit = limit
+	p.require(phonesListFilesRequestFieldLimit)
+}
+
+// SetOffset sets the Offset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListFilesRequest) SetOffset(offset *int64) {
+	p.Offset = offset
+	p.require(phonesListFilesRequestFieldOffset)
 }
 
 var (
@@ -475,9 +521,9 @@ type PhonesMineRequest struct {
 	Offset         *int64 `json:"-" url:"offset,omitempty"`
 	// free-text search across nickname, name, model, location
 	Search *string `json:"-" url:"search,omitempty"`
-	// filter by phone status (ACTIVE/INACTIVE/MAINTENANCE/SUSPENDED)
+	// filter by phone status (active/inactive/maintenance/suspended); case-insensitive
 	Status []string `json:"-" url:"status,omitempty"`
-	// filter by phone type (IPHONE/ANDROID)
+	// filter by phone type (iphone/android); case-insensitive
 	Type []string `json:"-" url:"type,omitempty"`
 	// only phones whose rental expires at/after this RFC3339 time
 	RentalExpiresAfter *string `json:"-" url:"rental_expires_after,omitempty"`
@@ -645,6 +691,78 @@ func (p *PhoneUpdateNicknameRequest) MarshalJSON() ([]byte, error) {
 }
 
 var (
+	phonesPreviewRequestFieldPhoneID = big.NewInt(1 << 0)
+)
+
+type PhonesPreviewRequest struct {
+	// Phone identifier
+	PhoneID string `json:"-" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (p *PhonesPreviewRequest) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesPreviewRequest) SetPhoneID(phoneID string) {
+	p.PhoneID = phoneID
+	p.require(phonesPreviewRequestFieldPhoneID)
+}
+
+var (
+	phonesPushFileRequestFieldPhoneID    = big.NewInt(1 << 0)
+	phonesPushFileRequestFieldFileID     = big.NewInt(1 << 1)
+	phonesPushFileRequestFieldCollection = big.NewInt(1 << 2)
+)
+
+type PhonesPushFileRequest struct {
+	// target phone_id
+	PhoneID string `json:"-" url:"-"`
+	// library file to push
+	FileID string `json:"-" url:"-"`
+	// MediaStore collection to insert into; defaults to Pictures for images and Movies for videos
+	Collection *PhonesPushFileRequestCollection `json:"-" url:"collection,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (p *PhonesPushFileRequest) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesPushFileRequest) SetPhoneID(phoneID string) {
+	p.PhoneID = phoneID
+	p.require(phonesPushFileRequestFieldPhoneID)
+}
+
+// SetFileID sets the FileID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesPushFileRequest) SetFileID(fileID string) {
+	p.FileID = fileID
+	p.require(phonesPushFileRequestFieldFileID)
+}
+
+// SetCollection sets the Collection field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesPushFileRequest) SetCollection(collection *PhonesPushFileRequestCollection) {
+	p.Collection = collection
+	p.require(phonesPushFileRequestFieldCollection)
+}
+
+var (
 	phonesSessionRecordingRequestFieldSessionID = big.NewInt(1 << 0)
 )
 
@@ -730,6 +848,485 @@ func (p *PhonesSupportedAppsRequest) SetPlatform(platform *string) {
 func (p *PhonesSupportedAppsRequest) SetCategory(category *string) {
 	p.Category = category
 	p.require(phonesSupportedAppsRequestFieldCategory)
+}
+
+// One page of a phone's file delivery records.
+var (
+	fileDeliveryListResponseFieldSchema     = big.NewInt(1 << 0)
+	fileDeliveryListResponseFieldDeliveries = big.NewInt(1 << 1)
+	fileDeliveryListResponseFieldTotal      = big.NewInt(1 << 2)
+)
+
+type FileDeliveryListResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Delivery records, newest first.
+	Deliveries []*FileDeliverySummary `json:"deliveries,omitempty" url:"deliveries,omitempty"`
+	// Total delivery records for the phone.
+	Total int64 `json:"total" url:"total"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (f *FileDeliveryListResponse) GetSchema() *string {
+	if f == nil {
+		return nil
+	}
+	return f.Schema
+}
+
+func (f *FileDeliveryListResponse) GetDeliveries() []*FileDeliverySummary {
+	if f == nil {
+		return nil
+	}
+	return f.Deliveries
+}
+
+func (f *FileDeliveryListResponse) GetTotal() int64 {
+	if f == nil {
+		return 0
+	}
+	return f.Total
+}
+
+func (f *FileDeliveryListResponse) GetExtraProperties() map[string]interface{} {
+	if f == nil {
+		return nil
+	}
+	return f.extraProperties
+}
+
+func (f *FileDeliveryListResponse) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliveryListResponse) SetSchema(schema *string) {
+	f.Schema = schema
+	f.require(fileDeliveryListResponseFieldSchema)
+}
+
+// SetDeliveries sets the Deliveries field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliveryListResponse) SetDeliveries(deliveries []*FileDeliverySummary) {
+	f.Deliveries = deliveries
+	f.require(fileDeliveryListResponseFieldDeliveries)
+}
+
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliveryListResponse) SetTotal(total int64) {
+	f.Total = total
+	f.require(fileDeliveryListResponseFieldTotal)
+}
+
+func (f *FileDeliveryListResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler FileDeliveryListResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*f = FileDeliveryListResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *f)
+	if err != nil {
+		return err
+	}
+	f.extraProperties = extraProperties
+	f.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (f *FileDeliveryListResponse) MarshalJSON() ([]byte, error) {
+	type embed FileDeliveryListResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*f),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (f *FileDeliveryListResponse) String() string {
+	if f == nil {
+		return "<nil>"
+	}
+	if len(f.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(f.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(f); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", f)
+}
+
+// One push of a library file to a phone.
+var (
+	fileDeliverySummaryFieldCreatedAt = big.NewInt(1 << 0)
+	fileDeliverySummaryFieldError     = big.NewInt(1 << 1)
+	fileDeliverySummaryFieldFileID    = big.NewInt(1 << 2)
+	fileDeliverySummaryFieldFilename  = big.NewInt(1 << 3)
+	fileDeliverySummaryFieldID        = big.NewInt(1 << 4)
+	fileDeliverySummaryFieldMimeType  = big.NewInt(1 << 5)
+	fileDeliverySummaryFieldPhoneID   = big.NewInt(1 << 6)
+	fileDeliverySummaryFieldSizeBytes = big.NewInt(1 << 7)
+	fileDeliverySummaryFieldStatus    = big.NewInt(1 << 8)
+)
+
+type FileDeliverySummary struct {
+	// When the push was dispatched.
+	CreatedAt time.Time `json:"created_at" url:"created_at"`
+	// Failure detail for failed deliveries.
+	Error *string `json:"error,omitempty" url:"error,omitempty"`
+	// Library file that was pushed.
+	FileID string `json:"file_id" url:"file_id"`
+	// Delivered file's display name.
+	Filename string `json:"filename" url:"filename"`
+	// Delivery identifier.
+	ID string `json:"id" url:"id"`
+	// Delivered file's MIME type.
+	MimeType string `json:"mime_type" url:"mime_type"`
+	// Phone the file was pushed to.
+	PhoneID string `json:"phone_id" url:"phone_id"`
+	// Delivered file's size in bytes.
+	SizeBytes int64 `json:"size_bytes" url:"size_bytes"`
+	// dispatched while the phone downloads; delivered or failed once it reports back.
+	Status FileDeliverySummaryStatus `json:"status" url:"status"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (f *FileDeliverySummary) GetCreatedAt() time.Time {
+	if f == nil {
+		return time.Time{}
+	}
+	return f.CreatedAt
+}
+
+func (f *FileDeliverySummary) GetError() *string {
+	if f == nil {
+		return nil
+	}
+	return f.Error
+}
+
+func (f *FileDeliverySummary) GetFileID() string {
+	if f == nil {
+		return ""
+	}
+	return f.FileID
+}
+
+func (f *FileDeliverySummary) GetFilename() string {
+	if f == nil {
+		return ""
+	}
+	return f.Filename
+}
+
+func (f *FileDeliverySummary) GetID() string {
+	if f == nil {
+		return ""
+	}
+	return f.ID
+}
+
+func (f *FileDeliverySummary) GetMimeType() string {
+	if f == nil {
+		return ""
+	}
+	return f.MimeType
+}
+
+func (f *FileDeliverySummary) GetPhoneID() string {
+	if f == nil {
+		return ""
+	}
+	return f.PhoneID
+}
+
+func (f *FileDeliverySummary) GetSizeBytes() int64 {
+	if f == nil {
+		return 0
+	}
+	return f.SizeBytes
+}
+
+func (f *FileDeliverySummary) GetStatus() FileDeliverySummaryStatus {
+	if f == nil {
+		return ""
+	}
+	return f.Status
+}
+
+func (f *FileDeliverySummary) GetExtraProperties() map[string]interface{} {
+	if f == nil {
+		return nil
+	}
+	return f.extraProperties
+}
+
+func (f *FileDeliverySummary) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetCreatedAt sets the CreatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetCreatedAt(createdAt time.Time) {
+	f.CreatedAt = createdAt
+	f.require(fileDeliverySummaryFieldCreatedAt)
+}
+
+// SetError sets the Error field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetError(error_ *string) {
+	f.Error = error_
+	f.require(fileDeliverySummaryFieldError)
+}
+
+// SetFileID sets the FileID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetFileID(fileID string) {
+	f.FileID = fileID
+	f.require(fileDeliverySummaryFieldFileID)
+}
+
+// SetFilename sets the Filename field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetFilename(filename string) {
+	f.Filename = filename
+	f.require(fileDeliverySummaryFieldFilename)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetID(id string) {
+	f.ID = id
+	f.require(fileDeliverySummaryFieldID)
+}
+
+// SetMimeType sets the MimeType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetMimeType(mimeType string) {
+	f.MimeType = mimeType
+	f.require(fileDeliverySummaryFieldMimeType)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetPhoneID(phoneID string) {
+	f.PhoneID = phoneID
+	f.require(fileDeliverySummaryFieldPhoneID)
+}
+
+// SetSizeBytes sets the SizeBytes field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetSizeBytes(sizeBytes int64) {
+	f.SizeBytes = sizeBytes
+	f.require(fileDeliverySummaryFieldSizeBytes)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetStatus(status FileDeliverySummaryStatus) {
+	f.Status = status
+	f.require(fileDeliverySummaryFieldStatus)
+}
+
+func (f *FileDeliverySummary) UnmarshalJSON(data []byte) error {
+	type embed FileDeliverySummary
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"created_at"`
+	}{
+		embed: embed(*f),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*f = FileDeliverySummary(unmarshaler.embed)
+	f.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *f)
+	if err != nil {
+		return err
+	}
+	f.extraProperties = extraProperties
+	f.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (f *FileDeliverySummary) MarshalJSON() ([]byte, error) {
+	type embed FileDeliverySummary
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"created_at"`
+	}{
+		embed:     embed(*f),
+		CreatedAt: internal.NewDateTime(f.CreatedAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (f *FileDeliverySummary) String() string {
+	if f == nil {
+		return "<nil>"
+	}
+	if len(f.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(f.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(f); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", f)
+}
+
+// dispatched while the phone downloads; delivered or failed once it reports back.
+type FileDeliverySummaryStatus string
+
+const (
+	FileDeliverySummaryStatusDispatched FileDeliverySummaryStatus = "dispatched"
+	FileDeliverySummaryStatusDelivered  FileDeliverySummaryStatus = "delivered"
+	FileDeliverySummaryStatusFailed     FileDeliverySummaryStatus = "failed"
+)
+
+func NewFileDeliverySummaryStatusFromString(s string) (FileDeliverySummaryStatus, error) {
+	switch s {
+	case "dispatched":
+		return FileDeliverySummaryStatusDispatched, nil
+	case "delivered":
+		return FileDeliverySummaryStatusDelivered, nil
+	case "failed":
+		return FileDeliverySummaryStatusFailed, nil
+	}
+	var t FileDeliverySummaryStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (f FileDeliverySummaryStatus) Ptr() *FileDeliverySummaryStatus {
+	return &f
+}
+
+// Acknowledges a dispatched push.
+var (
+	filePushResponseFieldSchema   = big.NewInt(1 << 0)
+	filePushResponseFieldDelivery = big.NewInt(1 << 1)
+)
+
+type FilePushResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// The created delivery record.
+	Delivery *FileDeliverySummary `json:"delivery" url:"delivery"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (f *FilePushResponse) GetSchema() *string {
+	if f == nil {
+		return nil
+	}
+	return f.Schema
+}
+
+func (f *FilePushResponse) GetDelivery() *FileDeliverySummary {
+	if f == nil {
+		return nil
+	}
+	return f.Delivery
+}
+
+func (f *FilePushResponse) GetExtraProperties() map[string]interface{} {
+	if f == nil {
+		return nil
+	}
+	return f.extraProperties
+}
+
+func (f *FilePushResponse) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FilePushResponse) SetSchema(schema *string) {
+	f.Schema = schema
+	f.require(filePushResponseFieldSchema)
+}
+
+// SetDelivery sets the Delivery field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FilePushResponse) SetDelivery(delivery *FileDeliverySummary) {
+	f.Delivery = delivery
+	f.require(filePushResponseFieldDelivery)
+}
+
+func (f *FilePushResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler FilePushResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*f = FilePushResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *f)
+	if err != nil {
+		return err
+	}
+	f.extraProperties = extraProperties
+	f.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (f *FilePushResponse) MarshalJSON() ([]byte, error) {
+	type embed FilePushResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*f),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (f *FilePushResponse) String() string {
+	if f == nil {
+		return "<nil>"
+	}
+	if len(f.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(f.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(f); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", f)
 }
 
 // One active phone allocation for the dashboard overview: a phone currently claimed by a run, a workflow-less interactive lease, or a dedicated phone in use.
@@ -2320,6 +2917,149 @@ func NewPhoneLiveViewOptionsAuthFromString(s string) (PhoneLiveViewOptionsAuth, 
 }
 
 func (p PhoneLiveViewOptionsAuth) Ptr() *PhoneLiveViewOptionsAuth {
+	return &p
+}
+
+// Phone preview lookup result.
+var (
+	phonePreviewResponseFieldSchema = big.NewInt(1 << 0)
+	phonePreviewResponseFieldStatus = big.NewInt(1 << 1)
+	phonePreviewResponseFieldURL    = big.NewInt(1 << 2)
+)
+
+type PhonePreviewResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// 'ready' when a preview URL is returned, or 'pending' when no preview exists.
+	Status PhonePreviewResponseStatus `json:"status" url:"status"`
+	// URL for the current preview JPEG, set only when status is 'ready'. Time-limited; poll for a fresh image.
+	URL *string `json:"url,omitempty" url:"url,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhonePreviewResponse) GetSchema() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Schema
+}
+
+func (p *PhonePreviewResponse) GetStatus() PhonePreviewResponseStatus {
+	if p == nil {
+		return ""
+	}
+	return p.Status
+}
+
+func (p *PhonePreviewResponse) GetURL() *string {
+	if p == nil {
+		return nil
+	}
+	return p.URL
+}
+
+func (p *PhonePreviewResponse) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhonePreviewResponse) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonePreviewResponse) SetSchema(schema *string) {
+	p.Schema = schema
+	p.require(phonePreviewResponseFieldSchema)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonePreviewResponse) SetStatus(status PhonePreviewResponseStatus) {
+	p.Status = status
+	p.require(phonePreviewResponseFieldStatus)
+}
+
+// SetURL sets the URL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonePreviewResponse) SetURL(url *string) {
+	p.URL = url
+	p.require(phonePreviewResponseFieldURL)
+}
+
+func (p *PhonePreviewResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhonePreviewResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PhonePreviewResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhonePreviewResponse) MarshalJSON() ([]byte, error) {
+	type embed PhonePreviewResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhonePreviewResponse) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// 'ready' when a preview URL is returned, or 'pending' when no preview exists.
+type PhonePreviewResponseStatus string
+
+const (
+	PhonePreviewResponseStatusReady   PhonePreviewResponseStatus = "ready"
+	PhonePreviewResponseStatusPending PhonePreviewResponseStatus = "pending"
+)
+
+func NewPhonePreviewResponseStatusFromString(s string) (PhonePreviewResponseStatus, error) {
+	switch s {
+	case "ready":
+		return PhonePreviewResponseStatusReady, nil
+	case "pending":
+		return PhonePreviewResponseStatusPending, nil
+	}
+	var t PhonePreviewResponseStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhonePreviewResponseStatus) Ptr() *PhonePreviewResponseStatus {
 	return &p
 }
 
@@ -4820,6 +5560,55 @@ func NewPhoneAllocateRequestPhoneTypeFromString(s string) (PhoneAllocateRequestP
 }
 
 func (p PhoneAllocateRequestPhoneType) Ptr() *PhoneAllocateRequestPhoneType {
+	return &p
+}
+
+// only return phones of this type
+type PhonesAvailableRequestPhoneType string
+
+const (
+	PhonesAvailableRequestPhoneTypeIphone  PhonesAvailableRequestPhoneType = "iphone"
+	PhonesAvailableRequestPhoneTypeAndroid PhonesAvailableRequestPhoneType = "android"
+)
+
+func NewPhonesAvailableRequestPhoneTypeFromString(s string) (PhonesAvailableRequestPhoneType, error) {
+	switch s {
+	case "iphone":
+		return PhonesAvailableRequestPhoneTypeIphone, nil
+	case "android":
+		return PhonesAvailableRequestPhoneTypeAndroid, nil
+	}
+	var t PhonesAvailableRequestPhoneType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhonesAvailableRequestPhoneType) Ptr() *PhonesAvailableRequestPhoneType {
+	return &p
+}
+
+// MediaStore collection to insert into; defaults to Pictures for images and Movies for videos
+type PhonesPushFileRequestCollection string
+
+const (
+	PhonesPushFileRequestCollectionDcim     PhonesPushFileRequestCollection = "DCIM"
+	PhonesPushFileRequestCollectionPictures PhonesPushFileRequestCollection = "Pictures"
+	PhonesPushFileRequestCollectionMovies   PhonesPushFileRequestCollection = "Movies"
+)
+
+func NewPhonesPushFileRequestCollectionFromString(s string) (PhonesPushFileRequestCollection, error) {
+	switch s {
+	case "DCIM":
+		return PhonesPushFileRequestCollectionDcim, nil
+	case "Pictures":
+		return PhonesPushFileRequestCollectionPictures, nil
+	case "Movies":
+		return PhonesPushFileRequestCollectionMovies, nil
+	}
+	var t PhonesPushFileRequestCollection
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhonesPushFileRequestCollection) Ptr() *PhonesPushFileRequestCollection {
 	return &p
 }
 

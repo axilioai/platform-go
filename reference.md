@@ -12,7 +12,7 @@
 <dl>
 <dd>
 
-Lists the API keys for the caller's organization, with optional paging, search, and sort.
+Lists the API keys for the caller's organization, with optional paging (limit + offset). Ordered newest-first.
 </dd>
 </dl>
 </dd>
@@ -486,7 +486,7 @@ client.Billing.GetHistory(
 <dl>
 <dd>
 
-Returns every active and pending phone rental subscription owned by the caller's organization.
+Returns every phone rental subscription owned by the caller's organization, in any lifecycle state (active or canceled) - canceled rentals are included so past rentals stay visible. Each item's status field tells them apart. The summary block (active_count, combined monthly cost) counts only active rentals.
 </dd>
 </dl>
 </dd>
@@ -528,7 +528,7 @@ client.Billing.GetRentalSubscriptions(
 <dl>
 <dd>
 
-Returns the caller organization's current plan.
+Returns the caller organization's active subscription plan. Only an active subscription is returned; if the org has none, this responds 404. (The status field is therefore always 'active' here.)
 </dd>
 </dl>
 </dd>
@@ -548,6 +548,214 @@ client.Billing.GetSubscription(
     )
 }
 ```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+## Files
+<details><summary><code>client.Files.List() -> *platformgo.FileListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns one page of the org's uploaded files, newest first. Files persist until deleted and can be pushed to any phone the org holds.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.FilesListRequest{}
+client.Files.List(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — max items per page
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Files.Create(request) -> *platformgo.FileUploadResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Registers an image or video in the org's file library and returns a presigned S3 URL to upload the bytes to. PUT the raw file to upload_url with the declared Content-Type and Content-Length headers before the URL expires. The file becomes pushable to phones once uploaded; the first push verifies the object. Uploads are capped per file by media type and per org by count and total size.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.FileCreateRequest{
+        Filename: "filename",
+        MimeType: "mime_type",
+        SizeBytes: int64(1000000),
+    }
+client.Files.Create(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**filename:** `string` — Display name for the file (also its name on the phone).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**mimeType:** `string` — MIME type of the upload; must be an allowed image or video type.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sizeBytes:** `int64` — Exact size of the upload in bytes; the presigned URL pins it.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Files.Delete(FileID) -> *platformgo.DeleteFileOutputBody</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Removes a file from the org's library: the stored object and the library entry, including its delivery history. Copies already delivered to phones are not affected (they are wiped when the phone is released).
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.FilesDeleteRequest{
+        FileID: "file_id",
+    }
+client.Files.Delete(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**fileID:** `string` — file identifier to delete
+    
 </dd>
 </dl>
 </dd>
@@ -763,7 +971,7 @@ client.Phones.SupportedApps(
 <dl>
 <dd>
 
-Returns ACTIVE unallocated phones the caller's org can claim, optionally filtered by phone type (iphone/android). Counts by type are included alongside the list.
+Returns the phones the caller can start a session on right now: every active phone in the shared pool, plus the caller org's own dedicated phones that are currently free. Only free + active phones appear here, so a dedicated phone that is busy or offline is intentionally absent - use GET /phones/my to see the org's full dedicated inventory including in-use ones. Optionally filtered by phone_type; counts by type are included alongside the list.
 </dd>
 </dl>
 </dd>
@@ -798,7 +1006,7 @@ client.Phones.Available(
 <dl>
 <dd>
 
-**deviceType:** `*string` — filter by device type (iphone/android)
+**phoneType:** `*platformgo.PhonesAvailableRequestPhoneType` — only return phones of this type
     
 </dd>
 </dl>
@@ -883,7 +1091,7 @@ client.Phones.Deallocate(
 <dl>
 <dd>
 
-Returns private and rented phones owned by the caller's org. include_expired=true keeps rentals past their rental_expires_at in the result so users can see what they used to own.
+Returns the caller org's full dedicated (private/rented) phone inventory - every state, not just the free ones: busy phones in an active session, offline/inactive phones, and phones in maintenance are all included, so this is the endpoint to discover a phone_id you can pin via POST /phones/allocate. Each phone's current_session_id and status reflect its live state. include_expired=true also keeps rentals past their rental_expires_at so users can see what they used to own. Filter by status/phone_type and paginate; the response total is the full match count.
 </dd>
 </dl>
 </dd>
@@ -950,7 +1158,7 @@ client.Phones.Mine(
 <dl>
 <dd>
 
-**status:** `[]string` — filter by phone status (ACTIVE/INACTIVE/MAINTENANCE/SUSPENDED)
+**status:** `[]string` — filter by phone status (active/inactive/maintenance/suspended); case-insensitive
     
 </dd>
 </dl>
@@ -958,7 +1166,7 @@ client.Phones.Mine(
 <dl>
 <dd>
 
-**type_:** `[]string` — filter by phone type (IPHONE/ANDROID)
+**type_:** `[]string` — filter by phone type (iphone/android); case-insensitive
     
 </dd>
 </dl>
@@ -1508,6 +1716,161 @@ client.Phones.Get(
 </dl>
 </details>
 
+<details><summary><code>client.Phones.ListFiles(PhoneID) -> *platformgo.FileDeliveryListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns the phone's file delivery records, newest first: which library files were pushed to it and where each push stands (dispatched / delivered / failed). Org-scoped: another org's phone reads as not found.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesListFilesRequest{
+        PhoneID: "phone_id",
+    }
+client.Phones.ListFiles(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**phoneID:** `string` — phone to list deliveries for
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — max items per page
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Phones.PushFile(PhoneID, FileID) -> *platformgo.FilePushResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Dispatches an uploaded file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Verifies the upload on first push. Returns 202 once the phone acknowledges the download started; watch GET /phones/{phone_id}/files or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesPushFileRequest{
+        PhoneID: "phone_id",
+        FileID: "file_id",
+    }
+client.Phones.PushFile(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**phoneID:** `string` — target phone_id
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**fileID:** `string` — library file to push
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**collection:** `*platformgo.PhonesPushFileRequestCollection` — MediaStore collection to insert into; defaults to Pictures for images and Movies for videos
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Phones.Nickname(PhoneID, request) -> *platformgo.PhoneSummary</code></summary>
 <dl>
 <dd>
@@ -1567,6 +1930,67 @@ client.Phones.Nickname(
 <dd>
 
 **nickname:** `string` — New display name for the device.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Phones.Preview(PhoneID) -> *platformgo.PhonePreviewResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns a short-lived URL for the phone's current screen preview — a rolling JPEG refreshed every few seconds while the phone is paired, available with or without an active session. Poll this endpoint and swap the image; every call mints a fresh URL. Status is "pending" when no preview exists yet. Authorized to the org that owns the phone or currently holds its active session; any other org reads as not found.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesPreviewRequest{
+        PhoneID: "phone_id",
+    }
+client.Phones.Preview(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**phoneID:** `string` — Phone identifier
     
 </dd>
 </dl>
@@ -1652,7 +2076,7 @@ client.Phones.Wipe(
 <dl>
 <dd>
 
-Returns paginated recent runs for the caller's org. Filters: workflow, search text, status, trigger; sort by any of the columns listed in RunSortField.
+Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status, trigger. Sortable fields: status, started_at, completed_at, created_at, workflow_id.
 </dd>
 </dl>
 </dd>
@@ -1667,10 +2091,7 @@ Returns paginated recent runs for the caller's org. Filters: workflow, search te
 <dd>
 
 ```go
-request := &platformgo.RunListRequest{
-        Limit: int64(1000000),
-        Offset: int64(1000000),
-    }
+request := &platformgo.RunListRequest{}
 client.Runs.List(
         context.TODO(),
         request,
@@ -1690,7 +2111,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**limit:** `int64` — Maximum number of runs to return per page.
+**limit:** `*int64` — Maximum number of runs to return per page.
     
 </dd>
 </dl>
@@ -1698,7 +2119,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**offset:** `int64` — Pagination offset.
+**offset:** `*int64` — Pagination offset.
     
 </dd>
 </dl>
@@ -1917,7 +2338,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**search:** `*string` — Filters by run ID, workflow ID, or device ID.
+**search:** `*string` — Filters by run ID or workflow ID substring.
     
 </dd>
 </dl>
@@ -1933,7 +2354,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**statusFilter:** `[]string` — StatusFilter restricts results to runs in the given statuses.
+**statusFilter:** `[]*platformgo.RunHistoryRequestStatusFilterItem` — Restricts results to runs in the given statuses (case-insensitive).
     
 </dd>
 </dl>
@@ -2087,7 +2508,7 @@ client.Runs.Get(
 <dl>
 <dd>
 
-Transitions a run to CANCELLED, scoped to the caller's org.
+Cancels a run that is still queued or running, scoped to the caller's org. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found.
 </dd>
 </dl>
 </dd>
@@ -2165,7 +2586,6 @@ Creates one or more runs against the given workflow and queues them for executio
 ```go
 request := &platformgo.RunCreateRequest{
         WorkflowID: "workflow_id",
-        Count: int64(1000000),
     }
 client.Runs.Create(
         context.TODO(),
@@ -2194,15 +2614,7 @@ client.Runs.Create(
 <dl>
 <dd>
 
-**count:** `int64` — Number of runs to create.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**runs:** `[]*platformgo.RunConfig` — Per-run variable configurations.
+**runs:** `[]*platformgo.RunConfig` — Per-run variable configurations. One run is created per entry.
     
 </dd>
 </dl>
@@ -2235,7 +2647,7 @@ client.Runs.Create(
 <dl>
 <dd>
 
-Paginated, filterable list of inference calls (/infer + /locate) the caller's user was billed for. Filters: date range, endpoint, free-text search. Ordered by call time DESC.
+Paginated, filterable list of inference calls (detect + locate) the caller's user was billed for. Filters: date range, endpoint, free-text search. Ordered by call time DESC.
 </dd>
 </dl>
 </dd>
@@ -2365,7 +2777,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-Returns infrastructure cost and compute-minute summaries for the caller's user over a date range, plus per-bucket chart data. Granularity is hourly (≤24h window) or daily. Use POST /usage/metrics if you need richer body params; this endpoint takes query params only.
+Returns infrastructure cost and compute-minute summaries for the caller's user over a date range, plus per-bucket chart data. Granularity is hourly (≤24h window) or daily. Pass the window and granularity as query params.
 </dd>
 </dl>
 </dd>
@@ -2507,7 +2919,7 @@ client.Workflows.List(
 <dl>
 <dd>
 
-**search:** `*string` — free-text search across workflow name
+**search:** `*string` — free-text search across workflow name or ID substring
     
 </dd>
 </dl>
@@ -2632,7 +3044,7 @@ client.Workflows.Create(
 <dl>
 <dd>
 
-**ocrEngine:** `*string` — OCR backend to use.
+**ocrEngine:** `*platformgo.WorkflowCreateRequestOcrEngine` — OCR backend to use.
     
 </dd>
 </dl>
@@ -2640,7 +3052,7 @@ client.Workflows.Create(
 <dl>
 <dd>
 
-**platform:** `*string` — Target OS platform.
+**platform:** `*platformgo.WorkflowCreateRequestPlatform` — Target OS platform.
     
 </dd>
 </dl>
@@ -2778,7 +3190,7 @@ client.Workflows.Update(
 <dl>
 <dd>
 
-**ocrEngine:** `*string` — Updated OCR backend selection.
+**ocrEngine:** `*platformgo.WorkflowUpdateRequestOcrEngine` — Updated OCR backend selection.
     
 </dd>
 </dl>
@@ -2786,7 +3198,7 @@ client.Workflows.Update(
 <dl>
 <dd>
 
-**platform:** `*string` — Updated target platform.
+**platform:** `*platformgo.WorkflowUpdateRequestPlatform` — Updated target platform.
     
 </dd>
 </dl>
@@ -2794,7 +3206,7 @@ client.Workflows.Update(
 <dl>
 <dd>
 
-**status:** `*string` — Updated lifecycle status.
+**status:** `*platformgo.WorkflowUpdateRequestStatus` — Updated lifecycle status.
     
 </dd>
 </dl>

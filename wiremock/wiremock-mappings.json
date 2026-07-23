@@ -213,7 +213,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/BillingHistoryResponse.json\",\n  \"items\": [\n    {\n      \"amount_cents\": 1000000,\n      \"amount_dollars\": 1.1,\n      \"billing_cycle\": \"billing_cycle\",\n      \"currency\": \"currency\",\n      \"description\": \"description\",\n      \"due_date\": \"2024-01-15T09:30:00Z\",\n      \"formatted_amount\": \"formatted_amount\",\n      \"hosted_invoice_url\": \"hosted_invoice_url\",\n      \"id\": \"id\",\n      \"invoice_date\": \"2024-01-15T09:30:00Z\",\n      \"invoice_number\": \"invoice_number\",\n      \"invoice_pdf_url\": \"invoice_pdf_url\",\n      \"paid_at\": \"2024-01-15T09:30:00Z\",\n      \"plan_name\": \"plan_name\",\n      \"status\": \"status\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/BillingHistoryResponse.json\",\n  \"items\": [\n    {\n      \"amount_cents\": 1000000,\n      \"amount_dollars\": 1.1,\n      \"billing_cycle\": \"billing_cycle\",\n      \"currency\": \"currency\",\n      \"description\": \"description\",\n      \"due_date\": \"2024-01-15T09:30:00Z\",\n      \"formatted_amount\": \"formatted_amount\",\n      \"hosted_invoice_url\": \"hosted_invoice_url\",\n      \"id\": \"id\",\n      \"invoice_date\": \"2024-01-15T09:30:00Z\",\n      \"invoice_number\": \"invoice_number\",\n      \"invoice_pdf_url\": \"invoice_pdf_url\",\n      \"paid_at\": \"2024-01-15T09:30:00Z\",\n      \"plan_name\": \"plan_name\",\n      \"status\": \"paid\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -245,7 +245,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneRentalSubscriptionListResponse.json\",\n  \"subscriptions\": [\n    {\n      \"cancel_at_period_end\": true,\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"current_period_end\": \"2024-01-15T09:30:00Z\",\n      \"current_period_start\": \"2024-01-15T09:30:00Z\",\n      \"id\": \"id\",\n      \"organization_id\": \"organization_id\",\n      \"payment_status\": \"payment_status\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_nickname\": \"phone_nickname\",\n      \"plan_id\": \"plan_id\",\n      \"plan_interval\": \"plan_interval\",\n      \"plan_name\": \"plan_name\",\n      \"plan_price_cents\": 1000000,\n      \"status\": \"status\"\n    }\n  ],\n  \"summary\": {\n    \"active_count\": 1000000,\n    \"combined_monthly_cents\": 1000000,\n    \"per_interval\": [\n      {\n        \"count\": 1000000,\n        \"interval\": \"interval\",\n        \"monthly_cents\": 1000000\n      }\n    ],\n    \"upcoming_charges\": [\n      {\n        \"amount_cents\": 1000000,\n        \"count\": 1000000,\n        \"date\": \"2024-01-15T09:30:00Z\"\n      }\n    ]\n  },\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneRentalSubscriptionListResponse.json\",\n  \"subscriptions\": [\n    {\n      \"cancel_at_period_end\": true,\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"current_period_end\": \"2024-01-15T09:30:00Z\",\n      \"current_period_start\": \"2024-01-15T09:30:00Z\",\n      \"id\": \"id\",\n      \"organization_id\": \"organization_id\",\n      \"payment_status\": \"healthy\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_nickname\": \"phone_nickname\",\n      \"plan_id\": \"plan_id\",\n      \"plan_interval\": \"plan_interval\",\n      \"plan_name\": \"plan_name\",\n      \"plan_price_cents\": 1000000,\n      \"status\": \"active\"\n    }\n  ],\n  \"summary\": {\n    \"active_count\": 1000000,\n    \"combined_monthly_cents\": 1000000,\n    \"per_interval\": [\n      {\n        \"count\": 1000000,\n        \"interval\": \"interval\",\n        \"monthly_cents\": 1000000\n      }\n    ],\n    \"upcoming_charges\": [\n      {\n        \"amount_cents\": 1000000,\n        \"count\": 1000000,\n        \"date\": \"2024-01-15T09:30:00Z\"\n      }\n    ]\n  },\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -294,6 +294,105 @@
         }
       },
       "postServeActions": []
+    },
+    {
+      "id": "ba03bd15-86bf-4e02-b584-7e0a6956c3e9",
+      "name": "List the org's file library - default",
+      "request": {
+        "urlPathTemplate": "/files",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"filename\": \"filename\",\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"size_bytes\": 1000000,\n      \"status\": \"uploading\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "ba03bd15-86bf-4e02-b584-7e0a6956c3e9",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "d2b45954-4c48-49c0-9dac-552ae4cd96d4",
+      "name": "Register a file upload - default",
+      "request": {
+        "urlPathTemplate": "/files",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": "{\n  \"$schema\": \"/api/v1/FileUploadResponse.json\",\n  \"file\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\"\n  },\n  \"upload_expires_in_seconds\": 1000000,\n  \"upload_url\": \"upload_url\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "d2b45954-4c48-49c0-9dac-552ae4cd96d4",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "8d8e341c-ff0e-4f0d-938d-13274a4c3bac",
+      "name": "Delete a file - default",
+      "request": {
+        "urlPathTemplate": "/files/{file_id}",
+        "method": "DELETE",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "file_id": {
+            "equalTo": "file_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "8d8e341c-ff0e-4f0d-938d-13274a4c3bac",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
     },
     {
       "id": "c09e1221-3090-4fba-88c6-d5c1e167cbdd",
@@ -359,8 +458,8 @@
       "postServeActions": []
     },
     {
-      "id": "aa8ea857-f614-4c91-8f52-dc696ee7d1ff",
-      "name": "List available phones - default",
+      "id": "ffc43c5c-3ffe-4d72-b0d3-6116a6ca8908",
+      "name": "List phones ready to start a session - default",
       "request": {
         "urlPathTemplate": "/phones/available",
         "method": "GET",
@@ -377,7 +476,7 @@
           "Content-Type": "application/json"
         }
       },
-      "uuid": "aa8ea857-f614-4c91-8f52-dc696ee7d1ff",
+      "uuid": "ffc43c5c-3ffe-4d72-b0d3-6116a6ca8908",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -427,8 +526,8 @@
       }
     },
     {
-      "id": "e3b3c716-8c03-4b7b-bfc7-7c9c40bfb0e4",
-      "name": "List your phones - default",
+      "id": "89bed7f1-e568-4861-9b9d-cd6ab1f0fcaa",
+      "name": "List the org's dedicated phones - default",
       "request": {
         "urlPathTemplate": "/phones/my",
         "method": "GET",
@@ -445,7 +544,7 @@
           "Content-Type": "application/json"
         }
       },
-      "uuid": "e3b3c716-8c03-4b7b-bfc7-7c9c40bfb0e4",
+      "uuid": "89bed7f1-e568-4861-9b9d-cd6ab1f0fcaa",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -667,6 +766,81 @@
       }
     },
     {
+      "id": "35c7d6fc-cc7d-4b33-b606-4e05831a930e",
+      "name": "List files pushed to a phone - default",
+      "request": {
+        "urlPathTemplate": "/phones/{phone_id}/files",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "phone_id": {
+            "equalTo": "phone_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/FileDeliveryListResponse.json\",\n  \"deliveries\": [\n    {\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error\": \"error\",\n      \"file_id\": \"file_id\",\n      \"filename\": \"filename\",\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"phone_id\": \"phone_id\",\n      \"size_bytes\": 1000000,\n      \"status\": \"dispatched\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "35c7d6fc-cc7d-4b33-b606-4e05831a930e",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "6fbd6bd0-284a-47db-892f-f3ba998854be",
+      "name": "Push a library file to a phone - default",
+      "request": {
+        "urlPathTemplate": "/phones/{phone_id}/files/{file_id}/push",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "phone_id": {
+            "equalTo": "phone_id"
+          },
+          "file_id": {
+            "equalTo": "file_id"
+          }
+        }
+      },
+      "response": {
+        "status": 202,
+        "body": "{\n  \"$schema\": \"/api/v1/FilePushResponse.json\",\n  \"delivery\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"error\": \"error\",\n    \"file_id\": \"file_id\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"phone_id\": \"phone_id\",\n    \"size_bytes\": 1000000,\n    \"status\": \"dispatched\"\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "6fbd6bd0-284a-47db-892f-f3ba998854be",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
       "id": "cabacafb-0e5b-4627-99e2-211e1bcf561a",
       "name": "Rename a phone - default",
       "request": {
@@ -691,6 +865,42 @@
         }
       },
       "uuid": "cabacafb-0e5b-4627-99e2-211e1bcf561a",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "a8c72fec-9a40-4f12-a97e-934b76545335",
+      "name": "Get a phone's live screen preview - default",
+      "request": {
+        "urlPathTemplate": "/phones/{phone_id}/preview",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "phone_id": {
+            "equalTo": "phone_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhonePreviewResponse.json\",\n  \"status\": \"ready\",\n  \"url\": \"url\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "a8c72fec-9a40-4f12-a97e-934b76545335",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -783,7 +993,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunEventsResponse.json\",\n  \"events\": [\n    {\n      \"body\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"timestamp\": \"2024-01-15T09:30:00Z\",\n      \"type\": \"type\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"retention_expired\": true,\n  \"sdk_call_costs\": {\n    \"key\": 1000000\n  },\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunEventsResponse.json\",\n  \"events\": [\n    {\n      \"body\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"timestamp\": \"2024-01-15T09:30:00Z\",\n      \"type\": \"type\"\n    }\n  ],\n  \"inference_costs\": {\n    \"key\": 1000000\n  },\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"retention_expired\": true,\n  \"sdk_call_costs\": {\n    \"key\": 1000000\n  },\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1402,6 +1612,6 @@
     }
   ],
   "meta": {
-    "total": 41
+    "total": 47
   }
 }

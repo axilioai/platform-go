@@ -38,17 +38,14 @@ func (r *RunsCancelRequest) SetRunID(runID string) {
 
 var (
 	runCreateRequestFieldWorkflowID          = big.NewInt(1 << 0)
-	runCreateRequestFieldCount               = big.NewInt(1 << 1)
-	runCreateRequestFieldRuns                = big.NewInt(1 << 2)
-	runCreateRequestFieldStartTimeoutSeconds = big.NewInt(1 << 3)
+	runCreateRequestFieldRuns                = big.NewInt(1 << 1)
+	runCreateRequestFieldStartTimeoutSeconds = big.NewInt(1 << 2)
 )
 
 type RunCreateRequest struct {
 	// workflow to create runs for
 	WorkflowID string `json:"-" url:"-"`
-	// Number of runs to create.
-	Count int64 `json:"count" url:"-"`
-	// Per-run variable configurations.
+	// Per-run variable configurations. One run is created per entry.
 	Runs []*RunConfig `json:"runs,omitempty" url:"-"`
 	// How long a queued run may wait for a phone before it is auto-cancelled.
 	StartTimeoutSeconds *int64 `json:"start_timeout_seconds,omitempty" url:"-"`
@@ -69,13 +66,6 @@ func (r *RunCreateRequest) require(field *big.Int) {
 func (r *RunCreateRequest) SetWorkflowID(workflowID string) {
 	r.WorkflowID = workflowID
 	r.require(runCreateRequestFieldWorkflowID)
-}
-
-// SetCount sets the Count field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunCreateRequest) SetCount(count int64) {
-	r.Count = count
-	r.require(runCreateRequestFieldCount)
 }
 
 // SetRuns sets the Runs field and marks it as non-optional;
@@ -151,9 +141,9 @@ var (
 
 type RunListRequest struct {
 	// Maximum number of runs to return per page.
-	Limit int64 `json:"limit" url:"-"`
+	Limit *int64 `json:"limit,omitempty" url:"-"`
 	// Pagination offset.
-	Offset int64 `json:"offset" url:"-"`
+	Offset *int64 `json:"offset,omitempty" url:"-"`
 	// Filters by run ID substring.
 	Search *string `json:"search,omitempty" url:"-"`
 	// Ordered list of sort specs; first entry is primary.
@@ -178,14 +168,14 @@ func (r *RunListRequest) require(field *big.Int) {
 
 // SetLimit sets the Limit field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunListRequest) SetLimit(limit int64) {
+func (r *RunListRequest) SetLimit(limit *int64) {
 	r.Limit = limit
 	r.require(runListRequestFieldLimit)
 }
 
 // SetOffset sets the Offset field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunListRequest) SetOffset(offset int64) {
+func (r *RunListRequest) SetOffset(offset *int64) {
 	r.Offset = offset
 	r.require(runListRequestFieldOffset)
 }
@@ -340,12 +330,12 @@ type RunHistoryRequest struct {
 	Limit int64 `json:"limit" url:"-"`
 	// Pagination offset.
 	Offset int64 `json:"offset" url:"-"`
-	// Filters by run ID, workflow ID, or device ID.
+	// Filters by run ID or workflow ID substring.
 	Search *string `json:"search,omitempty" url:"-"`
 	// Beginning of the query time window.
 	StartDate time.Time `json:"start_date" url:"-"`
-	// StatusFilter restricts results to runs in the given statuses.
-	StatusFilter []string `json:"status_filter,omitempty" url:"-"`
+	// Restricts results to runs in the given statuses (case-insensitive).
+	StatusFilter []RunHistoryRequestStatusFilterItem `json:"status_filter,omitempty" url:"-"`
 	// Filters results to a single workflow.
 	WorkflowID *string `json:"workflow_id,omitempty" url:"-"`
 
@@ -397,7 +387,7 @@ func (r *RunHistoryRequest) SetStartDate(startDate time.Time) {
 
 // SetStatusFilter sets the StatusFilter field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunHistoryRequest) SetStatusFilter(statusFilter []string) {
+func (r *RunHistoryRequest) SetStatusFilter(statusFilter []RunHistoryRequestStatusFilterItem) {
 	r.StatusFilter = statusFilter
 	r.require(runHistoryRequestFieldStatusFilter)
 }
@@ -815,11 +805,12 @@ func (r *RunEventSummary) String() string {
 var (
 	runEventsResponseFieldSchema           = big.NewInt(1 << 0)
 	runEventsResponseFieldEvents           = big.NewInt(1 << 1)
-	runEventsResponseFieldLimit            = big.NewInt(1 << 2)
-	runEventsResponseFieldOffset           = big.NewInt(1 << 3)
-	runEventsResponseFieldRetentionExpired = big.NewInt(1 << 4)
-	runEventsResponseFieldSdkCallCosts     = big.NewInt(1 << 5)
-	runEventsResponseFieldTotal            = big.NewInt(1 << 6)
+	runEventsResponseFieldInferenceCosts   = big.NewInt(1 << 2)
+	runEventsResponseFieldLimit            = big.NewInt(1 << 3)
+	runEventsResponseFieldOffset           = big.NewInt(1 << 4)
+	runEventsResponseFieldRetentionExpired = big.NewInt(1 << 5)
+	runEventsResponseFieldSdkCallCosts     = big.NewInt(1 << 6)
+	runEventsResponseFieldTotal            = big.NewInt(1 << 7)
 )
 
 type RunEventsResponse struct {
@@ -827,6 +818,8 @@ type RunEventsResponse struct {
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	// Page of run event records.
 	Events []*RunEventSummary `json:"events,omitempty" url:"events,omitempty"`
+	// Billed microdollars per inference_id.
+	InferenceCosts map[string]int64 `json:"inference_costs" url:"inference_costs"`
 	// Page size used for this response.
 	Limit int64 `json:"limit" url:"limit"`
 	// Pagination offset used for this response.
@@ -857,6 +850,13 @@ func (r *RunEventsResponse) GetEvents() []*RunEventSummary {
 		return nil
 	}
 	return r.Events
+}
+
+func (r *RunEventsResponse) GetInferenceCosts() map[string]int64 {
+	if r == nil {
+		return nil
+	}
+	return r.InferenceCosts
 }
 
 func (r *RunEventsResponse) GetLimit() int64 {
@@ -920,6 +920,13 @@ func (r *RunEventsResponse) SetSchema(schema *string) {
 func (r *RunEventsResponse) SetEvents(events []*RunEventSummary) {
 	r.Events = events
 	r.require(runEventsResponseFieldEvents)
+}
+
+// SetInferenceCosts sets the InferenceCosts field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunEventsResponse) SetInferenceCosts(inferenceCosts map[string]int64) {
+	r.InferenceCosts = inferenceCosts
+	r.require(runEventsResponseFieldInferenceCosts)
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -2334,7 +2341,7 @@ var (
 type RunStatsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// Percentage of runs that completed successfully.
+	// Fraction of completed+failed runs that succeeded, from 0.0 to 1.0 (multiply by 100 for a percentage). Note: total_runs counts all states, so it is a larger population than this rate's denominator.
 	SuccessRate float64 `json:"success_rate" url:"success_rate"`
 	// Total number of runs.
 	TotalRuns int64 `json:"total_runs" url:"total_runs"`
@@ -2545,6 +2552,37 @@ func (r *RunSuccessResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", r)
+}
+
+type RunHistoryRequestStatusFilterItem string
+
+const (
+	RunHistoryRequestStatusFilterItemQueued    RunHistoryRequestStatusFilterItem = "queued"
+	RunHistoryRequestStatusFilterItemRunning   RunHistoryRequestStatusFilterItem = "running"
+	RunHistoryRequestStatusFilterItemCompleted RunHistoryRequestStatusFilterItem = "completed"
+	RunHistoryRequestStatusFilterItemFailed    RunHistoryRequestStatusFilterItem = "failed"
+	RunHistoryRequestStatusFilterItemCancelled RunHistoryRequestStatusFilterItem = "cancelled"
+)
+
+func NewRunHistoryRequestStatusFilterItemFromString(s string) (RunHistoryRequestStatusFilterItem, error) {
+	switch s {
+	case "queued":
+		return RunHistoryRequestStatusFilterItemQueued, nil
+	case "running":
+		return RunHistoryRequestStatusFilterItemRunning, nil
+	case "completed":
+		return RunHistoryRequestStatusFilterItemCompleted, nil
+	case "failed":
+		return RunHistoryRequestStatusFilterItemFailed, nil
+	case "cancelled":
+		return RunHistoryRequestStatusFilterItemCancelled, nil
+	}
+	var t RunHistoryRequestStatusFilterItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunHistoryRequestStatusFilterItem) Ptr() *RunHistoryRequestStatusFilterItem {
+	return &r
 }
 
 type RunListRequestStatusFilterItem string
