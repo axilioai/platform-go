@@ -34,7 +34,7 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Paginated, filterable list of inference calls (/infer + /locate) the caller's user was billed for. Filters: date range, endpoint, free-text search. Ordered by call time DESC.
+// Paginated, filterable list of inference calls (detect + locate) the caller's user was billed for. Filters: date range, endpoint, free-text search. Ordered by call time DESC.
 func (c *Client) ListInferences(
 	ctx context.Context,
 	request *platformgo.UsageInferencesRequest,
@@ -51,7 +51,7 @@ func (c *Client) ListInferences(
 	return response.Body, nil
 }
 
-// Returns infrastructure cost and compute-minute summaries for the caller's user over a date range, plus per-bucket chart data. Granularity is hourly (≤24h window) or daily. Use POST /usage/metrics if you need richer body params; this endpoint takes query params only.
+// Returns infrastructure cost and compute-minute summaries for the caller's user over a date range, plus per-bucket chart data. Granularity is hourly (≤24h window) or daily. Pass the window and granularity as query params.
 func (c *Client) GetMetrics(
 	ctx context.Context,
 	request *platformgo.UsageGetMetricsRequest,

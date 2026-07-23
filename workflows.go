@@ -23,9 +23,9 @@ type WorkflowCreateRequest struct {
 	// Human-readable workflow name.
 	Name string `json:"name" url:"-"`
 	// OCR backend to use.
-	OcrEngine *string `json:"ocr_engine,omitempty" url:"-"`
+	OcrEngine *WorkflowCreateRequestOcrEngine `json:"ocr_engine,omitempty" url:"-"`
 	// Target OS platform.
-	Platform *string `json:"platform,omitempty" url:"-"`
+	Platform *WorkflowCreateRequestPlatform `json:"platform,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -54,14 +54,14 @@ func (w *WorkflowCreateRequest) SetName(name string) {
 
 // SetOcrEngine sets the OcrEngine field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowCreateRequest) SetOcrEngine(ocrEngine *string) {
+func (w *WorkflowCreateRequest) SetOcrEngine(ocrEngine *WorkflowCreateRequestOcrEngine) {
 	w.OcrEngine = ocrEngine
 	w.require(workflowCreateRequestFieldOcrEngine)
 }
 
 // SetPlatform sets the Platform field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowCreateRequest) SetPlatform(platform *string) {
+func (w *WorkflowCreateRequest) SetPlatform(platform *WorkflowCreateRequestPlatform) {
 	w.Platform = platform
 	w.require(workflowCreateRequestFieldPlatform)
 }
@@ -216,7 +216,7 @@ var (
 type WorkflowsListRequest struct {
 	Limit  *int64 `json:"-" url:"limit,omitempty"`
 	Offset *int64 `json:"-" url:"offset,omitempty"`
-	// free-text search across workflow name
+	// free-text search across workflow name or ID substring
 	Search *string `json:"-" url:"search,omitempty"`
 	// filter by workflow status (lowercase)
 	Status []string `json:"-" url:"status,omitempty"`
@@ -1823,7 +1823,7 @@ var (
 )
 
 type WorkflowStats struct {
-	// Percentage of runs that completed successfully.
+	// Fraction of runs that completed successfully, from 0.0 to 1.0 (multiply by 100 for a percentage).
 	SuccessRate float64 `json:"success_rate" url:"success_rate"`
 	// Total number of runs for this workflow.
 	TotalRuns int64 `json:"total_runs" url:"total_runs"`
@@ -2249,6 +2249,130 @@ func (w WorkflowSummaryStatus) Ptr() *WorkflowSummaryStatus {
 	return &w
 }
 
+// OCR backend to use.
+type WorkflowCreateRequestOcrEngine string
+
+const (
+	WorkflowCreateRequestOcrEngineFree    WorkflowCreateRequestOcrEngine = "free"
+	WorkflowCreateRequestOcrEnginePremium WorkflowCreateRequestOcrEngine = "premium"
+)
+
+func NewWorkflowCreateRequestOcrEngineFromString(s string) (WorkflowCreateRequestOcrEngine, error) {
+	switch s {
+	case "free":
+		return WorkflowCreateRequestOcrEngineFree, nil
+	case "premium":
+		return WorkflowCreateRequestOcrEnginePremium, nil
+	}
+	var t WorkflowCreateRequestOcrEngine
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WorkflowCreateRequestOcrEngine) Ptr() *WorkflowCreateRequestOcrEngine {
+	return &w
+}
+
+// Target OS platform.
+type WorkflowCreateRequestPlatform string
+
+const (
+	WorkflowCreateRequestPlatformIos     WorkflowCreateRequestPlatform = "ios"
+	WorkflowCreateRequestPlatformAndroid WorkflowCreateRequestPlatform = "android"
+	WorkflowCreateRequestPlatformBoth    WorkflowCreateRequestPlatform = "both"
+)
+
+func NewWorkflowCreateRequestPlatformFromString(s string) (WorkflowCreateRequestPlatform, error) {
+	switch s {
+	case "ios":
+		return WorkflowCreateRequestPlatformIos, nil
+	case "android":
+		return WorkflowCreateRequestPlatformAndroid, nil
+	case "both":
+		return WorkflowCreateRequestPlatformBoth, nil
+	}
+	var t WorkflowCreateRequestPlatform
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WorkflowCreateRequestPlatform) Ptr() *WorkflowCreateRequestPlatform {
+	return &w
+}
+
+// Updated OCR backend selection.
+type WorkflowUpdateRequestOcrEngine string
+
+const (
+	WorkflowUpdateRequestOcrEngineFree    WorkflowUpdateRequestOcrEngine = "free"
+	WorkflowUpdateRequestOcrEnginePremium WorkflowUpdateRequestOcrEngine = "premium"
+)
+
+func NewWorkflowUpdateRequestOcrEngineFromString(s string) (WorkflowUpdateRequestOcrEngine, error) {
+	switch s {
+	case "free":
+		return WorkflowUpdateRequestOcrEngineFree, nil
+	case "premium":
+		return WorkflowUpdateRequestOcrEnginePremium, nil
+	}
+	var t WorkflowUpdateRequestOcrEngine
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WorkflowUpdateRequestOcrEngine) Ptr() *WorkflowUpdateRequestOcrEngine {
+	return &w
+}
+
+// Updated target platform.
+type WorkflowUpdateRequestPlatform string
+
+const (
+	WorkflowUpdateRequestPlatformIos     WorkflowUpdateRequestPlatform = "ios"
+	WorkflowUpdateRequestPlatformAndroid WorkflowUpdateRequestPlatform = "android"
+	WorkflowUpdateRequestPlatformBoth    WorkflowUpdateRequestPlatform = "both"
+)
+
+func NewWorkflowUpdateRequestPlatformFromString(s string) (WorkflowUpdateRequestPlatform, error) {
+	switch s {
+	case "ios":
+		return WorkflowUpdateRequestPlatformIos, nil
+	case "android":
+		return WorkflowUpdateRequestPlatformAndroid, nil
+	case "both":
+		return WorkflowUpdateRequestPlatformBoth, nil
+	}
+	var t WorkflowUpdateRequestPlatform
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WorkflowUpdateRequestPlatform) Ptr() *WorkflowUpdateRequestPlatform {
+	return &w
+}
+
+// Updated lifecycle status.
+type WorkflowUpdateRequestStatus string
+
+const (
+	WorkflowUpdateRequestStatusReady    WorkflowUpdateRequestStatus = "ready"
+	WorkflowUpdateRequestStatusTraining WorkflowUpdateRequestStatus = "training"
+	WorkflowUpdateRequestStatusRunning  WorkflowUpdateRequestStatus = "running"
+)
+
+func NewWorkflowUpdateRequestStatusFromString(s string) (WorkflowUpdateRequestStatus, error) {
+	switch s {
+	case "ready":
+		return WorkflowUpdateRequestStatusReady, nil
+	case "training":
+		return WorkflowUpdateRequestStatusTraining, nil
+	case "running":
+		return WorkflowUpdateRequestStatusRunning, nil
+	}
+	var t WorkflowUpdateRequestStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WorkflowUpdateRequestStatus) Ptr() *WorkflowUpdateRequestStatus {
+	return &w
+}
+
 var (
 	workflowUpdateRequestFieldWorkflowID = big.NewInt(1 << 0)
 	workflowUpdateRequestFieldName       = big.NewInt(1 << 1)
@@ -2263,11 +2387,11 @@ type WorkflowUpdateRequest struct {
 	// Updated workflow name.
 	Name *string `json:"name,omitempty" url:"-"`
 	// Updated OCR backend selection.
-	OcrEngine *string `json:"ocr_engine,omitempty" url:"-"`
+	OcrEngine *WorkflowUpdateRequestOcrEngine `json:"ocr_engine,omitempty" url:"-"`
 	// Updated target platform.
-	Platform *string `json:"platform,omitempty" url:"-"`
+	Platform *WorkflowUpdateRequestPlatform `json:"platform,omitempty" url:"-"`
 	// Updated lifecycle status.
-	Status *string `json:"status,omitempty" url:"-"`
+	Status *WorkflowUpdateRequestStatus `json:"status,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -2296,21 +2420,21 @@ func (w *WorkflowUpdateRequest) SetName(name *string) {
 
 // SetOcrEngine sets the OcrEngine field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowUpdateRequest) SetOcrEngine(ocrEngine *string) {
+func (w *WorkflowUpdateRequest) SetOcrEngine(ocrEngine *WorkflowUpdateRequestOcrEngine) {
 	w.OcrEngine = ocrEngine
 	w.require(workflowUpdateRequestFieldOcrEngine)
 }
 
 // SetPlatform sets the Platform field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowUpdateRequest) SetPlatform(platform *string) {
+func (w *WorkflowUpdateRequest) SetPlatform(platform *WorkflowUpdateRequestPlatform) {
 	w.Platform = platform
 	w.require(workflowUpdateRequestFieldPlatform)
 }
 
 // SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowUpdateRequest) SetStatus(status *string) {
+func (w *WorkflowUpdateRequest) SetStatus(status *WorkflowUpdateRequestStatus) {
 	w.Status = status
 	w.require(workflowUpdateRequestFieldStatus)
 }

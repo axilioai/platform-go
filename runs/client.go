@@ -34,7 +34,7 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Returns paginated recent runs for the caller's org. Filters: workflow, search text, status, trigger; sort by any of the columns listed in RunSortField.
+// Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status, trigger. Sortable fields: status, started_at, completed_at, created_at, workflow_id.
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.RunListRequest,
@@ -119,7 +119,7 @@ func (c *Client) Get(
 	return response.Body, nil
 }
 
-// Transitions a run to CANCELLED, scoped to the caller's org.
+// Cancels a run that is still queued or running, scoped to the caller's org. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found.
 func (c *Client) Cancel(
 	ctx context.Context,
 	request *platformgo.RunsCancelRequest,

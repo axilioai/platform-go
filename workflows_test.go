@@ -29,7 +29,7 @@ func TestSettersWorkflowCreateRequest(t *testing.T) {
 
 	t.Run("SetOcrEngine", func(t *testing.T) {
 		obj := &WorkflowCreateRequest{}
-		var fernTestValueOcrEngine *string
+		var fernTestValueOcrEngine *WorkflowCreateRequestOcrEngine
 		obj.SetOcrEngine(fernTestValueOcrEngine)
 		assert.Equal(t, fernTestValueOcrEngine, obj.OcrEngine)
 		assert.NotNil(t, obj.explicitFields)
@@ -37,7 +37,7 @@ func TestSettersWorkflowCreateRequest(t *testing.T) {
 
 	t.Run("SetPlatform", func(t *testing.T) {
 		obj := &WorkflowCreateRequest{}
-		var fernTestValuePlatform *string
+		var fernTestValuePlatform *WorkflowCreateRequestPlatform
 		obj.SetPlatform(fernTestValuePlatform)
 		assert.Equal(t, fernTestValuePlatform, obj.Platform)
 		assert.NotNil(t, obj.explicitFields)
@@ -112,7 +112,7 @@ func TestSettersMarkExplicitWorkflowCreateRequest(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &WorkflowCreateRequest{}
-		var fernTestValueOcrEngine *string
+		var fernTestValueOcrEngine *WorkflowCreateRequestOcrEngine
 
 		// Act
 		obj.SetOcrEngine(fernTestValueOcrEngine)
@@ -143,7 +143,7 @@ func TestSettersMarkExplicitWorkflowCreateRequest(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &WorkflowCreateRequest{}
-		var fernTestValuePlatform *string
+		var fernTestValuePlatform *WorkflowCreateRequestPlatform
 
 		// Act
 		obj.SetPlatform(fernTestValuePlatform)
@@ -4672,7 +4672,7 @@ func TestSettersWorkflowUpdateRequest(t *testing.T) {
 
 	t.Run("SetOcrEngine", func(t *testing.T) {
 		obj := &WorkflowUpdateRequest{}
-		var fernTestValueOcrEngine *string
+		var fernTestValueOcrEngine *WorkflowUpdateRequestOcrEngine
 		obj.SetOcrEngine(fernTestValueOcrEngine)
 		assert.Equal(t, fernTestValueOcrEngine, obj.OcrEngine)
 		assert.NotNil(t, obj.explicitFields)
@@ -4680,7 +4680,7 @@ func TestSettersWorkflowUpdateRequest(t *testing.T) {
 
 	t.Run("SetPlatform", func(t *testing.T) {
 		obj := &WorkflowUpdateRequest{}
-		var fernTestValuePlatform *string
+		var fernTestValuePlatform *WorkflowUpdateRequestPlatform
 		obj.SetPlatform(fernTestValuePlatform)
 		assert.Equal(t, fernTestValuePlatform, obj.Platform)
 		assert.NotNil(t, obj.explicitFields)
@@ -4688,7 +4688,7 @@ func TestSettersWorkflowUpdateRequest(t *testing.T) {
 
 	t.Run("SetStatus", func(t *testing.T) {
 		obj := &WorkflowUpdateRequest{}
-		var fernTestValueStatus *string
+		var fernTestValueStatus *WorkflowUpdateRequestStatus
 		obj.SetStatus(fernTestValueStatus)
 		assert.Equal(t, fernTestValueStatus, obj.Status)
 		assert.NotNil(t, obj.explicitFields)
@@ -4763,7 +4763,7 @@ func TestSettersMarkExplicitWorkflowUpdateRequest(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &WorkflowUpdateRequest{}
-		var fernTestValueOcrEngine *string
+		var fernTestValueOcrEngine *WorkflowUpdateRequestOcrEngine
 
 		// Act
 		obj.SetOcrEngine(fernTestValueOcrEngine)
@@ -4794,7 +4794,7 @@ func TestSettersMarkExplicitWorkflowUpdateRequest(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &WorkflowUpdateRequest{}
-		var fernTestValuePlatform *string
+		var fernTestValuePlatform *WorkflowUpdateRequestPlatform
 
 		// Act
 		obj.SetPlatform(fernTestValuePlatform)
@@ -4825,7 +4825,7 @@ func TestSettersMarkExplicitWorkflowUpdateRequest(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &WorkflowUpdateRequest{}
-		var fernTestValueStatus *string
+		var fernTestValueStatus *WorkflowUpdateRequestStatus
 
 		// Act
 		obj.SetStatus(fernTestValueStatus)
@@ -5393,6 +5393,71 @@ func TestStringWorkflowSummary(t *testing.T) {
 	})
 }
 
+func TestEnumWorkflowCreateRequestOcrEngine(t *testing.T) {
+	t.Run("NewFromString_free", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowCreateRequestOcrEngineFromString("free")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowCreateRequestOcrEngine("free"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_premium", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowCreateRequestOcrEngineFromString("premium")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowCreateRequestOcrEngine("premium"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewWorkflowCreateRequestOcrEngineFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewWorkflowCreateRequestOcrEngineFromString("free")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
+func TestEnumWorkflowCreateRequestPlatform(t *testing.T) {
+	t.Run("NewFromString_ios", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowCreateRequestPlatformFromString("ios")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowCreateRequestPlatform("ios"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_android", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowCreateRequestPlatformFromString("android")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowCreateRequestPlatform("android"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_both", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowCreateRequestPlatformFromString("both")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowCreateRequestPlatform("both"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewWorkflowCreateRequestPlatformFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewWorkflowCreateRequestPlatformFromString("ios")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
 func TestEnumWorkflowSummaryOcrEngine(t *testing.T) {
 	t.Run("NewFromString_free", func(t *testing.T) {
 		t.Parallel()
@@ -5487,6 +5552,107 @@ func TestEnumWorkflowSummaryStatus(t *testing.T) {
 
 	t.Run("Ptr", func(t *testing.T) {
 		val, err := NewWorkflowSummaryStatusFromString("ready")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
+func TestEnumWorkflowUpdateRequestOcrEngine(t *testing.T) {
+	t.Run("NewFromString_free", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowUpdateRequestOcrEngineFromString("free")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowUpdateRequestOcrEngine("free"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_premium", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowUpdateRequestOcrEngineFromString("premium")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowUpdateRequestOcrEngine("premium"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewWorkflowUpdateRequestOcrEngineFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewWorkflowUpdateRequestOcrEngineFromString("free")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
+func TestEnumWorkflowUpdateRequestPlatform(t *testing.T) {
+	t.Run("NewFromString_ios", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowUpdateRequestPlatformFromString("ios")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowUpdateRequestPlatform("ios"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_android", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowUpdateRequestPlatformFromString("android")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowUpdateRequestPlatform("android"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_both", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowUpdateRequestPlatformFromString("both")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowUpdateRequestPlatform("both"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewWorkflowUpdateRequestPlatformFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewWorkflowUpdateRequestPlatformFromString("ios")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
+func TestEnumWorkflowUpdateRequestStatus(t *testing.T) {
+	t.Run("NewFromString_ready", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowUpdateRequestStatusFromString("ready")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowUpdateRequestStatus("ready"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_training", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowUpdateRequestStatusFromString("training")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowUpdateRequestStatus("training"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_running", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWorkflowUpdateRequestStatusFromString("running")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WorkflowUpdateRequestStatus("running"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewWorkflowUpdateRequestStatusFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewWorkflowUpdateRequestStatusFromString("ready")
 		assert.NoError(t, err)
 		ptr := val.Ptr()
 		assert.NotNil(t, ptr)

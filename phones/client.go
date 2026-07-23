@@ -68,7 +68,7 @@ func (c *Client) SupportedApps(
 	return response.Body, nil
 }
 
-// Returns ACTIVE unallocated phones the caller's org can claim, optionally filtered by phone type (iphone/android). Counts by type are included alongside the list.
+// Returns the phones the caller can start a session on right now: every active phone in the shared pool, plus the caller org's own dedicated phones that are currently free. Only free + active phones appear here, so a dedicated phone that is busy or offline is intentionally absent - use GET /phones/my to see the org's full dedicated inventory including in-use ones. Optionally filtered by phone_type; counts by type are included alongside the list.
 func (c *Client) Available(
 	ctx context.Context,
 	request *platformgo.PhonesAvailableRequest,
@@ -102,7 +102,7 @@ func (c *Client) Deallocate(
 	return response.Body, nil
 }
 
-// Returns private and rented phones owned by the caller's org. include_expired=true keeps rentals past their rental_expires_at in the result so users can see what they used to own.
+// Returns the caller org's full dedicated (private/rented) phone inventory - every state, not just the free ones: busy phones in an active session, offline/inactive phones, and phones in maintenance are all included, so this is the endpoint to discover a phone_id you can pin via POST /phones/allocate. Each phone's current_session_id and status reflect its live state. include_expired=true also keeps rentals past their rental_expires_at so users can see what they used to own. Filter by status/phone_type and paginate; the response total is the full match count.
 func (c *Client) Mine(
 	ctx context.Context,
 	request *platformgo.PhonesMineRequest,
@@ -221,6 +221,40 @@ func (c *Client) Get(
 	return response.Body, nil
 }
 
+// Returns the phone's file delivery records, newest first: which library files were pushed to it and where each push stands (dispatched / delivered / failed). Org-scoped: another org's phone reads as not found.
+func (c *Client) ListFiles(
+	ctx context.Context,
+	request *platformgo.PhonesListFilesRequest,
+	opts ...option.RequestOption,
+) (*platformgo.FileDeliveryListResponse, error) {
+	response, err := c.WithRawResponse.ListFiles(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Dispatches an uploaded file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Verifies the upload on first push. Returns 202 once the phone acknowledges the download started; watch GET /phones/{phone_id}/files or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
+func (c *Client) PushFile(
+	ctx context.Context,
+	request *platformgo.PhonesPushFileRequest,
+	opts ...option.RequestOption,
+) (*platformgo.FilePushResponse, error) {
+	response, err := c.WithRawResponse.PushFile(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Sets the human-readable display name on a private phone the caller's org owns. Returns the updated phone summary.
 func (c *Client) Nickname(
 	ctx context.Context,
@@ -228,6 +262,23 @@ func (c *Client) Nickname(
 	opts ...option.RequestOption,
 ) (*platformgo.PhoneSummary, error) {
 	response, err := c.WithRawResponse.Nickname(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Returns a short-lived URL for the phone's current screen preview — a rolling JPEG refreshed every few seconds while the phone is paired, available with or without an active session. Poll this endpoint and swap the image; every call mints a fresh URL. Status is "pending" when no preview exists yet. Authorized to the org that owns the phone or currently holds its active session; any other org reads as not found.
+func (c *Client) Preview(
+	ctx context.Context,
+	request *platformgo.PhonesPreviewRequest,
+	opts ...option.RequestOption,
+) (*platformgo.PhonePreviewResponse, error) {
+	response, err := c.WithRawResponse.Preview(
 		ctx,
 		request,
 		opts...,

@@ -6,6 +6,7 @@ import (
 	apikeys "github.com/axilioai/platform-go/apikeys"
 	billing "github.com/axilioai/platform-go/billing"
 	core "github.com/axilioai/platform-go/core"
+	files "github.com/axilioai/platform-go/files"
 	internal "github.com/axilioai/platform-go/internal"
 	option "github.com/axilioai/platform-go/option"
 	phones "github.com/axilioai/platform-go/phones"
@@ -17,6 +18,7 @@ import (
 type Client struct {
 	APIKeys   *apikeys.Client
 	Billing   *billing.Client
+	Files     *files.Client
 	Phones    *phones.Client
 	Runs      *runs.Client
 	Usage     *usage.Client
@@ -32,6 +34,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 	return &Client{
 		APIKeys:   apikeys.NewClient(options),
 		Billing:   billing.NewClient(options),
+		Files:     files.NewClient(options),
 		Phones:    phones.NewClient(options),
 		Runs:      runs.NewClient(options),
 		Usage:     usage.NewClient(options),

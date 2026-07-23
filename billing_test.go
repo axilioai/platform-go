@@ -560,7 +560,7 @@ func TestSettersBillingHistoryItem(t *testing.T) {
 
 	t.Run("SetStatus", func(t *testing.T) {
 		obj := &BillingHistoryItem{}
-		var fernTestValueStatus string
+		var fernTestValueStatus BillingHistoryItemStatus
 		obj.SetStatus(fernTestValueStatus)
 		assert.Equal(t, fernTestValueStatus, obj.Status)
 		assert.NotNil(t, obj.explicitFields)
@@ -935,7 +935,7 @@ func TestGettersBillingHistoryItem(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &BillingHistoryItem{}
-		var expected string
+		var expected BillingHistoryItemStatus
 		obj.Status = expected
 
 		// Act & Assert
@@ -1395,7 +1395,7 @@ func TestSettersMarkExplicitBillingHistoryItem(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &BillingHistoryItem{}
-		var fernTestValueStatus string
+		var fernTestValueStatus BillingHistoryItemStatus
 
 		// Act
 		obj.SetStatus(fernTestValueStatus)
@@ -2296,7 +2296,7 @@ func TestSettersPhoneRentalSubscriptionResponse(t *testing.T) {
 
 	t.Run("SetPaymentStatus", func(t *testing.T) {
 		obj := &PhoneRentalSubscriptionResponse{}
-		var fernTestValuePaymentStatus string
+		var fernTestValuePaymentStatus PhoneRentalSubscriptionResponsePaymentStatus
 		obj.SetPaymentStatus(fernTestValuePaymentStatus)
 		assert.Equal(t, fernTestValuePaymentStatus, obj.PaymentStatus)
 		assert.NotNil(t, obj.explicitFields)
@@ -2360,7 +2360,7 @@ func TestSettersPhoneRentalSubscriptionResponse(t *testing.T) {
 
 	t.Run("SetStatus", func(t *testing.T) {
 		obj := &PhoneRentalSubscriptionResponse{}
-		var fernTestValueStatus string
+		var fernTestValueStatus PhoneRentalSubscriptionResponseStatus
 		obj.SetStatus(fernTestValueStatus)
 		assert.Equal(t, fernTestValueStatus, obj.Status)
 		assert.NotNil(t, obj.explicitFields)
@@ -2521,7 +2521,7 @@ func TestGettersPhoneRentalSubscriptionResponse(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &PhoneRentalSubscriptionResponse{}
-		var expected string
+		var expected PhoneRentalSubscriptionResponsePaymentStatus
 		obj.PaymentStatus = expected
 
 		// Act & Assert
@@ -2735,7 +2735,7 @@ func TestGettersPhoneRentalSubscriptionResponse(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &PhoneRentalSubscriptionResponse{}
-		var expected string
+		var expected PhoneRentalSubscriptionResponseStatus
 		obj.Status = expected
 
 		// Act & Assert
@@ -2947,7 +2947,7 @@ func TestSettersMarkExplicitPhoneRentalSubscriptionResponse(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &PhoneRentalSubscriptionResponse{}
-		var fernTestValuePaymentStatus string
+		var fernTestValuePaymentStatus PhoneRentalSubscriptionResponsePaymentStatus
 
 		// Act
 		obj.SetPaymentStatus(fernTestValuePaymentStatus)
@@ -3195,7 +3195,7 @@ func TestSettersMarkExplicitPhoneRentalSubscriptionResponse(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &PhoneRentalSubscriptionResponse{}
-		var fernTestValueStatus string
+		var fernTestValueStatus PhoneRentalSubscriptionResponseStatus
 
 		// Act
 		obj.SetStatus(fernTestValueStatus)
@@ -6088,6 +6088,107 @@ func TestStringSubscriptionResponse(t *testing.T) {
 		var obj *SubscriptionResponse
 		result := obj.String()
 		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
+	})
+}
+
+func TestEnumBillingHistoryItemStatus(t *testing.T) {
+	t.Run("NewFromString_paid", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewBillingHistoryItemStatusFromString("paid")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, BillingHistoryItemStatus("paid"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_pending", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewBillingHistoryItemStatusFromString("pending")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, BillingHistoryItemStatus("pending"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_failed", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewBillingHistoryItemStatusFromString("failed")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, BillingHistoryItemStatus("failed"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_void", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewBillingHistoryItemStatusFromString("void")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, BillingHistoryItemStatus("void"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewBillingHistoryItemStatusFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewBillingHistoryItemStatusFromString("paid")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
+func TestEnumPhoneRentalSubscriptionResponsePaymentStatus(t *testing.T) {
+	t.Run("NewFromString_healthy", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneRentalSubscriptionResponsePaymentStatusFromString("healthy")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneRentalSubscriptionResponsePaymentStatus("healthy"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_past_due", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneRentalSubscriptionResponsePaymentStatusFromString("past_due")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneRentalSubscriptionResponsePaymentStatus("past_due"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewPhoneRentalSubscriptionResponsePaymentStatusFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewPhoneRentalSubscriptionResponsePaymentStatusFromString("healthy")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
+func TestEnumPhoneRentalSubscriptionResponseStatus(t *testing.T) {
+	t.Run("NewFromString_active", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneRentalSubscriptionResponseStatusFromString("active")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneRentalSubscriptionResponseStatus("active"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_canceled", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneRentalSubscriptionResponseStatusFromString("canceled")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneRentalSubscriptionResponseStatus("canceled"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewPhoneRentalSubscriptionResponseStatusFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewPhoneRentalSubscriptionResponseStatusFromString("active")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
 	})
 }
 

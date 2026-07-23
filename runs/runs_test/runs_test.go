@@ -88,10 +88,7 @@ func TestRunsListWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.RunListRequest{
-		Limit:  int64(1000000),
-		Offset: int64(1000000),
-	}
+	request := &platformgo.RunListRequest{}
 	_, invocationErr := client.Runs.List(
 		context.TODO(),
 		request,
@@ -256,7 +253,6 @@ func TestRunsCreateWithWireMock(
 	)
 	request := &platformgo.RunCreateRequest{
 		WorkflowID: "workflow_id",
-		Count:      int64(1000000),
 	}
 	_, invocationErr := client.Runs.Create(
 		context.TODO(),
