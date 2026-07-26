@@ -21,7 +21,6 @@
 package files
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -29,6 +28,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	platformgo "github.com/axilioai/platform-go"
@@ -38,6 +38,46 @@ import (
 // defaultMIME is sent when the extension maps to nothing known; the backend
 // MIME whitelist has the final say.
 const defaultMIME = "application/octet-stream"
+
+// extMIME pins the content type for every extension the API's upload
+// whitelist accepts. mime.TypeByExtension reads the HOST's MIME database,
+// which varies by machine and container image and does not reliably know
+// .heic — so relying on it alone made a supported format upload as
+// application/octet-stream on some machines and succeed on others. The API
+// pins Content-Type into the presigned PUT, so getting this wrong is not a
+// cosmetic difference: the upload is registered under a type the server then
+// rejects.
+var extMIME = map[string]string{
+	".jpg":  "image/jpeg",
+	".jpeg": "image/jpeg",
+	".png":  "image/png",
+	".webp": "image/webp",
+	".gif":  "image/gif",
+	".heic": "image/heic",
+	".mp4":  "video/mp4",
+	".webm": "video/webm",
+	".mov":  "video/quicktime",
+	".3gp":  "video/3gpp",
+	".mkv":  "video/x-matroska",
+}
+
+// detectMIME resolves a filename to a content type: our own table first, the
+// host database second, and the generic default last.
+func detectMIME(name string) string {
+	ext := strings.ToLower(filepath.Ext(name))
+	if m, ok := extMIME[ext]; ok {
+		return m
+	}
+	if m := mime.TypeByExtension(ext); m != "" {
+		// TypeByExtension can return parameters ("text/plain; charset=utf-8").
+		// The API compares the bare type, so hand it the bare type.
+		if base, _, err := mime.ParseMediaType(m); err == nil {
+			return base
+		}
+		return m
+	}
+	return defaultMIME
+}
 
 const (
 	defaultWaitTimeout = 60 * time.Second
@@ -57,6 +97,7 @@ type config struct {
 	wait       bool
 	timeout    time.Duration
 	pollEvery  time.Duration
+	httpClient *http.Client
 }
 
 // Option configures Upload / Push / Send. Each function reads only the options
@@ -73,14 +114,26 @@ func WithMimeType(mimeType string) Option { return func(c *config) { c.mimeType 
 // default by media class server-side).
 func WithCollection(collection string) Option { return func(c *config) { c.collection = collection } }
 
-// WithWait makes Send block until the phone reports terminal status (or timeout
-// elapses), returning the latest delivery either way. A zero or negative
-// timeout uses the 60s default.
+// WithWait makes Push and Send block until the phone reports terminal status
+// (or timeout elapses), returning the latest delivery either way. A zero or
+// negative timeout uses the 60s default.
 func WithWait(timeout time.Duration) Option {
 	return func(c *config) {
 		c.wait = true
 		if timeout > 0 {
 			c.timeout = timeout
+		}
+	}
+}
+
+// WithHTTPClient overrides the client used for the storage PUT (default
+// http.DefaultClient). Useful for a custom timeout or transport, and for
+// testing against a stub server. A nil client is ignored rather than
+// installed, so a zero value can't disable uploads.
+func WithHTTPClient(h *http.Client) Option {
+	return func(c *config) {
+		if h != nil {
+			c.httpClient = h
 		}
 	}
 }
@@ -95,7 +148,11 @@ func WithPollInterval(d time.Duration) Option {
 }
 
 func resolve(opts ...Option) config {
-	c := config{timeout: defaultWaitTimeout, pollEvery: defaultPollEvery}
+	c := config{
+		timeout:    defaultWaitTimeout,
+		pollEvery:  defaultPollEvery,
+		httpClient: http.DefaultClient,
+	}
 	for _, o := range opts {
 		o(&c)
 	}
@@ -107,40 +164,55 @@ func resolve(opts ...Option) config {
 // WithMimeType.
 func Upload(ctx context.Context, c *client.Client, path string, opts ...Option) (*platformgo.FileSummary, error) {
 	cfg := resolve(opts...)
+
+	// Stream the file rather than reading it into memory. The library accepts
+	// up to 1 GB per file, so os.ReadFile would allocate the whole payload —
+	// tolerable under the old 5 MiB cap, not under this one. Passing the open
+	// *os.File as the request body lets net/http copy it through in chunks.
+	fh, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open %s: %w", path, err)
+	}
+	defer fh.Close()
+	info, err := fh.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("stat %s: %w", path, err)
+	}
+	if info.IsDir() {
+		return nil, fmt.Errorf("%s is a directory", path)
+	}
+	size := info.Size()
+
 	name := cfg.filename
 	if name == "" {
 		name = filepath.Base(path)
 	}
 	mimeType := cfg.mimeType
 	if mimeType == "" {
-		if mimeType = mime.TypeByExtension(filepath.Ext(name)); mimeType == "" {
-			mimeType = defaultMIME
-		}
+		mimeType = detectMIME(name)
 	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
+
 	registered, err := c.Uploads.Create(ctx, &platformgo.FileCreateRequest{
 		Filename:  name,
 		MimeType:  mimeType,
-		SizeBytes: int64(len(data)),
+		SizeBytes: size,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("register upload: %w", err)
 	}
 	// The presigned PUT goes straight to object storage: no Axilio auth header,
 	// and Content-Type must match what was registered (the signature pins both
-	// type and length). ContentLength matches size_bytes.
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, registered.UploadURL, bytes.NewReader(data))
+	// type and length). Setting ContentLength explicitly keeps the request out
+	// of chunked encoding, which the signature would reject.
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, registered.UploadURL, fh)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build storage request: %w", err)
 	}
 	req.Header.Set("Content-Type", mimeType)
-	req.ContentLength = int64(len(data))
-	resp, err := http.DefaultClient.Do(req)
+	req.ContentLength = size
+	resp, err := cfg.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("upload %s to storage: %w", name, err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode/100 != 2 {
@@ -157,7 +229,7 @@ func Upload(ctx context.Context, c *client.Client, path string, opts ...Option) 
 		UploadID: registered.File.GetID(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("complete upload %s: %w", registered.File.GetID(), err)
 	}
 	return completed.File, nil
 }
