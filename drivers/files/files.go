@@ -1,17 +1,23 @@
 // Package files is the hand-written convenience layer for the org file
-// library: upload a local file and push it to a phone, on top of the generated
-// files + phones REST clients.
+// library: upload a local file, manage the library, and deliver a file to a
+// phone, on top of the generated uploads + phones REST clients.
 //
-//	f, _ := files.Upload(ctx, c, "./demo.mp4")           // register + PUT bytes
+//	f, _ := files.Upload(ctx, c, "./demo.mp4")           // register + PUT + complete
 //	files.Push(ctx, c, "phn_abc", f.ID)                  // reuse across phones
-//	files.Send(ctx, c, "phn_abc", "./demo.mp4",          // one-shot: upload + push
+//	files.Send(ctx, c, "phn_abc", "./demo.mp4",          // one-shot: upload + deliver
 //		files.WithWait(60*time.Second))                  // ...and wait for delivery
+//	files.List(ctx, c)                                   // what's in the library
+//	files.Delete(ctx, c, f.ID)                           // free the quota again
 //
 // Free functions taking the generated *client.Client — the Go twin of
-// platform-python's client.files.upload / client.phones.send_file, and the same
-// idiom as drivers/mobile (the generated types can't be extended, so the
-// value-add lives beside them). Preserved across regen by scripts/regen.sh's
-// drivers/ exclude.
+// platform-python's client.files helpers, and the same idiom as drivers/mobile
+// (the generated types can't be extended, so the value-add lives beside them).
+// Preserved across regen by scripts/regen.sh's drivers/ exclude.
+//
+// Vocabulary, one word per concept: UPLOAD puts a local file into the library,
+// PUSH sends a library file to a phone, SEND does both. The API these call is
+// named by direction — /uploads for what you put in, /phones/{id}/deliveries
+// for the record of what we sent to a phone.
 package files
 
 import (
@@ -115,7 +121,7 @@ func Upload(ctx context.Context, c *client.Client, path string, opts ...Option) 
 	if err != nil {
 		return nil, err
 	}
-	registered, err := c.Files.Create(ctx, &platformgo.FileCreateRequest{
+	registered, err := c.Uploads.Create(ctx, &platformgo.FileCreateRequest{
 		Filename:  name,
 		MimeType:  mimeType,
 		SizeBytes: int64(len(data)),
@@ -124,8 +130,8 @@ func Upload(ctx context.Context, c *client.Client, path string, opts ...Option) 
 		return nil, err
 	}
 	// The presigned PUT goes straight to object storage: no Axilio auth header,
-	// and Content-Type must match what was registered (the push HeadObject-
-	// verifies size + type). ContentLength matches size_bytes.
+	// and Content-Type must match what was registered (the signature pins both
+	// type and length). ContentLength matches size_bytes.
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, registered.UploadURL, bytes.NewReader(data))
 	if err != nil {
 		return nil, err
@@ -141,19 +147,49 @@ func Upload(ctx context.Context, c *client.Client, path string, opts ...Option) 
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
 		return nil, fmt.Errorf("upload PUT to storage failed: %s: %s", resp.Status, body)
 	}
-	return registered.File, nil
+	// Completion is what makes the file deliverable: the server verifies the
+	// object landed at the declared size and type, checks the content really is
+	// the media it claims, and flips the row to ready. Skipping it leaves a file
+	// stuck 'uploading' that every delivery would reject — previously the first
+	// push did this verification lazily, which only worked because Send always
+	// pushed. Upload on its own now finishes the job.
+	completed, err := c.Uploads.Complete(ctx, &platformgo.UploadsCompleteRequest{
+		UploadID: registered.File.GetID(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return completed.File, nil
+}
+
+// List returns one page of the org's library along with its standing usage
+// against the storage quota, so a caller can show "X of Y" without a second
+// call. Options are the generated request's own (limit/offset/search/sort).
+func List(ctx context.Context, c *client.Client, request *platformgo.UploadsListRequest) (*platformgo.FileListResponse, error) {
+	if request == nil {
+		request = &platformgo.UploadsListRequest{}
+	}
+	return c.Uploads.List(ctx, request)
+}
+
+// Delete removes a file from the org's library: the stored object, the entry,
+// and its delivery history. This is the other half of a quota — without it a
+// caller can fill the library and has no supported way to clear it.
+func Delete(ctx context.Context, c *client.Client, uploadID string) error {
+	_, err := c.Uploads.Delete(ctx, &platformgo.UploadsDeleteRequest{UploadID: uploadID})
+	return err
 }
 
 // Push sends an already-uploaded library file to a phone. Returns the delivery
 // (status dispatched once the phone acks). Reads WithCollection.
 func Push(ctx context.Context, c *client.Client, phoneID, fileID string, opts ...Option) (*platformgo.FileDeliverySummary, error) {
 	cfg := resolve(opts...)
-	req := &platformgo.PhonesPushFileRequest{PhoneID: phoneID, FileID: fileID}
+	req := &platformgo.FileDeliveryCreateRequest{PhoneID: phoneID, FileID: fileID}
 	if cfg.collection != "" {
-		col := platformgo.PhonesPushFileRequestCollection(cfg.collection)
+		col := platformgo.FileDeliveryCreateRequestCollection(cfg.collection)
 		req.Collection = &col
 	}
-	resp, err := c.Phones.PushFile(ctx, req)
+	resp, err := c.Phones.CreateDelivery(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -188,23 +224,26 @@ func awaitTerminal(
 	timeout, pollEvery time.Duration,
 ) (*platformgo.FileDeliverySummary, error) {
 	deadline := time.Now().Add(timeout)
-	limit := int64(100)
 	for !terminal(delivery.Status) && time.Now().Before(deadline) {
 		select {
 		case <-ctx.Done():
 			return delivery, ctx.Err()
 		case <-time.After(pollEvery):
 		}
-		page, err := c.Phones.ListFiles(ctx, &platformgo.PhonesListFilesRequest{PhoneID: phoneID, Limit: &limit})
+		// Fetch OUR delivery by id. This used to page the newest 100 deliveries
+		// and scan for a match, which silently lost the target on a busy phone:
+		// once 100 newer pushes landed, the delivery being waited on fell off
+		// the page, the loop stopped updating it, and the caller got a stale
+		// non-terminal record back as if it had simply timed out. The per-
+		// delivery endpoint has no such window.
+		latest, err := c.Phones.GetDelivery(ctx, &platformgo.PhonesGetDeliveryRequest{
+			PhoneID:    phoneID,
+			DeliveryID: delivery.GetID(),
+		})
 		if err != nil {
 			return delivery, err
 		}
-		for _, cand := range page.Deliveries {
-			if cand.ID == delivery.ID {
-				delivery = cand
-				break
-			}
-		}
+		delivery = latest
 	}
 	return delivery, nil
 }
