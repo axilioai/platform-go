@@ -493,6 +493,8 @@ func (u *UserSignUpRequest) String() string {
 var (
 	userWaitlistRequestFieldCompany = big.NewInt(1 << 0)
 	userWaitlistRequestFieldEmail   = big.NewInt(1 << 1)
+	userWaitlistRequestFieldName    = big.NewInt(1 << 2)
+	userWaitlistRequestFieldUseCase = big.NewInt(1 << 3)
 )
 
 type UserWaitlistRequest struct {
@@ -500,6 +502,10 @@ type UserWaitlistRequest struct {
 	Company *string `json:"company,omitempty" url:"company,omitempty"`
 	// Applicant's email address.
 	Email string `json:"email" url:"email"`
+	// Applicant's name.
+	Name *string `json:"name,omitempty" url:"name,omitempty"`
+	// Optional description of the applicant's use case.
+	UseCase *string `json:"use_case,omitempty" url:"use_case,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -520,6 +526,20 @@ func (u *UserWaitlistRequest) GetEmail() string {
 		return ""
 	}
 	return u.Email
+}
+
+func (u *UserWaitlistRequest) GetName() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Name
+}
+
+func (u *UserWaitlistRequest) GetUseCase() *string {
+	if u == nil {
+		return nil
+	}
+	return u.UseCase
 }
 
 func (u *UserWaitlistRequest) GetExtraProperties() map[string]interface{} {
@@ -548,6 +568,20 @@ func (u *UserWaitlistRequest) SetCompany(company *string) {
 func (u *UserWaitlistRequest) SetEmail(email string) {
 	u.Email = email
 	u.require(userWaitlistRequestFieldEmail)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UserWaitlistRequest) SetName(name *string) {
+	u.Name = name
+	u.require(userWaitlistRequestFieldName)
+}
+
+// SetUseCase sets the UseCase field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UserWaitlistRequest) SetUseCase(useCase *string) {
+	u.UseCase = useCase
+	u.require(userWaitlistRequestFieldUseCase)
 }
 
 func (u *UserWaitlistRequest) UnmarshalJSON(data []byte) error {

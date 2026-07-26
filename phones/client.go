@@ -221,13 +221,13 @@ func (c *Client) Get(
 	return response.Body, nil
 }
 
-// Returns the phone's file delivery records, newest first: which library files were pushed to it and where each push stands (dispatched / delivered / failed). Org-scoped: another org's phone reads as not found.
-func (c *Client) ListFiles(
+// Returns the phone's file delivery records, newest first: which library files were sent to it and where each stands (dispatching / dispatched / delivered / failed). Org-scoped: another org's phone reads as not found.
+func (c *Client) ListDeliveries(
 	ctx context.Context,
-	request *platformgo.PhonesListFilesRequest,
+	request *platformgo.PhonesListDeliveriesRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.FileDeliveryListResponse, error) {
-	response, err := c.WithRawResponse.ListFiles(
+	response, err := c.WithRawResponse.ListDeliveries(
 		ctx,
 		request,
 		opts...,
@@ -238,13 +238,30 @@ func (c *Client) ListFiles(
 	return response.Body, nil
 }
 
-// Dispatches an uploaded file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Verifies the upload on first push. Returns 202 once the phone acknowledges the download started; watch GET /phones/{phone_id}/files or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
-func (c *Client) PushFile(
+// Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts either an upload or a download by id. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
+func (c *Client) CreateDelivery(
 	ctx context.Context,
-	request *platformgo.PhonesPushFileRequest,
+	request *platformgo.FileDeliveryCreateRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.FilePushResponse, error) {
-	response, err := c.WithRawResponse.PushFile(
+	response, err := c.WithRawResponse.CreateDelivery(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Returns a single delivery by id and its current status. Poll this to wait on a specific push: the list endpoint pages the newest records and can drop a delivery that ages past the page on a busy phone.
+func (c *Client) GetDelivery(
+	ctx context.Context,
+	request *platformgo.PhonesGetDeliveryRequest,
+	opts ...option.RequestOption,
+) (*platformgo.FileDeliverySummary, error) {
+	response, err := c.WithRawResponse.GetDelivery(
 		ctx,
 		request,
 		opts...,

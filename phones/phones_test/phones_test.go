@@ -353,7 +353,7 @@ func TestPhonesGetWithWireMock(
 	VerifyRequestCount(t, "TestPhonesGetWithWireMock", "GET", "/phones/phone_id", nil, 1)
 }
 
-func TestPhonesListFilesWithWireMock(
+func TestPhonesListDeliveriesWithWireMock(
 	t *testing.T,
 ) {
 	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
@@ -364,22 +364,22 @@ func TestPhonesListFilesWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.PhonesListFilesRequest{
+	request := &platformgo.PhonesListDeliveriesRequest{
 		PhoneID: "phone_id",
 	}
-	_, invocationErr := client.Phones.ListFiles(
+	_, invocationErr := client.Phones.ListDeliveries(
 		context.TODO(),
 		request,
 		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestPhonesListFilesWithWireMock"}},
+			http.Header{"X-Test-Id": []string{"TestPhonesListDeliveriesWithWireMock"}},
 		),
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestPhonesListFilesWithWireMock", "GET", "/phones/phone_id/files", nil, 1)
+	VerifyRequestCount(t, "TestPhonesListDeliveriesWithWireMock", "GET", "/phones/phone_id/deliveries", nil, 1)
 }
 
-func TestPhonesPushFileWithWireMock(
+func TestPhonesCreateDeliveryWithWireMock(
 	t *testing.T,
 ) {
 	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
@@ -390,20 +390,47 @@ func TestPhonesPushFileWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.PhonesPushFileRequest{
+	request := &platformgo.FileDeliveryCreateRequest{
 		PhoneID: "phone_id",
 		FileID:  "file_id",
 	}
-	_, invocationErr := client.Phones.PushFile(
+	_, invocationErr := client.Phones.CreateDelivery(
 		context.TODO(),
 		request,
 		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestPhonesPushFileWithWireMock"}},
+			http.Header{"X-Test-Id": []string{"TestPhonesCreateDeliveryWithWireMock"}},
 		),
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestPhonesPushFileWithWireMock", "POST", "/phones/phone_id/files/file_id/push", nil, 1)
+	VerifyRequestCount(t, "TestPhonesCreateDeliveryWithWireMock", "POST", "/phones/phone_id/deliveries", nil, 1)
+}
+
+func TestPhonesGetDeliveryWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.PhonesGetDeliveryRequest{
+		PhoneID:    "phone_id",
+		DeliveryID: "delivery_id",
+	}
+	_, invocationErr := client.Phones.GetDelivery(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestPhonesGetDeliveryWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestPhonesGetDeliveryWithWireMock", "GET", "/phones/phone_id/deliveries/delivery_id", nil, 1)
 }
 
 func TestPhonesNicknameWithWireMock(
