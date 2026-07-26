@@ -181,7 +181,14 @@ func Delete(ctx context.Context, c *client.Client, uploadID string) error {
 }
 
 // Push sends an already-uploaded library file to a phone. Returns the delivery
-// (status dispatched once the phone acks). Reads WithCollection.
+// after dispatch; with WithWait it polls until the phone reports terminal
+// status (or timeout), returning the latest delivery either way — inspect
+// Status / Error. Reads WithCollection, WithWait, WithPollInterval.
+//
+// Waiting used to live only in Send, which made pushing one stored file to
+// several phones the one flow that could not be waited on — the case Push
+// exists for. The wait now belongs to the delivery, not to how the file got
+// into the library.
 func Push(ctx context.Context, c *client.Client, phoneID, fileID string, opts ...Option) (*platformgo.FileDeliverySummary, error) {
 	cfg := resolve(opts...)
 	req := &platformgo.FileDeliveryCreateRequest{PhoneID: phoneID, FileID: fileID}
@@ -193,27 +200,21 @@ func Push(ctx context.Context, c *client.Client, phoneID, fileID string, opts ..
 	if err != nil {
 		return nil, err
 	}
-	return resp.Delivery, nil
+	if !cfg.wait {
+		return resp.Delivery, nil
+	}
+	return awaitTerminal(ctx, c, phoneID, resp.Delivery, cfg.timeout, cfg.pollEvery)
 }
 
-// Send uploads a local file and pushes it to a phone in one call. Returns the
-// delivery after dispatch; with WithWait it polls until terminal status (or
-// timeout), returning the latest delivery either way — inspect Status / Error.
-// Reads all options.
+// Send uploads a local file and pushes it to a phone in one call: Upload then
+// Push, with every option forwarded to both. Returns whatever Push returns, so
+// WithWait behaves identically here and on a bare Push. Reads all options.
 func Send(ctx context.Context, c *client.Client, phoneID, path string, opts ...Option) (*platformgo.FileDeliverySummary, error) {
-	cfg := resolve(opts...)
 	f, err := Upload(ctx, c, path, opts...)
 	if err != nil {
 		return nil, err
 	}
-	delivery, err := Push(ctx, c, phoneID, f.ID, opts...)
-	if err != nil {
-		return nil, err
-	}
-	if !cfg.wait {
-		return delivery, nil
-	}
-	return awaitTerminal(ctx, c, phoneID, delivery, cfg.timeout, cfg.pollEvery)
+	return Push(ctx, c, phoneID, f.ID, opts...)
 }
 
 func awaitTerminal(
