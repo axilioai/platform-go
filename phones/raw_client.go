@@ -539,9 +539,9 @@ func (r *RawClient) Get(
 	}, nil
 }
 
-func (r *RawClient) ListFiles(
+func (r *RawClient) ListDeliveries(
 	ctx context.Context,
-	request *platformgo.PhonesListFilesRequest,
+	request *platformgo.PhonesListDeliveriesRequest,
 	opts ...option.RequestOption,
 ) (*core.Response[*platformgo.FileDeliveryListResponse], error) {
 	options := core.NewRequestOptions(opts...)
@@ -551,7 +551,7 @@ func (r *RawClient) ListFiles(
 		"/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
-		baseURL+"/phones/%v/files",
+		baseURL+"/phones/%v/deliveries",
 		request.PhoneID,
 	)
 	queryParams, err := internal.QueryValues(request)
@@ -590,9 +590,9 @@ func (r *RawClient) ListFiles(
 	}, nil
 }
 
-func (r *RawClient) PushFile(
+func (r *RawClient) CreateDelivery(
 	ctx context.Context,
-	request *platformgo.PhonesPushFileRequest,
+	request *platformgo.FileDeliveryCreateRequest,
 	opts ...option.RequestOption,
 ) (*core.Response[*platformgo.FilePushResponse], error) {
 	options := core.NewRequestOptions(opts...)
@@ -602,21 +602,14 @@ func (r *RawClient) PushFile(
 		"/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
-		baseURL+"/phones/%v/files/%v/push",
+		baseURL+"/phones/%v/deliveries",
 		request.PhoneID,
-		request.FileID,
 	)
-	queryParams, err := internal.QueryValues(request)
-	if err != nil {
-		return nil, err
-	}
-	if len(queryParams) > 0 {
-		endpointURL += "?" + queryParams.Encode()
-	}
 	headers := internal.MergeHeaders(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
+	headers.Add("Content-Type", "application/json")
 	var response *platformgo.FilePushResponse
 	raw, err := r.caller.Call(
 		ctx,
@@ -629,6 +622,7 @@ func (r *RawClient) PushFile(
 			BodyProperties:  options.BodyProperties,
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
+			Request:         request,
 			Response:        &response,
 		},
 	)
@@ -636,6 +630,51 @@ func (r *RawClient) PushFile(
 		return nil, err
 	}
 	return &core.Response[*platformgo.FilePushResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) GetDelivery(
+	ctx context.Context,
+	request *platformgo.PhonesGetDeliveryRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.FileDeliverySummary], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/phones/%v/deliveries/%v",
+		request.PhoneID,
+		request.DeliveryID,
+	)
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.FileDeliverySummary
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.FileDeliverySummary]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,

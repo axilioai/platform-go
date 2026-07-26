@@ -230,6 +230,73 @@ func (p *PhonesAvailableRequest) SetPhoneType(phoneType *PhonesAvailableRequestP
 }
 
 var (
+	fileDeliveryCreateRequestFieldPhoneID    = big.NewInt(1 << 0)
+	fileDeliveryCreateRequestFieldCollection = big.NewInt(1 << 1)
+	fileDeliveryCreateRequestFieldFileID     = big.NewInt(1 << 2)
+)
+
+type FileDeliveryCreateRequest struct {
+	// target phone_id
+	PhoneID string `json:"-" url:"-"`
+	// Media collection to insert into on the phone; defaults to Pictures for images and Movies for videos.
+	Collection *FileDeliveryCreateRequestCollection `json:"collection,omitempty" url:"-"`
+	// Library file to deliver; accepts an upload or a download id.
+	FileID string `json:"file_id" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (f *FileDeliveryCreateRequest) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliveryCreateRequest) SetPhoneID(phoneID string) {
+	f.PhoneID = phoneID
+	f.require(fileDeliveryCreateRequestFieldPhoneID)
+}
+
+// SetCollection sets the Collection field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliveryCreateRequest) SetCollection(collection *FileDeliveryCreateRequestCollection) {
+	f.Collection = collection
+	f.require(fileDeliveryCreateRequestFieldCollection)
+}
+
+// SetFileID sets the FileID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliveryCreateRequest) SetFileID(fileID string) {
+	f.FileID = fileID
+	f.require(fileDeliveryCreateRequestFieldFileID)
+}
+
+func (f *FileDeliveryCreateRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler FileDeliveryCreateRequest
+	var body unmarshaler
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	*f = FileDeliveryCreateRequest(body)
+	return nil
+}
+
+func (f *FileDeliveryCreateRequest) MarshalJSON() ([]byte, error) {
+	type embed FileDeliveryCreateRequest
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*f),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+var (
 	phonesDeallocateRequestFieldPhoneID = big.NewInt(1 << 0)
 )
 
@@ -282,6 +349,42 @@ func (p *PhonesGetRequest) SetPhoneID(phoneID string) {
 }
 
 var (
+	phonesGetDeliveryRequestFieldPhoneID    = big.NewInt(1 << 0)
+	phonesGetDeliveryRequestFieldDeliveryID = big.NewInt(1 << 1)
+)
+
+type PhonesGetDeliveryRequest struct {
+	// phone the delivery belongs to
+	PhoneID string `json:"-" url:"-"`
+	// delivery to fetch
+	DeliveryID string `json:"-" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (p *PhonesGetDeliveryRequest) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesGetDeliveryRequest) SetPhoneID(phoneID string) {
+	p.PhoneID = phoneID
+	p.require(phonesGetDeliveryRequestFieldPhoneID)
+}
+
+// SetDeliveryID sets the DeliveryID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesGetDeliveryRequest) SetDeliveryID(deliveryID string) {
+	p.DeliveryID = deliveryID
+	p.require(phonesGetDeliveryRequestFieldDeliveryID)
+}
+
+var (
 	phonesGetSessionRequestFieldSessionID = big.NewInt(1 << 0)
 )
 
@@ -308,12 +411,12 @@ func (p *PhonesGetSessionRequest) SetSessionID(sessionID string) {
 }
 
 var (
-	phonesListFilesRequestFieldPhoneID = big.NewInt(1 << 0)
-	phonesListFilesRequestFieldLimit   = big.NewInt(1 << 1)
-	phonesListFilesRequestFieldOffset  = big.NewInt(1 << 2)
+	phonesListDeliveriesRequestFieldPhoneID = big.NewInt(1 << 0)
+	phonesListDeliveriesRequestFieldLimit   = big.NewInt(1 << 1)
+	phonesListDeliveriesRequestFieldOffset  = big.NewInt(1 << 2)
 )
 
-type PhonesListFilesRequest struct {
+type PhonesListDeliveriesRequest struct {
 	// phone to list deliveries for
 	PhoneID string `json:"-" url:"-"`
 	// max items per page
@@ -325,7 +428,7 @@ type PhonesListFilesRequest struct {
 	explicitFields *big.Int `json:"-" url:"-"`
 }
 
-func (p *PhonesListFilesRequest) require(field *big.Int) {
+func (p *PhonesListDeliveriesRequest) require(field *big.Int) {
 	if p.explicitFields == nil {
 		p.explicitFields = big.NewInt(0)
 	}
@@ -334,23 +437,23 @@ func (p *PhonesListFilesRequest) require(field *big.Int) {
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesListFilesRequest) SetPhoneID(phoneID string) {
+func (p *PhonesListDeliveriesRequest) SetPhoneID(phoneID string) {
 	p.PhoneID = phoneID
-	p.require(phonesListFilesRequestFieldPhoneID)
+	p.require(phonesListDeliveriesRequestFieldPhoneID)
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesListFilesRequest) SetLimit(limit *int64) {
+func (p *PhonesListDeliveriesRequest) SetLimit(limit *int64) {
 	p.Limit = limit
-	p.require(phonesListFilesRequestFieldLimit)
+	p.require(phonesListDeliveriesRequestFieldLimit)
 }
 
 // SetOffset sets the Offset field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesListFilesRequest) SetOffset(offset *int64) {
+func (p *PhonesListDeliveriesRequest) SetOffset(offset *int64) {
 	p.Offset = offset
-	p.require(phonesListFilesRequestFieldOffset)
+	p.require(phonesListDeliveriesRequestFieldOffset)
 }
 
 var (
@@ -717,52 +820,6 @@ func (p *PhonesPreviewRequest) SetPhoneID(phoneID string) {
 }
 
 var (
-	phonesPushFileRequestFieldPhoneID    = big.NewInt(1 << 0)
-	phonesPushFileRequestFieldFileID     = big.NewInt(1 << 1)
-	phonesPushFileRequestFieldCollection = big.NewInt(1 << 2)
-)
-
-type PhonesPushFileRequest struct {
-	// target phone_id
-	PhoneID string `json:"-" url:"-"`
-	// library file to push
-	FileID string `json:"-" url:"-"`
-	// MediaStore collection to insert into; defaults to Pictures for images and Movies for videos
-	Collection *PhonesPushFileRequestCollection `json:"-" url:"collection,omitempty"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-}
-
-func (p *PhonesPushFileRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
-	}
-	p.explicitFields.Or(p.explicitFields, field)
-}
-
-// SetPhoneID sets the PhoneID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesPushFileRequest) SetPhoneID(phoneID string) {
-	p.PhoneID = phoneID
-	p.require(phonesPushFileRequestFieldPhoneID)
-}
-
-// SetFileID sets the FileID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesPushFileRequest) SetFileID(fileID string) {
-	p.FileID = fileID
-	p.require(phonesPushFileRequestFieldFileID)
-}
-
-// SetCollection sets the Collection field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesPushFileRequest) SetCollection(collection *PhonesPushFileRequestCollection) {
-	p.Collection = collection
-	p.require(phonesPushFileRequestFieldCollection)
-}
-
-var (
 	phonesSessionRecordingRequestFieldSessionID = big.NewInt(1 << 0)
 )
 
@@ -972,18 +1029,21 @@ func (f *FileDeliveryListResponse) String() string {
 
 // One push of a library file to a phone.
 var (
-	fileDeliverySummaryFieldCreatedAt = big.NewInt(1 << 0)
-	fileDeliverySummaryFieldError     = big.NewInt(1 << 1)
-	fileDeliverySummaryFieldFileID    = big.NewInt(1 << 2)
-	fileDeliverySummaryFieldFilename  = big.NewInt(1 << 3)
-	fileDeliverySummaryFieldID        = big.NewInt(1 << 4)
-	fileDeliverySummaryFieldMimeType  = big.NewInt(1 << 5)
-	fileDeliverySummaryFieldPhoneID   = big.NewInt(1 << 6)
-	fileDeliverySummaryFieldSizeBytes = big.NewInt(1 << 7)
-	fileDeliverySummaryFieldStatus    = big.NewInt(1 << 8)
+	fileDeliverySummaryFieldSchema    = big.NewInt(1 << 0)
+	fileDeliverySummaryFieldCreatedAt = big.NewInt(1 << 1)
+	fileDeliverySummaryFieldError     = big.NewInt(1 << 2)
+	fileDeliverySummaryFieldFileID    = big.NewInt(1 << 3)
+	fileDeliverySummaryFieldFilename  = big.NewInt(1 << 4)
+	fileDeliverySummaryFieldID        = big.NewInt(1 << 5)
+	fileDeliverySummaryFieldMimeType  = big.NewInt(1 << 6)
+	fileDeliverySummaryFieldPhoneID   = big.NewInt(1 << 7)
+	fileDeliverySummaryFieldSizeBytes = big.NewInt(1 << 8)
+	fileDeliverySummaryFieldStatus    = big.NewInt(1 << 9)
 )
 
 type FileDeliverySummary struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	// When the push was dispatched.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
 	// Failure detail for failed deliveries.
@@ -1000,7 +1060,7 @@ type FileDeliverySummary struct {
 	PhoneID string `json:"phone_id" url:"phone_id"`
 	// Delivered file's size in bytes.
 	SizeBytes int64 `json:"size_bytes" url:"size_bytes"`
-	// dispatched while the phone downloads; delivered or failed once it reports back.
+	// dispatching while the push is being published, dispatched while the phone downloads, then delivered or failed once it reports back.
 	Status FileDeliverySummaryStatus `json:"status" url:"status"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -1008,6 +1068,13 @@ type FileDeliverySummary struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (f *FileDeliverySummary) GetSchema() *string {
+	if f == nil {
+		return nil
+	}
+	return f.Schema
 }
 
 func (f *FileDeliverySummary) GetCreatedAt() time.Time {
@@ -1085,6 +1152,13 @@ func (f *FileDeliverySummary) require(field *big.Int) {
 		f.explicitFields = big.NewInt(0)
 	}
 	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetSchema(schema *string) {
+	f.Schema = schema
+	f.require(fileDeliverySummaryFieldSchema)
 }
 
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
@@ -1200,17 +1274,20 @@ func (f *FileDeliverySummary) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// dispatched while the phone downloads; delivered or failed once it reports back.
+// dispatching while the push is being published, dispatched while the phone downloads, then delivered or failed once it reports back.
 type FileDeliverySummaryStatus string
 
 const (
-	FileDeliverySummaryStatusDispatched FileDeliverySummaryStatus = "dispatched"
-	FileDeliverySummaryStatusDelivered  FileDeliverySummaryStatus = "delivered"
-	FileDeliverySummaryStatusFailed     FileDeliverySummaryStatus = "failed"
+	FileDeliverySummaryStatusDispatching FileDeliverySummaryStatus = "dispatching"
+	FileDeliverySummaryStatusDispatched  FileDeliverySummaryStatus = "dispatched"
+	FileDeliverySummaryStatusDelivered   FileDeliverySummaryStatus = "delivered"
+	FileDeliverySummaryStatusFailed      FileDeliverySummaryStatus = "failed"
 )
 
 func NewFileDeliverySummaryStatusFromString(s string) (FileDeliverySummaryStatus, error) {
 	switch s {
+	case "dispatching":
+		return FileDeliverySummaryStatusDispatching, nil
 	case "dispatched":
 		return FileDeliverySummaryStatusDispatched, nil
 	case "delivered":
@@ -5540,6 +5617,32 @@ func (p *PhoneSupportedAppsResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
+// Media collection to insert into on the phone; defaults to Pictures for images and Movies for videos.
+type FileDeliveryCreateRequestCollection string
+
+const (
+	FileDeliveryCreateRequestCollectionDcim     FileDeliveryCreateRequestCollection = "DCIM"
+	FileDeliveryCreateRequestCollectionPictures FileDeliveryCreateRequestCollection = "Pictures"
+	FileDeliveryCreateRequestCollectionMovies   FileDeliveryCreateRequestCollection = "Movies"
+)
+
+func NewFileDeliveryCreateRequestCollectionFromString(s string) (FileDeliveryCreateRequestCollection, error) {
+	switch s {
+	case "DCIM":
+		return FileDeliveryCreateRequestCollectionDcim, nil
+	case "Pictures":
+		return FileDeliveryCreateRequestCollectionPictures, nil
+	case "Movies":
+		return FileDeliveryCreateRequestCollectionMovies, nil
+	}
+	var t FileDeliveryCreateRequestCollection
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (f FileDeliveryCreateRequestCollection) Ptr() *FileDeliveryCreateRequestCollection {
+	return &f
+}
+
 // Category of device to allocate.
 type PhoneAllocateRequestPhoneType string
 
@@ -5583,32 +5686,6 @@ func NewPhonesAvailableRequestPhoneTypeFromString(s string) (PhonesAvailableRequ
 }
 
 func (p PhonesAvailableRequestPhoneType) Ptr() *PhonesAvailableRequestPhoneType {
-	return &p
-}
-
-// MediaStore collection to insert into; defaults to Pictures for images and Movies for videos
-type PhonesPushFileRequestCollection string
-
-const (
-	PhonesPushFileRequestCollectionDcim     PhonesPushFileRequestCollection = "DCIM"
-	PhonesPushFileRequestCollectionPictures PhonesPushFileRequestCollection = "Pictures"
-	PhonesPushFileRequestCollectionMovies   PhonesPushFileRequestCollection = "Movies"
-)
-
-func NewPhonesPushFileRequestCollectionFromString(s string) (PhonesPushFileRequestCollection, error) {
-	switch s {
-	case "DCIM":
-		return PhonesPushFileRequestCollectionDcim, nil
-	case "Pictures":
-		return PhonesPushFileRequestCollectionPictures, nil
-	case "Movies":
-		return PhonesPushFileRequestCollectionMovies, nil
-	}
-	var t PhonesPushFileRequestCollection
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (p PhonesPushFileRequestCollection) Ptr() *PhonesPushFileRequestCollection {
 	return &p
 }
 

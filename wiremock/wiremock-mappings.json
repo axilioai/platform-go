@@ -296,105 +296,6 @@
       "postServeActions": []
     },
     {
-      "id": "ba03bd15-86bf-4e02-b584-7e0a6956c3e9",
-      "name": "List the org's file library - default",
-      "request": {
-        "urlPathTemplate": "/files",
-        "method": "GET",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"filename\": \"filename\",\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"size_bytes\": 1000000,\n      \"status\": \"uploading\"\n    }\n  ],\n  \"total\": 1000000\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "ba03bd15-86bf-4e02-b584-7e0a6956c3e9",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      },
-      "postServeActions": []
-    },
-    {
-      "id": "d2b45954-4c48-49c0-9dac-552ae4cd96d4",
-      "name": "Register a file upload - default",
-      "request": {
-        "urlPathTemplate": "/files",
-        "method": "POST",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": "{\n  \"$schema\": \"/api/v1/FileUploadResponse.json\",\n  \"file\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\"\n  },\n  \"upload_expires_in_seconds\": 1000000,\n  \"upload_url\": \"upload_url\"\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "d2b45954-4c48-49c0-9dac-552ae4cd96d4",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
-      "id": "8d8e341c-ff0e-4f0d-938d-13274a4c3bac",
-      "name": "Delete a file - default",
-      "request": {
-        "urlPathTemplate": "/files/{file_id}",
-        "method": "DELETE",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "file_id": {
-            "equalTo": "file_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\"\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "8d8e341c-ff0e-4f0d-938d-13274a4c3bac",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
       "id": "c09e1221-3090-4fba-88c6-d5c1e167cbdd",
       "name": "Allocate a phone - default",
       "request": {
@@ -766,10 +667,10 @@
       }
     },
     {
-      "id": "35c7d6fc-cc7d-4b33-b606-4e05831a930e",
-      "name": "List files pushed to a phone - default",
+      "id": "e8238b2c-4eb2-48c2-80b7-bc84a143d6ea",
+      "name": "List a phone's file deliveries - default",
       "request": {
-        "urlPathTemplate": "/phones/{phone_id}/files",
+        "urlPathTemplate": "/phones/{phone_id}/deliveries",
         "method": "GET",
         "headers": {
           "X-Axilio-Api-Key": {
@@ -784,12 +685,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileDeliveryListResponse.json\",\n  \"deliveries\": [\n    {\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error\": \"error\",\n      \"file_id\": \"file_id\",\n      \"filename\": \"filename\",\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"phone_id\": \"phone_id\",\n      \"size_bytes\": 1000000,\n      \"status\": \"dispatched\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileDeliveryListResponse.json\",\n  \"deliveries\": [\n    {\n      \"$schema\": \"/api/v1/FileDeliverySummary.json\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error\": \"error\",\n      \"file_id\": \"file_id\",\n      \"filename\": \"filename\",\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"phone_id\": \"phone_id\",\n      \"size_bytes\": 1000000,\n      \"status\": \"dispatching\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "35c7d6fc-cc7d-4b33-b606-4e05831a930e",
+      "uuid": "e8238b2c-4eb2-48c2-80b7-bc84a143d6ea",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -802,10 +703,10 @@
       }
     },
     {
-      "id": "6fbd6bd0-284a-47db-892f-f3ba998854be",
-      "name": "Push a library file to a phone - default",
+      "id": "85f59078-f5bd-436b-bf68-2d7ce78084ca",
+      "name": "Deliver a library file to a phone - default",
       "request": {
-        "urlPathTemplate": "/phones/{phone_id}/files/{file_id}/push",
+        "urlPathTemplate": "/phones/{phone_id}/deliveries",
         "method": "POST",
         "headers": {
           "X-Axilio-Api-Key": {
@@ -815,20 +716,56 @@
         "pathParameters": {
           "phone_id": {
             "equalTo": "phone_id"
-          },
-          "file_id": {
-            "equalTo": "file_id"
           }
         }
       },
       "response": {
         "status": 202,
-        "body": "{\n  \"$schema\": \"/api/v1/FilePushResponse.json\",\n  \"delivery\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"error\": \"error\",\n    \"file_id\": \"file_id\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"phone_id\": \"phone_id\",\n    \"size_bytes\": 1000000,\n    \"status\": \"dispatched\"\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FilePushResponse.json\",\n  \"delivery\": {\n    \"$schema\": \"/api/v1/FileDeliverySummary.json\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"error\": \"error\",\n    \"file_id\": \"file_id\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"phone_id\": \"phone_id\",\n    \"size_bytes\": 1000000,\n    \"status\": \"dispatching\"\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "6fbd6bd0-284a-47db-892f-f3ba998854be",
+      "uuid": "85f59078-f5bd-436b-bf68-2d7ce78084ca",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "852116a0-2aed-432c-9ed6-c3e1b2f2b2e5",
+      "name": "Get one file delivery - default",
+      "request": {
+        "urlPathTemplate": "/phones/{phone_id}/deliveries/{delivery_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "phone_id": {
+            "equalTo": "phone_id"
+          },
+          "delivery_id": {
+            "equalTo": "delivery_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/FileDeliverySummary.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error\": \"error\",\n  \"file_id\": \"file_id\",\n  \"filename\": \"filename\",\n  \"id\": \"id\",\n  \"mime_type\": \"mime_type\",\n  \"phone_id\": \"phone_id\",\n  \"size_bytes\": 1000000,\n  \"status\": \"dispatching\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "852116a0-2aed-432c-9ed6-c3e1b2f2b2e5",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1174,6 +1111,141 @@
         }
       },
       "uuid": "ba32ce89-9e3d-413e-96cd-636f7e589186",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "be3f98d9-15fc-464e-a205-c7792a75a291",
+      "name": "List the org's uploads - default",
+      "request": {
+        "urlPathTemplate": "/uploads",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"filename\": \"filename\",\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"size_bytes\": 1000000,\n      \"status\": \"uploading\"\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "be3f98d9-15fc-464e-a205-c7792a75a291",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "c41a6cea-c983-4e58-87aa-982b03050687",
+      "name": "Register a file upload - default",
+      "request": {
+        "urlPathTemplate": "/uploads",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": "{\n  \"$schema\": \"/api/v1/FileUploadResponse.json\",\n  \"file\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\"\n  },\n  \"upload_expires_in_seconds\": 1000000,\n  \"upload_url\": \"upload_url\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "c41a6cea-c983-4e58-87aa-982b03050687",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "181d0be6-e739-4bf4-81a4-8cceda1a6f58",
+      "name": "Delete an upload - default",
+      "request": {
+        "urlPathTemplate": "/uploads/{upload_id}",
+        "method": "DELETE",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "upload_id": {
+            "equalTo": "upload_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "181d0be6-e739-4bf4-81a4-8cceda1a6f58",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "bee2012f-3d21-4da9-9990-d18370856181",
+      "name": "Mark an upload complete - default",
+      "request": {
+        "urlPathTemplate": "/uploads/{upload_id}/complete",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "upload_id": {
+            "equalTo": "upload_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/CompleteFileOutputBody.json\",\n  \"file\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\"\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "bee2012f-3d21-4da9-9990-d18370856181",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1612,6 +1684,6 @@
     }
   ],
   "meta": {
-    "total": 47
+    "total": 49
   }
 }

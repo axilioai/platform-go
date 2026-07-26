@@ -11,6 +11,32 @@ import (
 )
 
 var (
+	uploadsCompleteRequestFieldUploadID = big.NewInt(1 << 0)
+)
+
+type UploadsCompleteRequest struct {
+	// upload identifier to finalize
+	UploadID string `json:"-" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (u *UploadsCompleteRequest) require(field *big.Int) {
+	if u.explicitFields == nil {
+		u.explicitFields = big.NewInt(0)
+	}
+	u.explicitFields.Or(u.explicitFields, field)
+}
+
+// SetUploadID sets the UploadID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UploadsCompleteRequest) SetUploadID(uploadID string) {
+	u.UploadID = uploadID
+	u.require(uploadsCompleteRequestFieldUploadID)
+}
+
+var (
 	fileCreateRequestFieldFilename  = big.NewInt(1 << 0)
 	fileCreateRequestFieldMimeType  = big.NewInt(1 << 1)
 	fileCreateRequestFieldSizeBytes = big.NewInt(1 << 2)
@@ -78,65 +104,197 @@ func (f *FileCreateRequest) MarshalJSON() ([]byte, error) {
 }
 
 var (
-	filesDeleteRequestFieldFileID = big.NewInt(1 << 0)
+	uploadsDeleteRequestFieldUploadID = big.NewInt(1 << 0)
 )
 
-type FilesDeleteRequest struct {
-	// file identifier to delete
-	FileID string `json:"-" url:"-"`
+type UploadsDeleteRequest struct {
+	// upload identifier to delete
+	UploadID string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 }
 
-func (f *FilesDeleteRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+func (u *UploadsDeleteRequest) require(field *big.Int) {
+	if u.explicitFields == nil {
+		u.explicitFields = big.NewInt(0)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	u.explicitFields.Or(u.explicitFields, field)
 }
 
-// SetFileID sets the FileID field and marks it as non-optional;
+// SetUploadID sets the UploadID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (f *FilesDeleteRequest) SetFileID(fileID string) {
-	f.FileID = fileID
-	f.require(filesDeleteRequestFieldFileID)
+func (u *UploadsDeleteRequest) SetUploadID(uploadID string) {
+	u.UploadID = uploadID
+	u.require(uploadsDeleteRequestFieldUploadID)
 }
 
 var (
-	filesListRequestFieldLimit  = big.NewInt(1 << 0)
-	filesListRequestFieldOffset = big.NewInt(1 << 1)
+	uploadsListRequestFieldLimit  = big.NewInt(1 << 0)
+	uploadsListRequestFieldOffset = big.NewInt(1 << 1)
+	uploadsListRequestFieldQ      = big.NewInt(1 << 2)
+	uploadsListRequestFieldSort   = big.NewInt(1 << 3)
+	uploadsListRequestFieldOrder  = big.NewInt(1 << 4)
 )
 
-type FilesListRequest struct {
+type UploadsListRequest struct {
 	// max items per page
 	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// pagination offset
 	Offset *int64 `json:"-" url:"offset,omitempty"`
+	// filter by filename, case-insensitive substring match
+	Q *string `json:"-" url:"q,omitempty"`
+	// field to sort by
+	Sort *UploadsListRequestSort `json:"-" url:"sort,omitempty"`
+	// sort direction
+	Order *UploadsListRequestOrder `json:"-" url:"order,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 }
 
-func (f *FilesListRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+func (u *UploadsListRequest) require(field *big.Int) {
+	if u.explicitFields == nil {
+		u.explicitFields = big.NewInt(0)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	u.explicitFields.Or(u.explicitFields, field)
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (f *FilesListRequest) SetLimit(limit *int64) {
-	f.Limit = limit
-	f.require(filesListRequestFieldLimit)
+func (u *UploadsListRequest) SetLimit(limit *int64) {
+	u.Limit = limit
+	u.require(uploadsListRequestFieldLimit)
 }
 
 // SetOffset sets the Offset field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (f *FilesListRequest) SetOffset(offset *int64) {
-	f.Offset = offset
-	f.require(filesListRequestFieldOffset)
+func (u *UploadsListRequest) SetOffset(offset *int64) {
+	u.Offset = offset
+	u.require(uploadsListRequestFieldOffset)
+}
+
+// SetQ sets the Q field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UploadsListRequest) SetQ(q *string) {
+	u.Q = q
+	u.require(uploadsListRequestFieldQ)
+}
+
+// SetSort sets the Sort field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UploadsListRequest) SetSort(sort *UploadsListRequestSort) {
+	u.Sort = sort
+	u.require(uploadsListRequestFieldSort)
+}
+
+// SetOrder sets the Order field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UploadsListRequest) SetOrder(order *UploadsListRequestOrder) {
+	u.Order = order
+	u.require(uploadsListRequestFieldOrder)
+}
+
+var (
+	completeFileOutputBodyFieldSchema = big.NewInt(1 << 0)
+	completeFileOutputBodyFieldFile   = big.NewInt(1 << 1)
+)
+
+type CompleteFileOutputBody struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// The finalized library entry, now ready.
+	File *FileSummary `json:"file" url:"file"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CompleteFileOutputBody) GetSchema() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Schema
+}
+
+func (c *CompleteFileOutputBody) GetFile() *FileSummary {
+	if c == nil {
+		return nil
+	}
+	return c.File
+}
+
+func (c *CompleteFileOutputBody) GetExtraProperties() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.extraProperties
+}
+
+func (c *CompleteFileOutputBody) require(field *big.Int) {
+	if c.explicitFields == nil {
+		c.explicitFields = big.NewInt(0)
+	}
+	c.explicitFields.Or(c.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *CompleteFileOutputBody) SetSchema(schema *string) {
+	c.Schema = schema
+	c.require(completeFileOutputBodyFieldSchema)
+}
+
+// SetFile sets the File field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *CompleteFileOutputBody) SetFile(file *FileSummary) {
+	c.File = file
+	c.require(completeFileOutputBodyFieldFile)
+}
+
+func (c *CompleteFileOutputBody) UnmarshalJSON(data []byte) error {
+	type unmarshaler CompleteFileOutputBody
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CompleteFileOutputBody(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CompleteFileOutputBody) MarshalJSON() ([]byte, error) {
+	type embed CompleteFileOutputBody
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*c),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, c.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (c *CompleteFileOutputBody) String() string {
+	if c == nil {
+		return "<nil>"
+	}
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
 }
 
 // Confirmation that the file was deleted.
@@ -246,6 +404,7 @@ var (
 	fileListResponseFieldSchema = big.NewInt(1 << 0)
 	fileListResponseFieldFiles  = big.NewInt(1 << 1)
 	fileListResponseFieldTotal  = big.NewInt(1 << 2)
+	fileListResponseFieldUsage  = big.NewInt(1 << 3)
 )
 
 type FileListResponse struct {
@@ -253,8 +412,10 @@ type FileListResponse struct {
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	// Library entries, newest first.
 	Files []*FileSummary `json:"files,omitempty" url:"files,omitempty"`
-	// Total files in the library.
+	// Total files matching the query.
 	Total int64 `json:"total" url:"total"`
+	// The org's standing library usage against its quota.
+	Usage *FileUsage `json:"usage" url:"usage"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -282,6 +443,13 @@ func (f *FileListResponse) GetTotal() int64 {
 		return 0
 	}
 	return f.Total
+}
+
+func (f *FileListResponse) GetUsage() *FileUsage {
+	if f == nil {
+		return nil
+	}
+	return f.Usage
 }
 
 func (f *FileListResponse) GetExtraProperties() map[string]interface{} {
@@ -317,6 +485,13 @@ func (f *FileListResponse) SetFiles(files []*FileSummary) {
 func (f *FileListResponse) SetTotal(total int64) {
 	f.Total = total
 	f.require(fileListResponseFieldTotal)
+}
+
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileListResponse) SetUsage(usage *FileUsage) {
+	f.Usage = usage
+	f.require(fileListResponseFieldUsage)
 }
 
 func (f *FileListResponse) UnmarshalJSON(data []byte) error {
@@ -361,28 +536,31 @@ func (f *FileListResponse) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// One file in the org's upload library.
+// One file in the org's library.
 var (
-	fileSummaryFieldCreatedAt = big.NewInt(1 << 0)
-	fileSummaryFieldFilename  = big.NewInt(1 << 1)
-	fileSummaryFieldID        = big.NewInt(1 << 2)
-	fileSummaryFieldMimeType  = big.NewInt(1 << 3)
-	fileSummaryFieldSizeBytes = big.NewInt(1 << 4)
-	fileSummaryFieldStatus    = big.NewInt(1 << 5)
+	fileSummaryFieldCreatedAt   = big.NewInt(1 << 0)
+	fileSummaryFieldDownloadURL = big.NewInt(1 << 1)
+	fileSummaryFieldFilename    = big.NewInt(1 << 2)
+	fileSummaryFieldID          = big.NewInt(1 << 3)
+	fileSummaryFieldMimeType    = big.NewInt(1 << 4)
+	fileSummaryFieldSizeBytes   = big.NewInt(1 << 5)
+	fileSummaryFieldStatus      = big.NewInt(1 << 6)
 )
 
 type FileSummary struct {
 	// When the upload was registered.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
+	// Short-lived signed URL to read the file's bytes. Present only for ready files; re-list to refresh an expired one.
+	DownloadURL *string `json:"download_url,omitempty" url:"download_url,omitempty"`
 	// Original filename; used as the display name when the file lands on a phone.
 	Filename string `json:"filename" url:"filename"`
-	// File identifier.
+	// File identifier. Unique across uploads and downloads.
 	ID string `json:"id" url:"id"`
 	// Declared MIME type, pinned by the presigned upload.
 	MimeType string `json:"mime_type" url:"mime_type"`
 	// Declared size in bytes, pinned by the presigned upload.
 	SizeBytes int64 `json:"size_bytes" url:"size_bytes"`
-	// uploading until the object is verified in storage (on the first push), then ready.
+	// uploading until the object is verified in storage, then ready. Complete an upload to move it to ready.
 	Status FileSummaryStatus `json:"status" url:"status"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -397,6 +575,13 @@ func (f *FileSummary) GetCreatedAt() time.Time {
 		return time.Time{}
 	}
 	return f.CreatedAt
+}
+
+func (f *FileSummary) GetDownloadURL() *string {
+	if f == nil {
+		return nil
+	}
+	return f.DownloadURL
 }
 
 func (f *FileSummary) GetFilename() string {
@@ -453,6 +638,13 @@ func (f *FileSummary) require(field *big.Int) {
 func (f *FileSummary) SetCreatedAt(createdAt time.Time) {
 	f.CreatedAt = createdAt
 	f.require(fileSummaryFieldCreatedAt)
+}
+
+// SetDownloadURL sets the DownloadURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetDownloadURL(downloadURL *string) {
+	f.DownloadURL = downloadURL
+	f.require(fileSummaryFieldDownloadURL)
 }
 
 // SetFilename sets the Filename field and marks it as non-optional;
@@ -540,7 +732,7 @@ func (f *FileSummary) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// uploading until the object is verified in storage (on the first push), then ready.
+// uploading until the object is verified in storage, then ready. Complete an upload to move it to ready.
 type FileSummaryStatus string
 
 const (
@@ -698,4 +890,190 @@ func (f *FileUploadResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", f)
+}
+
+// The org's standing library usage against its quota.
+var (
+	fileUsageFieldByteLimit  = big.NewInt(1 << 0)
+	fileUsageFieldFileCount  = big.NewInt(1 << 1)
+	fileUsageFieldFileLimit  = big.NewInt(1 << 2)
+	fileUsageFieldTotalBytes = big.NewInt(1 << 3)
+)
+
+type FileUsage struct {
+	// Storage quota in bytes.
+	ByteLimit int64 `json:"byte_limit" url:"byte_limit"`
+	// Files currently in the library.
+	FileCount int64 `json:"file_count" url:"file_count"`
+	// Maximum files the library will hold.
+	FileLimit int64 `json:"file_limit" url:"file_limit"`
+	// Total bytes currently stored.
+	TotalBytes int64 `json:"total_bytes" url:"total_bytes"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (f *FileUsage) GetByteLimit() int64 {
+	if f == nil {
+		return 0
+	}
+	return f.ByteLimit
+}
+
+func (f *FileUsage) GetFileCount() int64 {
+	if f == nil {
+		return 0
+	}
+	return f.FileCount
+}
+
+func (f *FileUsage) GetFileLimit() int64 {
+	if f == nil {
+		return 0
+	}
+	return f.FileLimit
+}
+
+func (f *FileUsage) GetTotalBytes() int64 {
+	if f == nil {
+		return 0
+	}
+	return f.TotalBytes
+}
+
+func (f *FileUsage) GetExtraProperties() map[string]interface{} {
+	if f == nil {
+		return nil
+	}
+	return f.extraProperties
+}
+
+func (f *FileUsage) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetByteLimit sets the ByteLimit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileUsage) SetByteLimit(byteLimit int64) {
+	f.ByteLimit = byteLimit
+	f.require(fileUsageFieldByteLimit)
+}
+
+// SetFileCount sets the FileCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileUsage) SetFileCount(fileCount int64) {
+	f.FileCount = fileCount
+	f.require(fileUsageFieldFileCount)
+}
+
+// SetFileLimit sets the FileLimit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileUsage) SetFileLimit(fileLimit int64) {
+	f.FileLimit = fileLimit
+	f.require(fileUsageFieldFileLimit)
+}
+
+// SetTotalBytes sets the TotalBytes field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileUsage) SetTotalBytes(totalBytes int64) {
+	f.TotalBytes = totalBytes
+	f.require(fileUsageFieldTotalBytes)
+}
+
+func (f *FileUsage) UnmarshalJSON(data []byte) error {
+	type unmarshaler FileUsage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*f = FileUsage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *f)
+	if err != nil {
+		return err
+	}
+	f.extraProperties = extraProperties
+	f.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (f *FileUsage) MarshalJSON() ([]byte, error) {
+	type embed FileUsage
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*f),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (f *FileUsage) String() string {
+	if f == nil {
+		return "<nil>"
+	}
+	if len(f.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(f.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(f); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", f)
+}
+
+// sort direction
+type UploadsListRequestOrder string
+
+const (
+	UploadsListRequestOrderAsc  UploadsListRequestOrder = "asc"
+	UploadsListRequestOrderDesc UploadsListRequestOrder = "desc"
+)
+
+func NewUploadsListRequestOrderFromString(s string) (UploadsListRequestOrder, error) {
+	switch s {
+	case "asc":
+		return UploadsListRequestOrderAsc, nil
+	case "desc":
+		return UploadsListRequestOrderDesc, nil
+	}
+	var t UploadsListRequestOrder
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UploadsListRequestOrder) Ptr() *UploadsListRequestOrder {
+	return &u
+}
+
+// field to sort by
+type UploadsListRequestSort string
+
+const (
+	UploadsListRequestSortCreatedAt UploadsListRequestSort = "created_at"
+	UploadsListRequestSortFilename  UploadsListRequestSort = "filename"
+	UploadsListRequestSortSizeBytes UploadsListRequestSort = "size_bytes"
+)
+
+func NewUploadsListRequestSortFromString(s string) (UploadsListRequestSort, error) {
+	switch s {
+	case "created_at":
+		return UploadsListRequestSortCreatedAt, nil
+	case "filename":
+		return UploadsListRequestSortFilename, nil
+	case "size_bytes":
+		return UploadsListRequestSortSizeBytes, nil
+	}
+	var t UploadsListRequestSort
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UploadsListRequestSort) Ptr() *UploadsListRequestSort {
+	return &u
 }
