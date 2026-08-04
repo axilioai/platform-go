@@ -155,6 +155,33 @@ func TestUploadsDeleteWithWireMock(
 	VerifyRequestCount(t, "TestUploadsDeleteWithWireMock", "DELETE", "/uploads/upload_id", nil, 1)
 }
 
+func TestUploadsRenameWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.FileRenameRequest{
+		UploadID: "upload_id",
+		Filename: "filename",
+	}
+	_, invocationErr := client.Uploads.Rename(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestUploadsRenameWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestUploadsRenameWithWireMock", "PATCH", "/uploads/upload_id", nil, 1)
+}
+
 func TestUploadsCompleteWithWireMock(
 	t *testing.T,
 ) {

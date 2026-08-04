@@ -100,42 +100,6 @@
       }
     },
     {
-      "id": "6c495156-c35d-4389-8d95-43d76341496e",
-      "name": "Regenerate an API key - default",
-      "request": {
-        "urlPathTemplate": "/api-keys/{key_id}/regenerate",
-        "method": "POST",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "key_id": {
-            "equalTo": "key_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/APIKeyRegenerateResponse.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"key_value\": \"key_value\",\n  \"name\": \"name\",\n  \"regenerated_at\": \"2024-01-15T09:30:00Z\"\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "6c495156-c35d-4389-8d95-43d76341496e",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
       "id": "6a6a1fb7-60d0-4f89-b2ec-537fb714ba5e",
       "name": "Get auto-recharge settings - default",
       "request": {
@@ -296,6 +260,142 @@
       "postServeActions": []
     },
     {
+      "id": "df3a834f-0a86-4e12-aa66-2fab13054fe7",
+      "name": "Get usage-alert settings - default",
+      "request": {
+        "urlPathTemplate": "/billing/usage-alerts",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionUsageAlertSettingsResponse.json\",\n  \"active_alerts\": [\n    {\n      \"balance_cents\": 1000000,\n      \"kind\": \"low_balance\",\n      \"threshold_cents\": 1000000,\n      \"triggered_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"enabled\": true,\n  \"threshold_cents\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "df3a834f-0a86-4e12-aa66-2fab13054fe7",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "44ff6bbe-4cdb-4509-898d-d9e9bead8864",
+      "name": "List the org's captured downloads - default",
+      "request": {
+        "urlPathTemplate": "/downloads",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/FileDownloadListResponse.json\",\n  \"downloads\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "44ff6bbe-4cdb-4509-898d-d9e9bead8864",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "96ff2a8a-cf50-4c64-b2d7-1fb21354a140",
+      "name": "Delete a download - default",
+      "request": {
+        "urlPathTemplate": "/downloads/{download_id}",
+        "method": "DELETE",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "download_id": {
+            "equalTo": "download_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\",\n  \"phones_pending_removal\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "96ff2a8a-cf50-4c64-b2d7-1fb21354a140",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "b7d1e8a4-cf66-48f5-944b-ccc68cea6b2e",
+      "name": "List a session's captured downloads - default",
+      "request": {
+        "urlPathTemplate": "/phones/sessions/{session_id}/downloads",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "session_id": {
+            "equalTo": "session_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/FileDownloadListResponse.json\",\n  \"downloads\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "b7d1e8a4-cf66-48f5-944b-ccc68cea6b2e",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
       "id": "c09e1221-3090-4fba-88c6-d5c1e167cbdd",
       "name": "Allocate a phone - default",
       "request": {
@@ -372,7 +472,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneAvailableListResponse.json\",\n  \"android_count\": 1000000,\n  \"iphone_count\": 1000000,\n  \"phones\": [\n    {\n      \"$schema\": \"/api/v1/PhoneSummary.json\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"current_session_id\": \"current_session_id\",\n      \"last_heartbeat\": \"2024-01-15T09:30:00Z\",\n      \"last_interaction_timestamp\": \"2024-01-15T09:30:00Z\",\n      \"location\": \"location\",\n      \"model_id\": \"model_id\",\n      \"model_name\": \"model_name\",\n      \"nickname\": \"nickname\",\n      \"owner_organization_id\": \"owner_organization_id\",\n      \"ownership_type\": \"shared\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_type\": \"android\",\n      \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"active\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ]\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneAvailableListResponse.json\",\n  \"android_count\": 1000000,\n  \"phones\": [\n    {\n      \"$schema\": \"/api/v1/PhoneSummary.json\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"current_session_id\": \"current_session_id\",\n      \"last_heartbeat\": \"2024-01-15T09:30:00Z\",\n      \"last_interaction_timestamp\": \"2024-01-15T09:30:00Z\",\n      \"location\": \"location\",\n      \"model_id\": \"model_id\",\n      \"model_name\": \"model_name\",\n      \"nickname\": \"nickname\",\n      \"owner_organization_id\": \"owner_organization_id\",\n      \"ownership_type\": \"shared\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_type\": \"android\",\n      \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"active\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ]\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -541,7 +641,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionDetailResponse.json\",\n  \"allocated_at\": \"2024-01-15T09:30:00Z\",\n  \"allocated_by\": \"workflow_editor\",\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"is_dedicated_phone\": true,\n  \"location\": \"location\",\n  \"model_name\": \"model_name\",\n  \"name\": \"name\",\n  \"nickname\": \"nickname\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_status\": \"active\",\n  \"phone_type\": \"android\",\n  \"recording_status\": \"ready\",\n  \"recording_url\": \"recording_url\",\n  \"session_id\": \"session_id\",\n  \"source\": \"workflow\",\n  \"status\": \"active\",\n  \"tags\": {\n    \"key\": \"value\"\n  },\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionDetailResponse.json\",\n  \"allocated_at\": \"2024-01-15T09:30:00Z\",\n  \"allocated_by\": \"workflow_editor\",\n  \"capture_enabled\": true,\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"is_dedicated_phone\": true,\n  \"location\": \"location\",\n  \"model_name\": \"model_name\",\n  \"name\": \"name\",\n  \"nickname\": \"nickname\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_status\": \"active\",\n  \"phone_type\": \"android\",\n  \"recording_status\": \"ready\",\n  \"recording_url\": \"recording_url\",\n  \"session_id\": \"session_id\",\n  \"source\": \"workflow\",\n  \"status\": \"active\",\n  \"tags\": {\n    \"key\": \"value\"\n  },\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -685,7 +785,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileDeliveryListResponse.json\",\n  \"deliveries\": [\n    {\n      \"$schema\": \"/api/v1/FileDeliverySummary.json\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error\": \"error\",\n      \"file_id\": \"file_id\",\n      \"filename\": \"filename\",\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"phone_id\": \"phone_id\",\n      \"size_bytes\": 1000000,\n      \"status\": \"dispatching\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileDeliveryListResponse.json\",\n  \"deliveries\": [\n    {\n      \"$schema\": \"/api/v1/FileDeliverySummary.json\",\n      \"bytes_transferred\": 1000000,\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error\": \"error\",\n      \"file_id\": \"file_id\",\n      \"filename\": \"filename\",\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"phone_id\": \"phone_id\",\n      \"size_bytes\": 1000000,\n      \"status\": \"dispatching\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -721,7 +821,7 @@
       },
       "response": {
         "status": 202,
-        "body": "{\n  \"$schema\": \"/api/v1/FilePushResponse.json\",\n  \"delivery\": {\n    \"$schema\": \"/api/v1/FileDeliverySummary.json\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"error\": \"error\",\n    \"file_id\": \"file_id\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"phone_id\": \"phone_id\",\n    \"size_bytes\": 1000000,\n    \"status\": \"dispatching\"\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FilePushResponse.json\",\n  \"delivery\": {\n    \"$schema\": \"/api/v1/FileDeliverySummary.json\",\n    \"bytes_transferred\": 1000000,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"error\": \"error\",\n    \"file_id\": \"file_id\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"phone_id\": \"phone_id\",\n    \"size_bytes\": 1000000,\n    \"status\": \"dispatching\"\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -760,7 +860,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileDeliverySummary.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error\": \"error\",\n  \"file_id\": \"file_id\",\n  \"filename\": \"filename\",\n  \"id\": \"id\",\n  \"mime_type\": \"mime_type\",\n  \"phone_id\": \"phone_id\",\n  \"size_bytes\": 1000000,\n  \"status\": \"dispatching\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileDeliverySummary.json\",\n  \"bytes_transferred\": 1000000,\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error\": \"error\",\n  \"file_id\": \"file_id\",\n  \"filename\": \"filename\",\n  \"id\": \"id\",\n  \"mime_type\": \"mime_type\",\n  \"phone_id\": \"phone_id\",\n  \"size_bytes\": 1000000,\n  \"status\": \"dispatching\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -899,7 +999,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"$schema\": \"/api/v1/RunResponse.json\",\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"logs\": \"logs\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"start_timeout_seconds\": 1000000,\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"success\": true,\n      \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n      \"trigger\": \"manual\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"user_id\": \"user_id\",\n      \"variables\": {\n        \"key\": \"value\"\n      },\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"$schema\": \"/api/v1/RunResponse.json\",\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"logs\": \"logs\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"start_timeout_seconds\": 1000000,\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"success\": true,\n      \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n      \"trigger\": \"manual\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"user_id\": \"user_id\",\n      \"variables\": {\n        \"key\": \"value\"\n      },\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1033,7 +1133,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"logs\": \"logs\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"logs\": \"logs\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1123,6 +1223,33 @@
       }
     },
     {
+      "id": "627b305d-af2f-4407-bd46-5bfff87e7197",
+      "name": "Agent skill markdown - default",
+      "request": {
+        "urlPathTemplate": "/skill",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "\"\"",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "627b305d-af2f-4407-bd46-5bfff87e7197",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
       "id": "be3f98d9-15fc-464e-a205-c7792a75a291",
       "name": "List the org's uploads - default",
       "request": {
@@ -1136,7 +1263,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"filename\": \"filename\",\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"size_bytes\": 1000000,\n      \"status\": \"uploading\"\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"size_bytes\": 1000000,\n      \"status\": \"uploading\",\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1168,7 +1295,7 @@
       },
       "response": {
         "status": 201,
-        "body": "{\n  \"$schema\": \"/api/v1/FileUploadResponse.json\",\n  \"file\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\"\n  },\n  \"upload_expires_in_seconds\": 1000000,\n  \"upload_url\": \"upload_url\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileUploadResponse.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  },\n  \"upload_expires_in_seconds\": 1000000,\n  \"upload_url\": \"upload_url\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1204,12 +1331,48 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\",\n  \"phones_pending_removal\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
       "uuid": "181d0be6-e739-4bf4-81a4-8cceda1a6f58",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "c00a6bdb-8046-4d6f-b055-3e091025e8bb",
+      "name": "Rename an upload - default",
+      "request": {
+        "urlPathTemplate": "/uploads/{upload_id}",
+        "method": "PATCH",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "upload_id": {
+            "equalTo": "upload_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/RenameFileOutputBody.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "c00a6bdb-8046-4d6f-b055-3e091025e8bb",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1240,7 +1403,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/CompleteFileOutputBody.json\",\n  \"file\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"filename\": \"filename\",\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\"\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/CompleteFileOutputBody.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1342,7 +1505,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000,\n  \"workflows\": [\n    {\n      \"$schema\": \"/api/v1/WorkflowResponse.json\",\n      \"stats\": {\n        \"success_rate\": 1.1,\n        \"total_runs\": 1000000\n      },\n      \"workflow\": {\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"id\": \"id\",\n        \"last_run_at\": null,\n        \"name\": \"name\",\n        \"ocr_engine\": \"free\",\n        \"organization_id\": null,\n        \"platform\": \"android\",\n        \"status\": \"ready\",\n        \"updated_at\": \"2024-01-15T09:30:00Z\",\n        \"user_id\": \"user_id\"\n      }\n    }\n  ]\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000,\n  \"workflows\": [\n    {\n      \"$schema\": \"/api/v1/WorkflowResponse.json\",\n      \"stats\": {\n        \"success_rate\": 1.1,\n        \"total_runs\": 1000000\n      },\n      \"workflow\": {\n        \"capture\": true,\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"id\": \"id\",\n        \"last_run_at\": null,\n        \"name\": \"name\",\n        \"ocr_engine\": \"free\",\n        \"organization_id\": null,\n        \"platform\": \"android\",\n        \"recording\": true,\n        \"status\": \"ready\",\n        \"telemetry\": true,\n        \"updated_at\": \"2024-01-15T09:30:00Z\",\n        \"user_id\": \"user_id\"\n      }\n    }\n  ]\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1410,7 +1573,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"status\": \"ready\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1446,7 +1609,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"status\": \"ready\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1684,6 +1847,6 @@
     }
   ],
   "meta": {
-    "total": 49
+    "total": 54
   }
 }

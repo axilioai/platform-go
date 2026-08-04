@@ -1567,6 +1567,174 @@ func (p *PhoneRentalUpcomingCharge) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
+// An open balance alert.
+var (
+	subscriptionActiveUsageAlertFieldBalanceCents   = big.NewInt(1 << 0)
+	subscriptionActiveUsageAlertFieldKind           = big.NewInt(1 << 1)
+	subscriptionActiveUsageAlertFieldThresholdCents = big.NewInt(1 << 2)
+	subscriptionActiveUsageAlertFieldTriggeredAt    = big.NewInt(1 << 3)
+)
+
+type SubscriptionActiveUsageAlert struct {
+	// The balance when the alert opened, in cents. May be negative.
+	BalanceCents int64 `json:"balance_cents" url:"balance_cents"`
+	// Which rule fired: the configurable low-balance threshold, or the balance going negative.
+	Kind SubscriptionActiveUsageAlertKind `json:"kind" url:"kind"`
+	// The threshold in effect when the alert opened, in cents (0 for negative_balance).
+	ThresholdCents int64 `json:"threshold_cents" url:"threshold_cents"`
+	// When the alert opened.
+	TriggeredAt time.Time `json:"triggered_at" url:"triggered_at"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SubscriptionActiveUsageAlert) GetBalanceCents() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.BalanceCents
+}
+
+func (s *SubscriptionActiveUsageAlert) GetKind() SubscriptionActiveUsageAlertKind {
+	if s == nil {
+		return ""
+	}
+	return s.Kind
+}
+
+func (s *SubscriptionActiveUsageAlert) GetThresholdCents() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.ThresholdCents
+}
+
+func (s *SubscriptionActiveUsageAlert) GetTriggeredAt() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.TriggeredAt
+}
+
+func (s *SubscriptionActiveUsageAlert) GetExtraProperties() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.extraProperties
+}
+
+func (s *SubscriptionActiveUsageAlert) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetBalanceCents sets the BalanceCents field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionActiveUsageAlert) SetBalanceCents(balanceCents int64) {
+	s.BalanceCents = balanceCents
+	s.require(subscriptionActiveUsageAlertFieldBalanceCents)
+}
+
+// SetKind sets the Kind field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionActiveUsageAlert) SetKind(kind SubscriptionActiveUsageAlertKind) {
+	s.Kind = kind
+	s.require(subscriptionActiveUsageAlertFieldKind)
+}
+
+// SetThresholdCents sets the ThresholdCents field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionActiveUsageAlert) SetThresholdCents(thresholdCents int64) {
+	s.ThresholdCents = thresholdCents
+	s.require(subscriptionActiveUsageAlertFieldThresholdCents)
+}
+
+// SetTriggeredAt sets the TriggeredAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionActiveUsageAlert) SetTriggeredAt(triggeredAt time.Time) {
+	s.TriggeredAt = triggeredAt
+	s.require(subscriptionActiveUsageAlertFieldTriggeredAt)
+}
+
+func (s *SubscriptionActiveUsageAlert) UnmarshalJSON(data []byte) error {
+	type embed SubscriptionActiveUsageAlert
+	var unmarshaler = struct {
+		embed
+		TriggeredAt *internal.DateTime `json:"triggered_at"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SubscriptionActiveUsageAlert(unmarshaler.embed)
+	s.TriggeredAt = unmarshaler.TriggeredAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SubscriptionActiveUsageAlert) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionActiveUsageAlert
+	var marshaler = struct {
+		embed
+		TriggeredAt *internal.DateTime `json:"triggered_at"`
+	}{
+		embed:       embed(*s),
+		TriggeredAt: internal.NewDateTime(s.TriggeredAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (s *SubscriptionActiveUsageAlert) String() string {
+	if s == nil {
+		return "<nil>"
+	}
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// Which rule fired: the configurable low-balance threshold, or the balance going negative.
+type SubscriptionActiveUsageAlertKind string
+
+const (
+	SubscriptionActiveUsageAlertKindLowBalance      SubscriptionActiveUsageAlertKind = "low_balance"
+	SubscriptionActiveUsageAlertKindNegativeBalance SubscriptionActiveUsageAlertKind = "negative_balance"
+)
+
+func NewSubscriptionActiveUsageAlertKindFromString(s string) (SubscriptionActiveUsageAlertKind, error) {
+	switch s {
+	case "low_balance":
+		return SubscriptionActiveUsageAlertKindLowBalance, nil
+	case "negative_balance":
+		return SubscriptionActiveUsageAlertKindNegativeBalance, nil
+	}
+	var t SubscriptionActiveUsageAlertKind
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SubscriptionActiveUsageAlertKind) Ptr() *SubscriptionActiveUsageAlertKind {
+	return &s
+}
+
 // The org's auto-recharge configuration and status.
 var (
 	subscriptionAutoRechargeSettingsResponseFieldSchema         = big.NewInt(1 << 0)
@@ -2370,4 +2538,141 @@ func NewSubscriptionResponseStatusFromString(s string) (SubscriptionResponseStat
 
 func (s SubscriptionResponseStatus) Ptr() *SubscriptionResponseStatus {
 	return &s
+}
+
+// The org's usage-alert configuration and any open alerts.
+var (
+	subscriptionUsageAlertSettingsResponseFieldSchema         = big.NewInt(1 << 0)
+	subscriptionUsageAlertSettingsResponseFieldActiveAlerts   = big.NewInt(1 << 1)
+	subscriptionUsageAlertSettingsResponseFieldEnabled        = big.NewInt(1 << 2)
+	subscriptionUsageAlertSettingsResponseFieldThresholdCents = big.NewInt(1 << 3)
+)
+
+type SubscriptionUsageAlertSettingsResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Currently open alerts, oldest first. Empty when the balance is healthy.
+	ActiveAlerts []*SubscriptionActiveUsageAlert `json:"active_alerts,omitempty" url:"active_alerts,omitempty"`
+	// Whether low-balance alerts are active. Negative-balance alerts are always on.
+	Enabled bool `json:"enabled" url:"enabled"`
+	// Alert while the balance sits below this amount, in cents. Must be positive.
+	ThresholdCents int64 `json:"threshold_cents" url:"threshold_cents"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SubscriptionUsageAlertSettingsResponse) GetSchema() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Schema
+}
+
+func (s *SubscriptionUsageAlertSettingsResponse) GetActiveAlerts() []*SubscriptionActiveUsageAlert {
+	if s == nil {
+		return nil
+	}
+	return s.ActiveAlerts
+}
+
+func (s *SubscriptionUsageAlertSettingsResponse) GetEnabled() bool {
+	if s == nil {
+		return false
+	}
+	return s.Enabled
+}
+
+func (s *SubscriptionUsageAlertSettingsResponse) GetThresholdCents() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.ThresholdCents
+}
+
+func (s *SubscriptionUsageAlertSettingsResponse) GetExtraProperties() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.extraProperties
+}
+
+func (s *SubscriptionUsageAlertSettingsResponse) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionUsageAlertSettingsResponse) SetSchema(schema *string) {
+	s.Schema = schema
+	s.require(subscriptionUsageAlertSettingsResponseFieldSchema)
+}
+
+// SetActiveAlerts sets the ActiveAlerts field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionUsageAlertSettingsResponse) SetActiveAlerts(activeAlerts []*SubscriptionActiveUsageAlert) {
+	s.ActiveAlerts = activeAlerts
+	s.require(subscriptionUsageAlertSettingsResponseFieldActiveAlerts)
+}
+
+// SetEnabled sets the Enabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionUsageAlertSettingsResponse) SetEnabled(enabled bool) {
+	s.Enabled = enabled
+	s.require(subscriptionUsageAlertSettingsResponseFieldEnabled)
+}
+
+// SetThresholdCents sets the ThresholdCents field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionUsageAlertSettingsResponse) SetThresholdCents(thresholdCents int64) {
+	s.ThresholdCents = thresholdCents
+	s.require(subscriptionUsageAlertSettingsResponseFieldThresholdCents)
+}
+
+func (s *SubscriptionUsageAlertSettingsResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler SubscriptionUsageAlertSettingsResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SubscriptionUsageAlertSettingsResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SubscriptionUsageAlertSettingsResponse) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionUsageAlertSettingsResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*s),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (s *SubscriptionUsageAlertSettingsResponse) String() string {
+	if s == nil {
+		return "<nil>"
+	}
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
 }

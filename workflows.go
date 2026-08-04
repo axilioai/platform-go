@@ -11,13 +11,18 @@ import (
 )
 
 var (
-	workflowCreateRequestFieldCode      = big.NewInt(1 << 0)
-	workflowCreateRequestFieldName      = big.NewInt(1 << 1)
-	workflowCreateRequestFieldOcrEngine = big.NewInt(1 << 2)
-	workflowCreateRequestFieldPlatform  = big.NewInt(1 << 3)
+	workflowCreateRequestFieldCapture   = big.NewInt(1 << 0)
+	workflowCreateRequestFieldCode      = big.NewInt(1 << 1)
+	workflowCreateRequestFieldName      = big.NewInt(1 << 2)
+	workflowCreateRequestFieldOcrEngine = big.NewInt(1 << 3)
+	workflowCreateRequestFieldPlatform  = big.NewInt(1 << 4)
+	workflowCreateRequestFieldRecording = big.NewInt(1 << 5)
+	workflowCreateRequestFieldTelemetry = big.NewInt(1 << 6)
 )
 
 type WorkflowCreateRequest struct {
+	// Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
+	Capture *bool `json:"capture,omitempty" url:"-"`
 	// Optional Python source for the workflow's first revision, saved atomically with the workflow when provided.
 	Code *string `json:"code,omitempty" url:"-"`
 	// Human-readable workflow name.
@@ -26,6 +31,10 @@ type WorkflowCreateRequest struct {
 	OcrEngine *WorkflowCreateRequestOcrEngine `json:"ocr_engine,omitempty" url:"-"`
 	// Target OS platform.
 	Platform *WorkflowCreateRequestPlatform `json:"platform,omitempty" url:"-"`
+	// Record this workflow's runs (default true). false suppresses video recording and the rolling thumbnail entirely, for every run dispatched through the scheduler.
+	Recording *bool `json:"recording,omitempty" url:"-"`
+	// Persist telemetry spans for this workflow's runs (default true). false skips the durable trace store; the live telemetry stream still works while a run is active.
+	Telemetry *bool `json:"telemetry,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -36,6 +45,13 @@ func (w *WorkflowCreateRequest) require(field *big.Int) {
 		w.explicitFields = big.NewInt(0)
 	}
 	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetCapture sets the Capture field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRequest) SetCapture(capture *bool) {
+	w.Capture = capture
+	w.require(workflowCreateRequestFieldCapture)
 }
 
 // SetCode sets the Code field and marks it as non-optional;
@@ -64,6 +80,20 @@ func (w *WorkflowCreateRequest) SetOcrEngine(ocrEngine *WorkflowCreateRequestOcr
 func (w *WorkflowCreateRequest) SetPlatform(platform *WorkflowCreateRequestPlatform) {
 	w.Platform = platform
 	w.require(workflowCreateRequestFieldPlatform)
+}
+
+// SetRecording sets the Recording field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRequest) SetRecording(recording *bool) {
+	w.Recording = recording
+	w.require(workflowCreateRequestFieldRecording)
+}
+
+// SetTelemetry sets the Telemetry field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRequest) SetTelemetry(telemetry *bool) {
+	w.Telemetry = telemetry
+	w.require(workflowCreateRequestFieldTelemetry)
 }
 
 func (w *WorkflowCreateRequest) UnmarshalJSON(data []byte) error {
@@ -1921,19 +1951,24 @@ func (w *WorkflowStats) String() string {
 
 // A workflow: a saved automation that runs against a phone.
 var (
-	workflowSummaryFieldCreatedAt      = big.NewInt(1 << 0)
-	workflowSummaryFieldID             = big.NewInt(1 << 1)
-	workflowSummaryFieldLastRunAt      = big.NewInt(1 << 2)
-	workflowSummaryFieldName           = big.NewInt(1 << 3)
-	workflowSummaryFieldOcrEngine      = big.NewInt(1 << 4)
-	workflowSummaryFieldOrganizationID = big.NewInt(1 << 5)
-	workflowSummaryFieldPlatform       = big.NewInt(1 << 6)
-	workflowSummaryFieldStatus         = big.NewInt(1 << 7)
-	workflowSummaryFieldUpdatedAt      = big.NewInt(1 << 8)
-	workflowSummaryFieldUserID         = big.NewInt(1 << 9)
+	workflowSummaryFieldCapture        = big.NewInt(1 << 0)
+	workflowSummaryFieldCreatedAt      = big.NewInt(1 << 1)
+	workflowSummaryFieldID             = big.NewInt(1 << 2)
+	workflowSummaryFieldLastRunAt      = big.NewInt(1 << 3)
+	workflowSummaryFieldName           = big.NewInt(1 << 4)
+	workflowSummaryFieldOcrEngine      = big.NewInt(1 << 5)
+	workflowSummaryFieldOrganizationID = big.NewInt(1 << 6)
+	workflowSummaryFieldPlatform       = big.NewInt(1 << 7)
+	workflowSummaryFieldRecording      = big.NewInt(1 << 8)
+	workflowSummaryFieldStatus         = big.NewInt(1 << 9)
+	workflowSummaryFieldTelemetry      = big.NewInt(1 << 10)
+	workflowSummaryFieldUpdatedAt      = big.NewInt(1 << 11)
+	workflowSummaryFieldUserID         = big.NewInt(1 << 12)
 )
 
 type WorkflowSummary struct {
+	// Whether this workflow's runs capture media into the org's file library (default true).
+	Capture bool `json:"capture" url:"capture"`
 	// When the workflow was created.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
 	// Workflow identifier.
@@ -1948,8 +1983,12 @@ type WorkflowSummary struct {
 	OrganizationID *string `json:"organization_id,omitempty" url:"organization_id,omitempty"`
 	// Target platform.
 	Platform WorkflowSummaryPlatform `json:"platform" url:"platform"`
+	// Whether this workflow's runs record their screen (default true).
+	Recording bool `json:"recording" url:"recording"`
 	// Workflow lifecycle status.
 	Status WorkflowSummaryStatus `json:"status" url:"status"`
+	// Whether this workflow's runs persist telemetry spans (default true).
+	Telemetry bool `json:"telemetry" url:"telemetry"`
 	// When the workflow was last updated.
 	UpdatedAt time.Time `json:"updated_at" url:"updated_at"`
 	// User who created the workflow.
@@ -1960,6 +1999,13 @@ type WorkflowSummary struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (w *WorkflowSummary) GetCapture() bool {
+	if w == nil {
+		return false
+	}
+	return w.Capture
 }
 
 func (w *WorkflowSummary) GetCreatedAt() time.Time {
@@ -2011,11 +2057,25 @@ func (w *WorkflowSummary) GetPlatform() WorkflowSummaryPlatform {
 	return w.Platform
 }
 
+func (w *WorkflowSummary) GetRecording() bool {
+	if w == nil {
+		return false
+	}
+	return w.Recording
+}
+
 func (w *WorkflowSummary) GetStatus() WorkflowSummaryStatus {
 	if w == nil {
 		return ""
 	}
 	return w.Status
+}
+
+func (w *WorkflowSummary) GetTelemetry() bool {
+	if w == nil {
+		return false
+	}
+	return w.Telemetry
 }
 
 func (w *WorkflowSummary) GetUpdatedAt() time.Time {
@@ -2044,6 +2104,13 @@ func (w *WorkflowSummary) require(field *big.Int) {
 		w.explicitFields = big.NewInt(0)
 	}
 	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetCapture sets the Capture field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowSummary) SetCapture(capture bool) {
+	w.Capture = capture
+	w.require(workflowSummaryFieldCapture)
 }
 
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
@@ -2095,11 +2162,25 @@ func (w *WorkflowSummary) SetPlatform(platform WorkflowSummaryPlatform) {
 	w.require(workflowSummaryFieldPlatform)
 }
 
+// SetRecording sets the Recording field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowSummary) SetRecording(recording bool) {
+	w.Recording = recording
+	w.require(workflowSummaryFieldRecording)
+}
+
 // SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (w *WorkflowSummary) SetStatus(status WorkflowSummaryStatus) {
 	w.Status = status
 	w.require(workflowSummaryFieldStatus)
+}
+
+// SetTelemetry sets the Telemetry field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowSummary) SetTelemetry(telemetry bool) {
+	w.Telemetry = telemetry
+	w.require(workflowSummaryFieldTelemetry)
 }
 
 // SetUpdatedAt sets the UpdatedAt field and marks it as non-optional;
@@ -2375,23 +2456,32 @@ func (w WorkflowUpdateRequestStatus) Ptr() *WorkflowUpdateRequestStatus {
 
 var (
 	workflowUpdateRequestFieldWorkflowID = big.NewInt(1 << 0)
-	workflowUpdateRequestFieldName       = big.NewInt(1 << 1)
-	workflowUpdateRequestFieldOcrEngine  = big.NewInt(1 << 2)
-	workflowUpdateRequestFieldPlatform   = big.NewInt(1 << 3)
-	workflowUpdateRequestFieldStatus     = big.NewInt(1 << 4)
+	workflowUpdateRequestFieldCapture    = big.NewInt(1 << 1)
+	workflowUpdateRequestFieldName       = big.NewInt(1 << 2)
+	workflowUpdateRequestFieldOcrEngine  = big.NewInt(1 << 3)
+	workflowUpdateRequestFieldPlatform   = big.NewInt(1 << 4)
+	workflowUpdateRequestFieldRecording  = big.NewInt(1 << 5)
+	workflowUpdateRequestFieldStatus     = big.NewInt(1 << 6)
+	workflowUpdateRequestFieldTelemetry  = big.NewInt(1 << 7)
 )
 
 type WorkflowUpdateRequest struct {
 	// workflow identifier
 	WorkflowID string `json:"-" url:"-"`
+	// Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
+	Capture *bool `json:"capture,omitempty" url:"-"`
 	// Updated workflow name.
 	Name *string `json:"name,omitempty" url:"-"`
 	// Updated OCR backend selection.
 	OcrEngine *WorkflowUpdateRequestOcrEngine `json:"ocr_engine,omitempty" url:"-"`
 	// Updated target platform.
 	Platform *WorkflowUpdateRequestPlatform `json:"platform,omitempty" url:"-"`
+	// Record this workflow's runs (default true). false suppresses video recording and the rolling thumbnail entirely, for every run dispatched through the scheduler.
+	Recording *bool `json:"recording,omitempty" url:"-"`
 	// Updated lifecycle status.
 	Status *WorkflowUpdateRequestStatus `json:"status,omitempty" url:"-"`
+	// Persist telemetry spans for this workflow's runs (default true). false skips the durable trace store; the live telemetry stream still works while a run is active.
+	Telemetry *bool `json:"telemetry,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -2409,6 +2499,13 @@ func (w *WorkflowUpdateRequest) require(field *big.Int) {
 func (w *WorkflowUpdateRequest) SetWorkflowID(workflowID string) {
 	w.WorkflowID = workflowID
 	w.require(workflowUpdateRequestFieldWorkflowID)
+}
+
+// SetCapture sets the Capture field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowUpdateRequest) SetCapture(capture *bool) {
+	w.Capture = capture
+	w.require(workflowUpdateRequestFieldCapture)
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -2432,11 +2529,25 @@ func (w *WorkflowUpdateRequest) SetPlatform(platform *WorkflowUpdateRequestPlatf
 	w.require(workflowUpdateRequestFieldPlatform)
 }
 
+// SetRecording sets the Recording field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowUpdateRequest) SetRecording(recording *bool) {
+	w.Recording = recording
+	w.require(workflowUpdateRequestFieldRecording)
+}
+
 // SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (w *WorkflowUpdateRequest) SetStatus(status *WorkflowUpdateRequestStatus) {
 	w.Status = status
 	w.require(workflowUpdateRequestFieldStatus)
+}
+
+// SetTelemetry sets the Telemetry field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowUpdateRequest) SetTelemetry(telemetry *bool) {
+	w.Telemetry = telemetry
+	w.require(workflowUpdateRequestFieldTelemetry)
 }
 
 func (w *WorkflowUpdateRequest) UnmarshalJSON(data []byte) error {

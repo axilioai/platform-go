@@ -189,67 +189,6 @@ client.APIKeys.Delete(
 </dl>
 </details>
 
-<details><summary><code>client.APIKeys.Regenerate(KeyID) -> *platformgo.APIKeyRegenerateResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Rotates the plaintext value for an existing API key, preserving its name and identifier. The previous value is invalidated immediately.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.APIKeysRegenerateRequest{
-        KeyID: "key_id",
-    }
-client.APIKeys.Regenerate(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**keyID:** `string` — API key identifier to regenerate
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
 ## Billing
 <details><summary><code>client.Billing.GetAutoRecharge() -> *platformgo.SubscriptionAutoRechargeSettingsResponse</code></summary>
 <dl>
@@ -558,6 +497,374 @@ client.Billing.GetSubscription(
 </dl>
 </details>
 
+<details><summary><code>client.Billing.GetUsageAlerts() -> *platformgo.SubscriptionUsageAlertSettingsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns the organization's balance-alert configuration and any currently open alerts (low balance, negative balance).
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+client.Billing.GetUsageAlerts(
+        context.TODO(),
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+## Downloads
+<details><summary><code>client.Downloads.List() -> *platformgo.FileDownloadListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns one page of the files captured off phones during sessions (AXI-1449), newest first. Each row carries its capture state: a skipped or failed capture is a visible entry with a reason, not an absence. Downloads share the library and its storage quota with uploads, and a ready download can be delivered to a phone by its id like any upload.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.DownloadsListRequest{}
+client.Downloads.List(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**q:** `*string` — filter by filename, case-insensitive substring match
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**mimeType:** `*string` — only downloads of exactly this media type
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**minSizeBytes:** `*int64` — only downloads at least this many bytes (0 = no bound)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxSizeBytes:** `*int64` — only downloads at most this many bytes (0 = no bound)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdAfter:** `*time.Time` — only downloads registered at or after this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdBefore:** `*time.Time` — only downloads registered at or before this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — max items per page
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sessionID:** `*string` — only downloads captured by this session
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sort:** `*platformgo.DownloadsListRequestSort` — field to sort by
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**order:** `*platformgo.DownloadsListRequestOrder` — sort direction
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Downloads.Delete(DownloadID) -> *platformgo.DeleteFileOutputBody</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Removes a captured file from the org's library: the stored object and the library entry, freeing its quota. If the file was pushed to phones, those copies are scheduled for removal like an upload's. The copy in the phone's own gallery is removed on the library-deletes-everywhere policy as the device-side support ships.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.DownloadsDeleteRequest{
+        DownloadID: "download_id",
+    }
+client.Downloads.Delete(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**downloadID:** `string` — download identifier to delete
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Downloads.PhonesSessionDownloads(SessionID) -> *platformgo.FileDownloadListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns the files this session captured off its phone, newest first — the direct answer to "what did this session download". Rows appear at detection, before the bytes finish moving, so a caller waiting on a file watches its capture state progress rather than an empty list.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesSessionDownloadsRequest{
+        SessionID: "session_id",
+    }
+client.Downloads.PhonesSessionDownloads(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**sessionID:** `string` — session whose captures to list
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**q:** `*string` — filter by filename, case-insensitive substring match
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**mimeType:** `*string` — only downloads of exactly this media type
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**minSizeBytes:** `*int64` — only downloads at least this many bytes (0 = no bound)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxSizeBytes:** `*int64` — only downloads at most this many bytes (0 = no bound)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdAfter:** `*time.Time` — only downloads registered at or after this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdBefore:** `*time.Time` — only downloads registered at or before this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — max items per page
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 ## Phones
 <details><summary><code>client.Phones.Allocate(request) -> *platformgo.PhoneAllocateResponse</code></summary>
 <dl>
@@ -571,7 +878,7 @@ client.Billing.GetSubscription(
 <dl>
 <dd>
 
-Allocates a phone and opens a session. Omit workflow_id for an interactive lease (drive the phone directly); set it to allocate for a workflow. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
+Allocates an Android phone and opens a session. Omit workflow_id for an interactive lease (drive the phone directly); set it to allocate for a workflow. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
 </dd>
 </dl>
 </dd>
@@ -608,6 +915,14 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
+**capture:** `*bool` — Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **liveView:** `*platformgo.PhoneLiveViewOptions` — Hosted live-view options for this session; omit for the defaults (token auth, interactive, enabled).
     
 </dd>
@@ -633,6 +948,14 @@ client.Phones.Allocate(
 <dd>
 
 **phoneType:** `*platformgo.PhoneAllocateRequestPhoneType` — Category of device to allocate.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**pool:** `*platformgo.PhoneAllocateRequestPool` — Which pool to draw the phone from. Omit for shared. 'dedicated' claims any idle phone your organization rents; combine with phone_id to pin a specific one.
     
 </dd>
 </dl>
@@ -763,7 +1086,7 @@ client.Phones.SupportedApps(
 <dl>
 <dd>
 
-Returns the phones the caller can start a session on right now: every active phone in the shared pool, plus the caller org's own dedicated phones that are currently free. Only free + active phones appear here, so a dedicated phone that is busy or offline is intentionally absent - use GET /phones/my to see the org's full dedicated inventory including in-use ones. Optionally filtered by phone_type; counts by type are included alongside the list.
+Returns the Android phones the caller can start a session on right now: every active phone in the shared pool, plus the caller org's own dedicated phones that are currently free. Only free + active phones appear here, so a dedicated phone that is busy or offline is intentionally absent - use GET /phones/my to see the org's full dedicated inventory including in-use ones.
 </dd>
 </dl>
 </dd>
@@ -798,7 +1121,7 @@ client.Phones.Available(
 <dl>
 <dd>
 
-**phoneType:** `*platformgo.PhonesAvailableRequestPhoneType` — only return phones of this type
+**phoneType:** `*platformgo.PhonesAvailableRequestPhoneType` — only return Android phones
     
 </dd>
 </dl>
@@ -1153,7 +1476,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**sort:** `*string` — sort column: started|ended|status|duration (default started)
+**sort:** `*string` — sort column: started|ended|status|duration|source (default started)
     
 </dd>
 </dl>
@@ -1597,7 +1920,7 @@ client.Phones.ListDeliveries(
 <dl>
 <dd>
 
-Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts either an upload or a download by id. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
+Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts either an upload or a download by id, and the file must already be ready - finish an upload with POST /uploads/{upload_id}/complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
 </dd>
 </dl>
 </dd>
@@ -1938,7 +2261,7 @@ client.Phones.Wipe(
 <dl>
 <dd>
 
-Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status, trigger. Sortable fields: status, started_at, completed_at, created_at, workflow_id.
+Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status, trigger. Sortable fields: run_id, status, trigger, started_at, completed_at, created_at, workflow_id, workflow_name.
 </dd>
 </dl>
 </dd>
@@ -2496,6 +2819,49 @@ client.Runs.Create(
 </dl>
 </details>
 
+## Skill
+<details><summary><code>client.Skill.GetSkill() -> error</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+The canonical Axilio agent skill: markdown instructions that teach a coding agent to drive a phone through the axilio CLI, then hand back the equivalent SDK script. Single source of truth — the dashboard's "Get agent prompt" action and `axilio init` both fetch this instead of carrying their own copy, so a change here reaches both without a separate deploy.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+client.Skill.GetSkill(
+        context.TODO(),
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 ## Uploads
 <details><summary><code>client.Uploads.List() -> *platformgo.FileListResponse</code></summary>
 <dl>
@@ -2679,7 +3045,7 @@ client.Uploads.Create(
 <dl>
 <dd>
 
-Removes a file from the org's library: the stored object, the library entry and its delivery history. Copies already delivered to a phone are left in place for now: on a shared phone they are destroyed when the phone is released, while on a dedicated phone they persist until the phone is cleaned up.
+Removes a file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone holding a copy is scheduled to remove it (removal is confirmed per phone and retried until it lands). The response reports how many phones that recall reaches.
 </dd>
 </dl>
 </dd>
@@ -2717,6 +3083,76 @@ client.Uploads.Delete(
 <dd>
 
 **uploadID:** `string` — upload identifier to delete
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Uploads.Rename(UploadID, request) -> *platformgo.RenameFileOutputBody</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Updates the file's display name. Metadata only: storage is keyed by id, so the object never moves and existing URLs keep working, and past deliveries keep the name they were sent under. Downloads cannot be renamed — a captured file's name is part of its provenance.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.FileRenameRequest{
+        UploadID: "upload_id",
+        Filename: "filename",
+    }
+client.Uploads.Rename(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**uploadID:** `string` — upload identifier to rename
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**filename:** `string` — New display name for the file.
     
 </dd>
 </dl>
@@ -3183,6 +3619,14 @@ client.Workflows.Create(
 <dl>
 <dd>
 
+**capture:** `*bool` — Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **code:** `*string` — Optional Python source for the workflow's first revision, saved atomically with the workflow when provided.
     
 </dd>
@@ -3208,6 +3652,22 @@ client.Workflows.Create(
 <dd>
 
 **platform:** `*platformgo.WorkflowCreateRequestPlatform` — Target OS platform.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**recording:** `*bool` — Record this workflow's runs (default true). false suppresses video recording and the rolling thumbnail entirely, for every run dispatched through the scheduler.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**telemetry:** `*bool` — Persist telemetry spans for this workflow's runs (default true). false skips the durable trace store; the live telemetry stream still works while a run is active.
     
 </dd>
 </dl>
@@ -3337,6 +3797,14 @@ client.Workflows.Update(
 <dl>
 <dd>
 
+**capture:** `*bool` — Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **name:** `*string` — Updated workflow name.
     
 </dd>
@@ -3361,7 +3829,23 @@ client.Workflows.Update(
 <dl>
 <dd>
 
+**recording:** `*bool` — Record this workflow's runs (default true). false suppresses video recording and the rolling thumbnail entirely, for every run dispatched through the scheduler.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **status:** `*platformgo.WorkflowUpdateRequestStatus` — Updated lifecycle status.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**telemetry:** `*bool` — Persist telemetry spans for this workflow's runs (default true). false skips the durable trace store; the live telemetry stream still works while a run is active.
     
 </dd>
 </dl>
