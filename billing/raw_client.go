@@ -239,3 +239,43 @@ func (r *RawClient) GetSubscription(
 		Body:       response,
 	}, nil
 }
+
+func (r *RawClient) GetUsageAlerts(
+	ctx context.Context,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.SubscriptionUsageAlertSettingsResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := baseURL + "/billing/usage-alerts"
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.SubscriptionUsageAlertSettingsResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.SubscriptionUsageAlertSettingsResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}

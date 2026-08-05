@@ -110,3 +110,18 @@ func (c *Client) GetSubscription(
 	}
 	return response.Body, nil
 }
+
+// Returns the organization's balance-alert configuration and any currently open alerts (low balance, negative balance).
+func (c *Client) GetUsageAlerts(
+	ctx context.Context,
+	opts ...option.RequestOption,
+) (*platformgo.SubscriptionUsageAlertSettingsResponse, error) {
+	response, err := c.WithRawResponse.GetUsageAlerts(
+		ctx,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
