@@ -196,6 +196,63 @@ func (u *UploadsListRequest) SetOrder(order *UploadsListRequestOrder) {
 }
 
 var (
+	fileRenameRequestFieldUploadID = big.NewInt(1 << 0)
+	fileRenameRequestFieldFilename = big.NewInt(1 << 1)
+)
+
+type FileRenameRequest struct {
+	// upload identifier to rename
+	UploadID string `json:"-" url:"-"`
+	// New display name for the file.
+	Filename string `json:"filename" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (f *FileRenameRequest) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetUploadID sets the UploadID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileRenameRequest) SetUploadID(uploadID string) {
+	f.UploadID = uploadID
+	f.require(fileRenameRequestFieldUploadID)
+}
+
+// SetFilename sets the Filename field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileRenameRequest) SetFilename(filename string) {
+	f.Filename = filename
+	f.require(fileRenameRequestFieldFilename)
+}
+
+func (f *FileRenameRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler FileRenameRequest
+	var body unmarshaler
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	*f = FileRenameRequest(body)
+	return nil
+}
+
+func (f *FileRenameRequest) MarshalJSON() ([]byte, error) {
+	type embed FileRenameRequest
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*f),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+var (
 	completeFileOutputBodyFieldSchema = big.NewInt(1 << 0)
 	completeFileOutputBodyFieldFile   = big.NewInt(1 << 1)
 )
@@ -295,108 +352,6 @@ func (c *CompleteFileOutputBody) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", c)
-}
-
-// Confirmation that the file was deleted.
-var (
-	deleteFileOutputBodyFieldSchema  = big.NewInt(1 << 0)
-	deleteFileOutputBodyFieldMessage = big.NewInt(1 << 1)
-)
-
-type DeleteFileOutputBody struct {
-	// A URL to the JSON Schema for this object.
-	Schema  *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	Message string  `json:"message" url:"message"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (d *DeleteFileOutputBody) GetSchema() *string {
-	if d == nil {
-		return nil
-	}
-	return d.Schema
-}
-
-func (d *DeleteFileOutputBody) GetMessage() string {
-	if d == nil {
-		return ""
-	}
-	return d.Message
-}
-
-func (d *DeleteFileOutputBody) GetExtraProperties() map[string]interface{} {
-	if d == nil {
-		return nil
-	}
-	return d.extraProperties
-}
-
-func (d *DeleteFileOutputBody) require(field *big.Int) {
-	if d.explicitFields == nil {
-		d.explicitFields = big.NewInt(0)
-	}
-	d.explicitFields.Or(d.explicitFields, field)
-}
-
-// SetSchema sets the Schema field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (d *DeleteFileOutputBody) SetSchema(schema *string) {
-	d.Schema = schema
-	d.require(deleteFileOutputBodyFieldSchema)
-}
-
-// SetMessage sets the Message field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (d *DeleteFileOutputBody) SetMessage(message string) {
-	d.Message = message
-	d.require(deleteFileOutputBodyFieldMessage)
-}
-
-func (d *DeleteFileOutputBody) UnmarshalJSON(data []byte) error {
-	type unmarshaler DeleteFileOutputBody
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*d = DeleteFileOutputBody(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *d)
-	if err != nil {
-		return err
-	}
-	d.extraProperties = extraProperties
-	d.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (d *DeleteFileOutputBody) MarshalJSON() ([]byte, error) {
-	type embed DeleteFileOutputBody
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*d),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, d.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (d *DeleteFileOutputBody) String() string {
-	if d == nil {
-		return "<nil>"
-	}
-	if len(d.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(d.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(d); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", d)
 }
 
 // One page of the org's file library.
@@ -538,36 +493,77 @@ func (f *FileListResponse) String() string {
 
 // One file in the org's library.
 var (
-	fileSummaryFieldCreatedAt   = big.NewInt(1 << 0)
-	fileSummaryFieldDownloadURL = big.NewInt(1 << 1)
-	fileSummaryFieldFilename    = big.NewInt(1 << 2)
-	fileSummaryFieldID          = big.NewInt(1 << 3)
-	fileSummaryFieldMimeType    = big.NewInt(1 << 4)
-	fileSummaryFieldSizeBytes   = big.NewInt(1 << 5)
-	fileSummaryFieldStatus      = big.NewInt(1 << 6)
+	fileSummaryFieldAttachmentURL    = big.NewInt(1 << 0)
+	fileSummaryFieldBytesTransferred = big.NewInt(1 << 1)
+	fileSummaryFieldCreatedAt        = big.NewInt(1 << 2)
+	fileSummaryFieldDownloadURL      = big.NewInt(1 << 3)
+	fileSummaryFieldDurationSeconds  = big.NewInt(1 << 4)
+	fileSummaryFieldFilename         = big.NewInt(1 << 5)
+	fileSummaryFieldHeight           = big.NewInt(1 << 6)
+	fileSummaryFieldID               = big.NewInt(1 << 7)
+	fileSummaryFieldMimeType         = big.NewInt(1 << 8)
+	fileSummaryFieldOnPhoneCount     = big.NewInt(1 << 9)
+	fileSummaryFieldPreviewState     = big.NewInt(1 << 10)
+	fileSummaryFieldReelURL          = big.NewInt(1 << 11)
+	fileSummaryFieldSizeBytes        = big.NewInt(1 << 12)
+	fileSummaryFieldStatus           = big.NewInt(1 << 13)
+	fileSummaryFieldThumbnailURL     = big.NewInt(1 << 14)
+	fileSummaryFieldWidth            = big.NewInt(1 << 15)
 )
 
 type FileSummary struct {
+	// Short-lived signed URL that downloads the file as an attachment under its name. Present only for ready files.
+	AttachmentURL *string `json:"attachment_url,omitempty" url:"attachment_url,omitempty"`
+	// Bytes moved so far for an in-flight phone transfer. Absent until the phone reports progress.
+	BytesTransferred *int64 `json:"bytes_transferred,omitempty" url:"bytes_transferred,omitempty"`
 	// When the upload was registered.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
 	// Short-lived signed URL to read the file's bytes. Present only for ready files; re-list to refresh an expired one.
 	DownloadURL *string `json:"download_url,omitempty" url:"download_url,omitempty"`
+	// Video duration in seconds.
+	DurationSeconds *int64 `json:"duration_seconds,omitempty" url:"duration_seconds,omitempty"`
 	// Original filename; used as the display name when the file lands on a phone.
 	Filename string `json:"filename" url:"filename"`
+	// Intrinsic pixel height of the source.
+	Height *int64 `json:"height,omitempty" url:"height,omitempty"`
 	// File identifier. Unique across uploads and downloads.
 	ID string `json:"id" url:"id"`
 	// Declared MIME type, pinned by the presigned upload.
 	MimeType string `json:"mime_type" url:"mime_type"`
+	// Distinct phones currently holding or receiving a copy. Deleting the file recalls these.
+	OnPhoneCount int64 `json:"on_phone_count" url:"on_phone_count"`
+	// Whether the preview exists, is still being generated, or will never be available for this format.
+	PreviewState FileSummaryPreviewState `json:"preview_state" url:"preview_state"`
+	// Short-lived signed URL for the animated hover preview. Videos only; absent until generated.
+	ReelURL *string `json:"reel_url,omitempty" url:"reel_url,omitempty"`
 	// Declared size in bytes, pinned by the presigned upload.
 	SizeBytes int64 `json:"size_bytes" url:"size_bytes"`
 	// uploading until the object is verified in storage, then ready. Complete an upload to move it to ready.
 	Status FileSummaryStatus `json:"status" url:"status"`
+	// Short-lived signed URL for the generated preview image. Absent while generation is pending, and permanently absent for formats without a preview.
+	ThumbnailURL *string `json:"thumbnail_url,omitempty" url:"thumbnail_url,omitempty"`
+	// Intrinsic pixel width of the source.
+	Width *int64 `json:"width,omitempty" url:"width,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (f *FileSummary) GetAttachmentURL() *string {
+	if f == nil {
+		return nil
+	}
+	return f.AttachmentURL
+}
+
+func (f *FileSummary) GetBytesTransferred() *int64 {
+	if f == nil {
+		return nil
+	}
+	return f.BytesTransferred
 }
 
 func (f *FileSummary) GetCreatedAt() time.Time {
@@ -584,11 +580,25 @@ func (f *FileSummary) GetDownloadURL() *string {
 	return f.DownloadURL
 }
 
+func (f *FileSummary) GetDurationSeconds() *int64 {
+	if f == nil {
+		return nil
+	}
+	return f.DurationSeconds
+}
+
 func (f *FileSummary) GetFilename() string {
 	if f == nil {
 		return ""
 	}
 	return f.Filename
+}
+
+func (f *FileSummary) GetHeight() *int64 {
+	if f == nil {
+		return nil
+	}
+	return f.Height
 }
 
 func (f *FileSummary) GetID() string {
@@ -605,6 +615,27 @@ func (f *FileSummary) GetMimeType() string {
 	return f.MimeType
 }
 
+func (f *FileSummary) GetOnPhoneCount() int64 {
+	if f == nil {
+		return 0
+	}
+	return f.OnPhoneCount
+}
+
+func (f *FileSummary) GetPreviewState() FileSummaryPreviewState {
+	if f == nil {
+		return ""
+	}
+	return f.PreviewState
+}
+
+func (f *FileSummary) GetReelURL() *string {
+	if f == nil {
+		return nil
+	}
+	return f.ReelURL
+}
+
 func (f *FileSummary) GetSizeBytes() int64 {
 	if f == nil {
 		return 0
@@ -617,6 +648,20 @@ func (f *FileSummary) GetStatus() FileSummaryStatus {
 		return ""
 	}
 	return f.Status
+}
+
+func (f *FileSummary) GetThumbnailURL() *string {
+	if f == nil {
+		return nil
+	}
+	return f.ThumbnailURL
+}
+
+func (f *FileSummary) GetWidth() *int64 {
+	if f == nil {
+		return nil
+	}
+	return f.Width
 }
 
 func (f *FileSummary) GetExtraProperties() map[string]interface{} {
@@ -633,6 +678,20 @@ func (f *FileSummary) require(field *big.Int) {
 	f.explicitFields.Or(f.explicitFields, field)
 }
 
+// SetAttachmentURL sets the AttachmentURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetAttachmentURL(attachmentURL *string) {
+	f.AttachmentURL = attachmentURL
+	f.require(fileSummaryFieldAttachmentURL)
+}
+
+// SetBytesTransferred sets the BytesTransferred field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetBytesTransferred(bytesTransferred *int64) {
+	f.BytesTransferred = bytesTransferred
+	f.require(fileSummaryFieldBytesTransferred)
+}
+
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (f *FileSummary) SetCreatedAt(createdAt time.Time) {
@@ -647,11 +706,25 @@ func (f *FileSummary) SetDownloadURL(downloadURL *string) {
 	f.require(fileSummaryFieldDownloadURL)
 }
 
+// SetDurationSeconds sets the DurationSeconds field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetDurationSeconds(durationSeconds *int64) {
+	f.DurationSeconds = durationSeconds
+	f.require(fileSummaryFieldDurationSeconds)
+}
+
 // SetFilename sets the Filename field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (f *FileSummary) SetFilename(filename string) {
 	f.Filename = filename
 	f.require(fileSummaryFieldFilename)
+}
+
+// SetHeight sets the Height field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetHeight(height *int64) {
+	f.Height = height
+	f.require(fileSummaryFieldHeight)
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -668,6 +741,27 @@ func (f *FileSummary) SetMimeType(mimeType string) {
 	f.require(fileSummaryFieldMimeType)
 }
 
+// SetOnPhoneCount sets the OnPhoneCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetOnPhoneCount(onPhoneCount int64) {
+	f.OnPhoneCount = onPhoneCount
+	f.require(fileSummaryFieldOnPhoneCount)
+}
+
+// SetPreviewState sets the PreviewState field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetPreviewState(previewState FileSummaryPreviewState) {
+	f.PreviewState = previewState
+	f.require(fileSummaryFieldPreviewState)
+}
+
+// SetReelURL sets the ReelURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetReelURL(reelURL *string) {
+	f.ReelURL = reelURL
+	f.require(fileSummaryFieldReelURL)
+}
+
 // SetSizeBytes sets the SizeBytes field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (f *FileSummary) SetSizeBytes(sizeBytes int64) {
@@ -680,6 +774,20 @@ func (f *FileSummary) SetSizeBytes(sizeBytes int64) {
 func (f *FileSummary) SetStatus(status FileSummaryStatus) {
 	f.Status = status
 	f.require(fileSummaryFieldStatus)
+}
+
+// SetThumbnailURL sets the ThumbnailURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetThumbnailURL(thumbnailURL *string) {
+	f.ThumbnailURL = thumbnailURL
+	f.require(fileSummaryFieldThumbnailURL)
+}
+
+// SetWidth sets the Width field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetWidth(width *int64) {
+	f.Width = width
+	f.require(fileSummaryFieldWidth)
 }
 
 func (f *FileSummary) UnmarshalJSON(data []byte) error {
@@ -730,6 +838,32 @@ func (f *FileSummary) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", f)
+}
+
+// Whether the preview exists, is still being generated, or will never be available for this format.
+type FileSummaryPreviewState string
+
+const (
+	FileSummaryPreviewStateProcessing  FileSummaryPreviewState = "processing"
+	FileSummaryPreviewStateReady       FileSummaryPreviewState = "ready"
+	FileSummaryPreviewStateUnavailable FileSummaryPreviewState = "unavailable"
+)
+
+func NewFileSummaryPreviewStateFromString(s string) (FileSummaryPreviewState, error) {
+	switch s {
+	case "processing":
+		return FileSummaryPreviewStateProcessing, nil
+	case "ready":
+		return FileSummaryPreviewStateReady, nil
+	case "unavailable":
+		return FileSummaryPreviewStateUnavailable, nil
+	}
+	var t FileSummaryPreviewState
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (f FileSummaryPreviewState) Ptr() *FileSummaryPreviewState {
+	return &f
 }
 
 // uploading until the object is verified in storage, then ready. Complete an upload to move it to ready.
@@ -1027,6 +1161,107 @@ func (f *FileUsage) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", f)
+}
+
+var (
+	renameFileOutputBodyFieldSchema = big.NewInt(1 << 0)
+	renameFileOutputBodyFieldFile   = big.NewInt(1 << 1)
+)
+
+type RenameFileOutputBody struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string      `json:"$schema,omitempty" url:"$schema,omitempty"`
+	File   *FileSummary `json:"file" url:"file"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RenameFileOutputBody) GetSchema() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Schema
+}
+
+func (r *RenameFileOutputBody) GetFile() *FileSummary {
+	if r == nil {
+		return nil
+	}
+	return r.File
+}
+
+func (r *RenameFileOutputBody) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RenameFileOutputBody) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RenameFileOutputBody) SetSchema(schema *string) {
+	r.Schema = schema
+	r.require(renameFileOutputBodyFieldSchema)
+}
+
+// SetFile sets the File field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RenameFileOutputBody) SetFile(file *FileSummary) {
+	r.File = file
+	r.require(renameFileOutputBodyFieldFile)
+}
+
+func (r *RenameFileOutputBody) UnmarshalJSON(data []byte) error {
+	type unmarshaler RenameFileOutputBody
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RenameFileOutputBody(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RenameFileOutputBody) MarshalJSON() ([]byte, error) {
+	type embed RenameFileOutputBody
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RenameFileOutputBody) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
 }
 
 // sort direction

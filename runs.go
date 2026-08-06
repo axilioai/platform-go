@@ -1739,6 +1739,7 @@ var (
 	runResponseFieldVariables           = big.NewInt(1 << 18)
 	runResponseFieldVideoURL            = big.NewInt(1 << 19)
 	runResponseFieldWorkflowID          = big.NewInt(1 << 20)
+	runResponseFieldWorkflowName        = big.NewInt(1 << 21)
 )
 
 type RunResponse struct {
@@ -1784,6 +1785,8 @@ type RunResponse struct {
 	VideoURL *string `json:"video_url,omitempty" url:"video_url,omitempty"`
 	// Workflow this run belongs to.
 	WorkflowID string `json:"workflow_id" url:"workflow_id"`
+	// Display name of the workflow this run belongs to.
+	WorkflowName *string `json:"workflow_name,omitempty" url:"workflow_name,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -1937,6 +1940,13 @@ func (r *RunResponse) GetWorkflowID() string {
 		return ""
 	}
 	return r.WorkflowID
+}
+
+func (r *RunResponse) GetWorkflowName() *string {
+	if r == nil {
+		return nil
+	}
+	return r.WorkflowName
 }
 
 func (r *RunResponse) GetExtraProperties() map[string]interface{} {
@@ -2098,6 +2108,13 @@ func (r *RunResponse) SetVideoURL(videoURL *string) {
 func (r *RunResponse) SetWorkflowID(workflowID string) {
 	r.WorkflowID = workflowID
 	r.require(runResponseFieldWorkflowID)
+}
+
+// SetWorkflowName sets the WorkflowName field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetWorkflowName(workflowName *string) {
+	r.WorkflowName = workflowName
+	r.require(runResponseFieldWorkflowName)
 }
 
 func (r *RunResponse) UnmarshalJSON(data []byte) error {

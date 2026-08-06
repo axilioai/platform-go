@@ -188,3 +188,25 @@ func TestBillingGetSubscriptionWithWireMock(
 	require.NoError(t, invocationErr, "Client method call should succeed")
 	VerifyRequestCount(t, "TestBillingGetSubscriptionWithWireMock", "GET", "/billing/subscription", nil, 1)
 }
+
+func TestBillingGetUsageAlertsWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	_, invocationErr := client.Billing.GetUsageAlerts(
+		context.TODO(),
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestBillingGetUsageAlertsWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestBillingGetUsageAlertsWithWireMock", "GET", "/billing/usage-alerts", nil, 1)
+}

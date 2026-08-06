@@ -77,18 +77,22 @@ func (p *PhonesActiveSessionsRequest) SetSource(source *string) {
 }
 
 var (
-	phoneAllocateRequestFieldLiveView   = big.NewInt(1 << 0)
-	phoneAllocateRequestFieldName       = big.NewInt(1 << 1)
-	phoneAllocateRequestFieldPhoneID    = big.NewInt(1 << 2)
-	phoneAllocateRequestFieldPhoneType  = big.NewInt(1 << 3)
-	phoneAllocateRequestFieldRecording  = big.NewInt(1 << 4)
-	phoneAllocateRequestFieldTags       = big.NewInt(1 << 5)
-	phoneAllocateRequestFieldTelemetry  = big.NewInt(1 << 6)
-	phoneAllocateRequestFieldTTL        = big.NewInt(1 << 7)
-	phoneAllocateRequestFieldWorkflowID = big.NewInt(1 << 8)
+	phoneAllocateRequestFieldCapture    = big.NewInt(1 << 0)
+	phoneAllocateRequestFieldLiveView   = big.NewInt(1 << 1)
+	phoneAllocateRequestFieldName       = big.NewInt(1 << 2)
+	phoneAllocateRequestFieldPhoneID    = big.NewInt(1 << 3)
+	phoneAllocateRequestFieldPhoneType  = big.NewInt(1 << 4)
+	phoneAllocateRequestFieldPool       = big.NewInt(1 << 5)
+	phoneAllocateRequestFieldRecording  = big.NewInt(1 << 6)
+	phoneAllocateRequestFieldTags       = big.NewInt(1 << 7)
+	phoneAllocateRequestFieldTelemetry  = big.NewInt(1 << 8)
+	phoneAllocateRequestFieldTTL        = big.NewInt(1 << 9)
+	phoneAllocateRequestFieldWorkflowID = big.NewInt(1 << 10)
 )
 
 type PhoneAllocateRequest struct {
+	// Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
+	Capture *bool `json:"capture,omitempty" url:"-"`
 	// Hosted live-view options for this session; omit for the defaults (token auth, interactive, enabled).
 	LiveView *PhoneLiveViewOptions `json:"live_view,omitempty" url:"-"`
 	// Optional session label (letters, numbers, dots, hyphens, underscores; max 64). Unique among the org's active sessions - allocating with a name already in use returns a conflict.
@@ -97,6 +101,8 @@ type PhoneAllocateRequest struct {
 	PhoneID *string `json:"phone_id,omitempty" url:"-"`
 	// Category of device to allocate.
 	PhoneType PhoneAllocateRequestPhoneType `json:"phone_type" url:"-"`
+	// Which pool to draw the phone from. Omit for shared. 'dedicated' claims any idle phone your organization rents; combine with phone_id to pin a specific one.
+	Pool *PhoneAllocateRequestPool `json:"pool,omitempty" url:"-"`
 	// Record this session's screen (default true). false suppresses the video recording and rolling thumbnail entirely - no screen content is ever written.
 	Recording *bool `json:"recording,omitempty" url:"-"`
 	// Optional key->value labels for organizing sessions (max 50 tags; keys up to 40 chars, values up to 128).
@@ -117,6 +123,13 @@ func (p *PhoneAllocateRequest) require(field *big.Int) {
 		p.explicitFields = big.NewInt(0)
 	}
 	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetCapture sets the Capture field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneAllocateRequest) SetCapture(capture *bool) {
+	p.Capture = capture
+	p.require(phoneAllocateRequestFieldCapture)
 }
 
 // SetLiveView sets the LiveView field and marks it as non-optional;
@@ -145,6 +158,13 @@ func (p *PhoneAllocateRequest) SetPhoneID(phoneID *string) {
 func (p *PhoneAllocateRequest) SetPhoneType(phoneType PhoneAllocateRequestPhoneType) {
 	p.PhoneType = phoneType
 	p.require(phoneAllocateRequestFieldPhoneType)
+}
+
+// SetPool sets the Pool field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneAllocateRequest) SetPool(pool *PhoneAllocateRequestPool) {
+	p.Pool = pool
+	p.require(phoneAllocateRequestFieldPool)
 }
 
 // SetRecording sets the Recording field and marks it as non-optional;
@@ -208,7 +228,7 @@ var (
 )
 
 type PhonesAvailableRequest struct {
-	// only return phones of this type
+	// only return Android phones
 	PhoneType *PhonesAvailableRequestPhoneType `json:"-" url:"phone_type,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -495,7 +515,7 @@ type PhonesListSessionsRequest struct {
 	EndedAfter *string `json:"-" url:"ended_after,omitempty"`
 	// only sessions de-allocated at/before this RFC3339 time
 	EndedBefore *string `json:"-" url:"ended_before,omitempty"`
-	// sort column: started|ended|status|duration (default started)
+	// sort column: started|ended|status|duration|source (default started)
 	Sort *string `json:"-" url:"sort,omitempty"`
 	// sort direction: asc|desc (default desc)
 	Order *string `json:"-" url:"order,omitempty"`
@@ -1029,27 +1049,30 @@ func (f *FileDeliveryListResponse) String() string {
 
 // One push of a library file to a phone.
 var (
-	fileDeliverySummaryFieldSchema    = big.NewInt(1 << 0)
-	fileDeliverySummaryFieldCreatedAt = big.NewInt(1 << 1)
-	fileDeliverySummaryFieldError     = big.NewInt(1 << 2)
-	fileDeliverySummaryFieldFileID    = big.NewInt(1 << 3)
-	fileDeliverySummaryFieldFilename  = big.NewInt(1 << 4)
-	fileDeliverySummaryFieldID        = big.NewInt(1 << 5)
-	fileDeliverySummaryFieldMimeType  = big.NewInt(1 << 6)
-	fileDeliverySummaryFieldPhoneID   = big.NewInt(1 << 7)
-	fileDeliverySummaryFieldSizeBytes = big.NewInt(1 << 8)
-	fileDeliverySummaryFieldStatus    = big.NewInt(1 << 9)
+	fileDeliverySummaryFieldSchema           = big.NewInt(1 << 0)
+	fileDeliverySummaryFieldBytesTransferred = big.NewInt(1 << 1)
+	fileDeliverySummaryFieldCreatedAt        = big.NewInt(1 << 2)
+	fileDeliverySummaryFieldError            = big.NewInt(1 << 3)
+	fileDeliverySummaryFieldFileID           = big.NewInt(1 << 4)
+	fileDeliverySummaryFieldFilename         = big.NewInt(1 << 5)
+	fileDeliverySummaryFieldID               = big.NewInt(1 << 6)
+	fileDeliverySummaryFieldMimeType         = big.NewInt(1 << 7)
+	fileDeliverySummaryFieldPhoneID          = big.NewInt(1 << 8)
+	fileDeliverySummaryFieldSizeBytes        = big.NewInt(1 << 9)
+	fileDeliverySummaryFieldStatus           = big.NewInt(1 << 10)
 )
 
 type FileDeliverySummary struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Bytes the phone has downloaded so far. Absent until the phone reports progress.
+	BytesTransferred *int64 `json:"bytes_transferred,omitempty" url:"bytes_transferred,omitempty"`
 	// When the push was dispatched.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
 	// Failure detail for failed deliveries.
 	Error *string `json:"error,omitempty" url:"error,omitempty"`
-	// Library file that was pushed.
-	FileID string `json:"file_id" url:"file_id"`
+	// Library file that was pushed. Absent once that file has been deleted; the filename and size below are snapshots taken at push time and survive it.
+	FileID *string `json:"file_id,omitempty" url:"file_id,omitempty"`
 	// Delivered file's display name.
 	Filename string `json:"filename" url:"filename"`
 	// Delivery identifier.
@@ -1077,6 +1100,13 @@ func (f *FileDeliverySummary) GetSchema() *string {
 	return f.Schema
 }
 
+func (f *FileDeliverySummary) GetBytesTransferred() *int64 {
+	if f == nil {
+		return nil
+	}
+	return f.BytesTransferred
+}
+
 func (f *FileDeliverySummary) GetCreatedAt() time.Time {
 	if f == nil {
 		return time.Time{}
@@ -1091,9 +1121,9 @@ func (f *FileDeliverySummary) GetError() *string {
 	return f.Error
 }
 
-func (f *FileDeliverySummary) GetFileID() string {
+func (f *FileDeliverySummary) GetFileID() *string {
 	if f == nil {
-		return ""
+		return nil
 	}
 	return f.FileID
 }
@@ -1161,6 +1191,13 @@ func (f *FileDeliverySummary) SetSchema(schema *string) {
 	f.require(fileDeliverySummaryFieldSchema)
 }
 
+// SetBytesTransferred sets the BytesTransferred field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileDeliverySummary) SetBytesTransferred(bytesTransferred *int64) {
+	f.BytesTransferred = bytesTransferred
+	f.require(fileDeliverySummaryFieldBytesTransferred)
+}
+
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (f *FileDeliverySummary) SetCreatedAt(createdAt time.Time) {
@@ -1177,7 +1214,7 @@ func (f *FileDeliverySummary) SetError(error_ *string) {
 
 // SetFileID sets the FileID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (f *FileDeliverySummary) SetFileID(fileID string) {
+func (f *FileDeliverySummary) SetFileID(fileID *string) {
 	f.FileID = fileID
 	f.require(fileDeliverySummaryFieldFileID)
 }
@@ -2559,8 +2596,7 @@ func (p PhoneAppSummaryPlatform) Ptr() *PhoneAppSummaryPlatform {
 var (
 	phoneAvailableListResponseFieldSchema       = big.NewInt(1 << 0)
 	phoneAvailableListResponseFieldAndroidCount = big.NewInt(1 << 1)
-	phoneAvailableListResponseFieldIphoneCount  = big.NewInt(1 << 2)
-	phoneAvailableListResponseFieldPhones       = big.NewInt(1 << 3)
+	phoneAvailableListResponseFieldPhones       = big.NewInt(1 << 2)
 )
 
 type PhoneAvailableListResponse struct {
@@ -2568,8 +2604,6 @@ type PhoneAvailableListResponse struct {
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	// Number of available Android devices.
 	AndroidCount int64 `json:"android_count" url:"android_count"`
-	// Number of available iPhones.
-	IphoneCount int64 `json:"iphone_count" url:"iphone_count"`
 	// List of available device records.
 	Phones []*PhoneSummary `json:"phones,omitempty" url:"phones,omitempty"`
 
@@ -2592,13 +2626,6 @@ func (p *PhoneAvailableListResponse) GetAndroidCount() int64 {
 		return 0
 	}
 	return p.AndroidCount
-}
-
-func (p *PhoneAvailableListResponse) GetIphoneCount() int64 {
-	if p == nil {
-		return 0
-	}
-	return p.IphoneCount
 }
 
 func (p *PhoneAvailableListResponse) GetPhones() []*PhoneSummary {
@@ -2634,13 +2661,6 @@ func (p *PhoneAvailableListResponse) SetSchema(schema *string) {
 func (p *PhoneAvailableListResponse) SetAndroidCount(androidCount int64) {
 	p.AndroidCount = androidCount
 	p.require(phoneAvailableListResponseFieldAndroidCount)
-}
-
-// SetIphoneCount sets the IphoneCount field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneAvailableListResponse) SetIphoneCount(iphoneCount int64) {
-	p.IphoneCount = iphoneCount
-	p.require(phoneAvailableListResponseFieldIphoneCount)
 }
 
 // SetPhones sets the Phones field and marks it as non-optional;
@@ -3299,24 +3319,25 @@ var (
 	phoneSessionDetailResponseFieldSchema           = big.NewInt(1 << 0)
 	phoneSessionDetailResponseFieldAllocatedAt      = big.NewInt(1 << 1)
 	phoneSessionDetailResponseFieldAllocatedBy      = big.NewInt(1 << 2)
-	phoneSessionDetailResponseFieldDeallocatedAt    = big.NewInt(1 << 3)
-	phoneSessionDetailResponseFieldIsDedicatedPhone = big.NewInt(1 << 4)
-	phoneSessionDetailResponseFieldLocation         = big.NewInt(1 << 5)
-	phoneSessionDetailResponseFieldModelName        = big.NewInt(1 << 6)
-	phoneSessionDetailResponseFieldName             = big.NewInt(1 << 7)
-	phoneSessionDetailResponseFieldNickname         = big.NewInt(1 << 8)
-	phoneSessionDetailResponseFieldPhoneID          = big.NewInt(1 << 9)
-	phoneSessionDetailResponseFieldPhoneName        = big.NewInt(1 << 10)
-	phoneSessionDetailResponseFieldPhoneStatus      = big.NewInt(1 << 11)
-	phoneSessionDetailResponseFieldPhoneType        = big.NewInt(1 << 12)
-	phoneSessionDetailResponseFieldRecordingStatus  = big.NewInt(1 << 13)
-	phoneSessionDetailResponseFieldRecordingURL     = big.NewInt(1 << 14)
-	phoneSessionDetailResponseFieldSessionID        = big.NewInt(1 << 15)
-	phoneSessionDetailResponseFieldSource           = big.NewInt(1 << 16)
-	phoneSessionDetailResponseFieldStatus           = big.NewInt(1 << 17)
-	phoneSessionDetailResponseFieldTags             = big.NewInt(1 << 18)
-	phoneSessionDetailResponseFieldWorkflowID       = big.NewInt(1 << 19)
-	phoneSessionDetailResponseFieldWorkflowName     = big.NewInt(1 << 20)
+	phoneSessionDetailResponseFieldCaptureEnabled   = big.NewInt(1 << 3)
+	phoneSessionDetailResponseFieldDeallocatedAt    = big.NewInt(1 << 4)
+	phoneSessionDetailResponseFieldIsDedicatedPhone = big.NewInt(1 << 5)
+	phoneSessionDetailResponseFieldLocation         = big.NewInt(1 << 6)
+	phoneSessionDetailResponseFieldModelName        = big.NewInt(1 << 7)
+	phoneSessionDetailResponseFieldName             = big.NewInt(1 << 8)
+	phoneSessionDetailResponseFieldNickname         = big.NewInt(1 << 9)
+	phoneSessionDetailResponseFieldPhoneID          = big.NewInt(1 << 10)
+	phoneSessionDetailResponseFieldPhoneName        = big.NewInt(1 << 11)
+	phoneSessionDetailResponseFieldPhoneStatus      = big.NewInt(1 << 12)
+	phoneSessionDetailResponseFieldPhoneType        = big.NewInt(1 << 13)
+	phoneSessionDetailResponseFieldRecordingStatus  = big.NewInt(1 << 14)
+	phoneSessionDetailResponseFieldRecordingURL     = big.NewInt(1 << 15)
+	phoneSessionDetailResponseFieldSessionID        = big.NewInt(1 << 16)
+	phoneSessionDetailResponseFieldSource           = big.NewInt(1 << 17)
+	phoneSessionDetailResponseFieldStatus           = big.NewInt(1 << 18)
+	phoneSessionDetailResponseFieldTags             = big.NewInt(1 << 19)
+	phoneSessionDetailResponseFieldWorkflowID       = big.NewInt(1 << 20)
+	phoneSessionDetailResponseFieldWorkflowName     = big.NewInt(1 << 21)
 )
 
 type PhoneSessionDetailResponse struct {
@@ -3326,6 +3347,8 @@ type PhoneSessionDetailResponse struct {
 	AllocatedAt time.Time `json:"allocated_at" url:"allocated_at"`
 	// How the session was started.
 	AllocatedBy *PhoneSessionDetailResponseAllocatedBy `json:"allocated_by,omitempty" url:"allocated_by,omitempty"`
+	// Whether media this session produces on the phone is captured into the org's file library. On by default; set capture=false at allocation to disable.
+	CaptureEnabled bool `json:"capture_enabled" url:"capture_enabled"`
 	// When the session released the phone; absent while active.
 	DeallocatedAt *time.Time `json:"deallocated_at,omitempty" url:"deallocated_at,omitempty"`
 	// Whether the phone is a dedicated (rented) phone.
@@ -3389,6 +3412,13 @@ func (p *PhoneSessionDetailResponse) GetAllocatedBy() *PhoneSessionDetailRespons
 		return nil
 	}
 	return p.AllocatedBy
+}
+
+func (p *PhoneSessionDetailResponse) GetCaptureEnabled() bool {
+	if p == nil {
+		return false
+	}
+	return p.CaptureEnabled
 }
 
 func (p *PhoneSessionDetailResponse) GetDeallocatedAt() *time.Time {
@@ -3550,6 +3580,13 @@ func (p *PhoneSessionDetailResponse) SetAllocatedAt(allocatedAt time.Time) {
 func (p *PhoneSessionDetailResponse) SetAllocatedBy(allocatedBy *PhoneSessionDetailResponseAllocatedBy) {
 	p.AllocatedBy = allocatedBy
 	p.require(phoneSessionDetailResponseFieldAllocatedBy)
+}
+
+// SetCaptureEnabled sets the CaptureEnabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionDetailResponse) SetCaptureEnabled(captureEnabled bool) {
+	p.CaptureEnabled = captureEnabled
+	p.require(phoneSessionDetailResponseFieldCaptureEnabled)
 }
 
 // SetDeallocatedAt sets the DeallocatedAt field and marks it as non-optional;
@@ -5648,15 +5685,12 @@ type PhoneAllocateRequestPhoneType string
 
 const (
 	PhoneAllocateRequestPhoneTypeAndroid PhoneAllocateRequestPhoneType = "android"
-	PhoneAllocateRequestPhoneTypeIphone  PhoneAllocateRequestPhoneType = "iphone"
 )
 
 func NewPhoneAllocateRequestPhoneTypeFromString(s string) (PhoneAllocateRequestPhoneType, error) {
 	switch s {
 	case "android":
 		return PhoneAllocateRequestPhoneTypeAndroid, nil
-	case "iphone":
-		return PhoneAllocateRequestPhoneTypeIphone, nil
 	}
 	var t PhoneAllocateRequestPhoneType
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -5666,18 +5700,38 @@ func (p PhoneAllocateRequestPhoneType) Ptr() *PhoneAllocateRequestPhoneType {
 	return &p
 }
 
-// only return phones of this type
+// Which pool to draw the phone from. Omit for shared. 'dedicated' claims any idle phone your organization rents; combine with phone_id to pin a specific one.
+type PhoneAllocateRequestPool string
+
+const (
+	PhoneAllocateRequestPoolShared    PhoneAllocateRequestPool = "shared"
+	PhoneAllocateRequestPoolDedicated PhoneAllocateRequestPool = "dedicated"
+)
+
+func NewPhoneAllocateRequestPoolFromString(s string) (PhoneAllocateRequestPool, error) {
+	switch s {
+	case "shared":
+		return PhoneAllocateRequestPoolShared, nil
+	case "dedicated":
+		return PhoneAllocateRequestPoolDedicated, nil
+	}
+	var t PhoneAllocateRequestPool
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneAllocateRequestPool) Ptr() *PhoneAllocateRequestPool {
+	return &p
+}
+
+// only return Android phones
 type PhonesAvailableRequestPhoneType string
 
 const (
-	PhonesAvailableRequestPhoneTypeIphone  PhonesAvailableRequestPhoneType = "iphone"
 	PhonesAvailableRequestPhoneTypeAndroid PhonesAvailableRequestPhoneType = "android"
 )
 
 func NewPhonesAvailableRequestPhoneTypeFromString(s string) (PhonesAvailableRequestPhoneType, error) {
 	switch s {
-	case "iphone":
-		return PhonesAvailableRequestPhoneTypeIphone, nil
 	case "android":
 		return PhonesAvailableRequestPhoneTypeAndroid, nil
 	}
