@@ -84,20 +84,3 @@ func (c *Client) Delete(
 	}
 	return response.Body, nil
 }
-
-// Rotates the plaintext value for an existing API key, preserving its name and identifier. The previous value is invalidated immediately.
-func (c *Client) Regenerate(
-	ctx context.Context,
-	request *platformgo.APIKeysRegenerateRequest,
-	opts ...option.RequestOption,
-) (*platformgo.APIKeyRegenerateResponse, error) {
-	response, err := c.WithRawResponse.Regenerate(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}

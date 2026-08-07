@@ -9,6 +9,125 @@ import (
 	big "math/big"
 )
 
+// Confirmation that the file was deleted.
+var (
+	deleteFileOutputBodyFieldSchema               = big.NewInt(1 << 0)
+	deleteFileOutputBodyFieldMessage              = big.NewInt(1 << 1)
+	deleteFileOutputBodyFieldPhonesPendingRemoval = big.NewInt(1 << 2)
+)
+
+type DeleteFileOutputBody struct {
+	// A URL to the JSON Schema for this object.
+	Schema  *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	Message string  `json:"message" url:"message"`
+	// Phones that still hold a copy and have been scheduled to remove it. Zero means the file is already gone everywhere.
+	PhonesPendingRemoval int64 `json:"phones_pending_removal" url:"phones_pending_removal"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (d *DeleteFileOutputBody) GetSchema() *string {
+	if d == nil {
+		return nil
+	}
+	return d.Schema
+}
+
+func (d *DeleteFileOutputBody) GetMessage() string {
+	if d == nil {
+		return ""
+	}
+	return d.Message
+}
+
+func (d *DeleteFileOutputBody) GetPhonesPendingRemoval() int64 {
+	if d == nil {
+		return 0
+	}
+	return d.PhonesPendingRemoval
+}
+
+func (d *DeleteFileOutputBody) GetExtraProperties() map[string]interface{} {
+	if d == nil {
+		return nil
+	}
+	return d.extraProperties
+}
+
+func (d *DeleteFileOutputBody) require(field *big.Int) {
+	if d.explicitFields == nil {
+		d.explicitFields = big.NewInt(0)
+	}
+	d.explicitFields.Or(d.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (d *DeleteFileOutputBody) SetSchema(schema *string) {
+	d.Schema = schema
+	d.require(deleteFileOutputBodyFieldSchema)
+}
+
+// SetMessage sets the Message field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (d *DeleteFileOutputBody) SetMessage(message string) {
+	d.Message = message
+	d.require(deleteFileOutputBodyFieldMessage)
+}
+
+// SetPhonesPendingRemoval sets the PhonesPendingRemoval field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (d *DeleteFileOutputBody) SetPhonesPendingRemoval(phonesPendingRemoval int64) {
+	d.PhonesPendingRemoval = phonesPendingRemoval
+	d.require(deleteFileOutputBodyFieldPhonesPendingRemoval)
+}
+
+func (d *DeleteFileOutputBody) UnmarshalJSON(data []byte) error {
+	type unmarshaler DeleteFileOutputBody
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*d = DeleteFileOutputBody(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *d)
+	if err != nil {
+		return err
+	}
+	d.extraProperties = extraProperties
+	d.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (d *DeleteFileOutputBody) MarshalJSON() ([]byte, error) {
+	type embed DeleteFileOutputBody
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*d),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, d.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (d *DeleteFileOutputBody) String() string {
+	if d == nil {
+		return "<nil>"
+	}
+	if len(d.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(d.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(d); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", d)
+}
+
 // Returned after a successful sign-in or sign-up.
 var (
 	userAuthResponseFieldOrgSlug = big.NewInt(1 << 0)

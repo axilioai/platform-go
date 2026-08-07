@@ -68,13 +68,30 @@ func (c *Client) Create(
 	return response.Body, nil
 }
 
-// Removes a file from the org's library: the stored object, the library entry and its delivery history. Copies already delivered to a phone are left in place for now: on a shared phone they are destroyed when the phone is released, while on a dedicated phone they persist until the phone is cleaned up.
+// Removes a file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone holding a copy is scheduled to remove it (removal is confirmed per phone and retried until it lands). The response reports how many phones that recall reaches.
 func (c *Client) Delete(
 	ctx context.Context,
 	request *platformgo.UploadsDeleteRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.DeleteFileOutputBody, error) {
 	response, err := c.WithRawResponse.Delete(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Updates the file's display name. Metadata only: storage is keyed by id, so the object never moves and existing URLs keep working, and past deliveries keep the name they were sent under. Downloads cannot be renamed — a captured file's name is part of its provenance.
+func (c *Client) Rename(
+	ctx context.Context,
+	request *platformgo.FileRenameRequest,
+	opts ...option.RequestOption,
+) (*platformgo.RenameFileOutputBody, error) {
+	response, err := c.WithRawResponse.Rename(
 		ctx,
 		request,
 		opts...,
