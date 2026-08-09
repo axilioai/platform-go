@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -330,5 +331,85 @@ func TestUploadRejectsMissingFileBeforeRegistering(t *testing.T) {
 	}
 	if calls != 0 {
 		t.Errorf("made %d API calls before reading the file; expected none", calls)
+	}
+}
+
+// sparseFile creates a temp file of exactly size bytes without writing them
+// (truncate; the filesystem stores it sparse), so boundary tests don't cost
+// 100 MiB of real I/O.
+func sparseFile(t *testing.T, size int64) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "payload.png")
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	if err := f.Truncate(size); err != nil {
+		t.Fatalf("truncate: %v", err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatalf("close: %v", err)
+	}
+	return path
+}
+
+// Send must refuse an undeliverable file BEFORE any request goes out
+// (AXI-1581): uploading first and letting the delivery endpoint refuse leaves
+// the file retained in the library — quota consumed by a failed one-shot call.
+func TestSendRefusesOversizeBeforeAnyRequest(t *testing.T) {
+	var requests int
+	c, done := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer done()
+
+	_, err := Send(context.Background(), c, "phn_1", sparseFile(t, MaxDeliveryBytes+1))
+	if !errors.Is(err, ErrTooLargeForDelivery) {
+		t.Fatalf("Send = %v, want ErrTooLargeForDelivery", err)
+	}
+	if requests != 0 {
+		t.Fatalf("oversize Send made %d requests; the refusal must precede upload registration", requests)
+	}
+}
+
+// The boundary is inclusive: exactly MaxDeliveryBytes passes the preflight —
+// proven by Send reaching the (deliberately failing) register endpoint rather
+// than by streaming 100 MiB through the stub. The server keeps the final say
+// either way.
+func TestSendAllowsExactlyTheDeliveryLimit(t *testing.T) {
+	var registered bool
+	c, done := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		registered = true
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer done()
+
+	_, err := Send(context.Background(), c, "phn_1", sparseFile(t, MaxDeliveryBytes))
+	if errors.Is(err, ErrTooLargeForDelivery) {
+		t.Fatalf("exactly MaxDeliveryBytes was refused by the preflight; the boundary is inclusive")
+	}
+	if !registered {
+		t.Fatal("Send never reached upload registration; the preflight blocked a deliverable size")
+	}
+}
+
+// Upload keeps the library's own contract: no delivery-ceiling preflight
+// (the library stores files phones cannot receive). An oversize-for-delivery
+// file must still reach upload registration through the bare Upload door.
+func TestUploadDoesNotApplyTheDeliveryCeiling(t *testing.T) {
+	var registered bool
+	c, done := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		registered = true
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer done()
+
+	_, err := Upload(context.Background(), c, sparseFile(t, MaxDeliveryBytes+1))
+	if errors.Is(err, ErrTooLargeForDelivery) {
+		t.Fatalf("Upload applied the delivery ceiling: %v", err)
+	}
+	if !registered {
+		t.Fatal("Upload never reached registration")
 	}
 }
