@@ -11,12 +11,17 @@ import "encoding/json"
 
 // DCP method names ("Domain.method"). The driver's helpers translate their
 // ergonomic API to these verbatim, the way Playwright translates to CDP.
+//
+// DCP v1 (AXI-1785) groups the input verbs by device-class capability profile:
+// the touch verbs are in the Touch domain, the text/key verbs in Keyboard,
+// replacing the old flat Input domain. Screen stays the universal perception
+// domain. Requires a v1 executor; released in lockstep with it (AXI-1788).
 const (
-	methodInputTap         = "Input.tap"
-	methodInputLongPress   = "Input.longPress"
-	methodInputSwipe       = "Input.swipe"
-	methodInputTypeText    = "Input.typeText"
-	methodInputKeyPress    = "Input.keyPress"
+	methodTouchTap         = "Touch.tap"
+	methodTouchLongPress   = "Touch.longPress"
+	methodTouchSwipe       = "Touch.swipe"
+	methodKeyboardTypeText = "Keyboard.typeText"
+	methodKeyboardKeyPress = "Keyboard.keyPress"
 	methodScreenScreenshot = "Screen.screenshot"
 	methodScreenObserve    = "Screen.observe"
 	methodScreenFind       = "Screen.find"
