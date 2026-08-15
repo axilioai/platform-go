@@ -53,15 +53,44 @@ func okResp(cmd dcpCommand, result any) dcpResponse {
 	return dcpResponse{ID: cmd.ID, Result: raw}
 }
 
-func TestTapSendsInputTap(t *testing.T) {
+func TestInputMethodsSendV1WireNames(t *testing.T) {
+	// Each ergonomic input call must emit its DCP v1 method string on the
+	// wire (AXI-1788): the touch verbs under Touch.*, the text/key verbs
+	// under Keyboard.*. The public API is unchanged; only the wire moved.
+	cases := []struct {
+		name       string
+		call       func(d *MobileDriver) error
+		wantMethod string
+	}{
+		{"Tap", func(d *MobileDriver) error { return d.Tap(Coords{X: 5, Y: 6}) }, methodTouchTap},
+		{"LongPress", func(d *MobileDriver) error { return d.LongPress(Coords{X: 5, Y: 6}, 800) }, methodTouchLongPress},
+		{"Swipe", func(d *MobileDriver) error { return d.Swipe(Coords{X: 1, Y: 2}, Coords{X: 3, Y: 4}, 300) }, methodTouchSwipe},
+		{"TypeText", func(d *MobileDriver) error { return d.TypeText("hi") }, methodKeyboardTypeText},
+		{"KeyPress", func(d *MobileDriver) error { return d.KeyPress("enter") }, methodKeyboardKeyPress},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return dcpResponse{ID: cmd.ID} }}
+			d := driverWith(fc)
+			if err := c.call(d); err != nil {
+				t.Fatalf("%s: %v", c.name, err)
+			}
+			if len(fc.sent) != 1 {
+				t.Fatalf("%s: want one frame, got %d", c.name, len(fc.sent))
+			}
+			if fc.sent[0].Method != c.wantMethod {
+				t.Fatalf("%s: wire method = %q, want %q", c.name, fc.sent[0].Method, c.wantMethod)
+			}
+		})
+	}
+}
+
+func TestTapPreservesParamsAndID(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return dcpResponse{ID: cmd.ID} }}
 	d := driverWith(fc)
 
 	if err := d.Tap(Coords{X: 5, Y: 6}); err != nil {
 		t.Fatalf("Tap: %v", err)
-	}
-	if len(fc.sent) != 1 || fc.sent[0].Method != methodTouchTap {
-		t.Fatalf("want one Touch.tap, got %+v", fc.sent)
 	}
 	var p tapParams
 	if err := json.Unmarshal(fc.sent[0].Params, &p); err != nil {
