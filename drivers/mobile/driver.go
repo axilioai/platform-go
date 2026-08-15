@@ -252,7 +252,7 @@ func (d *MobileDriver) TypeText(text string) error { return d.typeText(text) }
 
 // KeyPress presses a named key (see the Key* constants), e.g. KeyEnter.
 func (d *MobileDriver) KeyPress(key string) error {
-	_, err := d.call(methodInputKeyPress, keyPressParams{Key: key}, defaultCallTimeout)
+	_, err := d.call(methodKeyboardKeyPress, keyPressParams{Key: key}, defaultCallTimeout)
 	return err
 }
 
@@ -273,22 +273,22 @@ func (d *MobileDriver) Screenshot() ([]byte, error) {
 }
 
 func (d *MobileDriver) tapXY(x, y int) error {
-	_, err := d.call(methodInputTap, tapParams{X: x, Y: y}, defaultCallTimeout)
+	_, err := d.call(methodTouchTap, tapParams{X: x, Y: y}, defaultCallTimeout)
 	return err
 }
 
 func (d *MobileDriver) longPressXY(x, y, durationMs int) error {
-	_, err := d.call(methodInputLongPress, longPressParams{X: x, Y: y, DurationMs: durationMs}, defaultCallTimeout)
+	_, err := d.call(methodTouchLongPress, longPressParams{X: x, Y: y, DurationMs: durationMs}, defaultCallTimeout)
 	return err
 }
 
 func (d *MobileDriver) swipeXY(x1, y1, x2, y2, durationMs int) error {
-	_, err := d.call(methodInputSwipe, swipeParams{X1: x1, Y1: y1, X2: x2, Y2: y2, DurationMs: durationMs}, defaultCallTimeout)
+	_, err := d.call(methodTouchSwipe, swipeParams{X1: x1, Y1: y1, X2: x2, Y2: y2, DurationMs: durationMs}, defaultCallTimeout)
 	return err
 }
 
 func (d *MobileDriver) typeText(text string) error {
-	_, err := d.call(methodInputTypeText, typeTextParams{Text: text}, defaultCallTimeout)
+	_, err := d.call(methodKeyboardTypeText, typeTextParams{Text: text}, defaultCallTimeout)
 	return err
 }
 

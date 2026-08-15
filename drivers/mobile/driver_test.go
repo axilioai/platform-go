@@ -60,8 +60,8 @@ func TestTapSendsInputTap(t *testing.T) {
 	if err := d.Tap(Coords{X: 5, Y: 6}); err != nil {
 		t.Fatalf("Tap: %v", err)
 	}
-	if len(fc.sent) != 1 || fc.sent[0].Method != methodInputTap {
-		t.Fatalf("want one Input.tap, got %+v", fc.sent)
+	if len(fc.sent) != 1 || fc.sent[0].Method != methodTouchTap {
+		t.Fatalf("want one Touch.tap, got %+v", fc.sent)
 	}
 	var p tapParams
 	if err := json.Unmarshal(fc.sent[0].Params, &p); err != nil {
@@ -186,8 +186,8 @@ func TestElementChainTaps(t *testing.T) {
 		t.Fatalf("chained Tap: %v", err)
 	}
 	last := fc.sent[len(fc.sent)-1]
-	if last.Method != methodInputTap {
-		t.Fatalf("want chained Input.tap, got %q", last.Method)
+	if last.Method != methodTouchTap {
+		t.Fatalf("want chained Touch.tap, got %q", last.Method)
 	}
 	var p tapParams
 	_ = json.Unmarshal(last.Params, &p)
