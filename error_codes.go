@@ -3,7 +3,29 @@
 package api
 
 import (
+	core "github.com/axilioai/platform-go/core"
 	internal "github.com/axilioai/platform-go/internal"
 )
 
-var ErrorCodes internal.ErrorCodes = internal.ErrorCodes{}
+var ErrorCodes internal.ErrorCodes = internal.ErrorCodes{
+	404: func(apiError *core.APIError) error {
+		return &NotFoundError{
+			APIError: apiError,
+		}
+	},
+	422: func(apiError *core.APIError) error {
+		return &UnprocessableEntityError{
+			APIError: apiError,
+		}
+	},
+	500: func(apiError *core.APIError) error {
+		return &InternalServerError{
+			APIError: apiError,
+		}
+	},
+	402: func(apiError *core.APIError) error {
+		return &PaymentRequiredError{
+			APIError: apiError,
+		}
+	},
+}

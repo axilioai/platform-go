@@ -34,10 +34,27 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status, trigger. Sortable fields: run_id, status, trigger, started_at, completed_at, created_at, workflow_id, workflow_name.
+// Returns the paginated event trace for a session (workflow runs and workflow-less interactive leases alike). Org-scoped: another org's session reads as not found.
+func (c *Client) SessionsListEvents(
+	ctx context.Context,
+	request *platformgo.SessionsListEventsRequest,
+	opts ...option.RequestOption,
+) (*platformgo.RunEventsResponse, error) {
+	response, err := c.WithRawResponse.SessionsListEvents(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status_filter, trigger_filter. Order with order_by ('<field> <asc|desc>'), field one of status, started_at, completed_at, created_at.
 func (c *Client) List(
 	ctx context.Context,
-	request *platformgo.RunListRequest,
+	request *platformgo.RunsListRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.RunListResponse, error) {
 	response, err := c.WithRawResponse.List(
@@ -51,27 +68,10 @@ func (c *Client) List(
 	return response.Body, nil
 }
 
-// Returns paginated run events for a session, filtered by session_id.
-func (c *Client) ListEvents(
-	ctx context.Context,
-	request *platformgo.RunEventsRequest,
-	opts ...option.RequestOption,
-) (*platformgo.RunEventsResponse, error) {
-	response, err := c.WithRawResponse.ListEvents(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
-// Returns paginated historic runs for the caller's user. Use POST /runs for recent (non-archived) runs.
+// Returns paginated historic runs for the caller's user over a required time window (start_date/end_date). Use GET /runs for recent (non-archived) runs.
 func (c *Client) ListHistoric(
 	ctx context.Context,
-	request *platformgo.RunHistoryRequest,
+	request *platformgo.RunsListHistoricRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.RunHistoryResponse, error) {
 	response, err := c.WithRawResponse.ListHistoric(
@@ -119,12 +119,12 @@ func (c *Client) Get(
 	return response.Body, nil
 }
 
-// Cancels a run that is still queued or running, scoped to the caller's org. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found.
+// Cancels a run that is still queued or running, scoped to the caller's org. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
 func (c *Client) Cancel(
 	ctx context.Context,
 	request *platformgo.RunsCancelRequest,
 	opts ...option.RequestOption,
-) (*platformgo.RunSuccessResponse, error) {
+) (*platformgo.RunResponse, error) {
 	response, err := c.WithRawResponse.Cancel(
 		ctx,
 		request,

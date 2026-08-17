@@ -47,7 +47,7 @@ type FileCreateRequest struct {
 	Filename string `json:"filename" url:"-"`
 	// MIME type of the upload; must be an allowed image or video type.
 	MimeType string `json:"mime_type" url:"-"`
-	// Exact size of the upload in bytes; the presigned URL pins it.
+	// Exact size of the upload in bytes, up to 1 GiB; the presigned URL pins it.
 	SizeBytes int64 `json:"size_bytes" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted

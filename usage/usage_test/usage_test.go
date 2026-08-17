@@ -88,11 +88,11 @@ func TestUsageListInferencesWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.UsageInferencesRequest{
-		EndDate: platformgo.MustParseDateTime(
+	request := &platformgo.UsageListInferencesRequest{
+		StartDate: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
-		StartDate: platformgo.MustParseDateTime(
+		EndDate: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
 	}
@@ -105,7 +105,7 @@ func TestUsageListInferencesWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestUsageListInferencesWithWireMock", "POST", "/usage/inferences", nil, 1)
+	VerifyRequestCount(t, "TestUsageListInferencesWithWireMock", "GET", "/usage/inferences", map[string]interface{}{"start_date": "2024-01-15T09:30:00.000Z", "end_date": "2024-01-15T09:30:00.000Z"}, 1)
 }
 
 func TestUsageGetMetricsWithWireMock(

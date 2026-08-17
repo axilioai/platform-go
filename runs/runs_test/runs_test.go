@@ -77,6 +77,32 @@ func VerifyRequestCount(
 	require.Equal(t, expected, len(result.Requests))
 }
 
+func TestRunsSessionsListEventsWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.SessionsListEventsRequest{
+		SessionID: "session_id",
+	}
+	_, invocationErr := client.Runs.SessionsListEvents(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestRunsSessionsListEventsWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestRunsSessionsListEventsWithWireMock", "GET", "/phones/sessions/session_id/events", nil, 1)
+}
+
 func TestRunsListWithWireMock(
 	t *testing.T,
 ) {
@@ -88,7 +114,7 @@ func TestRunsListWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.RunListRequest{}
+	request := &platformgo.RunsListRequest{}
 	_, invocationErr := client.Runs.List(
 		context.TODO(),
 		request,
@@ -98,35 +124,7 @@ func TestRunsListWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsListWithWireMock", "POST", "/runs", nil, 1)
-}
-
-func TestRunsListEventsWithWireMock(
-	t *testing.T,
-) {
-	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
-	if WireMockBaseURL == "" {
-		WireMockBaseURL = "http://localhost:8080"
-	}
-	client := client.NewClient(
-		option.WithBaseURL(WireMockBaseURL),
-		option.WithAPIKey("test-value"),
-	)
-	request := &platformgo.RunEventsRequest{
-		Limit:     int64(1000000),
-		Offset:    int64(1000000),
-		SessionID: "session_id",
-	}
-	_, invocationErr := client.Runs.ListEvents(
-		context.TODO(),
-		request,
-		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestRunsListEventsWithWireMock"}},
-		),
-	)
-
-	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsListEventsWithWireMock", "POST", "/runs/events", nil, 1)
+	VerifyRequestCount(t, "TestRunsListWithWireMock", "GET", "/runs", nil, 1)
 }
 
 func TestRunsListHistoricWithWireMock(
@@ -140,13 +138,11 @@ func TestRunsListHistoricWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.RunHistoryRequest{
-		EndDate: platformgo.MustParseDateTime(
+	request := &platformgo.RunsListHistoricRequest{
+		StartDate: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
-		Limit:  int64(1000000),
-		Offset: int64(1000000),
-		StartDate: platformgo.MustParseDateTime(
+		EndDate: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
 	}
@@ -159,7 +155,7 @@ func TestRunsListHistoricWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsListHistoricWithWireMock", "POST", "/runs/history", nil, 1)
+	VerifyRequestCount(t, "TestRunsListHistoricWithWireMock", "GET", "/runs/history", map[string]interface{}{"start_date": "2024-01-15T09:30:00.000Z", "end_date": "2024-01-15T09:30:00.000Z"}, 1)
 }
 
 func TestRunsStatsWithWireMock(
@@ -237,7 +233,7 @@ func TestRunsCancelWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsCancelWithWireMock", "PATCH", "/runs/run_id", nil, 1)
+	VerifyRequestCount(t, "TestRunsCancelWithWireMock", "POST", "/runs/run_id:cancel", nil, 1)
 }
 
 func TestRunsCreateWithWireMock(
@@ -253,6 +249,9 @@ func TestRunsCreateWithWireMock(
 	)
 	request := &platformgo.RunCreateRequest{
 		WorkflowID: "workflow_id",
+		Runs: []*platformgo.RunConfig{
+			&platformgo.RunConfig{},
+		},
 	}
 	_, invocationErr := client.Runs.Create(
 		context.TODO(),
@@ -263,5 +262,5 @@ func TestRunsCreateWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsCreateWithWireMock", "POST", "/runs/workflow_id", nil, 1)
+	VerifyRequestCount(t, "TestRunsCreateWithWireMock", "POST", "/workflows/workflow_id/runs", nil, 1)
 }

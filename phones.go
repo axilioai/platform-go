@@ -109,7 +109,7 @@ type PhoneAllocateRequest struct {
 	Tags map[string]string `json:"tags,omitempty" url:"-"`
 	// Persist this session's telemetry spans (default true). false skips the durable trace store; the live telemetry stream still works while the session runs.
 	Telemetry *bool `json:"telemetry,omitempty" url:"-"`
-	// Idle-timeout override for this session; omit for the defaults (inactive after 5 min, close 10 min later).
+	// Idle timeout for this session. Omit for no idle timeout: the session runs until the 1-hour max-session cap.
 	TTL *PhoneSessionTTLOptions `json:"ttl,omitempty" url:"-"`
 	// Workflow requesting allocation; nil for an interactive lease.
 	WorkflowID *string `json:"workflow_id,omitempty" url:"-"`
@@ -224,32 +224,6 @@ func (p *PhoneAllocateRequest) MarshalJSON() ([]byte, error) {
 }
 
 var (
-	phonesAvailableRequestFieldPhoneType = big.NewInt(1 << 0)
-)
-
-type PhonesAvailableRequest struct {
-	// only return Android phones
-	PhoneType *PhonesAvailableRequestPhoneType `json:"-" url:"phone_type,omitempty"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-}
-
-func (p *PhonesAvailableRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
-	}
-	p.explicitFields.Or(p.explicitFields, field)
-}
-
-// SetPhoneType sets the PhoneType field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesAvailableRequest) SetPhoneType(phoneType *PhonesAvailableRequestPhoneType) {
-	p.PhoneType = phoneType
-	p.require(phonesAvailableRequestFieldPhoneType)
-}
-
-var (
 	fileDeliveryCreateRequestFieldPhoneID    = big.NewInt(1 << 0)
 	fileDeliveryCreateRequestFieldCollection = big.NewInt(1 << 1)
 	fileDeliveryCreateRequestFieldFileID     = big.NewInt(1 << 2)
@@ -321,8 +295,8 @@ var (
 )
 
 type PhonesDeallocateRequest struct {
-	// device identifier to deallocate
-	PhoneID string `json:"-" url:"phone_id"`
+	// phone identifier to deallocate
+	PhoneID string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -428,6 +402,150 @@ func (p *PhonesGetSessionRequest) require(field *big.Int) {
 func (p *PhonesGetSessionRequest) SetSessionID(sessionID string) {
 	p.SessionID = sessionID
 	p.require(phonesGetSessionRequestFieldSessionID)
+}
+
+var (
+	phonesListRequestFieldOwnership           = big.NewInt(1 << 0)
+	phonesListRequestFieldIncludeExpired      = big.NewInt(1 << 1)
+	phonesListRequestFieldLimit               = big.NewInt(1 << 2)
+	phonesListRequestFieldOffset              = big.NewInt(1 << 3)
+	phonesListRequestFieldSearch              = big.NewInt(1 << 4)
+	phonesListRequestFieldStatus              = big.NewInt(1 << 5)
+	phonesListRequestFieldType                = big.NewInt(1 << 6)
+	phonesListRequestFieldRentalExpiresAfter  = big.NewInt(1 << 7)
+	phonesListRequestFieldRentalExpiresBefore = big.NewInt(1 << 8)
+	phonesListRequestFieldLastActiveAfter     = big.NewInt(1 << 9)
+	phonesListRequestFieldLastActiveBefore    = big.NewInt(1 << 10)
+	phonesListRequestFieldSort                = big.NewInt(1 << 11)
+	phonesListRequestFieldOrder               = big.NewInt(1 << 12)
+)
+
+type PhonesListRequest struct {
+	// Which phones to return. 'dedicated' = the org's dedicated/rented inventory in every state (busy, offline, and maintenance phones included).
+	Ownership PhonesListRequestOwnership `json:"-" url:"ownership"`
+	// include rented devices whose rental window has expired
+	IncludeExpired *bool  `json:"-" url:"include_expired,omitempty"`
+	Limit          *int64 `json:"-" url:"limit,omitempty"`
+	Offset         *int64 `json:"-" url:"offset,omitempty"`
+	// free-text search across nickname, name, model, location
+	Search *string `json:"-" url:"search,omitempty"`
+	// filter by phone status (active/inactive/maintenance/suspended); case-insensitive
+	Status []string `json:"-" url:"status,omitempty"`
+	// filter by phone type (iphone/android); case-insensitive
+	Type []string `json:"-" url:"type,omitempty"`
+	// only phones whose rental expires at/after this RFC3339 time
+	RentalExpiresAfter *string `json:"-" url:"rental_expires_after,omitempty"`
+	// only phones whose rental expires at/before this RFC3339 time
+	RentalExpiresBefore *string `json:"-" url:"rental_expires_before,omitempty"`
+	// only phones last seen at/after this RFC3339 time
+	LastActiveAfter *string `json:"-" url:"last_active_after,omitempty"`
+	// only phones last seen at/before this RFC3339 time
+	LastActiveBefore *string `json:"-" url:"last_active_before,omitempty"`
+	// sort column (created|rental_expires|last_active|status|type|location)
+	Sort *string `json:"-" url:"sort,omitempty"`
+	// sort direction (asc|desc)
+	Order *string `json:"-" url:"order,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (p *PhonesListRequest) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetOwnership sets the Ownership field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetOwnership(ownership PhonesListRequestOwnership) {
+	p.Ownership = ownership
+	p.require(phonesListRequestFieldOwnership)
+}
+
+// SetIncludeExpired sets the IncludeExpired field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetIncludeExpired(includeExpired *bool) {
+	p.IncludeExpired = includeExpired
+	p.require(phonesListRequestFieldIncludeExpired)
+}
+
+// SetLimit sets the Limit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetLimit(limit *int64) {
+	p.Limit = limit
+	p.require(phonesListRequestFieldLimit)
+}
+
+// SetOffset sets the Offset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetOffset(offset *int64) {
+	p.Offset = offset
+	p.require(phonesListRequestFieldOffset)
+}
+
+// SetSearch sets the Search field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetSearch(search *string) {
+	p.Search = search
+	p.require(phonesListRequestFieldSearch)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetStatus(status []string) {
+	p.Status = status
+	p.require(phonesListRequestFieldStatus)
+}
+
+// SetType sets the Type field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetType(type_ []string) {
+	p.Type = type_
+	p.require(phonesListRequestFieldType)
+}
+
+// SetRentalExpiresAfter sets the RentalExpiresAfter field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetRentalExpiresAfter(rentalExpiresAfter *string) {
+	p.RentalExpiresAfter = rentalExpiresAfter
+	p.require(phonesListRequestFieldRentalExpiresAfter)
+}
+
+// SetRentalExpiresBefore sets the RentalExpiresBefore field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetRentalExpiresBefore(rentalExpiresBefore *string) {
+	p.RentalExpiresBefore = rentalExpiresBefore
+	p.require(phonesListRequestFieldRentalExpiresBefore)
+}
+
+// SetLastActiveAfter sets the LastActiveAfter field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetLastActiveAfter(lastActiveAfter *string) {
+	p.LastActiveAfter = lastActiveAfter
+	p.require(phonesListRequestFieldLastActiveAfter)
+}
+
+// SetLastActiveBefore sets the LastActiveBefore field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetLastActiveBefore(lastActiveBefore *string) {
+	p.LastActiveBefore = lastActiveBefore
+	p.require(phonesListRequestFieldLastActiveBefore)
+}
+
+// SetSort sets the Sort field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetSort(sort *string) {
+	p.Sort = sort
+	p.require(phonesListRequestFieldSort)
+}
+
+// SetOrder sets the Order field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesListRequest) SetOrder(order *string) {
+	p.Order = order
+	p.require(phonesListRequestFieldOrder)
 }
 
 var (
@@ -620,140 +738,6 @@ func (p *PhonesListSessionsRequest) SetSort(sort *string) {
 func (p *PhonesListSessionsRequest) SetOrder(order *string) {
 	p.Order = order
 	p.require(phonesListSessionsRequestFieldOrder)
-}
-
-var (
-	phonesMineRequestFieldIncludeExpired      = big.NewInt(1 << 0)
-	phonesMineRequestFieldLimit               = big.NewInt(1 << 1)
-	phonesMineRequestFieldOffset              = big.NewInt(1 << 2)
-	phonesMineRequestFieldSearch              = big.NewInt(1 << 3)
-	phonesMineRequestFieldStatus              = big.NewInt(1 << 4)
-	phonesMineRequestFieldType                = big.NewInt(1 << 5)
-	phonesMineRequestFieldRentalExpiresAfter  = big.NewInt(1 << 6)
-	phonesMineRequestFieldRentalExpiresBefore = big.NewInt(1 << 7)
-	phonesMineRequestFieldLastActiveAfter     = big.NewInt(1 << 8)
-	phonesMineRequestFieldLastActiveBefore    = big.NewInt(1 << 9)
-	phonesMineRequestFieldSort                = big.NewInt(1 << 10)
-	phonesMineRequestFieldOrder               = big.NewInt(1 << 11)
-)
-
-type PhonesMineRequest struct {
-	// include rented devices whose rental window has expired
-	IncludeExpired *bool  `json:"-" url:"include_expired,omitempty"`
-	Limit          *int64 `json:"-" url:"limit,omitempty"`
-	Offset         *int64 `json:"-" url:"offset,omitempty"`
-	// free-text search across nickname, name, model, location
-	Search *string `json:"-" url:"search,omitempty"`
-	// filter by phone status (active/inactive/maintenance/suspended); case-insensitive
-	Status []string `json:"-" url:"status,omitempty"`
-	// filter by phone type (iphone/android); case-insensitive
-	Type []string `json:"-" url:"type,omitempty"`
-	// only phones whose rental expires at/after this RFC3339 time
-	RentalExpiresAfter *string `json:"-" url:"rental_expires_after,omitempty"`
-	// only phones whose rental expires at/before this RFC3339 time
-	RentalExpiresBefore *string `json:"-" url:"rental_expires_before,omitempty"`
-	// only phones last seen at/after this RFC3339 time
-	LastActiveAfter *string `json:"-" url:"last_active_after,omitempty"`
-	// only phones last seen at/before this RFC3339 time
-	LastActiveBefore *string `json:"-" url:"last_active_before,omitempty"`
-	// sort column (created|rental_expires|last_active|status|type|location)
-	Sort *string `json:"-" url:"sort,omitempty"`
-	// sort direction (asc|desc)
-	Order *string `json:"-" url:"order,omitempty"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-}
-
-func (p *PhonesMineRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
-	}
-	p.explicitFields.Or(p.explicitFields, field)
-}
-
-// SetIncludeExpired sets the IncludeExpired field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetIncludeExpired(includeExpired *bool) {
-	p.IncludeExpired = includeExpired
-	p.require(phonesMineRequestFieldIncludeExpired)
-}
-
-// SetLimit sets the Limit field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetLimit(limit *int64) {
-	p.Limit = limit
-	p.require(phonesMineRequestFieldLimit)
-}
-
-// SetOffset sets the Offset field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetOffset(offset *int64) {
-	p.Offset = offset
-	p.require(phonesMineRequestFieldOffset)
-}
-
-// SetSearch sets the Search field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetSearch(search *string) {
-	p.Search = search
-	p.require(phonesMineRequestFieldSearch)
-}
-
-// SetStatus sets the Status field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetStatus(status []string) {
-	p.Status = status
-	p.require(phonesMineRequestFieldStatus)
-}
-
-// SetType sets the Type field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetType(type_ []string) {
-	p.Type = type_
-	p.require(phonesMineRequestFieldType)
-}
-
-// SetRentalExpiresAfter sets the RentalExpiresAfter field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetRentalExpiresAfter(rentalExpiresAfter *string) {
-	p.RentalExpiresAfter = rentalExpiresAfter
-	p.require(phonesMineRequestFieldRentalExpiresAfter)
-}
-
-// SetRentalExpiresBefore sets the RentalExpiresBefore field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetRentalExpiresBefore(rentalExpiresBefore *string) {
-	p.RentalExpiresBefore = rentalExpiresBefore
-	p.require(phonesMineRequestFieldRentalExpiresBefore)
-}
-
-// SetLastActiveAfter sets the LastActiveAfter field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetLastActiveAfter(lastActiveAfter *string) {
-	p.LastActiveAfter = lastActiveAfter
-	p.require(phonesMineRequestFieldLastActiveAfter)
-}
-
-// SetLastActiveBefore sets the LastActiveBefore field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetLastActiveBefore(lastActiveBefore *string) {
-	p.LastActiveBefore = lastActiveBefore
-	p.require(phonesMineRequestFieldLastActiveBefore)
-}
-
-// SetSort sets the Sort field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetSort(sort *string) {
-	p.Sort = sort
-	p.require(phonesMineRequestFieldSort)
-}
-
-// SetOrder sets the Order field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesMineRequest) SetOrder(order *string) {
-	p.Order = order
-	p.require(phonesMineRequestFieldOrder)
 }
 
 var (
@@ -2590,126 +2574,6 @@ func NewPhoneAppSummaryPlatformFromString(s string) (PhoneAppSummaryPlatform, er
 
 func (p PhoneAppSummaryPlatform) Ptr() *PhoneAppSummaryPlatform {
 	return &p
-}
-
-// Returned when querying available devices for allocation.
-var (
-	phoneAvailableListResponseFieldSchema       = big.NewInt(1 << 0)
-	phoneAvailableListResponseFieldAndroidCount = big.NewInt(1 << 1)
-	phoneAvailableListResponseFieldPhones       = big.NewInt(1 << 2)
-)
-
-type PhoneAvailableListResponse struct {
-	// A URL to the JSON Schema for this object.
-	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// Number of available Android devices.
-	AndroidCount int64 `json:"android_count" url:"android_count"`
-	// List of available device records.
-	Phones []*PhoneSummary `json:"phones,omitempty" url:"phones,omitempty"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (p *PhoneAvailableListResponse) GetSchema() *string {
-	if p == nil {
-		return nil
-	}
-	return p.Schema
-}
-
-func (p *PhoneAvailableListResponse) GetAndroidCount() int64 {
-	if p == nil {
-		return 0
-	}
-	return p.AndroidCount
-}
-
-func (p *PhoneAvailableListResponse) GetPhones() []*PhoneSummary {
-	if p == nil {
-		return nil
-	}
-	return p.Phones
-}
-
-func (p *PhoneAvailableListResponse) GetExtraProperties() map[string]interface{} {
-	if p == nil {
-		return nil
-	}
-	return p.extraProperties
-}
-
-func (p *PhoneAvailableListResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
-	}
-	p.explicitFields.Or(p.explicitFields, field)
-}
-
-// SetSchema sets the Schema field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneAvailableListResponse) SetSchema(schema *string) {
-	p.Schema = schema
-	p.require(phoneAvailableListResponseFieldSchema)
-}
-
-// SetAndroidCount sets the AndroidCount field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneAvailableListResponse) SetAndroidCount(androidCount int64) {
-	p.AndroidCount = androidCount
-	p.require(phoneAvailableListResponseFieldAndroidCount)
-}
-
-// SetPhones sets the Phones field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneAvailableListResponse) SetPhones(phones []*PhoneSummary) {
-	p.Phones = phones
-	p.require(phoneAvailableListResponseFieldPhones)
-}
-
-func (p *PhoneAvailableListResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler PhoneAvailableListResponse
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*p = PhoneAvailableListResponse(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *p)
-	if err != nil {
-		return err
-	}
-	p.extraProperties = extraProperties
-	p.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (p *PhoneAvailableListResponse) MarshalJSON() ([]byte, error) {
-	type embed PhoneAvailableListResponse
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*p),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (p *PhoneAvailableListResponse) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	if len(p.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(p); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", p)
 }
 
 // Returned after a device has been successfully deallocated.
@@ -4885,13 +4749,13 @@ func (p PhoneSessionThumbnailResponseStatus) Ptr() *PhoneSessionThumbnailRespons
 	return &p
 }
 
-// Per-session idle-timeout override.
+// Per-session idle timeout.
 var (
 	phoneSessionTTLOptionsFieldIdleTimeoutSeconds = big.NewInt(1 << 0)
 )
 
 type PhoneSessionTTLOptions struct {
-	// Seconds with no user connection before the session is closed and its phone released (capped at 3600). Omit for no idle timeout: the session then runs until the 1-hour max-session cap.
+	// Seconds with no user connection before the session is closed and its phone released. Omitted or non-positive means no idle timeout: the session runs until the 1-hour max-session cap. Explicit values are clamped to 1..3600 seconds.
 	IdleTimeoutSeconds *int64 `json:"idle_timeout_seconds,omitempty" url:"idle_timeout_seconds,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -5723,23 +5587,23 @@ func (p PhoneAllocateRequestPool) Ptr() *PhoneAllocateRequestPool {
 	return &p
 }
 
-// only return Android phones
-type PhonesAvailableRequestPhoneType string
+// Which phones to return. 'dedicated' = the org's dedicated/rented inventory in every state (busy, offline, and maintenance phones included).
+type PhonesListRequestOwnership string
 
 const (
-	PhonesAvailableRequestPhoneTypeAndroid PhonesAvailableRequestPhoneType = "android"
+	PhonesListRequestOwnershipDedicated PhonesListRequestOwnership = "dedicated"
 )
 
-func NewPhonesAvailableRequestPhoneTypeFromString(s string) (PhonesAvailableRequestPhoneType, error) {
+func NewPhonesListRequestOwnershipFromString(s string) (PhonesListRequestOwnership, error) {
 	switch s {
-	case "android":
-		return PhonesAvailableRequestPhoneTypeAndroid, nil
+	case "dedicated":
+		return PhonesListRequestOwnershipDedicated, nil
 	}
-	var t PhonesAvailableRequestPhoneType
+	var t PhonesListRequestOwnership
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
 }
 
-func (p PhonesAvailableRequestPhoneType) Ptr() *PhonesAvailableRequestPhoneType {
+func (p PhonesListRequestOwnership) Ptr() *PhonesListRequestOwnership {
 	return &p
 }
 

@@ -67,134 +67,109 @@ func (u *UsageGetMetricsRequest) SetTimezone(timezone *string) {
 }
 
 var (
-	usageInferencesRequestFieldEndDate        = big.NewInt(1 << 0)
-	usageInferencesRequestFieldEndpointFilter = big.NewInt(1 << 1)
-	usageInferencesRequestFieldLimit          = big.NewInt(1 << 2)
-	usageInferencesRequestFieldModel          = big.NewInt(1 << 3)
-	usageInferencesRequestFieldOffset         = big.NewInt(1 << 4)
-	usageInferencesRequestFieldSearch         = big.NewInt(1 << 5)
-	usageInferencesRequestFieldSessionID      = big.NewInt(1 << 6)
-	usageInferencesRequestFieldSortBy         = big.NewInt(1 << 7)
-	usageInferencesRequestFieldStartDate      = big.NewInt(1 << 8)
+	usageListInferencesRequestFieldStartDate      = big.NewInt(1 << 0)
+	usageListInferencesRequestFieldEndDate        = big.NewInt(1 << 1)
+	usageListInferencesRequestFieldLimit          = big.NewInt(1 << 2)
+	usageListInferencesRequestFieldOffset         = big.NewInt(1 << 3)
+	usageListInferencesRequestFieldEndpointFilter = big.NewInt(1 << 4)
+	usageListInferencesRequestFieldModel          = big.NewInt(1 << 5)
+	usageListInferencesRequestFieldSearch         = big.NewInt(1 << 6)
+	usageListInferencesRequestFieldSessionID      = big.NewInt(1 << 7)
+	usageListInferencesRequestFieldOrderBy        = big.NewInt(1 << 8)
 )
 
-type UsageInferencesRequest struct {
-	// End of the inferences query window.
-	EndDate time.Time `json:"end_date" url:"-"`
-	// Restricts results to the given vision endpoints ('detect'/'locate').
-	EndpointFilter []string `json:"endpoint_filter,omitempty" url:"-"`
-	// Number of inferences per page.
-	Limit *int64 `json:"limit,omitempty" url:"-"`
-	// Model restricts results to a single model name.
-	Model *string `json:"model,omitempty" url:"-"`
+type UsageListInferencesRequest struct {
+	// Beginning of the inferences query window (RFC 3339).
+	StartDate time.Time `json:"-" url:"start_date"`
+	// End of the inferences query window (RFC 3339).
+	EndDate time.Time `json:"-" url:"end_date"`
+	// Number of inferences per page (1-100).
+	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// Pagination offset.
-	Offset *int64 `json:"offset,omitempty" url:"-"`
-	// Filters by inference (event) ID substring.
-	Search *string `json:"search,omitempty" url:"-"`
-	// Restricts results to inferences that ran under one phone session.
-	SessionID *string `json:"session_id,omitempty" url:"-"`
-	// Ordered list of sort specs; first entry is primary.
-	SortBy []*UsageInferenceSortSpec `json:"sort_by,omitempty" url:"-"`
-	// Beginning of the inferences query window.
-	StartDate time.Time `json:"start_date" url:"-"`
+	Offset *int64 `json:"-" url:"offset,omitempty"`
+	// Restrict results to the given vision endpoints ('detect'/'locate').
+	EndpointFilter []string `json:"-" url:"endpoint_filter,omitempty"`
+	// Restrict results to a single model name.
+	Model *string `json:"-" url:"model,omitempty"`
+	// Filter by inference (event) id substring.
+	Search *string `json:"-" url:"search,omitempty"`
+	// Restrict results to inferences that ran under one phone session.
+	SessionID *string `json:"-" url:"session_id,omitempty"`
+	// Sort expression '<field> <asc|desc>'; field one of created_at, cost_microdollars, latency_ms, endpoint, model, inference_id. Defaults to created_at desc.
+	OrderBy *string `json:"-" url:"order_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 }
 
-func (u *UsageInferencesRequest) require(field *big.Int) {
+func (u *UsageListInferencesRequest) require(field *big.Int) {
 	if u.explicitFields == nil {
 		u.explicitFields = big.NewInt(0)
 	}
 	u.explicitFields.Or(u.explicitFields, field)
 }
 
-// SetEndDate sets the EndDate field and marks it as non-optional;
+// SetStartDate sets the StartDate field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferencesRequest) SetEndDate(endDate time.Time) {
-	u.EndDate = endDate
-	u.require(usageInferencesRequestFieldEndDate)
+func (u *UsageListInferencesRequest) SetStartDate(startDate time.Time) {
+	u.StartDate = startDate
+	u.require(usageListInferencesRequestFieldStartDate)
 }
 
-// SetEndpointFilter sets the EndpointFilter field and marks it as non-optional;
+// SetEndDate sets the EndDate field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferencesRequest) SetEndpointFilter(endpointFilter []string) {
-	u.EndpointFilter = endpointFilter
-	u.require(usageInferencesRequestFieldEndpointFilter)
+func (u *UsageListInferencesRequest) SetEndDate(endDate time.Time) {
+	u.EndDate = endDate
+	u.require(usageListInferencesRequestFieldEndDate)
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferencesRequest) SetLimit(limit *int64) {
+func (u *UsageListInferencesRequest) SetLimit(limit *int64) {
 	u.Limit = limit
-	u.require(usageInferencesRequestFieldLimit)
-}
-
-// SetModel sets the Model field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferencesRequest) SetModel(model *string) {
-	u.Model = model
-	u.require(usageInferencesRequestFieldModel)
+	u.require(usageListInferencesRequestFieldLimit)
 }
 
 // SetOffset sets the Offset field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferencesRequest) SetOffset(offset *int64) {
+func (u *UsageListInferencesRequest) SetOffset(offset *int64) {
 	u.Offset = offset
-	u.require(usageInferencesRequestFieldOffset)
+	u.require(usageListInferencesRequestFieldOffset)
+}
+
+// SetEndpointFilter sets the EndpointFilter field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListInferencesRequest) SetEndpointFilter(endpointFilter []string) {
+	u.EndpointFilter = endpointFilter
+	u.require(usageListInferencesRequestFieldEndpointFilter)
+}
+
+// SetModel sets the Model field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListInferencesRequest) SetModel(model *string) {
+	u.Model = model
+	u.require(usageListInferencesRequestFieldModel)
 }
 
 // SetSearch sets the Search field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferencesRequest) SetSearch(search *string) {
+func (u *UsageListInferencesRequest) SetSearch(search *string) {
 	u.Search = search
-	u.require(usageInferencesRequestFieldSearch)
+	u.require(usageListInferencesRequestFieldSearch)
 }
 
 // SetSessionID sets the SessionID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferencesRequest) SetSessionID(sessionID *string) {
+func (u *UsageListInferencesRequest) SetSessionID(sessionID *string) {
 	u.SessionID = sessionID
-	u.require(usageInferencesRequestFieldSessionID)
+	u.require(usageListInferencesRequestFieldSessionID)
 }
 
-// SetSortBy sets the SortBy field and marks it as non-optional;
+// SetOrderBy sets the OrderBy field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferencesRequest) SetSortBy(sortBy []*UsageInferenceSortSpec) {
-	u.SortBy = sortBy
-	u.require(usageInferencesRequestFieldSortBy)
-}
-
-// SetStartDate sets the StartDate field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferencesRequest) SetStartDate(startDate time.Time) {
-	u.StartDate = startDate
-	u.require(usageInferencesRequestFieldStartDate)
-}
-
-func (u *UsageInferencesRequest) UnmarshalJSON(data []byte) error {
-	type unmarshaler UsageInferencesRequest
-	var body unmarshaler
-	if err := json.Unmarshal(data, &body); err != nil {
-		return err
-	}
-	*u = UsageInferencesRequest(body)
-	return nil
-}
-
-func (u *UsageInferencesRequest) MarshalJSON() ([]byte, error) {
-	type embed UsageInferencesRequest
-	var marshaler = struct {
-		embed
-		EndDate   *internal.DateTime `json:"end_date"`
-		StartDate *internal.DateTime `json:"start_date"`
-	}{
-		embed:     embed(*u),
-		EndDate:   internal.NewDateTime(u.EndDate),
-		StartDate: internal.NewDateTime(u.StartDate),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
-	return json.Marshal(explicitMarshaler)
+func (u *UsageListInferencesRequest) SetOrderBy(orderBy *string) {
+	u.OrderBy = orderBy
+	u.require(usageListInferencesRequestFieldOrderBy)
 }
 
 // Single time-series value for usage charts.
@@ -890,109 +865,6 @@ func NewUsageInferenceOcrEngineFromString(s string) (UsageInferenceOcrEngine, er
 
 func (u UsageInferenceOcrEngine) Ptr() *UsageInferenceOcrEngine {
 	return &u
-}
-
-// One sort instruction for the inferences list.
-var (
-	usageInferenceSortSpecFieldField = big.NewInt(1 << 0)
-	usageInferenceSortSpecFieldOrder = big.NewInt(1 << 1)
-)
-
-type UsageInferenceSortSpec struct {
-	// Column to sort by.
-	Field string `json:"field" url:"field"`
-	// Sort direction.
-	Order string `json:"order" url:"order"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (u *UsageInferenceSortSpec) GetField() string {
-	if u == nil {
-		return ""
-	}
-	return u.Field
-}
-
-func (u *UsageInferenceSortSpec) GetOrder() string {
-	if u == nil {
-		return ""
-	}
-	return u.Order
-}
-
-func (u *UsageInferenceSortSpec) GetExtraProperties() map[string]interface{} {
-	if u == nil {
-		return nil
-	}
-	return u.extraProperties
-}
-
-func (u *UsageInferenceSortSpec) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
-	}
-	u.explicitFields.Or(u.explicitFields, field)
-}
-
-// SetField sets the Field field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferenceSortSpec) SetField(field string) {
-	u.Field = field
-	u.require(usageInferenceSortSpecFieldField)
-}
-
-// SetOrder sets the Order field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInferenceSortSpec) SetOrder(order string) {
-	u.Order = order
-	u.require(usageInferenceSortSpecFieldOrder)
-}
-
-func (u *UsageInferenceSortSpec) UnmarshalJSON(data []byte) error {
-	type unmarshaler UsageInferenceSortSpec
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*u = UsageInferenceSortSpec(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
-	if err != nil {
-		return err
-	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (u *UsageInferenceSortSpec) MarshalJSON() ([]byte, error) {
-	type embed UsageInferenceSortSpec
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*u),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (u *UsageInferenceSortSpec) String() string {
-	if u == nil {
-		return "<nil>"
-	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(u); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", u)
 }
 
 // Paginated list of inference calls.

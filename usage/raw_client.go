@@ -34,7 +34,7 @@ func NewRawClient(options *core.RequestOptions) *RawClient {
 
 func (r *RawClient) ListInferences(
 	ctx context.Context,
-	request *platformgo.UsageInferencesRequest,
+	request *platformgo.UsageListInferencesRequest,
 	opts ...option.RequestOption,
 ) (*core.Response[*platformgo.UsageInferencesResponse], error) {
 	options := core.NewRequestOptions(opts...)
@@ -44,24 +44,29 @@ func (r *RawClient) ListInferences(
 		"/api/v1",
 	)
 	endpointURL := baseURL + "/usage/inferences"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
 	headers := internal.MergeHeaders(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
-	headers.Add("Content-Type", "application/json")
 	var response *platformgo.UsageInferencesResponse
 	raw, err := r.caller.Call(
 		ctx,
 		&internal.CallParams{
 			URL:             endpointURL,
-			Method:          http.MethodPost,
+			Method:          http.MethodGet,
 			Headers:         headers,
 			MaxAttempts:     options.MaxAttempts,
 			DisableRetries:  options.DisableRetries,
 			BodyProperties:  options.BodyProperties,
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
-			Request:         request,
 			Response:        &response,
 		},
 	)

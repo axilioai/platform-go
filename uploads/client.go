@@ -68,7 +68,7 @@ func (c *Client) Create(
 	return response.Body, nil
 }
 
-// Removes a file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone holding a copy is scheduled to remove it (removal is confirmed per phone and retried until it lands). The response reports how many phones that recall reaches.
+// Removes a file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone holding a copy is scheduled to remove it (removal is confirmed per phone and retried until it lands). The response reports how many phones that recall reaches. Deleting a download runs the same recall.
 func (c *Client) Delete(
 	ctx context.Context,
 	request *platformgo.UploadsDeleteRequest,

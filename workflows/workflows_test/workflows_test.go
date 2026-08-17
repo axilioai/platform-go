@@ -153,32 +153,6 @@ func TestWorkflowsGetWithWireMock(
 	VerifyRequestCount(t, "TestWorkflowsGetWithWireMock", "GET", "/workflows/workflow_id", nil, 1)
 }
 
-func TestWorkflowsUpdateWithWireMock(
-	t *testing.T,
-) {
-	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
-	if WireMockBaseURL == "" {
-		WireMockBaseURL = "http://localhost:8080"
-	}
-	client := client.NewClient(
-		option.WithBaseURL(WireMockBaseURL),
-		option.WithAPIKey("test-value"),
-	)
-	request := &platformgo.WorkflowUpdateRequest{
-		WorkflowID: "workflow_id",
-	}
-	_, invocationErr := client.Workflows.Update(
-		context.TODO(),
-		request,
-		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestWorkflowsUpdateWithWireMock"}},
-		),
-	)
-
-	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestWorkflowsUpdateWithWireMock", "PUT", "/workflows/workflow_id", nil, 1)
-}
-
 func TestWorkflowsDeleteWithWireMock(
 	t *testing.T,
 ) {
@@ -203,6 +177,32 @@ func TestWorkflowsDeleteWithWireMock(
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
 	VerifyRequestCount(t, "TestWorkflowsDeleteWithWireMock", "DELETE", "/workflows/workflow_id", nil, 1)
+}
+
+func TestWorkflowsUpdateWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.WorkflowUpdateRequest{
+		WorkflowID: "workflow_id",
+	}
+	_, invocationErr := client.Workflows.Update(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestWorkflowsUpdateWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestWorkflowsUpdateWithWireMock", "PATCH", "/workflows/workflow_id", nil, 1)
 }
 
 func TestWorkflowsGetCodeWithWireMock(

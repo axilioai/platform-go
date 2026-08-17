@@ -691,7 +691,7 @@ client.Downloads.List(
 <dl>
 <dd>
 
-Removes a captured file from the org's library: the stored object and the library entry, freeing its quota. If the file was pushed to phones, those copies are scheduled for removal like an upload's. The copy in the phone's own gallery is removed on the library-deletes-everywhere policy as the device-side support ships.
+Removes a captured file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone the file was pushed to is scheduled to remove its copy (removal is confirmed per phone and retried until it lands), the same recall an upload's delete runs. The response reports how many phones that recall reaches. The source phone's own copy from the capture session is outside the recall: it belongs to the session, not the library.
 </dd>
 </dl>
 </dd>
@@ -866,7 +866,7 @@ client.Downloads.PhonesSessionDownloads(
 </details>
 
 ## Phones
-<details><summary><code>client.Phones.Allocate(request) -> *platformgo.PhoneAllocateResponse</code></summary>
+<details><summary><code>client.Phones.List() -> *platformgo.PhonePrivateListResponse</code></summary>
 <dl>
 <dd>
 
@@ -878,7 +878,7 @@ client.Downloads.PhonesSessionDownloads(
 <dl>
 <dd>
 
-Allocates an Android phone and opens a session. Omit workflow_id for an interactive lease (drive the phone directly); set it to allocate for a workflow. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
+Returns the caller org's full dedicated (private/rented) phone inventory - every state, not just the free ones: busy phones in an active session, offline/inactive phones, and phones in maintenance are all included, so this is the endpoint to discover a phone_id you can pin via POST /phones:allocate. Each phone's current_session_id and status reflect its live state. include_expired=true also keeps rentals past their rental_expires_at so users can see what they used to own. Filter by status/phone_type and paginate; the response total is the full match count. Pass ownership=dedicated.
 </dd>
 </dl>
 </dd>
@@ -893,10 +893,10 @@ Allocates an Android phone and opens a session. Omit workflow_id for an interact
 <dd>
 
 ```go
-request := &platformgo.PhoneAllocateRequest{
-        PhoneType: platformgo.PhoneAllocateRequestPhoneTypeAndroid,
+request := &platformgo.PhonesListRequest{
+        Ownership: platformgo.PhonesListRequestOwnershipDedicated,
     }
-client.Phones.Allocate(
+client.Phones.List(
         context.TODO(),
         request,
     )
@@ -915,328 +915,10 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
-**capture:** `*bool` — Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
+**ownership:** `*platformgo.PhonesListRequestOwnership` — Which phones to return. 'dedicated' = the org's dedicated/rented inventory in every state (busy, offline, and maintenance phones included).
     
 </dd>
 </dl>
-
-<dl>
-<dd>
-
-**liveView:** `*platformgo.PhoneLiveViewOptions` — Hosted live-view options for this session; omit for the defaults (token auth, interactive, enabled).
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**name:** `*string` — Optional session label (letters, numbers, dots, hyphens, underscores; max 64). Unique among the org's active sessions - allocating with a name already in use returns a conflict.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**phoneID:** `*string` — PhoneID pins allocation to a specific device (for dedicated devices).
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**phoneType:** `*platformgo.PhoneAllocateRequestPhoneType` — Category of device to allocate.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**pool:** `*platformgo.PhoneAllocateRequestPool` — Which pool to draw the phone from. Omit for shared. 'dedicated' claims any idle phone your organization rents; combine with phone_id to pin a specific one.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**recording:** `*bool` — Record this session's screen (default true). false suppresses the video recording and rolling thumbnail entirely - no screen content is ever written.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**tags:** `map[string]string` — Optional key->value labels for organizing sessions (max 50 tags; keys up to 40 chars, values up to 128).
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**telemetry:** `*bool` — Persist this session's telemetry spans (default true). false skips the durable trace store; the live telemetry stream still works while the session runs.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**ttl:** `*platformgo.PhoneSessionTTLOptions` — Idle-timeout override for this session; omit for the defaults (inactive after 5 min, close 10 min later).
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**workflowID:** `*string` — Workflow requesting allocation; nil for an interactive lease.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Phones.SupportedApps() -> *platformgo.PhoneSupportedAppsResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns the apps the platform supports orchestration for, optionally filtered by platform and category.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.PhonesSupportedAppsRequest{}
-client.Phones.SupportedApps(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**platform:** `*string` — filter by platform
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**category:** `*string` — filter by app category
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Phones.Available() -> *platformgo.PhoneAvailableListResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns the Android phones the caller can start a session on right now: every active phone in the shared pool, plus the caller org's own dedicated phones that are currently free. Only free + active phones appear here, so a dedicated phone that is busy or offline is intentionally absent - use GET /phones/my to see the org's full dedicated inventory including in-use ones.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.PhonesAvailableRequest{}
-client.Phones.Available(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**phoneType:** `*platformgo.PhonesAvailableRequestPhoneType` — only return Android phones
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Phones.Deallocate() -> *platformgo.PhoneDeallocateResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Deallocates a phone the caller's org currently holds. The session is billed and the phone is torn down asynchronously.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.PhonesDeallocateRequest{
-        PhoneID: "phone_id",
-    }
-client.Phones.Deallocate(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**phoneID:** `string` — device identifier to deallocate
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Phones.Mine() -> *platformgo.PhonePrivateListResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns the caller org's full dedicated (private/rented) phone inventory - every state, not just the free ones: busy phones in an active session, offline/inactive phones, and phones in maintenance are all included, so this is the endpoint to discover a phone_id you can pin via POST /phones/allocate. Each phone's current_session_id and status reflect its live state. include_expired=true also keeps rentals past their rental_expires_at so users can see what they used to own. Filter by status/phone_type and paginate; the response total is the full match count.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.PhonesMineRequest{}
-client.Phones.Mine(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
 
 <dl>
 <dd>
@@ -1330,6 +1012,73 @@ client.Phones.Mine(
 <dd>
 
 **order:** `*string` — sort direction (asc|desc)
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Phones.SupportedApps() -> *platformgo.PhoneSupportedAppsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns the apps the platform supports orchestration for, optionally filtered by platform and category.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesSupportedAppsRequest{}
+client.Phones.SupportedApps(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**platform:** `*string` — filter by platform
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**category:** `*string` — filter by app category
     
 </dd>
 </dl>
@@ -2187,6 +1936,67 @@ client.Phones.Preview(
 </dl>
 </details>
 
+<details><summary><code>client.Phones.Deallocate(PhoneID) -> *platformgo.PhoneDeallocateResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Deallocates a phone the caller's org currently holds. The session is billed and the phone is torn down asynchronously.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesDeallocateRequest{
+        PhoneID: "phone_id",
+    }
+client.Phones.Deallocate(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**phoneID:** `string` — phone identifier to deallocate
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Phones.Wipe(PhoneID) -> *platformgo.PhoneSuccessResponse</code></summary>
 <dl>
 <dd>
@@ -2248,8 +2058,7 @@ client.Phones.Wipe(
 </dl>
 </details>
 
-## Runs
-<details><summary><code>client.Runs.List(request) -> *platformgo.RunListResponse</code></summary>
+<details><summary><code>client.Phones.Allocate(request) -> *platformgo.PhoneAllocateResponse</code></summary>
 <dl>
 <dd>
 
@@ -2261,7 +2070,7 @@ client.Phones.Wipe(
 <dl>
 <dd>
 
-Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status, trigger. Sortable fields: run_id, status, trigger, started_at, completed_at, created_at, workflow_id, workflow_name.
+Allocates an Android phone and opens a session. Omit workflow_id for an interactive lease (drive the phone directly); set it to allocate for a workflow. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
 </dd>
 </dl>
 </dd>
@@ -2276,7 +2085,234 @@ Returns paginated recent (non-archived) runs the caller started - scoped to thei
 <dd>
 
 ```go
-request := &platformgo.RunListRequest{}
+request := &platformgo.PhoneAllocateRequest{
+        PhoneType: platformgo.PhoneAllocateRequestPhoneTypeAndroid,
+    }
+client.Phones.Allocate(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**capture:** `*bool` — Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**liveView:** `*platformgo.PhoneLiveViewOptions` — Hosted live-view options for this session; omit for the defaults (token auth, interactive, enabled).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `*string` — Optional session label (letters, numbers, dots, hyphens, underscores; max 64). Unique among the org's active sessions - allocating with a name already in use returns a conflict.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**phoneID:** `*string` — PhoneID pins allocation to a specific device (for dedicated devices).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**phoneType:** `*platformgo.PhoneAllocateRequestPhoneType` — Category of device to allocate.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**pool:** `*platformgo.PhoneAllocateRequestPool` — Which pool to draw the phone from. Omit for shared. 'dedicated' claims any idle phone your organization rents; combine with phone_id to pin a specific one.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**recording:** `*bool` — Record this session's screen (default true). false suppresses the video recording and rolling thumbnail entirely - no screen content is ever written.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**tags:** `map[string]string` — Optional key->value labels for organizing sessions (max 50 tags; keys up to 40 chars, values up to 128).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**telemetry:** `*bool` — Persist this session's telemetry spans (default true). false skips the durable trace store; the live telemetry stream still works while the session runs.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**ttl:** `*platformgo.PhoneSessionTTLOptions` — Idle timeout for this session. Omit for no idle timeout: the session runs until the 1-hour max-session cap.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**workflowID:** `*string` — Workflow requesting allocation; nil for an interactive lease.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+## Runs
+<details><summary><code>client.Runs.SessionsListEvents(SessionID) -> *platformgo.RunEventsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns the paginated event trace for a session (workflow runs and workflow-less interactive leases alike). Org-scoped: another org's session reads as not found.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.SessionsListEventsRequest{
+        SessionID: "session_id",
+    }
+client.Runs.SessionsListEvents(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**sessionID:** `string` — Session whose events to return.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**eventTypes:** `[]string` — Restrict results to specific event type codes (RUN_STARTED / OUTPUT_LOG / SDK_CALL_COMPLETED / etc.).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Maximum number of events to return (1-1000).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — Pagination offset.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Runs.List() -> *platformgo.RunListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status_filter, trigger_filter. Order with order_by ('<field> <asc|desc>'), field one of status, started_at, completed_at, created_at.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.RunsListRequest{}
 client.Runs.List(
         context.TODO(),
         request,
@@ -2296,7 +2332,15 @@ client.Runs.List(
 <dl>
 <dd>
 
-**limit:** `*int64` — Maximum number of runs to return per page.
+**workflowID:** `*string` — Filter results to a single workflow.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Maximum number of runs to return per page (1-500).
     
 </dd>
 </dl>
@@ -2312,7 +2356,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**search:** `*string` — Filters by run ID substring.
+**search:** `*string` — Filter by run id substring.
     
 </dd>
 </dl>
@@ -2320,7 +2364,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**sortBy:** `[]*platformgo.RunSortSpec` — Ordered list of sort specs; first entry is primary.
+**statusFilter:** `[]*platformgo.RunsListRequestStatusFilterItem` — Restrict results to the given run statuses.
     
 </dd>
 </dl>
@@ -2328,7 +2372,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**statusFilter:** `[]*platformgo.RunListRequestStatusFilterItem` — StatusFilter restricts results to runs in the given statuses.
+**triggerFilter:** `[]*platformgo.RunsListRequestTriggerFilterItem` — Restrict results to the given triggers.
     
 </dd>
 </dl>
@@ -2336,15 +2380,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**triggerFilter:** `[]*platformgo.RunListRequestTriggerFilterItem` — TriggerFilter restricts results to runs with the given triggers.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**workflowID:** `*string` — Filters results to a single workflow.
+**orderBy:** `*string` — Sort expression '<field> <asc|desc>'; field is one of status, started_at, completed_at, created_at. Defaults to created_at desc.
     
 </dd>
 </dl>
@@ -2356,7 +2392,7 @@ client.Runs.List(
 </dl>
 </details>
 
-<details><summary><code>client.Runs.ListEvents(request) -> *platformgo.RunEventsResponse</code></summary>
+<details><summary><code>client.Runs.ListHistoric() -> *platformgo.RunHistoryResponse</code></summary>
 <dl>
 <dd>
 
@@ -2368,7 +2404,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-Returns paginated run events for a session, filtered by session_id.
+Returns paginated historic runs for the caller's user over a required time window (start_date/end_date). Use GET /runs for recent (non-archived) runs.
 </dd>
 </dl>
 </dd>
@@ -2383,100 +2419,11 @@ Returns paginated run events for a session, filtered by session_id.
 <dd>
 
 ```go
-request := &platformgo.RunEventsRequest{
-        Limit: int64(1000000),
-        Offset: int64(1000000),
-        SessionID: "session_id",
-    }
-client.Runs.ListEvents(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**eventTypes:** `[]string` — EventTypes restricts results to specific event type codes (RUN_STARTED / OUTPUT_LOG / SDK_CALL_COMPLETED / etc.).
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `int64` — Maximum number of events to return.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `int64` — Pagination offset.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sessionID:** `string` — Filters events to a specific device session (formerly allocation_id; W6-2).
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Runs.ListHistoric(request) -> *platformgo.RunHistoryResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns paginated historic runs for the caller's user. Use POST /runs for recent (non-archived) runs.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.RunHistoryRequest{
-        EndDate: platformgo.MustParseDateTime(
+request := &platformgo.RunsListHistoricRequest{
+        StartDate: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
-        Limit: int64(1000000),
-        Offset: int64(1000000),
-        StartDate: platformgo.MustParseDateTime(
+        EndDate: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
     }
@@ -2499,7 +2446,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**endDate:** `time.Time` — End of the query time window.
+**startDate:** `time.Time` — Beginning of the query time window (RFC 3339).
     
 </dd>
 </dl>
@@ -2507,7 +2454,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**limit:** `int64` — Maximum number of runs to return.
+**endDate:** `time.Time` — End of the query time window (RFC 3339).
     
 </dd>
 </dl>
@@ -2515,7 +2462,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**offset:** `int64` — Pagination offset.
+**workflowID:** `*string` — Filter results to a single workflow.
     
 </dd>
 </dl>
@@ -2523,7 +2470,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**search:** `*string` — Filters by run ID or workflow ID substring.
+**limit:** `*int64` — Maximum number of runs to return (1-500).
     
 </dd>
 </dl>
@@ -2531,7 +2478,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**startDate:** `time.Time` — Beginning of the query time window.
+**offset:** `*int64` — Pagination offset.
     
 </dd>
 </dl>
@@ -2539,7 +2486,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**statusFilter:** `[]*platformgo.RunHistoryRequestStatusFilterItem` — Restricts results to runs in the given statuses (case-insensitive).
+**statusFilter:** `[]*platformgo.RunsListHistoricRequestStatusFilterItem` — Restrict results to the given run statuses (case-insensitive).
     
 </dd>
 </dl>
@@ -2547,7 +2494,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**workflowID:** `*string` — Filters results to a single workflow.
+**search:** `*string` — Filter by run id or workflow id substring.
     
 </dd>
 </dl>
@@ -2681,7 +2628,7 @@ client.Runs.Get(
 </dl>
 </details>
 
-<details><summary><code>client.Runs.Cancel(RunID) -> *platformgo.RunSuccessResponse</code></summary>
+<details><summary><code>client.Runs.Cancel(RunID) -> *platformgo.RunResponse</code></summary>
 <dl>
 <dd>
 
@@ -2693,7 +2640,7 @@ client.Runs.Get(
 <dl>
 <dd>
 
-Cancels a run that is still queued or running, scoped to the caller's org. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found.
+Cancels a run that is still queued or running, scoped to the caller's org. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
 </dd>
 </dl>
 </dd>
@@ -2771,6 +2718,9 @@ Creates one or more runs against the given workflow and queues them for executio
 ```go
 request := &platformgo.RunCreateRequest{
         WorkflowID: "workflow_id",
+        Runs: []*platformgo.RunConfig{
+            &platformgo.RunConfig{},
+        },
     }
 client.Runs.Create(
         context.TODO(),
@@ -2799,7 +2749,7 @@ client.Runs.Create(
 <dl>
 <dd>
 
-**runs:** `[]*platformgo.RunConfig` — Per-run variable configurations. One run is created per entry.
+**runs:** `[]*platformgo.RunConfig` — Per-run variable configurations. One run is created per entry; 1-1000 entries per request.
     
 </dd>
 </dl>
@@ -2807,7 +2757,7 @@ client.Runs.Create(
 <dl>
 <dd>
 
-**startTimeoutSeconds:** `*int64` — How long a queued run may wait for a phone before it is auto-cancelled.
+**startTimeoutSeconds:** `*int64` — How long a queued run may wait for a phone before it is auto-cancelled (60-86400). Defaults to 300.
     
 </dd>
 </dl>
@@ -3021,7 +2971,7 @@ client.Uploads.Create(
 <dl>
 <dd>
 
-**sizeBytes:** `int64` — Exact size of the upload in bytes; the presigned URL pins it.
+**sizeBytes:** `int64` — Exact size of the upload in bytes, up to 1 GiB; the presigned URL pins it.
     
 </dd>
 </dl>
@@ -3045,7 +2995,7 @@ client.Uploads.Create(
 <dl>
 <dd>
 
-Removes a file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone holding a copy is scheduled to remove it (removal is confirmed per phone and retried until it lands). The response reports how many phones that recall reaches.
+Removes a file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone holding a copy is scheduled to remove it (removal is confirmed per phone and retried until it lands). The response reports how many phones that recall reaches. Deleting a download runs the same recall.
 </dd>
 </dl>
 </dd>
@@ -3226,7 +3176,7 @@ client.Uploads.Complete(
 </details>
 
 ## Usage
-<details><summary><code>client.Usage.ListInferences(request) -> *platformgo.UsageInferencesResponse</code></summary>
+<details><summary><code>client.Usage.ListInferences() -> *platformgo.UsageInferencesResponse</code></summary>
 <dl>
 <dd>
 
@@ -3238,7 +3188,7 @@ client.Uploads.Complete(
 <dl>
 <dd>
 
-Paginated, filterable list of inference calls (detect + locate) the caller's user was billed for. Filters: date range, endpoint, free-text search. Ordered by call time DESC.
+Paginated, filterable list of inference calls (detect + locate) the caller's user was billed for over a required time window (start_date/end_date). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
 </dd>
 </dl>
 </dd>
@@ -3253,11 +3203,11 @@ Paginated, filterable list of inference calls (detect + locate) the caller's use
 <dd>
 
 ```go
-request := &platformgo.UsageInferencesRequest{
-        EndDate: platformgo.MustParseDateTime(
+request := &platformgo.UsageListInferencesRequest{
+        StartDate: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
-        StartDate: platformgo.MustParseDateTime(
+        EndDate: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
     }
@@ -3280,7 +3230,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**endDate:** `time.Time` — End of the inferences query window.
+**startDate:** `time.Time` — Beginning of the inferences query window (RFC 3339).
     
 </dd>
 </dl>
@@ -3288,7 +3238,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**endpointFilter:** `[]string` — Restricts results to the given vision endpoints ('detect'/'locate').
+**endDate:** `time.Time` — End of the inferences query window (RFC 3339).
     
 </dd>
 </dl>
@@ -3296,15 +3246,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**limit:** `*int64` — Number of inferences per page.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**model:** `*string` — Model restricts results to a single model name.
+**limit:** `*int64` — Number of inferences per page (1-100).
     
 </dd>
 </dl>
@@ -3320,7 +3262,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**search:** `*string` — Filters by inference (event) ID substring.
+**endpointFilter:** `[]string` — Restrict results to the given vision endpoints ('detect'/'locate').
     
 </dd>
 </dl>
@@ -3328,7 +3270,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**sessionID:** `*string` — Restricts results to inferences that ran under one phone session.
+**model:** `*string` — Restrict results to a single model name.
     
 </dd>
 </dl>
@@ -3336,7 +3278,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**sortBy:** `[]*platformgo.UsageInferenceSortSpec` — Ordered list of sort specs; first entry is primary.
+**search:** `*string` — Filter by inference (event) id substring.
     
 </dd>
 </dl>
@@ -3344,7 +3286,15 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**startDate:** `time.Time` — Beginning of the inferences query window.
+**sessionID:** `*string` — Restrict results to inferences that ran under one phone session.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**orderBy:** `*string` — Sort expression '<field> <asc|desc>'; field one of created_at, cost_microdollars, latency_ms, endpoint, model, inference_id. Defaults to created_at desc.
     
 </dd>
 </dl>
@@ -3740,6 +3690,67 @@ client.Workflows.Get(
 </dl>
 </details>
 
+<details><summary><code>client.Workflows.Delete(WorkflowID) -> *platformgo.MessageOutputBody</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Deletes a workflow. Org-scoped — workflows in other orgs return 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WorkflowsDeleteRequest{
+        WorkflowID: "workflow_id",
+    }
+client.Workflows.Delete(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**workflowID:** `string` — workflow identifier
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Workflows.Update(WorkflowID, request) -> *platformgo.WorkflowResponse</code></summary>
 <dl>
 <dd>
@@ -3846,67 +3857,6 @@ client.Workflows.Update(
 <dd>
 
 **telemetry:** `*bool` — Persist telemetry spans for this workflow's runs (default true). false skips the durable trace store; the live telemetry stream still works while a run is active.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.Delete(WorkflowID) -> *platformgo.MessageOutputBody</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Deletes a workflow. Org-scoped — workflows in other orgs return 404.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowsDeleteRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.Delete(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
     
 </dd>
 </dl>
