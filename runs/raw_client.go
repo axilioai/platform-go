@@ -32,52 +32,9 @@ func NewRawClient(options *core.RequestOptions) *RawClient {
 	}
 }
 
-func (r *RawClient) List(
+func (r *RawClient) SessionsListEvents(
 	ctx context.Context,
-	request *platformgo.RunListRequest,
-	opts ...option.RequestOption,
-) (*core.Response[*platformgo.RunListResponse], error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		r.baseURL,
-		"/api/v1",
-	)
-	endpointURL := baseURL + "/runs"
-	headers := internal.MergeHeaders(
-		r.options.ToHeader(),
-		options.ToHeader(),
-	)
-	headers.Add("Content-Type", "application/json")
-	var response *platformgo.RunListResponse
-	raw, err := r.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodPost,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			DisableRetries:  options.DisableRetries,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Request:         request,
-			Response:        &response,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &core.Response[*platformgo.RunListResponse]{
-		StatusCode: raw.StatusCode,
-		Header:     raw.Header,
-		Body:       response,
-	}, nil
-}
-
-func (r *RawClient) ListEvents(
-	ctx context.Context,
-	request *platformgo.RunEventsRequest,
+	request *platformgo.SessionsListEventsRequest,
 	opts ...option.RequestOption,
 ) (*core.Response[*platformgo.RunEventsResponse], error) {
 	options := core.NewRequestOptions(opts...)
@@ -86,25 +43,33 @@ func (r *RawClient) ListEvents(
 		r.baseURL,
 		"/api/v1",
 	)
-	endpointURL := baseURL + "/runs/events"
+	endpointURL := internal.EncodeURL(
+		baseURL+"/phones/sessions/%v/events",
+		request.SessionID,
+	)
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
 	headers := internal.MergeHeaders(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
-	headers.Add("Content-Type", "application/json")
 	var response *platformgo.RunEventsResponse
 	raw, err := r.caller.Call(
 		ctx,
 		&internal.CallParams{
 			URL:             endpointURL,
-			Method:          http.MethodPost,
+			Method:          http.MethodGet,
 			Headers:         headers,
 			MaxAttempts:     options.MaxAttempts,
 			DisableRetries:  options.DisableRetries,
 			BodyProperties:  options.BodyProperties,
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
-			Request:         request,
 			Response:        &response,
 		},
 	)
@@ -118,9 +83,57 @@ func (r *RawClient) ListEvents(
 	}, nil
 }
 
+func (r *RawClient) List(
+	ctx context.Context,
+	request *platformgo.RunsListRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.RunListResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := baseURL + "/runs"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.RunListResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.RunListResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
 func (r *RawClient) ListHistoric(
 	ctx context.Context,
-	request *platformgo.RunHistoryRequest,
+	request *platformgo.RunsListHistoricRequest,
 	opts ...option.RequestOption,
 ) (*core.Response[*platformgo.RunHistoryResponse], error) {
 	options := core.NewRequestOptions(opts...)
@@ -130,24 +143,29 @@ func (r *RawClient) ListHistoric(
 		"/api/v1",
 	)
 	endpointURL := baseURL + "/runs/history"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
 	headers := internal.MergeHeaders(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
-	headers.Add("Content-Type", "application/json")
 	var response *platformgo.RunHistoryResponse
 	raw, err := r.caller.Call(
 		ctx,
 		&internal.CallParams{
 			URL:             endpointURL,
-			Method:          http.MethodPost,
+			Method:          http.MethodGet,
 			Headers:         headers,
 			MaxAttempts:     options.MaxAttempts,
 			DisableRetries:  options.DisableRetries,
 			BodyProperties:  options.BodyProperties,
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
-			Request:         request,
 			Response:        &response,
 		},
 	)
@@ -237,6 +255,7 @@ func (r *RawClient) Get(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -253,7 +272,7 @@ func (r *RawClient) Cancel(
 	ctx context.Context,
 	request *platformgo.RunsCancelRequest,
 	opts ...option.RequestOption,
-) (*core.Response[*platformgo.RunSuccessResponse], error) {
+) (*core.Response[*platformgo.RunResponse], error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -261,19 +280,19 @@ func (r *RawClient) Cancel(
 		"/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
-		baseURL+"/runs/%v",
+		baseURL+"/runs/%v:cancel",
 		request.RunID,
 	)
 	headers := internal.MergeHeaders(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
-	var response *platformgo.RunSuccessResponse
+	var response *platformgo.RunResponse
 	raw, err := r.caller.Call(
 		ctx,
 		&internal.CallParams{
 			URL:             endpointURL,
-			Method:          http.MethodPatch,
+			Method:          http.MethodPost,
 			Headers:         headers,
 			MaxAttempts:     options.MaxAttempts,
 			DisableRetries:  options.DisableRetries,
@@ -281,12 +300,13 @@ func (r *RawClient) Cancel(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &core.Response[*platformgo.RunSuccessResponse]{
+	return &core.Response[*platformgo.RunResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
@@ -305,7 +325,7 @@ func (r *RawClient) Create(
 		"/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
-		baseURL+"/runs/%v",
+		baseURL+"/workflows/%v/runs",
 		request.WorkflowID,
 	)
 	headers := internal.MergeHeaders(
@@ -327,6 +347,7 @@ func (r *RawClient) Create(
 			Client:          options.HTTPClient,
 			Request:         request,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {

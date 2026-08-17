@@ -85,13 +85,13 @@ func (c *Client) Get(
 	return response.Body, nil
 }
 
-// Applies a partial update (name, platform, status, ocr_engine). Org-scoped — workflows in other orgs return 404.
-func (c *Client) Update(
+// Deletes a workflow. Org-scoped — workflows in other orgs return 404.
+func (c *Client) Delete(
 	ctx context.Context,
-	request *platformgo.WorkflowUpdateRequest,
+	request *platformgo.WorkflowsDeleteRequest,
 	opts ...option.RequestOption,
-) (*platformgo.WorkflowResponse, error) {
-	response, err := c.WithRawResponse.Update(
+) (*platformgo.MessageOutputBody, error) {
+	response, err := c.WithRawResponse.Delete(
 		ctx,
 		request,
 		opts...,
@@ -102,13 +102,13 @@ func (c *Client) Update(
 	return response.Body, nil
 }
 
-// Deletes a workflow. Org-scoped — workflows in other orgs return 404.
-func (c *Client) Delete(
+// Applies a partial update (name, platform, status, ocr_engine). Org-scoped — workflows in other orgs return 404.
+func (c *Client) Update(
 	ctx context.Context,
-	request *platformgo.WorkflowsDeleteRequest,
+	request *platformgo.WorkflowUpdateRequest,
 	opts ...option.RequestOption,
-) (*platformgo.MessageOutputBody, error) {
-	response, err := c.WithRawResponse.Delete(
+) (*platformgo.WorkflowResponse, error) {
+	response, err := c.WithRawResponse.Update(
 		ctx,
 		request,
 		opts...,

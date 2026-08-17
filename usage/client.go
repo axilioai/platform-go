@@ -34,10 +34,10 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Paginated, filterable list of inference calls (detect + locate) the caller's user was billed for. Filters: date range, endpoint, free-text search. Ordered by call time DESC.
+// Paginated, filterable list of inference calls (detect + locate) the caller's user was billed for over a required time window (start_date/end_date). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
 func (c *Client) ListInferences(
 	ctx context.Context,
-	request *platformgo.UsageInferencesRequest,
+	request *platformgo.UsageListInferencesRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.UsageInferencesResponse, error) {
 	response, err := c.WithRawResponse.ListInferences(

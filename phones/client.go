@@ -34,13 +34,13 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Allocates an Android phone and opens a session. Omit workflow_id for an interactive lease (drive the phone directly); set it to allocate for a workflow. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
-func (c *Client) Allocate(
+// Returns the caller org's full dedicated (private/rented) phone inventory - every state, not just the free ones: busy phones in an active session, offline/inactive phones, and phones in maintenance are all included, so this is the endpoint to discover a phone_id you can pin via POST /phones:allocate. Each phone's current_session_id and status reflect its live state. include_expired=true also keeps rentals past their rental_expires_at so users can see what they used to own. Filter by status/phone_type and paginate; the response total is the full match count. Pass ownership=dedicated.
+func (c *Client) List(
 	ctx context.Context,
-	request *platformgo.PhoneAllocateRequest,
+	request *platformgo.PhonesListRequest,
 	opts ...option.RequestOption,
-) (*platformgo.PhoneAllocateResponse, error) {
-	response, err := c.WithRawResponse.Allocate(
+) (*platformgo.PhonePrivateListResponse, error) {
+	response, err := c.WithRawResponse.List(
 		ctx,
 		request,
 		opts...,
@@ -58,57 +58,6 @@ func (c *Client) SupportedApps(
 	opts ...option.RequestOption,
 ) (*platformgo.PhoneSupportedAppsResponse, error) {
 	response, err := c.WithRawResponse.SupportedApps(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
-// Returns the Android phones the caller can start a session on right now: every active phone in the shared pool, plus the caller org's own dedicated phones that are currently free. Only free + active phones appear here, so a dedicated phone that is busy or offline is intentionally absent - use GET /phones/my to see the org's full dedicated inventory including in-use ones.
-func (c *Client) Available(
-	ctx context.Context,
-	request *platformgo.PhonesAvailableRequest,
-	opts ...option.RequestOption,
-) (*platformgo.PhoneAvailableListResponse, error) {
-	response, err := c.WithRawResponse.Available(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
-// Deallocates a phone the caller's org currently holds. The session is billed and the phone is torn down asynchronously.
-func (c *Client) Deallocate(
-	ctx context.Context,
-	request *platformgo.PhonesDeallocateRequest,
-	opts ...option.RequestOption,
-) (*platformgo.PhoneDeallocateResponse, error) {
-	response, err := c.WithRawResponse.Deallocate(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
-// Returns the caller org's full dedicated (private/rented) phone inventory - every state, not just the free ones: busy phones in an active session, offline/inactive phones, and phones in maintenance are all included, so this is the endpoint to discover a phone_id you can pin via POST /phones/allocate. Each phone's current_session_id and status reflect its live state. include_expired=true also keeps rentals past their rental_expires_at so users can see what they used to own. Filter by status/phone_type and paginate; the response total is the full match count.
-func (c *Client) Mine(
-	ctx context.Context,
-	request *platformgo.PhonesMineRequest,
-	opts ...option.RequestOption,
-) (*platformgo.PhonePrivateListResponse, error) {
-	response, err := c.WithRawResponse.Mine(
 		ctx,
 		request,
 		opts...,
@@ -306,6 +255,23 @@ func (c *Client) Preview(
 	return response.Body, nil
 }
 
+// Deallocates a phone the caller's org currently holds. The session is billed and the phone is torn down asynchronously.
+func (c *Client) Deallocate(
+	ctx context.Context,
+	request *platformgo.PhonesDeallocateRequest,
+	opts ...option.RequestOption,
+) (*platformgo.PhoneDeallocateResponse, error) {
+	response, err := c.WithRawResponse.Deallocate(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Requests an on-demand factory reset of a private phone the caller's org owns. Requires the phone to be ACTIVE and not currently allocated. Sets the phone to MAINTENANCE while the wipe is carried out.
 func (c *Client) Wipe(
 	ctx context.Context,
@@ -313,6 +279,23 @@ func (c *Client) Wipe(
 	opts ...option.RequestOption,
 ) (*platformgo.PhoneSuccessResponse, error) {
 	response, err := c.WithRawResponse.Wipe(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Allocates an Android phone and opens a session. Omit workflow_id for an interactive lease (drive the phone directly); set it to allocate for a workflow. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
+func (c *Client) Allocate(
+	ctx context.Context,
+	request *platformgo.PhoneAllocateRequest,
+	opts ...option.RequestOption,
+) (*platformgo.PhoneAllocateResponse, error) {
+	response, err := c.WithRawResponse.Allocate(
 		ctx,
 		request,
 		opts...,
