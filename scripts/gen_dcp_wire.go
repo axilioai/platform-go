@@ -3,8 +3,8 @@
 // Command gen_dcp_wire generates the DCP typed wire layer for the mobile driver
 // from the vendored AsyncAPI contract.
 //
-// It reads contracts/dcp-asyncapi.json — the public DCP contract the backend
-// publishes on every production deploy — and writes drivers/mobile/wire_gen.go:
+// It reads contracts/dcp-asyncapi.json (the public DCP contract the backend
+// publishes on every production deploy) and writes drivers/mobile/wire_gen.go:
 // the command-method name constants, the error-kind constants, the protocol
 // version, and one struct per input-param schema. These used to be hand-copied
 // from the Go server and drifted silently; now the backend's own drift gate
