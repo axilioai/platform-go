@@ -83,11 +83,3 @@ func (d *MobileDriver) DeviceInfo(opts ...CallOption) (*DeviceInfo, error) {
 	}
 	return out, nil
 }
-
-// handshakeParams is the (optional) Protocol.handshake argument. Both fields are
-// omitempty: the server does not enforce min_protocol, so an empty object is a
-// valid handshake.
-type handshakeParams struct {
-	ClientVersion string `json:"client_version,omitempty"`
-	MinProtocol   int    `json:"min_protocol,omitempty"`
-}

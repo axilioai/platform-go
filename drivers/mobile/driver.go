@@ -303,44 +303,9 @@ func applyCall(defaultTimeout time.Duration, opts []CallOption) callConfig {
 	return cfg
 }
 
-// --- wire params/results (snake_case, mirrors sandbox/internal/sdkserver) ----
-
-type tapParams struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
-
-type longPressParams struct {
-	X          int `json:"x"`
-	Y          int `json:"y"`
-	DurationMs int `json:"duration_ms"`
-}
-
-type swipeParams struct {
-	X1         int `json:"x1"`
-	Y1         int `json:"y1"`
-	X2         int `json:"x2"`
-	Y2         int `json:"y2"`
-	DurationMs int `json:"duration_ms"`
-}
-
-type typeTextParams struct {
-	Text string `json:"text"`
-}
-
-type keyPressParams struct {
-	Key string `json:"key"`
-}
-
-type observeParams struct {
-	OcrEngine string `json:"ocr_engine"`
-}
-
-type findParams struct {
-	Query     string `json:"query"`
-	Model     string `json:"model,omitempty"`
-	OcrEngine string `json:"ocr_engine"`
-}
+// --- wire result frames (snake_case). The input-param frames live in the
+// generated wire_gen.go; these result shapes feed the hand-written converters
+// below into the ergonomic Screen/Element types, so they stay hand-written. ---
 
 type wireBBox struct {
 	X      int `json:"x"`

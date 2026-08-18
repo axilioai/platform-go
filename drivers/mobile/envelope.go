@@ -2,47 +2,12 @@ package mobile
 
 import "encoding/json"
 
-// DCP (Device Control Protocol) wire constants + codec. DCP is literal CDP: a
-// command rides the wire as {"id","method","params"}, the reply echoes the id
-// with exactly one of "result"/"error". This mirrors
-// commons/go/types/backend/realtime/dcp.go in the monorepo — redeclared here so
-// the public SDK stays free of the internal commons module (the same way
-// platform-python's drivers/mobile/_envelope.py mirrors it).
-
-// DCP method names ("Domain.method"). The driver's helpers translate their
-// ergonomic API to these verbatim, the way Playwright translates to CDP.
-//
-// DCP v1 (AXI-1785) groups the input verbs by device-class capability profile:
-// the touch verbs are in the Touch domain, the text/key verbs in Keyboard,
-// replacing the old flat Input domain. Screen stays the universal perception
-// domain. Requires a v1 executor; released in lockstep with it (AXI-1788).
-const (
-	methodProtocolHandshake = "Protocol.handshake"
-	methodDeviceInfo        = "Device.info"
-	methodTouchTap          = "Touch.tap"
-	methodTouchLongPress    = "Touch.longPress"
-	methodTouchSwipe        = "Touch.swipe"
-	methodKeyboardTypeText  = "Keyboard.typeText"
-	methodKeyboardKeyPress  = "Keyboard.keyPress"
-	methodScreenScreenshot  = "Screen.screenshot"
-	methodScreenObserve     = "Screen.observe"
-	methodScreenFind        = "Screen.find"
-)
-
-// DCP error kinds (the data.kind on a CDP error frame). PascalCase to mirror the
-// Go side; mapped to Code in fromDCPError.
-const (
-	kindUnknownOp       = "UnknownOp"
-	kindInvalidArgs     = "InvalidArgs"
-	kindNoAllocation    = "NoAllocation"
-	kindNotConnected    = "NotConnected"
-	kindDeviceOffline   = "DeviceOffline"
-	kindElementNotFound = "ElementNotFound"
-	kindTimeout         = "Timeout"
-	kindUnauthorized    = "Unauthorized"
-	kindInternal        = "Internal"
-	kindCanceled        = "Canceled"
-)
+// DCP (Device Control Protocol) frame codec. DCP is literal CDP: a command
+// rides the wire as {"id","method","params"}, the reply echoes the id with
+// exactly one of "result"/"error". The method-name constants, error-kind
+// constants, and input-param frames are generated from the vendored contract
+// into wire_gen.go (see scripts/gen_dcp_wire.go); this file is the hand-written
+// transport codec that stays put across regens.
 
 // dcpCommand is a client->device request frame.
 type dcpCommand struct {
