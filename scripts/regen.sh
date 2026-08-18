@@ -32,6 +32,7 @@ rsync -a --delete \
   --exclude='specs' \
   --exclude='scripts' \
   --exclude='drivers' \
+  --exclude='contracts' \
   --exclude='.github' \
   --exclude='VERSION' \
   --exclude='.gitignore' \
