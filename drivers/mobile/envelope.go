@@ -17,14 +17,16 @@ import "encoding/json"
 // replacing the old flat Input domain. Screen stays the universal perception
 // domain. Requires a v1 executor; released in lockstep with it (AXI-1788).
 const (
-	methodTouchTap         = "Touch.tap"
-	methodTouchLongPress   = "Touch.longPress"
-	methodTouchSwipe       = "Touch.swipe"
-	methodKeyboardTypeText = "Keyboard.typeText"
-	methodKeyboardKeyPress = "Keyboard.keyPress"
-	methodScreenScreenshot = "Screen.screenshot"
-	methodScreenObserve    = "Screen.observe"
-	methodScreenFind       = "Screen.find"
+	methodProtocolHandshake = "Protocol.handshake"
+	methodDeviceInfo        = "Device.info"
+	methodTouchTap          = "Touch.tap"
+	methodTouchLongPress    = "Touch.longPress"
+	methodTouchSwipe        = "Touch.swipe"
+	methodKeyboardTypeText  = "Keyboard.typeText"
+	methodKeyboardKeyPress  = "Keyboard.keyPress"
+	methodScreenScreenshot  = "Screen.screenshot"
+	methodScreenObserve     = "Screen.observe"
+	methodScreenFind        = "Screen.find"
 )
 
 // DCP error kinds (the data.kind on a CDP error frame). PascalCase to mirror the
