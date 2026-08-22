@@ -18,7 +18,7 @@ import (
 // owns presenting the cursor back, pacing the redial, and making the
 // re-send of the interrupted command idempotent.
 
-// Transport notification methods — the vendor Axilio domain the server uses
+// Transport notification methods: the vendor Axilio domain the server uses
 // for resume machinery below the CDP frame. Strictly opt-in server-side
 // (only sent because every attach carries resume=1), and structurally
 // id-less so they can never be mistaken for a response.
@@ -33,7 +33,7 @@ const (
 const _closeControlHeld websocket.StatusCode = 4409
 
 // Redial budget: bounded exponential backoff with full jitter. Base/cap are
-// sized for an interactive SDK call — the worst case (~15s of accumulated
+// sized for an interactive SDK call: the worst case (~15s of accumulated
 // backoff across the budget) stays inside a default call deadline while
 // covering a connect pod replacement.
 const (
@@ -71,7 +71,7 @@ func sleepCtx(ctx context.Context, d time.Duration) error {
 // attachURL is the control URL plus the resume params: every attach opts in
 // to checkpoints (resume=1), and a reattach that holds a cursor presents it
 // so delivery continues where this client left off. The same URL stays
-// valid across redials by design — the control token outlives the session
+// valid across redials by design; the control token outlives the session
 // cap.
 func (t *RemoteTransport) attachURL() string {
 	u, err := url.Parse(t.url)
@@ -89,10 +89,10 @@ func (t *RemoteTransport) attachURL() string {
 	return u.String()
 }
 
-// isMutatingMethod reports whether a DCP method mutates device state — the
-// interaction domains (Touch.* / Keyboard.*). Only these carry idempotency
-// keys: reads are naturally safe to re-send, and keyless reads are what
-// keep the executor's ledger small.
+// isMutatingMethod reports whether a DCP method mutates device state,
+// meaning the interaction domains (Touch.* / Keyboard.*). Only these
+// carry idempotency keys: reads are naturally safe to re-send, and
+// keyless reads are what keep the executor's ledger small.
 func isMutatingMethod(method string) bool {
 	domain, _, ok := strings.Cut(method, ".")
 	if !ok {

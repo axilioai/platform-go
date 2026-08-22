@@ -51,7 +51,7 @@ echo "platform-go regenerated from specs/production/openapi.json"
 
 # Strip Fern's SSE stream-reconnect surface. These generated options
 # (WithMaxStreamReconnectAttempts / WithoutStreamReconnection) promise
-# Last-Event-ID resumption that nothing in this SDK reads or implements —
+# Last-Event-ID resumption that nothing in this SDK reads or implements;
 # our streaming surface is the DCP WebSocket in drivers/mobile, whose real
 # reconnect contract is built in. Leaving them published advertises a
 # reconnect story that silently does nothing, so they are deleted on every

@@ -52,7 +52,7 @@ func marshalParams(params any) (json.RawMessage, error) {
 	return raw, nil
 }
 
-// buildRawFrame marshals a command frame from already-marshaled params —
+// buildRawFrame marshals a command frame from already-marshaled params,
 // the shape the transport works in, so a re-send after a reconnect reuses
 // the exact same params bytes (idempotency key included).
 func buildRawFrame(id int64, method string, params json.RawMessage) ([]byte, error) {

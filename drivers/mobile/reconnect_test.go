@@ -15,7 +15,7 @@ import (
 // matrixConn is a scripted rawConn for the reconnect matrix: each send is
 // decoded and handed to respond, whose replies (responses and notification
 // frames alike) are queued; once every queued frame is drained, recv fails
-// with recvErr — the scripted force-close.
+// with recvErr, the scripted force-close.
 type matrixConn struct {
 	respond   func(cmd dcpCommand) []dcpResponse
 	recvErr   error
@@ -127,11 +127,11 @@ func keyOf(t *testing.T, cmd dcpCommand) string {
 }
 
 // The force-close matrix (the design doc's original SDK kill criterion):
-// each retryable close class — 1001 going away, 1013 try again later, 1011
-// internal error, abrupt TCP loss — must be survived by a redial that
+// each retryable close class (1001 going away, 1013 try again later, 1011
+// internal error, abrupt TCP loss) must be survived by a redial that
 // re-sends the interrupted command under a fresh id with the SAME
 // idempotency key, so the caller's Tap returns success exactly once. Each
-// terminal class — 1000 session ended / superseded, 4409 control held —
+// terminal class (1000 session ended / superseded, 4409 control held)
 // must surface its code without a single redial.
 func TestReconnect_ForceCloseMatrix(t *testing.T) {
 	retryable := []struct {
@@ -164,7 +164,7 @@ func TestReconnect_ForceCloseMatrix(t *testing.T) {
 				t.Fatalf("re-sent method = %q, want %q", resend.Method, methodTouchTap)
 			}
 			if key := keyOf(t, orig); key == "" || key != keyOf(t, resend) {
-				t.Fatalf("idempotency keys: original %q, re-send %q — must be one non-empty key reused verbatim", key, keyOf(t, resend))
+				t.Fatalf("idempotency keys: original %q, re-send %q; must be one non-empty key reused verbatim", key, keyOf(t, resend))
 			}
 			if resend.ID <= orig.ID {
 				t.Fatalf("re-send id %d not greater than original %d: ids must stay monotonic across the redial (AXI-1293)", resend.ID, orig.ID)
@@ -314,7 +314,7 @@ func TestReconnect_ResyncClearsCursor(t *testing.T) {
 
 // AXI-1293 regression, resumed-connection flavor: a pre-drop response
 // redelivered on the resumed socket must never be matched to the re-sent
-// command — ids stay monotonic and the transport matches strictly by the
+// command: ids stay monotonic and the transport matches strictly by the
 // fresh id.
 func TestReconnect_StaleReplayedResponseSkipped(t *testing.T) {
 	conn1 := &matrixConn{recvErr: websocket.CloseError{Code: websocket.StatusGoingAway}}

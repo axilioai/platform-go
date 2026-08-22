@@ -42,7 +42,7 @@ func main() {
 		for _, pat := range res {
 			re := regexp.MustCompile(pat)
 			if !re.MatchString(src) {
-				fail(fmt.Sprintf("%s: pattern %q matched nothing — the generator's shape changed; update this strip or re-decide the deletion", file, pat))
+				fail(fmt.Sprintf("%s: pattern %q matched nothing; the generator's shape changed, so update this strip or re-decide the deletion", file, pat))
 			}
 			src = re.ReplaceAllString(src, "")
 		}

@@ -31,7 +31,7 @@ type rawConn interface {
 // default 32 KiB is far too small for base64 screenshot frames.
 const _readLimit = 16 << 20
 
-// RemoteTransport speaks the DCP control WebSocket — literal CDP frames. The
+// RemoteTransport speaks the DCP control WebSocket in literal CDP frames. The
 // driver already emits DCP method names, so this does no translation: each call
 // goes out as {"id","method","params"} and the matching {"id","result"|"error"}
 // comes back. One WebSocket per allocation; the allocation lease outlives the
@@ -49,7 +49,7 @@ const _readLimit = 16 << 20
 //     a fresh request id; mutating input commands carry a transport-generated
 //     idempotencyKey (reused verbatim on the re-send), so the executor dedups
 //     and the command executes exactly once.
-//   - Request ids stay monotonic across redials — a resumed socket can still
+//   - Request ids stay monotonic across redials: a resumed socket can still
 //     deliver a pre-drop response, and a reused id would mismatch it to the
 //     wrong call (the AXI-1293 wedge).
 //   - If Handshake succeeded on a previous connection, it is replayed
@@ -67,7 +67,7 @@ type RemoteTransport struct {
 	mu     sync.Mutex
 	conn   rawConn
 	nextID int64
-	// cursor is the latest Axilio.cursor checkpoint — the opaque resume
+	// cursor is the latest Axilio.cursor checkpoint, the opaque resume
 	// token presented on reattach. Empty until the first checkpoint (or
 	// after a resync, whose window the server could not replay).
 	cursor string
@@ -155,8 +155,8 @@ func (t *RemoteTransport) attempt(ctx context.Context, method string, params jso
 
 // awaitReply reads until the frame that echoes id. Id-less frames are
 // notifications: the Axilio.* transport notifications are intercepted
-// (cursor tracking, resync) before the skip, everything else is skipped —
-// the DCP request/response path carries no other notifications today.
+// (cursor tracking, resync) before the skip; everything else is skipped
+// (the DCP request/response path carries no other notifications today).
 // Stale responses (a pre-drop reply redelivered after a resume) have older
 // ids and are skipped by the same match.
 func (t *RemoteTransport) awaitReply(ctx context.Context, conn rawConn, id int64) (json.RawMessage, error) {
@@ -198,10 +198,10 @@ func (t *RemoteTransport) observeNotification(resp *dcpResponse) {
 	case methodAxilioResyncRequired:
 		// The retained window expired: the server could not replay the gap
 		// and continued live. Nothing is lost on this request/response
-		// path — the transport never relies on replayed responses (the
-		// in-flight command is always re-sent, and the executor dedups) —
-		// but the held cursor predates the window, so drop it rather than
-		// re-present a known-stale token on the next reattach.
+		// path, because the transport never relies on replayed responses
+		// (the in-flight command is always re-sent, and the executor
+		// dedups); but the held cursor predates the window, so drop it
+		// rather than re-present a known-stale token on the next reattach.
 		t.cursor = ""
 	}
 }
@@ -257,8 +257,8 @@ func (t *RemoteTransport) closeLocked() error {
 
 // sendRecvErr classifies an I/O error: a per-call deadline becomes a
 // timeout, a terminal close (session over / control held) surfaces as its
-// own non-retryable code, and everything else — 1001 going away, 1013 try
-// again later, 1011 internal error, abrupt TCP loss — is a retryable
+// own non-retryable code, and everything else (1001 going away, 1013 try
+// again later, 1011 internal error, abrupt TCP loss) is a retryable
 // connection failure the redial loop recovers. Always surfaced after the
 // socket has been dropped so a late reply can't be misread as the next
 // call's.
