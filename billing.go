@@ -1909,11 +1909,14 @@ func (s SubscriptionAutoRechargeSettingsResponseDisabledReason) Ptr() *Subscript
 	return &s
 }
 
-// The current account balance.
+// The current account balance and its source breakdown.
 var (
-	subscriptionBalanceResponseFieldSchema              = big.NewInt(1 << 0)
-	subscriptionBalanceResponseFieldBalanceDisplay      = big.NewInt(1 << 1)
-	subscriptionBalanceResponseFieldBalanceMicrodollars = big.NewInt(1 << 2)
+	subscriptionBalanceResponseFieldSchema                = big.NewInt(1 << 0)
+	subscriptionBalanceResponseFieldBalanceDisplay        = big.NewInt(1 << 1)
+	subscriptionBalanceResponseFieldBalanceMicrodollars   = big.NewInt(1 << 2)
+	subscriptionBalanceResponseFieldIncludedMicrodollars  = big.NewInt(1 << 3)
+	subscriptionBalanceResponseFieldPurchasedMicrodollars = big.NewInt(1 << 4)
+	subscriptionBalanceResponseFieldPurchasedNextExpiry   = big.NewInt(1 << 5)
 )
 
 type SubscriptionBalanceResponse struct {
@@ -1923,6 +1926,12 @@ type SubscriptionBalanceResponse struct {
 	BalanceDisplay string `json:"balance_display" url:"balance_display"`
 	// Current balance in microdollars (1_000_000 = $1.00).
 	BalanceMicrodollars int64 `json:"balance_microdollars" url:"balance_microdollars"`
+	// Remaining plan-included credit in microdollars. Spent first; resets to the plan allowance at each renewal.
+	IncludedMicrodollars int64 `json:"included_microdollars" url:"included_microdollars"`
+	// Remaining purchased credit in microdollars. Spent after included credit; each purchase expires one year after Stripe settled it.
+	PurchasedMicrodollars int64 `json:"purchased_microdollars" url:"purchased_microdollars"`
+	// When the soonest-expiring purchased credit stops being usable.
+	PurchasedNextExpiry *time.Time `json:"purchased_next_expiry,omitempty" url:"purchased_next_expiry,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -1950,6 +1959,27 @@ func (s *SubscriptionBalanceResponse) GetBalanceMicrodollars() int64 {
 		return 0
 	}
 	return s.BalanceMicrodollars
+}
+
+func (s *SubscriptionBalanceResponse) GetIncludedMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.IncludedMicrodollars
+}
+
+func (s *SubscriptionBalanceResponse) GetPurchasedMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.PurchasedMicrodollars
+}
+
+func (s *SubscriptionBalanceResponse) GetPurchasedNextExpiry() *time.Time {
+	if s == nil {
+		return nil
+	}
+	return s.PurchasedNextExpiry
 }
 
 func (s *SubscriptionBalanceResponse) GetExtraProperties() map[string]interface{} {
@@ -1987,13 +2017,40 @@ func (s *SubscriptionBalanceResponse) SetBalanceMicrodollars(balanceMicrodollars
 	s.require(subscriptionBalanceResponseFieldBalanceMicrodollars)
 }
 
+// SetIncludedMicrodollars sets the IncludedMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceResponse) SetIncludedMicrodollars(includedMicrodollars int64) {
+	s.IncludedMicrodollars = includedMicrodollars
+	s.require(subscriptionBalanceResponseFieldIncludedMicrodollars)
+}
+
+// SetPurchasedMicrodollars sets the PurchasedMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceResponse) SetPurchasedMicrodollars(purchasedMicrodollars int64) {
+	s.PurchasedMicrodollars = purchasedMicrodollars
+	s.require(subscriptionBalanceResponseFieldPurchasedMicrodollars)
+}
+
+// SetPurchasedNextExpiry sets the PurchasedNextExpiry field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceResponse) SetPurchasedNextExpiry(purchasedNextExpiry *time.Time) {
+	s.PurchasedNextExpiry = purchasedNextExpiry
+	s.require(subscriptionBalanceResponseFieldPurchasedNextExpiry)
+}
+
 func (s *SubscriptionBalanceResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler SubscriptionBalanceResponse
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
+	type embed SubscriptionBalanceResponse
+	var unmarshaler = struct {
+		embed
+		PurchasedNextExpiry *internal.DateTime `json:"purchased_next_expiry,omitempty"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*s = SubscriptionBalanceResponse(value)
+	*s = SubscriptionBalanceResponse(unmarshaler.embed)
+	s.PurchasedNextExpiry = unmarshaler.PurchasedNextExpiry.TimePtr()
 	extraProperties, err := internal.ExtractExtraProperties(data, *s)
 	if err != nil {
 		return err
@@ -2007,8 +2064,10 @@ func (s *SubscriptionBalanceResponse) MarshalJSON() ([]byte, error) {
 	type embed SubscriptionBalanceResponse
 	var marshaler = struct {
 		embed
+		PurchasedNextExpiry *internal.DateTime `json:"purchased_next_expiry,omitempty"`
 	}{
-		embed: embed(*s),
+		embed:               embed(*s),
+		PurchasedNextExpiry: internal.NewOptionalDateTime(s.PurchasedNextExpiry),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
 	return json.Marshal(explicitMarshaler)

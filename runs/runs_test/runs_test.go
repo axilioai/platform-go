@@ -77,7 +77,7 @@ func VerifyRequestCount(
 	require.Equal(t, expected, len(result.Requests))
 }
 
-func TestRunsSessionsListEventsWithWireMock(
+func TestRunsSessionsListFramesWithWireMock(
 	t *testing.T,
 ) {
 	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
@@ -88,19 +88,19 @@ func TestRunsSessionsListEventsWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.SessionsListEventsRequest{
+	request := &platformgo.SessionsListFramesRequest{
 		SessionID: "session_id",
 	}
-	_, invocationErr := client.Runs.SessionsListEvents(
+	_, invocationErr := client.Runs.SessionsListFrames(
 		context.TODO(),
 		request,
 		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestRunsSessionsListEventsWithWireMock"}},
+			http.Header{"X-Test-Id": []string{"TestRunsSessionsListFramesWithWireMock"}},
 		),
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsSessionsListEventsWithWireMock", "GET", "/phones/sessions/session_id/events", nil, 1)
+	VerifyRequestCount(t, "TestRunsSessionsListFramesWithWireMock", "GET", "/phones/sessions/session_id/frames", nil, 1)
 }
 
 func TestRunsListWithWireMock(

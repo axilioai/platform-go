@@ -107,7 +107,7 @@ type PhoneAllocateRequest struct {
 	Recording *bool `json:"recording,omitempty" url:"-"`
 	// Optional key->value labels for organizing sessions (max 50 tags; keys up to 40 chars, values up to 128).
 	Tags map[string]string `json:"tags,omitempty" url:"-"`
-	// Persist this session's telemetry spans (default true). false skips the durable trace store; the live telemetry stream still works while the session runs.
+	// Emit this session's telemetry (default true). false suppresses telemetry entirely - no live trace stream and no durable trace store; the session dashboard shows a 'telemetry disabled' state.
 	Telemetry *bool `json:"telemetry,omitempty" url:"-"`
 	// Idle timeout for this session. Omit for no idle timeout: the session runs until the 1-hour max-session cap.
 	TTL *PhoneSessionTTLOptions `json:"ttl,omitempty" url:"-"`
@@ -3180,28 +3180,29 @@ func (p *PhonePrivateListResponse) String() string {
 
 // Detail for a single session: the session, phone display fields, and a recording URL when available.
 var (
-	phoneSessionDetailResponseFieldSchema           = big.NewInt(1 << 0)
-	phoneSessionDetailResponseFieldAllocatedAt      = big.NewInt(1 << 1)
-	phoneSessionDetailResponseFieldAllocatedBy      = big.NewInt(1 << 2)
-	phoneSessionDetailResponseFieldCaptureEnabled   = big.NewInt(1 << 3)
-	phoneSessionDetailResponseFieldDeallocatedAt    = big.NewInt(1 << 4)
-	phoneSessionDetailResponseFieldIsDedicatedPhone = big.NewInt(1 << 5)
-	phoneSessionDetailResponseFieldLocation         = big.NewInt(1 << 6)
-	phoneSessionDetailResponseFieldModelName        = big.NewInt(1 << 7)
-	phoneSessionDetailResponseFieldName             = big.NewInt(1 << 8)
-	phoneSessionDetailResponseFieldNickname         = big.NewInt(1 << 9)
-	phoneSessionDetailResponseFieldPhoneID          = big.NewInt(1 << 10)
-	phoneSessionDetailResponseFieldPhoneName        = big.NewInt(1 << 11)
-	phoneSessionDetailResponseFieldPhoneStatus      = big.NewInt(1 << 12)
-	phoneSessionDetailResponseFieldPhoneType        = big.NewInt(1 << 13)
-	phoneSessionDetailResponseFieldRecordingStatus  = big.NewInt(1 << 14)
-	phoneSessionDetailResponseFieldRecordingURL     = big.NewInt(1 << 15)
-	phoneSessionDetailResponseFieldSessionID        = big.NewInt(1 << 16)
-	phoneSessionDetailResponseFieldSource           = big.NewInt(1 << 17)
-	phoneSessionDetailResponseFieldStatus           = big.NewInt(1 << 18)
-	phoneSessionDetailResponseFieldTags             = big.NewInt(1 << 19)
-	phoneSessionDetailResponseFieldWorkflowID       = big.NewInt(1 << 20)
-	phoneSessionDetailResponseFieldWorkflowName     = big.NewInt(1 << 21)
+	phoneSessionDetailResponseFieldSchema            = big.NewInt(1 << 0)
+	phoneSessionDetailResponseFieldAllocatedAt       = big.NewInt(1 << 1)
+	phoneSessionDetailResponseFieldAllocatedBy       = big.NewInt(1 << 2)
+	phoneSessionDetailResponseFieldCaptureEnabled    = big.NewInt(1 << 3)
+	phoneSessionDetailResponseFieldDeallocatedAt     = big.NewInt(1 << 4)
+	phoneSessionDetailResponseFieldIsDedicatedPhone  = big.NewInt(1 << 5)
+	phoneSessionDetailResponseFieldLocation          = big.NewInt(1 << 6)
+	phoneSessionDetailResponseFieldModelName         = big.NewInt(1 << 7)
+	phoneSessionDetailResponseFieldName              = big.NewInt(1 << 8)
+	phoneSessionDetailResponseFieldNickname          = big.NewInt(1 << 9)
+	phoneSessionDetailResponseFieldPhoneID           = big.NewInt(1 << 10)
+	phoneSessionDetailResponseFieldPhoneName         = big.NewInt(1 << 11)
+	phoneSessionDetailResponseFieldPhoneStatus       = big.NewInt(1 << 12)
+	phoneSessionDetailResponseFieldPhoneType         = big.NewInt(1 << 13)
+	phoneSessionDetailResponseFieldRecordingStatus   = big.NewInt(1 << 14)
+	phoneSessionDetailResponseFieldRecordingURL      = big.NewInt(1 << 15)
+	phoneSessionDetailResponseFieldSessionID         = big.NewInt(1 << 16)
+	phoneSessionDetailResponseFieldSource            = big.NewInt(1 << 17)
+	phoneSessionDetailResponseFieldStatus            = big.NewInt(1 << 18)
+	phoneSessionDetailResponseFieldTags              = big.NewInt(1 << 19)
+	phoneSessionDetailResponseFieldTelemetryDisabled = big.NewInt(1 << 20)
+	phoneSessionDetailResponseFieldWorkflowID        = big.NewInt(1 << 21)
+	phoneSessionDetailResponseFieldWorkflowName      = big.NewInt(1 << 22)
 )
 
 type PhoneSessionDetailResponse struct {
@@ -3245,6 +3246,8 @@ type PhoneSessionDetailResponse struct {
 	Status PhoneSessionDetailResponseStatus `json:"status" url:"status"`
 	// Optional key->value labels attached to the session.
 	Tags map[string]string `json:"tags,omitempty" url:"tags,omitempty"`
+	// Whether session telemetry was disabled at allocation. When true the session has no live or archived trace by policy.
+	TelemetryDisabled bool `json:"telemetry_disabled" url:"telemetry_disabled"`
 	// Workflow the session executed, when source is 'workflow'.
 	WorkflowID *string `json:"workflow_id,omitempty" url:"workflow_id,omitempty"`
 	// Name of the workflow the session executed.
@@ -3395,6 +3398,13 @@ func (p *PhoneSessionDetailResponse) GetTags() map[string]string {
 		return nil
 	}
 	return p.Tags
+}
+
+func (p *PhoneSessionDetailResponse) GetTelemetryDisabled() bool {
+	if p == nil {
+		return false
+	}
+	return p.TelemetryDisabled
 }
 
 func (p *PhoneSessionDetailResponse) GetWorkflowID() *string {
@@ -3563,6 +3573,13 @@ func (p *PhoneSessionDetailResponse) SetStatus(status PhoneSessionDetailResponse
 func (p *PhoneSessionDetailResponse) SetTags(tags map[string]string) {
 	p.Tags = tags
 	p.require(phoneSessionDetailResponseFieldTags)
+}
+
+// SetTelemetryDisabled sets the TelemetryDisabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionDetailResponse) SetTelemetryDisabled(telemetryDisabled bool) {
+	p.TelemetryDisabled = telemetryDisabled
+	p.require(phoneSessionDetailResponseFieldTelemetryDisabled)
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;

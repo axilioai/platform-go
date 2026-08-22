@@ -302,18 +302,15 @@ func (r *RunsListHistoricRequest) SetSearch(search *string) {
 }
 
 var (
-	sessionsListEventsRequestFieldSessionID  = big.NewInt(1 << 0)
-	sessionsListEventsRequestFieldEventTypes = big.NewInt(1 << 1)
-	sessionsListEventsRequestFieldLimit      = big.NewInt(1 << 2)
-	sessionsListEventsRequestFieldOffset     = big.NewInt(1 << 3)
+	sessionsListFramesRequestFieldSessionID = big.NewInt(1 << 0)
+	sessionsListFramesRequestFieldLimit     = big.NewInt(1 << 1)
+	sessionsListFramesRequestFieldOffset    = big.NewInt(1 << 2)
 )
 
-type SessionsListEventsRequest struct {
-	// Session whose events to return.
+type SessionsListFramesRequest struct {
+	// Session whose frames to return.
 	SessionID string `json:"-" url:"-"`
-	// Restrict results to specific event type codes (RUN_STARTED / OUTPUT_LOG / SDK_CALL_COMPLETED / etc.).
-	EventTypes []string `json:"-" url:"event_types,omitempty"`
-	// Maximum number of events to return (1-1000).
+	// Maximum number of frames to return (1-1000).
 	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// Pagination offset.
 	Offset *int64 `json:"-" url:"offset,omitempty"`
@@ -322,7 +319,7 @@ type SessionsListEventsRequest struct {
 	explicitFields *big.Int `json:"-" url:"-"`
 }
 
-func (s *SessionsListEventsRequest) require(field *big.Int) {
+func (s *SessionsListFramesRequest) require(field *big.Int) {
 	if s.explicitFields == nil {
 		s.explicitFields = big.NewInt(0)
 	}
@@ -331,30 +328,23 @@ func (s *SessionsListEventsRequest) require(field *big.Int) {
 
 // SetSessionID sets the SessionID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SessionsListEventsRequest) SetSessionID(sessionID string) {
+func (s *SessionsListFramesRequest) SetSessionID(sessionID string) {
 	s.SessionID = sessionID
-	s.require(sessionsListEventsRequestFieldSessionID)
-}
-
-// SetEventTypes sets the EventTypes field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SessionsListEventsRequest) SetEventTypes(eventTypes []string) {
-	s.EventTypes = eventTypes
-	s.require(sessionsListEventsRequestFieldEventTypes)
+	s.require(sessionsListFramesRequestFieldSessionID)
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SessionsListEventsRequest) SetLimit(limit *int64) {
+func (s *SessionsListFramesRequest) SetLimit(limit *int64) {
 	s.Limit = limit
-	s.require(sessionsListEventsRequestFieldLimit)
+	s.require(sessionsListFramesRequestFieldLimit)
 }
 
 // SetOffset sets the Offset field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SessionsListEventsRequest) SetOffset(offset *int64) {
+func (s *SessionsListFramesRequest) SetOffset(offset *int64) {
 	s.Offset = offset
-	s.require(sessionsListEventsRequestFieldOffset)
+	s.require(sessionsListFramesRequestFieldOffset)
 }
 
 var (
@@ -589,23 +579,17 @@ func (r *RunCreateResponse) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// A single event recorded during a run.
+// Span outcome.
 var (
-	runEventSummaryFieldBody      = big.NewInt(1 << 0)
-	runEventSummaryFieldSessionID = big.NewInt(1 << 1)
-	runEventSummaryFieldTimestamp = big.NewInt(1 << 2)
-	runEventSummaryFieldType      = big.NewInt(1 << 3)
+	runFrameStatusFieldCode    = big.NewInt(1 << 0)
+	runFrameStatusFieldMessage = big.NewInt(1 << 1)
 )
 
-type RunEventSummary struct {
-	// Event payload; shape depends on type.
-	Body any `json:"body,omitempty" url:"body,omitempty"`
-	// Session the event belongs to.
-	SessionID string `json:"session_id" url:"session_id"`
-	// When the event occurred.
-	Timestamp time.Time `json:"timestamp" url:"timestamp"`
-	// Event type (e.g. RUN_STARTED, OUTPUT_LOG).
-	Type string `json:"type" url:"type"`
+type RunFrameStatus struct {
+	// "ok" or "error".
+	Code string `json:"code" url:"code"`
+	// Human-readable failure message; empty on success.
+	Message string `json:"message" url:"message"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -614,296 +598,55 @@ type RunEventSummary struct {
 	rawJSON         json.RawMessage
 }
 
-func (r *RunEventSummary) GetBody() any {
-	if r == nil {
-		return nil
-	}
-	return r.Body
-}
-
-func (r *RunEventSummary) GetSessionID() string {
+func (r *RunFrameStatus) GetCode() string {
 	if r == nil {
 		return ""
 	}
-	return r.SessionID
+	return r.Code
 }
 
-func (r *RunEventSummary) GetTimestamp() time.Time {
-	if r == nil {
-		return time.Time{}
-	}
-	return r.Timestamp
-}
-
-func (r *RunEventSummary) GetType() string {
+func (r *RunFrameStatus) GetMessage() string {
 	if r == nil {
 		return ""
 	}
-	return r.Type
+	return r.Message
 }
 
-func (r *RunEventSummary) GetExtraProperties() map[string]interface{} {
+func (r *RunFrameStatus) GetExtraProperties() map[string]interface{} {
 	if r == nil {
 		return nil
 	}
 	return r.extraProperties
 }
 
-func (r *RunEventSummary) require(field *big.Int) {
+func (r *RunFrameStatus) require(field *big.Int) {
 	if r.explicitFields == nil {
 		r.explicitFields = big.NewInt(0)
 	}
 	r.explicitFields.Or(r.explicitFields, field)
 }
 
-// SetBody sets the Body field and marks it as non-optional;
+// SetCode sets the Code field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventSummary) SetBody(body any) {
-	r.Body = body
-	r.require(runEventSummaryFieldBody)
+func (r *RunFrameStatus) SetCode(code string) {
+	r.Code = code
+	r.require(runFrameStatusFieldCode)
 }
 
-// SetSessionID sets the SessionID field and marks it as non-optional;
+// SetMessage sets the Message field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventSummary) SetSessionID(sessionID string) {
-	r.SessionID = sessionID
-	r.require(runEventSummaryFieldSessionID)
+func (r *RunFrameStatus) SetMessage(message string) {
+	r.Message = message
+	r.require(runFrameStatusFieldMessage)
 }
 
-// SetTimestamp sets the Timestamp field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventSummary) SetTimestamp(timestamp time.Time) {
-	r.Timestamp = timestamp
-	r.require(runEventSummaryFieldTimestamp)
-}
-
-// SetType sets the Type field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventSummary) SetType(type_ string) {
-	r.Type = type_
-	r.require(runEventSummaryFieldType)
-}
-
-func (r *RunEventSummary) UnmarshalJSON(data []byte) error {
-	type embed RunEventSummary
-	var unmarshaler = struct {
-		embed
-		Timestamp *internal.DateTime `json:"timestamp"`
-	}{
-		embed: embed(*r),
-	}
-	if err := json.Unmarshal(data, &unmarshaler); err != nil {
-		return err
-	}
-	*r = RunEventSummary(unmarshaler.embed)
-	r.Timestamp = unmarshaler.Timestamp.Time()
-	extraProperties, err := internal.ExtractExtraProperties(data, *r)
-	if err != nil {
-		return err
-	}
-	r.extraProperties = extraProperties
-	r.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (r *RunEventSummary) MarshalJSON() ([]byte, error) {
-	type embed RunEventSummary
-	var marshaler = struct {
-		embed
-		Timestamp *internal.DateTime `json:"timestamp"`
-	}{
-		embed:     embed(*r),
-		Timestamp: internal.NewDateTime(r.Timestamp),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (r *RunEventSummary) String() string {
-	if r == nil {
-		return "<nil>"
-	}
-	if len(r.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(r); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", r)
-}
-
-// Paginated list of run events.
-var (
-	runEventsResponseFieldSchema           = big.NewInt(1 << 0)
-	runEventsResponseFieldEvents           = big.NewInt(1 << 1)
-	runEventsResponseFieldInferenceCosts   = big.NewInt(1 << 2)
-	runEventsResponseFieldLimit            = big.NewInt(1 << 3)
-	runEventsResponseFieldOffset           = big.NewInt(1 << 4)
-	runEventsResponseFieldRetentionExpired = big.NewInt(1 << 5)
-	runEventsResponseFieldSdkCallCosts     = big.NewInt(1 << 6)
-	runEventsResponseFieldTotal            = big.NewInt(1 << 7)
-)
-
-type RunEventsResponse struct {
-	// A URL to the JSON Schema for this object.
-	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// Page of run event records.
-	Events []*RunEventSummary `json:"events,omitempty" url:"events,omitempty"`
-	// Billed microdollars per inference_id.
-	InferenceCosts map[string]int64 `json:"inference_costs" url:"inference_costs"`
-	// Page size used for this response.
-	Limit int64 `json:"limit" url:"limit"`
-	// Pagination offset used for this response.
-	Offset int64 `json:"offset" url:"offset"`
-	// True when the trace is past the org's retention window. Events are withheld from this point on, and the underlying data is physically deleted by a daily sweep; deletion may lag this flag by up to a day, after which the data is unrecoverable.
-	RetentionExpired bool `json:"retention_expired" url:"retention_expired"`
-	// Billed microdollars per SDK-call span_id.
-	SdkCallCosts map[string]int64 `json:"sdk_call_costs" url:"sdk_call_costs"`
-	// Total number of events matching the query.
-	Total int64 `json:"total" url:"total"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (r *RunEventsResponse) GetSchema() *string {
-	if r == nil {
-		return nil
-	}
-	return r.Schema
-}
-
-func (r *RunEventsResponse) GetEvents() []*RunEventSummary {
-	if r == nil {
-		return nil
-	}
-	return r.Events
-}
-
-func (r *RunEventsResponse) GetInferenceCosts() map[string]int64 {
-	if r == nil {
-		return nil
-	}
-	return r.InferenceCosts
-}
-
-func (r *RunEventsResponse) GetLimit() int64 {
-	if r == nil {
-		return 0
-	}
-	return r.Limit
-}
-
-func (r *RunEventsResponse) GetOffset() int64 {
-	if r == nil {
-		return 0
-	}
-	return r.Offset
-}
-
-func (r *RunEventsResponse) GetRetentionExpired() bool {
-	if r == nil {
-		return false
-	}
-	return r.RetentionExpired
-}
-
-func (r *RunEventsResponse) GetSdkCallCosts() map[string]int64 {
-	if r == nil {
-		return nil
-	}
-	return r.SdkCallCosts
-}
-
-func (r *RunEventsResponse) GetTotal() int64 {
-	if r == nil {
-		return 0
-	}
-	return r.Total
-}
-
-func (r *RunEventsResponse) GetExtraProperties() map[string]interface{} {
-	if r == nil {
-		return nil
-	}
-	return r.extraProperties
-}
-
-func (r *RunEventsResponse) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
-	}
-	r.explicitFields.Or(r.explicitFields, field)
-}
-
-// SetSchema sets the Schema field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventsResponse) SetSchema(schema *string) {
-	r.Schema = schema
-	r.require(runEventsResponseFieldSchema)
-}
-
-// SetEvents sets the Events field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventsResponse) SetEvents(events []*RunEventSummary) {
-	r.Events = events
-	r.require(runEventsResponseFieldEvents)
-}
-
-// SetInferenceCosts sets the InferenceCosts field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventsResponse) SetInferenceCosts(inferenceCosts map[string]int64) {
-	r.InferenceCosts = inferenceCosts
-	r.require(runEventsResponseFieldInferenceCosts)
-}
-
-// SetLimit sets the Limit field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventsResponse) SetLimit(limit int64) {
-	r.Limit = limit
-	r.require(runEventsResponseFieldLimit)
-}
-
-// SetOffset sets the Offset field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventsResponse) SetOffset(offset int64) {
-	r.Offset = offset
-	r.require(runEventsResponseFieldOffset)
-}
-
-// SetRetentionExpired sets the RetentionExpired field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventsResponse) SetRetentionExpired(retentionExpired bool) {
-	r.RetentionExpired = retentionExpired
-	r.require(runEventsResponseFieldRetentionExpired)
-}
-
-// SetSdkCallCosts sets the SdkCallCosts field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventsResponse) SetSdkCallCosts(sdkCallCosts map[string]int64) {
-	r.SdkCallCosts = sdkCallCosts
-	r.require(runEventsResponseFieldSdkCallCosts)
-}
-
-// SetTotal sets the Total field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunEventsResponse) SetTotal(total int64) {
-	r.Total = total
-	r.require(runEventsResponseFieldTotal)
-}
-
-func (r *RunEventsResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler RunEventsResponse
+func (r *RunFrameStatus) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunFrameStatus
 	var value unmarshaler
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*r = RunEventsResponse(value)
+	*r = RunFrameStatus(value)
 	extraProperties, err := internal.ExtractExtraProperties(data, *r)
 	if err != nil {
 		return err
@@ -913,8 +656,8 @@ func (r *RunEventsResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (r *RunEventsResponse) MarshalJSON() ([]byte, error) {
-	type embed RunEventsResponse
+func (r *RunFrameStatus) MarshalJSON() ([]byte, error) {
+	type embed RunFrameStatus
 	var marshaler = struct {
 		embed
 	}{
@@ -924,7 +667,7 @@ func (r *RunEventsResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(explicitMarshaler)
 }
 
-func (r *RunEventsResponse) String() string {
+func (r *RunFrameStatus) String() string {
 	if r == nil {
 		return "<nil>"
 	}
@@ -1649,6 +1392,194 @@ func (r *RunListResponse) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
+// One point-in-time telemetry log event in the canonical frame envelope.
+var (
+	runLogFrameFieldAttributes   = big.NewInt(1 << 0)
+	runLogFrameFieldBody         = big.NewInt(1 << 1)
+	runLogFrameFieldLogType      = big.NewInt(1 << 2)
+	runLogFrameFieldSeverity     = big.NewInt(1 << 3)
+	runLogFrameFieldSpanID       = big.NewInt(1 << 4)
+	runLogFrameFieldTimeUnixNano = big.NewInt(1 << 5)
+	runLogFrameFieldTraceID      = big.NewInt(1 << 6)
+)
+
+type RunLogFrame struct {
+	// Every attribute the producer stamped (axilio.* vocabulary), verbatim.
+	Attributes map[string]any `json:"attributes,omitempty" url:"attributes,omitempty"`
+	// The log's human-readable text.
+	Body string `json:"body" url:"body"`
+	// Product log type, e.g. output_log, output_error, kernel_status, transfer_progress. Unknown values MUST be rendered generically, never rejected.
+	LogType string `json:"log_type" url:"log_type"`
+	// Log severity (INFO / ERROR).
+	Severity string `json:"severity" url:"severity"`
+	// Span the log occurred under; omitted for session-level logs.
+	SpanID *string `json:"span_id,omitempty" url:"span_id,omitempty"`
+	// Event time, nanoseconds since the Unix epoch.
+	TimeUnixNano int64 `json:"time_unix_nano" url:"time_unix_nano"`
+	// OTel trace id (32 lowercase hex chars) of the session the log belongs to.
+	TraceID string `json:"trace_id" url:"trace_id"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunLogFrame) GetAttributes() map[string]any {
+	if r == nil {
+		return nil
+	}
+	return r.Attributes
+}
+
+func (r *RunLogFrame) GetBody() string {
+	if r == nil {
+		return ""
+	}
+	return r.Body
+}
+
+func (r *RunLogFrame) GetLogType() string {
+	if r == nil {
+		return ""
+	}
+	return r.LogType
+}
+
+func (r *RunLogFrame) GetSeverity() string {
+	if r == nil {
+		return ""
+	}
+	return r.Severity
+}
+
+func (r *RunLogFrame) GetSpanID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.SpanID
+}
+
+func (r *RunLogFrame) GetTimeUnixNano() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.TimeUnixNano
+}
+
+func (r *RunLogFrame) GetTraceID() string {
+	if r == nil {
+		return ""
+	}
+	return r.TraceID
+}
+
+func (r *RunLogFrame) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunLogFrame) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetAttributes sets the Attributes field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetAttributes(attributes map[string]any) {
+	r.Attributes = attributes
+	r.require(runLogFrameFieldAttributes)
+}
+
+// SetBody sets the Body field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetBody(body string) {
+	r.Body = body
+	r.require(runLogFrameFieldBody)
+}
+
+// SetLogType sets the LogType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetLogType(logType string) {
+	r.LogType = logType
+	r.require(runLogFrameFieldLogType)
+}
+
+// SetSeverity sets the Severity field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetSeverity(severity string) {
+	r.Severity = severity
+	r.require(runLogFrameFieldSeverity)
+}
+
+// SetSpanID sets the SpanID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetSpanID(spanID *string) {
+	r.SpanID = spanID
+	r.require(runLogFrameFieldSpanID)
+}
+
+// SetTimeUnixNano sets the TimeUnixNano field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetTimeUnixNano(timeUnixNano int64) {
+	r.TimeUnixNano = timeUnixNano
+	r.require(runLogFrameFieldTimeUnixNano)
+}
+
+// SetTraceID sets the TraceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetTraceID(traceID string) {
+	r.TraceID = traceID
+	r.require(runLogFrameFieldTraceID)
+}
+
+func (r *RunLogFrame) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunLogFrame
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunLogFrame(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunLogFrame) MarshalJSON() ([]byte, error) {
+	type embed RunLogFrame
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunLogFrame) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
 // Full run record returned by run endpoints.
 var (
 	runResponseFieldSchema              = big.NewInt(1 << 0)
@@ -1657,22 +1588,21 @@ var (
 	runResponseFieldCreatedAt           = big.NewInt(1 << 3)
 	runResponseFieldErrorMessage        = big.NewInt(1 << 4)
 	runResponseFieldID                  = big.NewInt(1 << 5)
-	runResponseFieldLogs                = big.NewInt(1 << 6)
-	runResponseFieldPhoneID             = big.NewInt(1 << 7)
-	runResponseFieldRunMetadata         = big.NewInt(1 << 8)
-	runResponseFieldSessionID           = big.NewInt(1 << 9)
-	runResponseFieldStartTimeoutSeconds = big.NewInt(1 << 10)
-	runResponseFieldStartedAt           = big.NewInt(1 << 11)
-	runResponseFieldStatus              = big.NewInt(1 << 12)
-	runResponseFieldSuccess             = big.NewInt(1 << 13)
-	runResponseFieldTraceExpiredAt      = big.NewInt(1 << 14)
-	runResponseFieldTrigger             = big.NewInt(1 << 15)
-	runResponseFieldUpdatedAt           = big.NewInt(1 << 16)
-	runResponseFieldUserID              = big.NewInt(1 << 17)
-	runResponseFieldVariables           = big.NewInt(1 << 18)
-	runResponseFieldVideoURL            = big.NewInt(1 << 19)
-	runResponseFieldWorkflowID          = big.NewInt(1 << 20)
-	runResponseFieldWorkflowName        = big.NewInt(1 << 21)
+	runResponseFieldPhoneID             = big.NewInt(1 << 6)
+	runResponseFieldRunMetadata         = big.NewInt(1 << 7)
+	runResponseFieldSessionID           = big.NewInt(1 << 8)
+	runResponseFieldStartTimeoutSeconds = big.NewInt(1 << 9)
+	runResponseFieldStartedAt           = big.NewInt(1 << 10)
+	runResponseFieldStatus              = big.NewInt(1 << 11)
+	runResponseFieldSuccess             = big.NewInt(1 << 12)
+	runResponseFieldTraceExpiredAt      = big.NewInt(1 << 13)
+	runResponseFieldTrigger             = big.NewInt(1 << 14)
+	runResponseFieldUpdatedAt           = big.NewInt(1 << 15)
+	runResponseFieldUserID              = big.NewInt(1 << 16)
+	runResponseFieldVariables           = big.NewInt(1 << 17)
+	runResponseFieldVideoURL            = big.NewInt(1 << 18)
+	runResponseFieldWorkflowID          = big.NewInt(1 << 19)
+	runResponseFieldWorkflowName        = big.NewInt(1 << 20)
 )
 
 type RunResponse struct {
@@ -1688,8 +1618,6 @@ type RunResponse struct {
 	ErrorMessage *string `json:"error_message,omitempty" url:"error_message,omitempty"`
 	// Run identifier.
 	ID string `json:"id" url:"id"`
-	// Run's execution log output.
-	Logs *string `json:"logs,omitempty" url:"logs,omitempty"`
 	// Device executing the run.
 	PhoneID *string `json:"phone_id,omitempty" url:"phone_id,omitempty"`
 	// Arbitrary metadata attached to the run.
@@ -1768,13 +1696,6 @@ func (r *RunResponse) GetID() string {
 		return ""
 	}
 	return r.ID
-}
-
-func (r *RunResponse) GetLogs() *string {
-	if r == nil {
-		return nil
-	}
-	return r.Logs
 }
 
 func (r *RunResponse) GetPhoneID() *string {
@@ -1936,13 +1857,6 @@ func (r *RunResponse) SetErrorMessage(errorMessage *string) {
 func (r *RunResponse) SetID(id string) {
 	r.ID = id
 	r.require(runResponseFieldID)
-}
-
-// SetLogs sets the Logs field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunResponse) SetLogs(logs *string) {
-	r.Logs = logs
-	r.require(runResponseFieldLogs)
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -2176,6 +2090,577 @@ func NewRunResponseTriggerFromString(s string) (RunResponseTrigger, error) {
 
 func (r RunResponseTrigger) Ptr() *RunResponseTrigger {
 	return &r
+}
+
+// Paginated list of telemetry frames for a session.
+var (
+	runSessionFramesResponseFieldSchema           = big.NewInt(1 << 0)
+	runSessionFramesResponseFieldFrames           = big.NewInt(1 << 1)
+	runSessionFramesResponseFieldInferenceCosts   = big.NewInt(1 << 2)
+	runSessionFramesResponseFieldLimit            = big.NewInt(1 << 3)
+	runSessionFramesResponseFieldOffset           = big.NewInt(1 << 4)
+	runSessionFramesResponseFieldRetentionExpired = big.NewInt(1 << 5)
+	runSessionFramesResponseFieldSdkCallCosts     = big.NewInt(1 << 6)
+	runSessionFramesResponseFieldTotal            = big.NewInt(1 << 7)
+)
+
+type RunSessionFramesResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Page of frames, ordered by span start / log time.
+	Frames []*RunSessionFramesResponseFramesItem `json:"frames,omitempty" url:"frames,omitempty"`
+	// Billed microdollars per inference_id, the per-inference detail behind sdk_call_costs.
+	InferenceCosts map[string]int64 `json:"inference_costs" url:"inference_costs"`
+	// Page size used for this response.
+	Limit int64 `json:"limit" url:"limit"`
+	// Pagination offset used for this response.
+	Offset int64 `json:"offset" url:"offset"`
+	// True when the trace is past the org's retention window; frames are withheld and the underlying data is deleted by a daily sweep.
+	RetentionExpired bool `json:"retention_expired" url:"retention_expired"`
+	// Billed microdollars per sdk_call span_id (post-markup, what the invoice charges). Response-level by design: billed cost is a read-time billing join, never a frame attribute.
+	SdkCallCosts map[string]int64 `json:"sdk_call_costs" url:"sdk_call_costs"`
+	// Total number of frames for the session.
+	Total int64 `json:"total" url:"total"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunSessionFramesResponse) GetSchema() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Schema
+}
+
+func (r *RunSessionFramesResponse) GetFrames() []*RunSessionFramesResponseFramesItem {
+	if r == nil {
+		return nil
+	}
+	return r.Frames
+}
+
+func (r *RunSessionFramesResponse) GetInferenceCosts() map[string]int64 {
+	if r == nil {
+		return nil
+	}
+	return r.InferenceCosts
+}
+
+func (r *RunSessionFramesResponse) GetLimit() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.Limit
+}
+
+func (r *RunSessionFramesResponse) GetOffset() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.Offset
+}
+
+func (r *RunSessionFramesResponse) GetRetentionExpired() bool {
+	if r == nil {
+		return false
+	}
+	return r.RetentionExpired
+}
+
+func (r *RunSessionFramesResponse) GetSdkCallCosts() map[string]int64 {
+	if r == nil {
+		return nil
+	}
+	return r.SdkCallCosts
+}
+
+func (r *RunSessionFramesResponse) GetTotal() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.Total
+}
+
+func (r *RunSessionFramesResponse) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunSessionFramesResponse) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSessionFramesResponse) SetSchema(schema *string) {
+	r.Schema = schema
+	r.require(runSessionFramesResponseFieldSchema)
+}
+
+// SetFrames sets the Frames field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSessionFramesResponse) SetFrames(frames []*RunSessionFramesResponseFramesItem) {
+	r.Frames = frames
+	r.require(runSessionFramesResponseFieldFrames)
+}
+
+// SetInferenceCosts sets the InferenceCosts field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSessionFramesResponse) SetInferenceCosts(inferenceCosts map[string]int64) {
+	r.InferenceCosts = inferenceCosts
+	r.require(runSessionFramesResponseFieldInferenceCosts)
+}
+
+// SetLimit sets the Limit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSessionFramesResponse) SetLimit(limit int64) {
+	r.Limit = limit
+	r.require(runSessionFramesResponseFieldLimit)
+}
+
+// SetOffset sets the Offset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSessionFramesResponse) SetOffset(offset int64) {
+	r.Offset = offset
+	r.require(runSessionFramesResponseFieldOffset)
+}
+
+// SetRetentionExpired sets the RetentionExpired field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSessionFramesResponse) SetRetentionExpired(retentionExpired bool) {
+	r.RetentionExpired = retentionExpired
+	r.require(runSessionFramesResponseFieldRetentionExpired)
+}
+
+// SetSdkCallCosts sets the SdkCallCosts field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSessionFramesResponse) SetSdkCallCosts(sdkCallCosts map[string]int64) {
+	r.SdkCallCosts = sdkCallCosts
+	r.require(runSessionFramesResponseFieldSdkCallCosts)
+}
+
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSessionFramesResponse) SetTotal(total int64) {
+	r.Total = total
+	r.require(runSessionFramesResponseFieldTotal)
+}
+
+func (r *RunSessionFramesResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunSessionFramesResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunSessionFramesResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunSessionFramesResponse) MarshalJSON() ([]byte, error) {
+	type embed RunSessionFramesResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunSessionFramesResponse) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// One telemetry frame: a completed span or a log event, discriminated on kind. Tolerant reader (unified frame contract): consumers MUST ignore frames with an unknown kind, unknown fields within known kinds, and unknown span_type/log_type values (render generically, never error). Generated SDK types surface an unrecognized frame as an explicit UnknownFrame variant carrying the raw JSON, never a silent drop. A live-stream message MAY carry a JSON array of frame objects; consumers MUST accept a single object or an array.
+type RunSessionFramesResponseFramesItem struct {
+	Kind string
+	Log  *RunLogFrame
+	Span *RunSpanFrame
+
+	rawJSON json.RawMessage
+}
+
+func (r *RunSessionFramesResponseFramesItem) GetKind() string {
+	if r == nil {
+		return ""
+	}
+	return r.Kind
+}
+
+func (r *RunSessionFramesResponseFramesItem) GetLog() *RunLogFrame {
+	if r == nil {
+		return nil
+	}
+	return r.Log
+}
+
+func (r *RunSessionFramesResponseFramesItem) GetSpan() *RunSpanFrame {
+	if r == nil {
+		return nil
+	}
+	return r.Span
+}
+
+func (r *RunSessionFramesResponseFramesItem) UnmarshalJSON(data []byte) error {
+	var unmarshaler struct {
+		Kind string `json:"kind"`
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	r.Kind = unmarshaler.Kind
+	if unmarshaler.Kind == "" {
+		return fmt.Errorf("%T did not include discriminant kind", r)
+	}
+	switch unmarshaler.Kind {
+	case "log":
+		value := new(RunLogFrame)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		r.Log = value
+	case "span":
+		value := new(RunSpanFrame)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		r.Span = value
+	}
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r RunSessionFramesResponseFramesItem) MarshalJSON() ([]byte, error) {
+	if err := r.validate(); err != nil {
+		return nil, err
+	}
+	if r.Log != nil {
+		return internal.MarshalJSONWithExtraProperty(r.Log, "kind", "log")
+	}
+	if r.Span != nil {
+		return internal.MarshalJSONWithExtraProperty(r.Span, "kind", "span")
+	}
+	if len(r.rawJSON) > 0 {
+		return r.rawJSON, nil
+	}
+	return nil, fmt.Errorf("type %T does not define a non-empty union type", r)
+}
+
+type RunSessionFramesResponseFramesItemVisitor interface {
+	VisitLog(*RunLogFrame) error
+	VisitSpan(*RunSpanFrame) error
+}
+
+func (r *RunSessionFramesResponseFramesItem) Accept(visitor RunSessionFramesResponseFramesItemVisitor) error {
+	if r.Log != nil {
+		return visitor.VisitLog(r.Log)
+	}
+	if r.Span != nil {
+		return visitor.VisitSpan(r.Span)
+	}
+	return fmt.Errorf("type %T does not define a non-empty union type", r)
+}
+
+func (r *RunSessionFramesResponseFramesItem) validate() error {
+	if r == nil {
+		return fmt.Errorf("type %T is nil", r)
+	}
+	var fields []string
+	if r.Log != nil {
+		fields = append(fields, "log")
+	}
+	if r.Span != nil {
+		fields = append(fields, "span")
+	}
+	if len(fields) == 0 {
+		if r.Kind != "" {
+			if len(r.rawJSON) > 0 {
+				return nil
+			}
+			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", r, r.Kind)
+		}
+		return fmt.Errorf("type %T is empty", r)
+	}
+	if len(fields) > 1 {
+		return fmt.Errorf("type %T defines values for %s, but only one value is allowed", r, fields)
+	}
+	if r.Kind != "" {
+		field := fields[0]
+		if r.Kind != field {
+			return fmt.Errorf(
+				"type %T defines a discriminant set to %q, but it does not match the %T field; either remove or update the discriminant to match",
+				r,
+				r.Kind,
+				r,
+			)
+		}
+	}
+	return nil
+}
+
+// One completed telemetry span in the canonical frame envelope.
+var (
+	runSpanFrameFieldAttributes        = big.NewInt(1 << 0)
+	runSpanFrameFieldEndTimeUnixNano   = big.NewInt(1 << 1)
+	runSpanFrameFieldName              = big.NewInt(1 << 2)
+	runSpanFrameFieldParentSpanID      = big.NewInt(1 << 3)
+	runSpanFrameFieldPhase             = big.NewInt(1 << 4)
+	runSpanFrameFieldSpanID            = big.NewInt(1 << 5)
+	runSpanFrameFieldSpanType          = big.NewInt(1 << 6)
+	runSpanFrameFieldStartTimeUnixNano = big.NewInt(1 << 7)
+	runSpanFrameFieldStatus            = big.NewInt(1 << 8)
+	runSpanFrameFieldTraceID           = big.NewInt(1 << 9)
+)
+
+type RunSpanFrame struct {
+	// Every attribute the producer stamped (axilio.* vocabulary), verbatim. Attributes are the contract's extension seam: new keys appear here without a version bump.
+	Attributes map[string]any `json:"attributes,omitempty" url:"attributes,omitempty"`
+	// Span end, nanoseconds since the Unix epoch.
+	EndTimeUnixNano int64 `json:"end_time_unix_nano" url:"end_time_unix_nano"`
+	// Span name (for sdk_call spans, the SDK operation, e.g. Screen.observe).
+	Name string `json:"name" url:"name"`
+	// Parent span id; omitted on root spans.
+	ParentSpanID *string `json:"parent_span_id,omitempty" url:"parent_span_id,omitempty"`
+	// Span phase. The archive returns completed spans only ("end"); "start" phases exist only on the live stream.
+	Phase string `json:"phase" url:"phase"`
+	// OTel span id (16 lowercase hex chars). Upsert key: the live copy of this span carries the same id.
+	SpanID string `json:"span_id" url:"span_id"`
+	// Product span role: session (the session root), run, sdk_call, inference, file_push, media_capture. Spans stored before the 2026-08-21 vocabulary cutover carry the retired phone_session value for the session root. Unknown values MUST be rendered generically, never rejected.
+	SpanType string `json:"span_type" url:"span_type"`
+	// Span start, nanoseconds since the Unix epoch.
+	StartTimeUnixNano int64 `json:"start_time_unix_nano" url:"start_time_unix_nano"`
+	// Span outcome.
+	Status *RunFrameStatus `json:"status" url:"status"`
+	// OTel trace id (32 lowercase hex chars), derived from the session id: one session is one trace.
+	TraceID string `json:"trace_id" url:"trace_id"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunSpanFrame) GetAttributes() map[string]any {
+	if r == nil {
+		return nil
+	}
+	return r.Attributes
+}
+
+func (r *RunSpanFrame) GetEndTimeUnixNano() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.EndTimeUnixNano
+}
+
+func (r *RunSpanFrame) GetName() string {
+	if r == nil {
+		return ""
+	}
+	return r.Name
+}
+
+func (r *RunSpanFrame) GetParentSpanID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.ParentSpanID
+}
+
+func (r *RunSpanFrame) GetPhase() string {
+	if r == nil {
+		return ""
+	}
+	return r.Phase
+}
+
+func (r *RunSpanFrame) GetSpanID() string {
+	if r == nil {
+		return ""
+	}
+	return r.SpanID
+}
+
+func (r *RunSpanFrame) GetSpanType() string {
+	if r == nil {
+		return ""
+	}
+	return r.SpanType
+}
+
+func (r *RunSpanFrame) GetStartTimeUnixNano() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.StartTimeUnixNano
+}
+
+func (r *RunSpanFrame) GetStatus() *RunFrameStatus {
+	if r == nil {
+		return nil
+	}
+	return r.Status
+}
+
+func (r *RunSpanFrame) GetTraceID() string {
+	if r == nil {
+		return ""
+	}
+	return r.TraceID
+}
+
+func (r *RunSpanFrame) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunSpanFrame) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetAttributes sets the Attributes field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetAttributes(attributes map[string]any) {
+	r.Attributes = attributes
+	r.require(runSpanFrameFieldAttributes)
+}
+
+// SetEndTimeUnixNano sets the EndTimeUnixNano field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetEndTimeUnixNano(endTimeUnixNano int64) {
+	r.EndTimeUnixNano = endTimeUnixNano
+	r.require(runSpanFrameFieldEndTimeUnixNano)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetName(name string) {
+	r.Name = name
+	r.require(runSpanFrameFieldName)
+}
+
+// SetParentSpanID sets the ParentSpanID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetParentSpanID(parentSpanID *string) {
+	r.ParentSpanID = parentSpanID
+	r.require(runSpanFrameFieldParentSpanID)
+}
+
+// SetPhase sets the Phase field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetPhase(phase string) {
+	r.Phase = phase
+	r.require(runSpanFrameFieldPhase)
+}
+
+// SetSpanID sets the SpanID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetSpanID(spanID string) {
+	r.SpanID = spanID
+	r.require(runSpanFrameFieldSpanID)
+}
+
+// SetSpanType sets the SpanType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetSpanType(spanType string) {
+	r.SpanType = spanType
+	r.require(runSpanFrameFieldSpanType)
+}
+
+// SetStartTimeUnixNano sets the StartTimeUnixNano field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetStartTimeUnixNano(startTimeUnixNano int64) {
+	r.StartTimeUnixNano = startTimeUnixNano
+	r.require(runSpanFrameFieldStartTimeUnixNano)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetStatus(status *RunFrameStatus) {
+	r.Status = status
+	r.require(runSpanFrameFieldStatus)
+}
+
+// SetTraceID sets the TraceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetTraceID(traceID string) {
+	r.TraceID = traceID
+	r.require(runSpanFrameFieldTraceID)
+}
+
+func (r *RunSpanFrame) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunSpanFrame
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunSpanFrame(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunSpanFrame) MarshalJSON() ([]byte, error) {
+	type embed RunSpanFrame
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunSpanFrame) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
 }
 
 // RunStatsResponse summarizes run statistics for a workflow or organization.

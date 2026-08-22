@@ -145,7 +145,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionBalanceResponse.json\",\n  \"balance_display\": \"balance_display\",\n  \"balance_microdollars\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionBalanceResponse.json\",\n  \"balance_display\": \"balance_display\",\n  \"balance_microdollars\": 1000000,\n  \"included_microdollars\": 1000000,\n  \"purchased_microdollars\": 1000000,\n  \"purchased_next_expiry\": \"2024-01-15T09:30:00Z\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -547,7 +547,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionDetailResponse.json\",\n  \"allocated_at\": \"2024-01-15T09:30:00Z\",\n  \"allocated_by\": \"workflow_editor\",\n  \"capture_enabled\": true,\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"is_dedicated_phone\": true,\n  \"location\": \"location\",\n  \"model_name\": \"model_name\",\n  \"name\": \"name\",\n  \"nickname\": \"nickname\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_status\": \"active\",\n  \"phone_type\": \"android\",\n  \"recording_status\": \"ready\",\n  \"recording_url\": \"recording_url\",\n  \"session_id\": \"session_id\",\n  \"source\": \"workflow\",\n  \"status\": \"active\",\n  \"tags\": {\n    \"key\": \"value\"\n  },\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionDetailResponse.json\",\n  \"allocated_at\": \"2024-01-15T09:30:00Z\",\n  \"allocated_by\": \"workflow_editor\",\n  \"capture_enabled\": true,\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"is_dedicated_phone\": true,\n  \"location\": \"location\",\n  \"model_name\": \"model_name\",\n  \"name\": \"name\",\n  \"nickname\": \"nickname\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_status\": \"active\",\n  \"phone_type\": \"android\",\n  \"recording_status\": \"ready\",\n  \"recording_url\": \"recording_url\",\n  \"session_id\": \"session_id\",\n  \"source\": \"workflow\",\n  \"status\": \"active\",\n  \"tags\": {\n    \"key\": \"value\"\n  },\n  \"telemetry_disabled\": true,\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -959,10 +959,10 @@
       }
     },
     {
-      "id": "1b1791dc-0e34-4f18-9951-cfcfd3581c81",
-      "name": "List a session's events - default",
+      "id": "8a45b16f-6449-4c3b-b1c7-9e93e1534c0b",
+      "name": "List a session's telemetry frames - default",
       "request": {
-        "urlPathTemplate": "/phones/sessions/{session_id}/events",
+        "urlPathTemplate": "/phones/sessions/{session_id}/frames",
         "method": "GET",
         "headers": {
           "X-Axilio-Api-Key": {
@@ -977,12 +977,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunEventsResponse.json\",\n  \"events\": [\n    {\n      \"body\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"timestamp\": \"2024-01-15T09:30:00Z\",\n      \"type\": \"type\"\n    }\n  ],\n  \"inference_costs\": {\n    \"key\": 1000000\n  },\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"retention_expired\": true,\n  \"sdk_call_costs\": {\n    \"key\": 1000000\n  },\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunSessionFramesResponse.json\",\n  \"frames\": [\n    {\n      \"attributes\": {\n        \"key\": \"value\"\n      },\n      \"body\": \"body\",\n      \"log_type\": \"log_type\",\n      \"severity\": \"severity\",\n      \"span_id\": \"span_id\",\n      \"time_unix_nano\": 1000000,\n      \"trace_id\": \"trace_id\",\n      \"kind\": \"log\"\n    }\n  ],\n  \"inference_costs\": {\n    \"key\": 1000000\n  },\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"retention_expired\": true,\n  \"sdk_call_costs\": {\n    \"key\": 1000000\n  },\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "1b1791dc-0e34-4f18-9951-cfcfd3581c81",
+      "uuid": "8a45b16f-6449-4c3b-b1c7-9e93e1534c0b",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1008,7 +1008,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"$schema\": \"/api/v1/RunResponse.json\",\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"logs\": \"logs\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"start_timeout_seconds\": 1000000,\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"success\": true,\n      \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n      \"trigger\": \"manual\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"user_id\": \"user_id\",\n      \"variables\": {\n        \"key\": \"value\"\n      },\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"$schema\": \"/api/v1/RunResponse.json\",\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"start_timeout_seconds\": 1000000,\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"success\": true,\n      \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n      \"trigger\": \"manual\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"user_id\": \"user_id\",\n      \"variables\": {\n        \"key\": \"value\"\n      },\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1121,7 +1121,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"logs\": \"logs\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1157,7 +1157,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"logs\": \"logs\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
