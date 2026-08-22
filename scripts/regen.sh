@@ -48,3 +48,13 @@ rm -rf .gen
 go mod tidy
 
 echo "platform-go regenerated from specs/production/openapi.json"
+
+# Strip Fern's SSE stream-reconnect surface. These generated options
+# (WithMaxStreamReconnectAttempts / WithoutStreamReconnection) promise
+# Last-Event-ID resumption that nothing in this SDK reads or implements —
+# our streaming surface is the DCP WebSocket in drivers/mobile, whose real
+# reconnect contract is built in. Leaving them published advertises a
+# reconnect story that silently does nothing, so they are deleted on every
+# regen; the guard fails the regen loudly if the generator's shape drifts
+# and the strip stops matching.
+go run scripts/strip_dead_stream_options.go

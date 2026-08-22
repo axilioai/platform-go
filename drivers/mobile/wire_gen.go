@@ -35,31 +35,36 @@ const (
 
 // Input param frames (snake_case on the wire), one per contract schema.
 type tapParams struct {
-	X int `json:"x"`
-	Y int `json:"y"`
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
+	X              int    `json:"x"`
+	Y              int    `json:"y"`
 }
 
 type longPressParams struct {
-	DurationMs int `json:"duration_ms,omitempty"`
-	X          int `json:"x"`
-	Y          int `json:"y"`
+	DurationMs     int    `json:"duration_ms,omitempty"`
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
+	X              int    `json:"x"`
+	Y              int    `json:"y"`
 }
 
 type swipeParams struct {
-	DurationMs int `json:"duration_ms,omitempty"`
-	X1         int `json:"x1"`
-	X2         int `json:"x2"`
-	Y1         int `json:"y1"`
-	Y2         int `json:"y2"`
+	DurationMs     int    `json:"duration_ms,omitempty"`
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
+	X1             int    `json:"x1"`
+	X2             int    `json:"x2"`
+	Y1             int    `json:"y1"`
+	Y2             int    `json:"y2"`
 }
 
 type typeTextParams struct {
-	Text string `json:"text"`
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
+	Text           string `json:"text"`
 }
 
 type keyPressParams struct {
-	Key   string `json:"key,omitempty"`
-	Usage int    `json:"usage,omitempty"`
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
+	Key            string `json:"key,omitempty"`
+	Usage          int    `json:"usage,omitempty"`
 }
 
 type observeParams struct {
