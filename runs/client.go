@@ -34,13 +34,13 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Returns the paginated event trace for a session (workflow runs and workflow-less interactive leases alike). Org-scoped: another org's session reads as not found.
-func (c *Client) SessionsListEvents(
+// Returns the paginated telemetry frames for a session in the canonical frame envelope: one completed span frame per durable span (operations that never completed appear via their synthesized failed closures) plus log frames, ordered by span start / log time, with response-level billed-cost maps. This is the same envelope the live telemetry WebSocket streams; live and archive differ only in cardinality (start+end frames live, one completed frame here). Org-scoped: another org's session reads as not found. A trace past the organization's telemetry retention window returns an empty list with retention_expired=true; when the retention policy itself cannot be resolved the request fails with a 500 rather than serving frames whose retention state is unknown. Tolerant reader (unified frame contract): consumers MUST ignore frames with an unknown kind, unknown fields within known kinds, and unknown span_type/log_type values (render generically, never error). Generated SDK types surface an unrecognized frame as an explicit UnknownFrame variant carrying the raw JSON, never a silent drop. A live-stream message MAY carry a JSON array of frame objects; consumers MUST accept a single object or an array.
+func (c *Client) SessionsListFrames(
 	ctx context.Context,
-	request *platformgo.SessionsListEventsRequest,
+	request *platformgo.SessionsListFramesRequest,
 	opts ...option.RequestOption,
-) (*platformgo.RunEventsResponse, error) {
-	response, err := c.WithRawResponse.SessionsListEvents(
+) (*platformgo.RunSessionFramesResponse, error) {
+	response, err := c.WithRawResponse.SessionsListFrames(
 		ctx,
 		request,
 		opts...,
