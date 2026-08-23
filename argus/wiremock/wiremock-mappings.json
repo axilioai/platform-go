@@ -1,0 +1,96 @@
+{
+  "mappings": [
+    {
+      "id": "b37bb937-04c8-4231-916a-3d1d9f6f5c7f",
+      "name": "Run Inference - default",
+      "request": {
+        "urlPathTemplate": "/api/v1/vision/detect",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"analyzer_type\": \"analyzer_type\",\n  \"data\": {\n    \"hash_result\": {\n      \"ahash\": \"ahash\",\n      \"content_bounds\": {\n        \"bottom_y\": 1,\n        \"top_y\": 1\n      },\n      \"dhash\": \"dhash\",\n      \"histogram\": [\n        [\n          1\n        ]\n      ],\n      \"phash\": \"phash\"\n    },\n    \"icon_detections\": [\n      {\n        \"bbox\": {\n          \"x1\": 1.1,\n          \"x2\": 1.1,\n          \"y1\": 1.1,\n          \"y2\": 1.1\n        },\n        \"class_id\": 1,\n        \"class_name\": \"class_name\",\n        \"confidence\": 1.1\n      }\n    ],\n    \"metadata\": {\n      \"icon_detections_after_nms\": 1,\n      \"icon_detections_before_nms\": 1,\n      \"image_height\": 1,\n      \"image_width\": 1,\n      \"inference_time_ms\": 1.1,\n      \"ocr_ns\": 1,\n      \"queue_wait_ns\": 1,\n      \"yolo_ns\": 1\n    },\n    \"ocr_results\": [\n      {\n        \"bbox\": {\n          \"x1\": 1.1,\n          \"x2\": 1.1,\n          \"y1\": 1.1,\n          \"y2\": 1.1\n        },\n        \"confidence\": 1.1,\n        \"text\": \"text\"\n      }\n    ]\n  },\n  \"type\": \"type\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "b37bb937-04c8-4231-916a-3d1d9f6f5c7f",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "32e71609-21e1-4fae-95bb-f35e69c18149",
+      "name": "Run Locate - default",
+      "request": {
+        "urlPathTemplate": "/api/v1/vision/locate",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"bbox\": {\n    \"height\": 1,\n    \"width\": 1,\n    \"x\": 1,\n    \"y\": 1\n  },\n  \"completion_tokens\": 1,\n  \"confidence\": 1.1,\n  \"cost_microdollars\": 1,\n  \"found\": true,\n  \"latency_ms\": 1,\n  \"matched_text_index\": 1,\n  \"model\": \"model\",\n  \"prompt_tokens\": 1\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "32e71609-21e1-4fae-95bb-f35e69c18149",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "649afced-c6d2-4740-be16-0a9069a9c6cc",
+      "name": "List Models - default",
+      "request": {
+        "urlPathTemplate": "/api/v1/vision/models",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"data\": [\n    {\n      \"context_window\": 1,\n      \"id\": \"id\",\n      \"name\": \"name\",\n      \"object\": \"model\",\n      \"owned_by\": \"owned_by\",\n      \"pricing\": {\n        \"input\": \"input\",\n        \"output\": \"output\"\n      },\n      \"type\": \"type\"\n    }\n  ],\n  \"object\": \"list\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "649afced-c6d2-4740-be16-0a9069a9c6cc",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    }
+  ],
+  "meta": {
+    "total": 3
+  }
+}
