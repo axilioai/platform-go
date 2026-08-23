@@ -32,6 +32,8 @@ rsync -a --delete \
   --exclude='specs' \
   --exclude='scripts' \
   --exclude='drivers' \
+  --exclude='argus' \
+  --exclude='.gen-argus' \
   --exclude='contracts' \
   --exclude='.github' \
   --exclude='VERSION' \
