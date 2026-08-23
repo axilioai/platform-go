@@ -2171,7 +2171,7 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
-**telemetry:** `*bool` — Persist this session's telemetry spans (default true). false skips the durable trace store; the live telemetry stream still works while the session runs.
+**telemetry:** `*bool` — Emit this session's telemetry (default true). false suppresses telemetry entirely - no live trace stream and no durable trace store; the session dashboard shows a 'telemetry disabled' state.
     
 </dd>
 </dl>
@@ -2200,7 +2200,7 @@ client.Phones.Allocate(
 </details>
 
 ## Runs
-<details><summary><code>client.Runs.SessionsListEvents(SessionID) -> *platformgo.RunEventsResponse</code></summary>
+<details><summary><code>client.Runs.SessionsListFrames(SessionID) -> *platformgo.RunSessionFramesResponse</code></summary>
 <dl>
 <dd>
 
@@ -2212,7 +2212,7 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
-Returns the paginated event trace for a session (workflow runs and workflow-less interactive leases alike). Org-scoped: another org's session reads as not found.
+Returns the paginated telemetry frames for a session in the canonical frame envelope: one completed span frame per durable span (operations that never completed appear via their synthesized failed closures) plus log frames, ordered by span start / log time, with response-level billed-cost maps. This is the same envelope the live telemetry WebSocket streams; live and archive differ only in cardinality (start+end frames live, one completed frame here). Org-scoped: another org's session reads as not found. A trace past the organization's telemetry retention window returns an empty list with retention_expired=true; when the retention policy itself cannot be resolved the request fails with a 500 rather than serving frames whose retention state is unknown. Tolerant reader (unified frame contract): consumers MUST ignore frames with an unknown kind, unknown fields within known kinds, and unknown span_type/log_type values (render generically, never error). Generated SDK types surface an unrecognized frame as an explicit UnknownFrame variant carrying the raw JSON, never a silent drop. A live-stream message MAY carry a JSON array of frame objects; consumers MUST accept a single object or an array.
 </dd>
 </dl>
 </dd>
@@ -2227,10 +2227,10 @@ Returns the paginated event trace for a session (workflow runs and workflow-less
 <dd>
 
 ```go
-request := &platformgo.SessionsListEventsRequest{
+request := &platformgo.SessionsListFramesRequest{
         SessionID: "session_id",
     }
-client.Runs.SessionsListEvents(
+client.Runs.SessionsListFrames(
         context.TODO(),
         request,
     )
@@ -2249,7 +2249,7 @@ client.Runs.SessionsListEvents(
 <dl>
 <dd>
 
-**sessionID:** `string` — Session whose events to return.
+**sessionID:** `string` — Session whose frames to return.
     
 </dd>
 </dl>
@@ -2257,15 +2257,7 @@ client.Runs.SessionsListEvents(
 <dl>
 <dd>
 
-**eventTypes:** `[]string` — Restrict results to specific event type codes (RUN_STARTED / OUTPUT_LOG / SDK_CALL_COMPLETED / etc.).
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `*int64` — Maximum number of events to return (1-1000).
+**limit:** `*int64` — Maximum number of frames to return (1-1000).
     
 </dd>
 </dl>

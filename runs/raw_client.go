@@ -32,11 +32,11 @@ func NewRawClient(options *core.RequestOptions) *RawClient {
 	}
 }
 
-func (r *RawClient) SessionsListEvents(
+func (r *RawClient) SessionsListFrames(
 	ctx context.Context,
-	request *platformgo.SessionsListEventsRequest,
+	request *platformgo.SessionsListFramesRequest,
 	opts ...option.RequestOption,
-) (*core.Response[*platformgo.RunEventsResponse], error) {
+) (*core.Response[*platformgo.RunSessionFramesResponse], error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -44,7 +44,7 @@ func (r *RawClient) SessionsListEvents(
 		"/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
-		baseURL+"/phones/sessions/%v/events",
+		baseURL+"/phones/sessions/%v/frames",
 		request.SessionID,
 	)
 	queryParams, err := internal.QueryValues(request)
@@ -58,7 +58,7 @@ func (r *RawClient) SessionsListEvents(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
-	var response *platformgo.RunEventsResponse
+	var response *platformgo.RunSessionFramesResponse
 	raw, err := r.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -76,7 +76,7 @@ func (r *RawClient) SessionsListEvents(
 	if err != nil {
 		return nil, err
 	}
-	return &core.Response[*platformgo.RunEventsResponse]{
+	return &core.Response[*platformgo.RunSessionFramesResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
