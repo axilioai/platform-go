@@ -234,7 +234,7 @@ func summarize(sessionID string, trace *Trace) *Summary {
 		return summary
 	}
 	for _, ts := range trace.Spans {
-		spanEnd := ts.Span.EndTimeUnixNano
+		spanEnd := spanEndNano(ts.Span)
 		if spanEnd == 0 {
 			spanEnd = ts.Span.StartTimeUnixNano
 		}
@@ -354,10 +354,20 @@ func spanDuration(span *platformgo.RunSpanFrame) time.Duration {
 	if ns, ok := attrNumber(span.Attributes, attrDurationNs); ok && ns > 0 {
 		return time.Duration(ns)
 	}
-	if span.EndTimeUnixNano > span.StartTimeUnixNano {
-		return time.Duration(span.EndTimeUnixNano - span.StartTimeUnixNano)
+	if end := spanEndNano(span); end > span.StartTimeUnixNano {
+		return time.Duration(end - span.StartTimeUnixNano)
 	}
 	return 0
+}
+
+// spanEndNano reads a span's end time, mapping the omitted (in-flight) case
+// to 0 — the sentinel this package keys on. Since spec 0.82.0 the field is
+// optional on the wire: live start-phase frames carry no end time.
+func spanEndNano(span *platformgo.RunSpanFrame) int64 {
+	if span == nil || span.EndTimeUnixNano == nil {
+		return 0
+	}
+	return *span.EndTimeUnixNano
 }
 
 // attrNumber reads a numeric attribute, tolerating the JSON number types an
