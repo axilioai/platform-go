@@ -67,3 +67,20 @@ func (c *Client) GetMetrics(
 	}
 	return response.Body, nil
 }
+
+// Paginated, filterable list of the caller's phone sessions over a required time window (start_date/end_date), each row carrying billing detail: phone-time cost, inference cost, and combined total in microdollars, billing processing status, and allocation source. Filters: session status, billing processing status, workflow, allocation source, free-text search. Order with order_by ('<field> <asc|desc>').
+func (c *Client) ListSessions(
+	ctx context.Context,
+	request *platformgo.UsageListSessionsRequest,
+	opts ...option.RequestOption,
+) (*platformgo.UsageSessionsResponse, error) {
+	response, err := c.WithRawResponse.ListSessions(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}

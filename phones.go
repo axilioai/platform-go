@@ -224,6 +224,42 @@ func (p *PhoneAllocateRequest) MarshalJSON() ([]byte, error) {
 }
 
 var (
+	phonesAvailabilityRequestFieldPhoneType = big.NewInt(1 << 0)
+	phonesAvailabilityRequestFieldLocation  = big.NewInt(1 << 1)
+)
+
+type PhonesAvailabilityRequest struct {
+	// Only count phones of this platform.
+	PhoneType *PhonesAvailabilityRequestPhoneType `json:"-" url:"phone_type,omitempty"`
+	// Only count phones at this location slug.
+	Location *string `json:"-" url:"location,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (p *PhonesAvailabilityRequest) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetPhoneType sets the PhoneType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesAvailabilityRequest) SetPhoneType(phoneType *PhonesAvailabilityRequestPhoneType) {
+	p.PhoneType = phoneType
+	p.require(phonesAvailabilityRequestFieldPhoneType)
+}
+
+// SetLocation sets the Location field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesAvailabilityRequest) SetLocation(location *string) {
+	p.Location = location
+	p.require(phonesAvailabilityRequestFieldLocation)
+}
+
+var (
 	fileDeliveryCreateRequestFieldPhoneID    = big.NewInt(1 << 0)
 	fileDeliveryCreateRequestFieldCollection = big.NewInt(1 << 1)
 	fileDeliveryCreateRequestFieldFileID     = big.NewInt(1 << 2)
@@ -824,6 +860,32 @@ func (p *PhonesPreviewRequest) SetPhoneID(phoneID string) {
 }
 
 var (
+	phonesSessionLiveViewTokenRequestFieldSessionID = big.NewInt(1 << 0)
+)
+
+type PhonesSessionLiveViewTokenRequest struct {
+	// Phone session identifier
+	SessionID string `json:"-" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (p *PhonesSessionLiveViewTokenRequest) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetSessionID sets the SessionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesSessionLiveViewTokenRequest) SetSessionID(sessionID string) {
+	p.SessionID = sessionID
+	p.require(phonesSessionLiveViewTokenRequestFieldSessionID)
+}
+
+var (
 	phonesSessionRecordingRequestFieldSessionID = big.NewInt(1 << 0)
 )
 
@@ -847,6 +909,32 @@ func (p *PhonesSessionRecordingRequest) require(field *big.Int) {
 func (p *PhonesSessionRecordingRequest) SetSessionID(sessionID string) {
 	p.SessionID = sessionID
 	p.require(phonesSessionRecordingRequestFieldSessionID)
+}
+
+var (
+	phonesSessionTelemetryTokenRequestFieldSessionID = big.NewInt(1 << 0)
+)
+
+type PhonesSessionTelemetryTokenRequest struct {
+	// Phone session identifier
+	SessionID string `json:"-" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (p *PhonesSessionTelemetryTokenRequest) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetSessionID sets the SessionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhonesSessionTelemetryTokenRequest) SetSessionID(sessionID string) {
+	p.SessionID = sessionID
+	p.require(phonesSessionTelemetryTokenRequestFieldSessionID)
 }
 
 var (
@@ -2576,6 +2664,126 @@ func (p PhoneAppSummaryPlatform) Ptr() *PhoneAppSummaryPlatform {
 	return &p
 }
 
+// Phone availability summary: shared-pool capacity plus the caller org's dedicated idle counts. An advisory snapshot - allocation is the authority and can still refuse.
+var (
+	phoneAvailabilityResponseFieldSchema    = big.NewInt(1 << 0)
+	phoneAvailabilityResponseFieldDedicated = big.NewInt(1 << 1)
+	phoneAvailabilityResponseFieldShared    = big.NewInt(1 << 2)
+)
+
+type PhoneAvailabilityResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// The caller org's dedicated phones.
+	Dedicated *PhoneDedicatedAvailability `json:"dedicated" url:"dedicated"`
+	// Shared-pool availability, fleet-wide.
+	Shared *PhoneSharedAvailability `json:"shared" url:"shared"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhoneAvailabilityResponse) GetSchema() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Schema
+}
+
+func (p *PhoneAvailabilityResponse) GetDedicated() *PhoneDedicatedAvailability {
+	if p == nil {
+		return nil
+	}
+	return p.Dedicated
+}
+
+func (p *PhoneAvailabilityResponse) GetShared() *PhoneSharedAvailability {
+	if p == nil {
+		return nil
+	}
+	return p.Shared
+}
+
+func (p *PhoneAvailabilityResponse) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneAvailabilityResponse) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneAvailabilityResponse) SetSchema(schema *string) {
+	p.Schema = schema
+	p.require(phoneAvailabilityResponseFieldSchema)
+}
+
+// SetDedicated sets the Dedicated field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneAvailabilityResponse) SetDedicated(dedicated *PhoneDedicatedAvailability) {
+	p.Dedicated = dedicated
+	p.require(phoneAvailabilityResponseFieldDedicated)
+}
+
+// SetShared sets the Shared field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneAvailabilityResponse) SetShared(shared *PhoneSharedAvailability) {
+	p.Shared = shared
+	p.require(phoneAvailabilityResponseFieldShared)
+}
+
+func (p *PhoneAvailabilityResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneAvailabilityResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PhoneAvailabilityResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhoneAvailabilityResponse) MarshalJSON() ([]byte, error) {
+	type embed PhoneAvailabilityResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhoneAvailabilityResponse) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
 // Returned after a device has been successfully deallocated.
 var (
 	phoneDeallocateResponseFieldSchema        = big.NewInt(1 << 0)
@@ -2738,6 +2946,246 @@ func (p *PhoneDeallocateResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
+// The caller org's dedicated-phone availability summary.
+var (
+	phoneDedicatedAvailabilityFieldByType = big.NewInt(1 << 0)
+	phoneDedicatedAvailabilityFieldIdle   = big.NewInt(1 << 1)
+	phoneDedicatedAvailabilityFieldTotal  = big.NewInt(1 << 2)
+)
+
+type PhoneDedicatedAvailability struct {
+	// Counts per phone type.
+	ByType []*PhoneDedicatedTypeAvailabilityEntry `json:"by_type,omitempty" url:"by_type,omitempty"`
+	// Dedicated phones claimable right now.
+	Idle int64 `json:"idle" url:"idle"`
+	// Active dedicated phones with a usable rental.
+	Total int64 `json:"total" url:"total"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhoneDedicatedAvailability) GetByType() []*PhoneDedicatedTypeAvailabilityEntry {
+	if p == nil {
+		return nil
+	}
+	return p.ByType
+}
+
+func (p *PhoneDedicatedAvailability) GetIdle() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Idle
+}
+
+func (p *PhoneDedicatedAvailability) GetTotal() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Total
+}
+
+func (p *PhoneDedicatedAvailability) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneDedicatedAvailability) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetByType sets the ByType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneDedicatedAvailability) SetByType(byType []*PhoneDedicatedTypeAvailabilityEntry) {
+	p.ByType = byType
+	p.require(phoneDedicatedAvailabilityFieldByType)
+}
+
+// SetIdle sets the Idle field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneDedicatedAvailability) SetIdle(idle int64) {
+	p.Idle = idle
+	p.require(phoneDedicatedAvailabilityFieldIdle)
+}
+
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneDedicatedAvailability) SetTotal(total int64) {
+	p.Total = total
+	p.require(phoneDedicatedAvailabilityFieldTotal)
+}
+
+func (p *PhoneDedicatedAvailability) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneDedicatedAvailability
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PhoneDedicatedAvailability(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhoneDedicatedAvailability) MarshalJSON() ([]byte, error) {
+	type embed PhoneDedicatedAvailability
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhoneDedicatedAvailability) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// The caller org's dedicated phones for one phone type.
+var (
+	phoneDedicatedTypeAvailabilityEntryFieldIdle      = big.NewInt(1 << 0)
+	phoneDedicatedTypeAvailabilityEntryFieldPhoneType = big.NewInt(1 << 1)
+	phoneDedicatedTypeAvailabilityEntryFieldTotal     = big.NewInt(1 << 2)
+)
+
+type PhoneDedicatedTypeAvailabilityEntry struct {
+	// Phones claimable right now: active, unallocated, rental still usable.
+	Idle int64 `json:"idle" url:"idle"`
+	// Phone platform (android/iphone).
+	PhoneType string `json:"phone_type" url:"phone_type"`
+	// Active dedicated phones of this type with a usable rental.
+	Total int64 `json:"total" url:"total"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhoneDedicatedTypeAvailabilityEntry) GetIdle() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Idle
+}
+
+func (p *PhoneDedicatedTypeAvailabilityEntry) GetPhoneType() string {
+	if p == nil {
+		return ""
+	}
+	return p.PhoneType
+}
+
+func (p *PhoneDedicatedTypeAvailabilityEntry) GetTotal() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Total
+}
+
+func (p *PhoneDedicatedTypeAvailabilityEntry) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneDedicatedTypeAvailabilityEntry) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetIdle sets the Idle field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneDedicatedTypeAvailabilityEntry) SetIdle(idle int64) {
+	p.Idle = idle
+	p.require(phoneDedicatedTypeAvailabilityEntryFieldIdle)
+}
+
+// SetPhoneType sets the PhoneType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneDedicatedTypeAvailabilityEntry) SetPhoneType(phoneType string) {
+	p.PhoneType = phoneType
+	p.require(phoneDedicatedTypeAvailabilityEntryFieldPhoneType)
+}
+
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneDedicatedTypeAvailabilityEntry) SetTotal(total int64) {
+	p.Total = total
+	p.require(phoneDedicatedTypeAvailabilityEntryFieldTotal)
+}
+
+func (p *PhoneDedicatedTypeAvailabilityEntry) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneDedicatedTypeAvailabilityEntry
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PhoneDedicatedTypeAvailabilityEntry(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhoneDedicatedTypeAvailabilityEntry) MarshalJSON() ([]byte, error) {
+	type embed PhoneDedicatedTypeAvailabilityEntry
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhoneDedicatedTypeAvailabilityEntry) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
 // Per-session options for the hosted live view.
 var (
 	phoneLiveViewOptionsFieldAuth     = big.NewInt(1 << 0)
@@ -2879,6 +3327,348 @@ func NewPhoneLiveViewOptionsAuthFromString(s string) (PhoneLiveViewOptionsAuth, 
 
 func (p PhoneLiveViewOptionsAuth) Ptr() *PhoneLiveViewOptionsAuth {
 	return &p
+}
+
+// Live-view token mint response.
+var (
+	phoneLiveViewTokenResponseFieldSchema      = big.NewInt(1 << 0)
+	phoneLiveViewTokenResponseFieldLiveViewURL = big.NewInt(1 << 1)
+	phoneLiveViewTokenResponseFieldPhoneID     = big.NewInt(1 << 2)
+	phoneLiveViewTokenResponseFieldSessionID   = big.NewInt(1 << 3)
+	phoneLiveViewTokenResponseFieldToken       = big.NewInt(1 << 4)
+	phoneLiveViewTokenResponseFieldViewOnly    = big.NewInt(1 << 5)
+)
+
+type PhoneLiveViewTokenResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Hosted live-view page URL embedding this token (live screen + interaction, iframe-embeddable). Bearer capability; treat as a secret. Dies with the session.
+	LiveViewURL string `json:"live_view_url" url:"live_view_url"`
+	// The session's phone.
+	PhoneID string `json:"phone_id" url:"phone_id"`
+	// Session the token is scoped to.
+	SessionID string `json:"session_id" url:"session_id"`
+	// Allocation-scoped live-view token.
+	Token string `json:"token" url:"token"`
+	// Whether the session's live view is watch-only.
+	ViewOnly bool `json:"view_only" url:"view_only"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhoneLiveViewTokenResponse) GetSchema() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Schema
+}
+
+func (p *PhoneLiveViewTokenResponse) GetLiveViewURL() string {
+	if p == nil {
+		return ""
+	}
+	return p.LiveViewURL
+}
+
+func (p *PhoneLiveViewTokenResponse) GetPhoneID() string {
+	if p == nil {
+		return ""
+	}
+	return p.PhoneID
+}
+
+func (p *PhoneLiveViewTokenResponse) GetSessionID() string {
+	if p == nil {
+		return ""
+	}
+	return p.SessionID
+}
+
+func (p *PhoneLiveViewTokenResponse) GetToken() string {
+	if p == nil {
+		return ""
+	}
+	return p.Token
+}
+
+func (p *PhoneLiveViewTokenResponse) GetViewOnly() bool {
+	if p == nil {
+		return false
+	}
+	return p.ViewOnly
+}
+
+func (p *PhoneLiveViewTokenResponse) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneLiveViewTokenResponse) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLiveViewTokenResponse) SetSchema(schema *string) {
+	p.Schema = schema
+	p.require(phoneLiveViewTokenResponseFieldSchema)
+}
+
+// SetLiveViewURL sets the LiveViewURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLiveViewTokenResponse) SetLiveViewURL(liveViewURL string) {
+	p.LiveViewURL = liveViewURL
+	p.require(phoneLiveViewTokenResponseFieldLiveViewURL)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLiveViewTokenResponse) SetPhoneID(phoneID string) {
+	p.PhoneID = phoneID
+	p.require(phoneLiveViewTokenResponseFieldPhoneID)
+}
+
+// SetSessionID sets the SessionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLiveViewTokenResponse) SetSessionID(sessionID string) {
+	p.SessionID = sessionID
+	p.require(phoneLiveViewTokenResponseFieldSessionID)
+}
+
+// SetToken sets the Token field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLiveViewTokenResponse) SetToken(token string) {
+	p.Token = token
+	p.require(phoneLiveViewTokenResponseFieldToken)
+}
+
+// SetViewOnly sets the ViewOnly field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLiveViewTokenResponse) SetViewOnly(viewOnly bool) {
+	p.ViewOnly = viewOnly
+	p.require(phoneLiveViewTokenResponseFieldViewOnly)
+}
+
+func (p *PhoneLiveViewTokenResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneLiveViewTokenResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PhoneLiveViewTokenResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhoneLiveViewTokenResponse) MarshalJSON() ([]byte, error) {
+	type embed PhoneLiveViewTokenResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhoneLiveViewTokenResponse) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// Shared-pool availability at a single location.
+var (
+	phoneLocationAvailabilityEntryFieldAvailable = big.NewInt(1 << 0)
+	phoneLocationAvailabilityEntryFieldCity      = big.NewInt(1 << 1)
+	phoneLocationAvailabilityEntryFieldLocation  = big.NewInt(1 << 2)
+	phoneLocationAvailabilityEntryFieldRegion    = big.NewInt(1 << 3)
+	phoneLocationAvailabilityEntryFieldState     = big.NewInt(1 << 4)
+	phoneLocationAvailabilityEntryFieldTotal     = big.NewInt(1 << 5)
+)
+
+type PhoneLocationAvailabilityEntry struct {
+	// Phones free to allocate at this location right now.
+	Available int64 `json:"available" url:"available"`
+	// City name for this location.
+	City string `json:"city" url:"city"`
+	// Location slug identifier.
+	Location string `json:"location" url:"location"`
+	// Broader geographic region label.
+	Region string `json:"region" url:"region"`
+	// State or region name for this location.
+	State string `json:"state" url:"state"`
+	// Active shared phones at this location.
+	Total int64 `json:"total" url:"total"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhoneLocationAvailabilityEntry) GetAvailable() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Available
+}
+
+func (p *PhoneLocationAvailabilityEntry) GetCity() string {
+	if p == nil {
+		return ""
+	}
+	return p.City
+}
+
+func (p *PhoneLocationAvailabilityEntry) GetLocation() string {
+	if p == nil {
+		return ""
+	}
+	return p.Location
+}
+
+func (p *PhoneLocationAvailabilityEntry) GetRegion() string {
+	if p == nil {
+		return ""
+	}
+	return p.Region
+}
+
+func (p *PhoneLocationAvailabilityEntry) GetState() string {
+	if p == nil {
+		return ""
+	}
+	return p.State
+}
+
+func (p *PhoneLocationAvailabilityEntry) GetTotal() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Total
+}
+
+func (p *PhoneLocationAvailabilityEntry) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneLocationAvailabilityEntry) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetAvailable sets the Available field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLocationAvailabilityEntry) SetAvailable(available int64) {
+	p.Available = available
+	p.require(phoneLocationAvailabilityEntryFieldAvailable)
+}
+
+// SetCity sets the City field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLocationAvailabilityEntry) SetCity(city string) {
+	p.City = city
+	p.require(phoneLocationAvailabilityEntryFieldCity)
+}
+
+// SetLocation sets the Location field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLocationAvailabilityEntry) SetLocation(location string) {
+	p.Location = location
+	p.require(phoneLocationAvailabilityEntryFieldLocation)
+}
+
+// SetRegion sets the Region field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLocationAvailabilityEntry) SetRegion(region string) {
+	p.Region = region
+	p.require(phoneLocationAvailabilityEntryFieldRegion)
+}
+
+// SetState sets the State field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLocationAvailabilityEntry) SetState(state string) {
+	p.State = state
+	p.require(phoneLocationAvailabilityEntryFieldState)
+}
+
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneLocationAvailabilityEntry) SetTotal(total int64) {
+	p.Total = total
+	p.require(phoneLocationAvailabilityEntryFieldTotal)
+}
+
+func (p *PhoneLocationAvailabilityEntry) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneLocationAvailabilityEntry
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PhoneLocationAvailabilityEntry(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhoneLocationAvailabilityEntry) MarshalJSON() ([]byte, error) {
+	type embed PhoneLocationAvailabilityEntry
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhoneLocationAvailabilityEntry) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
 }
 
 // Phone preview lookup result.
@@ -4852,6 +5642,143 @@ func (p *PhoneSessionTTLOptions) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
+// Shared-pool availability summary.
+var (
+	phoneSharedAvailabilityFieldAvailable  = big.NewInt(1 << 0)
+	phoneSharedAvailabilityFieldByLocation = big.NewInt(1 << 1)
+	phoneSharedAvailabilityFieldByType     = big.NewInt(1 << 2)
+	phoneSharedAvailabilityFieldTotal      = big.NewInt(1 << 3)
+)
+
+type PhoneSharedAvailability struct {
+	// Shared phones free to allocate right now, across every type and location in the response.
+	Available int64 `json:"available" url:"available"`
+	// Counts per active location; locations with zero shared phones still appear.
+	ByLocation []*PhoneLocationAvailabilityEntry `json:"by_location,omitempty" url:"by_location,omitempty"`
+	// Counts per phone type.
+	ByType []*PhoneTypeAvailabilityEntry `json:"by_type,omitempty" url:"by_type,omitempty"`
+	// Active shared phones, across every type and location in the response.
+	Total int64 `json:"total" url:"total"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhoneSharedAvailability) GetAvailable() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Available
+}
+
+func (p *PhoneSharedAvailability) GetByLocation() []*PhoneLocationAvailabilityEntry {
+	if p == nil {
+		return nil
+	}
+	return p.ByLocation
+}
+
+func (p *PhoneSharedAvailability) GetByType() []*PhoneTypeAvailabilityEntry {
+	if p == nil {
+		return nil
+	}
+	return p.ByType
+}
+
+func (p *PhoneSharedAvailability) GetTotal() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Total
+}
+
+func (p *PhoneSharedAvailability) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneSharedAvailability) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetAvailable sets the Available field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSharedAvailability) SetAvailable(available int64) {
+	p.Available = available
+	p.require(phoneSharedAvailabilityFieldAvailable)
+}
+
+// SetByLocation sets the ByLocation field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSharedAvailability) SetByLocation(byLocation []*PhoneLocationAvailabilityEntry) {
+	p.ByLocation = byLocation
+	p.require(phoneSharedAvailabilityFieldByLocation)
+}
+
+// SetByType sets the ByType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSharedAvailability) SetByType(byType []*PhoneTypeAvailabilityEntry) {
+	p.ByType = byType
+	p.require(phoneSharedAvailabilityFieldByType)
+}
+
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSharedAvailability) SetTotal(total int64) {
+	p.Total = total
+	p.require(phoneSharedAvailabilityFieldTotal)
+}
+
+func (p *PhoneSharedAvailability) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneSharedAvailability
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PhoneSharedAvailability(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhoneSharedAvailability) MarshalJSON() ([]byte, error) {
+	type embed PhoneSharedAvailability
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhoneSharedAvailability) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
 // Generic success message response.
 var (
 	phoneSuccessResponseFieldSchema  = big.NewInt(1 << 0)
@@ -5535,6 +6462,246 @@ func (p *PhoneSupportedAppsResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
+// Telemetry-token mint response.
+var (
+	phoneTelemetryTokenResponseFieldSchema       = big.NewInt(1 << 0)
+	phoneTelemetryTokenResponseFieldSessionID    = big.NewInt(1 << 1)
+	phoneTelemetryTokenResponseFieldTelemetryURL = big.NewInt(1 << 2)
+)
+
+type PhoneTelemetryTokenResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Session the URL is scoped to.
+	SessionID string `json:"session_id" url:"session_id"`
+	// WebSocket URL for the session's live telemetry stream (trace spans + output logs, read-only). Dies with the session.
+	TelemetryURL string `json:"telemetry_url" url:"telemetry_url"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhoneTelemetryTokenResponse) GetSchema() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Schema
+}
+
+func (p *PhoneTelemetryTokenResponse) GetSessionID() string {
+	if p == nil {
+		return ""
+	}
+	return p.SessionID
+}
+
+func (p *PhoneTelemetryTokenResponse) GetTelemetryURL() string {
+	if p == nil {
+		return ""
+	}
+	return p.TelemetryURL
+}
+
+func (p *PhoneTelemetryTokenResponse) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneTelemetryTokenResponse) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneTelemetryTokenResponse) SetSchema(schema *string) {
+	p.Schema = schema
+	p.require(phoneTelemetryTokenResponseFieldSchema)
+}
+
+// SetSessionID sets the SessionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneTelemetryTokenResponse) SetSessionID(sessionID string) {
+	p.SessionID = sessionID
+	p.require(phoneTelemetryTokenResponseFieldSessionID)
+}
+
+// SetTelemetryURL sets the TelemetryURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneTelemetryTokenResponse) SetTelemetryURL(telemetryURL string) {
+	p.TelemetryURL = telemetryURL
+	p.require(phoneTelemetryTokenResponseFieldTelemetryURL)
+}
+
+func (p *PhoneTelemetryTokenResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneTelemetryTokenResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PhoneTelemetryTokenResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhoneTelemetryTokenResponse) MarshalJSON() ([]byte, error) {
+	type embed PhoneTelemetryTokenResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhoneTelemetryTokenResponse) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// Shared-pool availability for one phone type.
+var (
+	phoneTypeAvailabilityEntryFieldAvailable = big.NewInt(1 << 0)
+	phoneTypeAvailabilityEntryFieldPhoneType = big.NewInt(1 << 1)
+	phoneTypeAvailabilityEntryFieldTotal     = big.NewInt(1 << 2)
+)
+
+type PhoneTypeAvailabilityEntry struct {
+	// Phones free to allocate right now.
+	Available int64 `json:"available" url:"available"`
+	// Phone platform (android/iphone).
+	PhoneType string `json:"phone_type" url:"phone_type"`
+	// Active phones of this type in the shared pool.
+	Total int64 `json:"total" url:"total"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhoneTypeAvailabilityEntry) GetAvailable() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Available
+}
+
+func (p *PhoneTypeAvailabilityEntry) GetPhoneType() string {
+	if p == nil {
+		return ""
+	}
+	return p.PhoneType
+}
+
+func (p *PhoneTypeAvailabilityEntry) GetTotal() int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Total
+}
+
+func (p *PhoneTypeAvailabilityEntry) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneTypeAvailabilityEntry) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetAvailable sets the Available field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneTypeAvailabilityEntry) SetAvailable(available int64) {
+	p.Available = available
+	p.require(phoneTypeAvailabilityEntryFieldAvailable)
+}
+
+// SetPhoneType sets the PhoneType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneTypeAvailabilityEntry) SetPhoneType(phoneType string) {
+	p.PhoneType = phoneType
+	p.require(phoneTypeAvailabilityEntryFieldPhoneType)
+}
+
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneTypeAvailabilityEntry) SetTotal(total int64) {
+	p.Total = total
+	p.require(phoneTypeAvailabilityEntryFieldTotal)
+}
+
+func (p *PhoneTypeAvailabilityEntry) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneTypeAvailabilityEntry
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PhoneTypeAvailabilityEntry(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhoneTypeAvailabilityEntry) MarshalJSON() ([]byte, error) {
+	type embed PhoneTypeAvailabilityEntry
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhoneTypeAvailabilityEntry) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
 // Media collection to insert into on the phone; defaults to Pictures for images and Movies for videos.
 type FileDeliveryCreateRequestCollection string
 
@@ -5601,6 +6768,29 @@ func NewPhoneAllocateRequestPoolFromString(s string) (PhoneAllocateRequestPool, 
 }
 
 func (p PhoneAllocateRequestPool) Ptr() *PhoneAllocateRequestPool {
+	return &p
+}
+
+// Only count phones of this platform.
+type PhonesAvailabilityRequestPhoneType string
+
+const (
+	PhonesAvailabilityRequestPhoneTypeAndroid PhonesAvailabilityRequestPhoneType = "android"
+	PhonesAvailabilityRequestPhoneTypeIphone  PhonesAvailabilityRequestPhoneType = "iphone"
+)
+
+func NewPhonesAvailabilityRequestPhoneTypeFromString(s string) (PhonesAvailabilityRequestPhoneType, error) {
+	switch s {
+	case "android":
+		return PhonesAvailabilityRequestPhoneTypeAndroid, nil
+	case "iphone":
+		return PhonesAvailabilityRequestPhoneTypeIphone, nil
+	}
+	var t PhonesAvailabilityRequestPhoneType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhonesAvailabilityRequestPhoneType) Ptr() *PhonesAvailabilityRequestPhoneType {
 	return &p
 }
 

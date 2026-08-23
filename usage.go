@@ -172,6 +172,122 @@ func (u *UsageListInferencesRequest) SetOrderBy(orderBy *string) {
 	u.require(usageListInferencesRequestFieldOrderBy)
 }
 
+var (
+	usageListSessionsRequestFieldStartDate             = big.NewInt(1 << 0)
+	usageListSessionsRequestFieldEndDate               = big.NewInt(1 << 1)
+	usageListSessionsRequestFieldLimit                 = big.NewInt(1 << 2)
+	usageListSessionsRequestFieldOffset                = big.NewInt(1 << 3)
+	usageListSessionsRequestFieldSessionStatusFilter   = big.NewInt(1 << 4)
+	usageListSessionsRequestFieldProcessedStatusFilter = big.NewInt(1 << 5)
+	usageListSessionsRequestFieldWorkflowID            = big.NewInt(1 << 6)
+	usageListSessionsRequestFieldAllocatedBy           = big.NewInt(1 << 7)
+	usageListSessionsRequestFieldSearch                = big.NewInt(1 << 8)
+	usageListSessionsRequestFieldOrderBy               = big.NewInt(1 << 9)
+)
+
+type UsageListSessionsRequest struct {
+	// Beginning of the sessions query window (RFC 3339).
+	StartDate time.Time `json:"-" url:"start_date"`
+	// End of the sessions query window (RFC 3339).
+	EndDate time.Time `json:"-" url:"end_date"`
+	// Number of sessions per page (1-100).
+	Limit *int64 `json:"-" url:"limit,omitempty"`
+	// Pagination offset.
+	Offset *int64 `json:"-" url:"offset,omitempty"`
+	// Restrict results to the given session lifecycle statuses.
+	SessionStatusFilter []string `json:"-" url:"session_status_filter,omitempty"`
+	// Restrict results to the given billing processing statuses.
+	ProcessedStatusFilter []string `json:"-" url:"processed_status_filter,omitempty"`
+	// Restrict results to sessions of a single workflow.
+	WorkflowID *string `json:"-" url:"workflow_id,omitempty"`
+	// Restrict results to the given allocation sources.
+	AllocatedBy []string `json:"-" url:"allocated_by,omitempty"`
+	// Filter by session, workflow, or phone id substring.
+	Search *string `json:"-" url:"search,omitempty"`
+	// Sort expression '<field> <asc|desc>'; field one of allocated_at, deallocated_at, duration, cost_microdollars, session_status, processed_status, allocated_by, session_id, workflow_id. Defaults to allocated_at desc.
+	OrderBy *string `json:"-" url:"order_by,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (u *UsageListSessionsRequest) require(field *big.Int) {
+	if u.explicitFields == nil {
+		u.explicitFields = big.NewInt(0)
+	}
+	u.explicitFields.Or(u.explicitFields, field)
+}
+
+// SetStartDate sets the StartDate field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetStartDate(startDate time.Time) {
+	u.StartDate = startDate
+	u.require(usageListSessionsRequestFieldStartDate)
+}
+
+// SetEndDate sets the EndDate field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetEndDate(endDate time.Time) {
+	u.EndDate = endDate
+	u.require(usageListSessionsRequestFieldEndDate)
+}
+
+// SetLimit sets the Limit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetLimit(limit *int64) {
+	u.Limit = limit
+	u.require(usageListSessionsRequestFieldLimit)
+}
+
+// SetOffset sets the Offset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetOffset(offset *int64) {
+	u.Offset = offset
+	u.require(usageListSessionsRequestFieldOffset)
+}
+
+// SetSessionStatusFilter sets the SessionStatusFilter field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetSessionStatusFilter(sessionStatusFilter []string) {
+	u.SessionStatusFilter = sessionStatusFilter
+	u.require(usageListSessionsRequestFieldSessionStatusFilter)
+}
+
+// SetProcessedStatusFilter sets the ProcessedStatusFilter field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetProcessedStatusFilter(processedStatusFilter []string) {
+	u.ProcessedStatusFilter = processedStatusFilter
+	u.require(usageListSessionsRequestFieldProcessedStatusFilter)
+}
+
+// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetWorkflowID(workflowID *string) {
+	u.WorkflowID = workflowID
+	u.require(usageListSessionsRequestFieldWorkflowID)
+}
+
+// SetAllocatedBy sets the AllocatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetAllocatedBy(allocatedBy []string) {
+	u.AllocatedBy = allocatedBy
+	u.require(usageListSessionsRequestFieldAllocatedBy)
+}
+
+// SetSearch sets the Search field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetSearch(search *string) {
+	u.Search = search
+	u.require(usageListSessionsRequestFieldSearch)
+}
+
+// SetOrderBy sets the OrderBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageListSessionsRequest) SetOrderBy(orderBy *string) {
+	u.OrderBy = orderBy
+	u.require(usageListSessionsRequestFieldOrderBy)
+}
+
 // Single time-series value for usage charts.
 var (
 	usageChartDataPointFieldIsCurrent = big.NewInt(1 << 0)
@@ -1413,6 +1529,484 @@ func NewUsageMetricsResponseGranularityFromString(s string) (UsageMetricsRespons
 
 func (u UsageMetricsResponseGranularity) Ptr() *UsageMetricsResponseGranularity {
 	return &u
+}
+
+// Single phone-session record from the usage sessions endpoint.
+var (
+	usageSessionFieldAllocatedAt               = big.NewInt(1 << 0)
+	usageSessionFieldAllocatedBy               = big.NewInt(1 << 1)
+	usageSessionFieldBillingPlanID             = big.NewInt(1 << 2)
+	usageSessionFieldCostMicrodollars          = big.NewInt(1 << 3)
+	usageSessionFieldDeallocatedAt             = big.NewInt(1 << 4)
+	usageSessionFieldDurationSeconds           = big.NewInt(1 << 5)
+	usageSessionFieldInferenceCostMicrodollars = big.NewInt(1 << 6)
+	usageSessionFieldIsDedicatedPhone          = big.NewInt(1 << 7)
+	usageSessionFieldPhoneID                   = big.NewInt(1 << 8)
+	usageSessionFieldProcessedStatus           = big.NewInt(1 << 9)
+	usageSessionFieldSessionID                 = big.NewInt(1 << 10)
+	usageSessionFieldSessionMetadata           = big.NewInt(1 << 11)
+	usageSessionFieldSessionStatus             = big.NewInt(1 << 12)
+	usageSessionFieldTotalCostMicrodollars     = big.NewInt(1 << 13)
+	usageSessionFieldWorkflowID                = big.NewInt(1 << 14)
+)
+
+type UsageSession struct {
+	// ISO 8601 timestamp when the phone was allocated.
+	AllocatedAt *string `json:"allocated_at,omitempty" url:"allocated_at,omitempty"`
+	// AllocatedBy identifies what triggered the session's allocation.
+	AllocatedBy *string `json:"allocated_by,omitempty" url:"allocated_by,omitempty"`
+	// Billing plan active during the session.
+	BillingPlanID *string `json:"billing_plan_id,omitempty" url:"billing_plan_id,omitempty"`
+	// Phone-time cost charged for this session in microdollars.
+	CostMicrodollars int64 `json:"cost_microdollars" url:"cost_microdollars"`
+	// ISO 8601 timestamp when the phone was released.
+	DeallocatedAt *string `json:"deallocated_at,omitempty" url:"deallocated_at,omitempty"`
+	// Session duration in seconds.
+	DurationSeconds *int64 `json:"duration_seconds,omitempty" url:"duration_seconds,omitempty"`
+	// Inference spend attributable to this session (sum of the argus calls made under it).
+	InferenceCostMicrodollars int64 `json:"inference_cost_microdollars" url:"inference_cost_microdollars"`
+	// Whether the session used a dedicated pre-paid phone.
+	IsDedicatedPhone bool `json:"is_dedicated_phone" url:"is_dedicated_phone"`
+	// Phone claimed by the session.
+	PhoneID string `json:"phone_id" url:"phone_id"`
+	// Billing processing status (e.g., 'billed').
+	ProcessedStatus *string `json:"processed_status,omitempty" url:"processed_status,omitempty"`
+	// Unique session identifier.
+	SessionID string `json:"session_id" url:"session_id"`
+	// Arbitrary metadata attached to the session.
+	SessionMetadata map[string]any `json:"session_metadata,omitempty" url:"session_metadata,omitempty"`
+	// Session lifecycle status (e.g., 'completed').
+	SessionStatus *string `json:"session_status,omitempty" url:"session_status,omitempty"`
+	// Session's all-in cost: phone time + inference.
+	TotalCostMicrodollars int64 `json:"total_cost_microdollars" url:"total_cost_microdollars"`
+	// Associated workflow identifier.
+	WorkflowID string `json:"workflow_id" url:"workflow_id"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (u *UsageSession) GetAllocatedAt() *string {
+	if u == nil {
+		return nil
+	}
+	return u.AllocatedAt
+}
+
+func (u *UsageSession) GetAllocatedBy() *string {
+	if u == nil {
+		return nil
+	}
+	return u.AllocatedBy
+}
+
+func (u *UsageSession) GetBillingPlanID() *string {
+	if u == nil {
+		return nil
+	}
+	return u.BillingPlanID
+}
+
+func (u *UsageSession) GetCostMicrodollars() int64 {
+	if u == nil {
+		return 0
+	}
+	return u.CostMicrodollars
+}
+
+func (u *UsageSession) GetDeallocatedAt() *string {
+	if u == nil {
+		return nil
+	}
+	return u.DeallocatedAt
+}
+
+func (u *UsageSession) GetDurationSeconds() *int64 {
+	if u == nil {
+		return nil
+	}
+	return u.DurationSeconds
+}
+
+func (u *UsageSession) GetInferenceCostMicrodollars() int64 {
+	if u == nil {
+		return 0
+	}
+	return u.InferenceCostMicrodollars
+}
+
+func (u *UsageSession) GetIsDedicatedPhone() bool {
+	if u == nil {
+		return false
+	}
+	return u.IsDedicatedPhone
+}
+
+func (u *UsageSession) GetPhoneID() string {
+	if u == nil {
+		return ""
+	}
+	return u.PhoneID
+}
+
+func (u *UsageSession) GetProcessedStatus() *string {
+	if u == nil {
+		return nil
+	}
+	return u.ProcessedStatus
+}
+
+func (u *UsageSession) GetSessionID() string {
+	if u == nil {
+		return ""
+	}
+	return u.SessionID
+}
+
+func (u *UsageSession) GetSessionMetadata() map[string]any {
+	if u == nil {
+		return nil
+	}
+	return u.SessionMetadata
+}
+
+func (u *UsageSession) GetSessionStatus() *string {
+	if u == nil {
+		return nil
+	}
+	return u.SessionStatus
+}
+
+func (u *UsageSession) GetTotalCostMicrodollars() int64 {
+	if u == nil {
+		return 0
+	}
+	return u.TotalCostMicrodollars
+}
+
+func (u *UsageSession) GetWorkflowID() string {
+	if u == nil {
+		return ""
+	}
+	return u.WorkflowID
+}
+
+func (u *UsageSession) GetExtraProperties() map[string]interface{} {
+	if u == nil {
+		return nil
+	}
+	return u.extraProperties
+}
+
+func (u *UsageSession) require(field *big.Int) {
+	if u.explicitFields == nil {
+		u.explicitFields = big.NewInt(0)
+	}
+	u.explicitFields.Or(u.explicitFields, field)
+}
+
+// SetAllocatedAt sets the AllocatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetAllocatedAt(allocatedAt *string) {
+	u.AllocatedAt = allocatedAt
+	u.require(usageSessionFieldAllocatedAt)
+}
+
+// SetAllocatedBy sets the AllocatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetAllocatedBy(allocatedBy *string) {
+	u.AllocatedBy = allocatedBy
+	u.require(usageSessionFieldAllocatedBy)
+}
+
+// SetBillingPlanID sets the BillingPlanID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetBillingPlanID(billingPlanID *string) {
+	u.BillingPlanID = billingPlanID
+	u.require(usageSessionFieldBillingPlanID)
+}
+
+// SetCostMicrodollars sets the CostMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetCostMicrodollars(costMicrodollars int64) {
+	u.CostMicrodollars = costMicrodollars
+	u.require(usageSessionFieldCostMicrodollars)
+}
+
+// SetDeallocatedAt sets the DeallocatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetDeallocatedAt(deallocatedAt *string) {
+	u.DeallocatedAt = deallocatedAt
+	u.require(usageSessionFieldDeallocatedAt)
+}
+
+// SetDurationSeconds sets the DurationSeconds field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetDurationSeconds(durationSeconds *int64) {
+	u.DurationSeconds = durationSeconds
+	u.require(usageSessionFieldDurationSeconds)
+}
+
+// SetInferenceCostMicrodollars sets the InferenceCostMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetInferenceCostMicrodollars(inferenceCostMicrodollars int64) {
+	u.InferenceCostMicrodollars = inferenceCostMicrodollars
+	u.require(usageSessionFieldInferenceCostMicrodollars)
+}
+
+// SetIsDedicatedPhone sets the IsDedicatedPhone field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetIsDedicatedPhone(isDedicatedPhone bool) {
+	u.IsDedicatedPhone = isDedicatedPhone
+	u.require(usageSessionFieldIsDedicatedPhone)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetPhoneID(phoneID string) {
+	u.PhoneID = phoneID
+	u.require(usageSessionFieldPhoneID)
+}
+
+// SetProcessedStatus sets the ProcessedStatus field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetProcessedStatus(processedStatus *string) {
+	u.ProcessedStatus = processedStatus
+	u.require(usageSessionFieldProcessedStatus)
+}
+
+// SetSessionID sets the SessionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetSessionID(sessionID string) {
+	u.SessionID = sessionID
+	u.require(usageSessionFieldSessionID)
+}
+
+// SetSessionMetadata sets the SessionMetadata field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetSessionMetadata(sessionMetadata map[string]any) {
+	u.SessionMetadata = sessionMetadata
+	u.require(usageSessionFieldSessionMetadata)
+}
+
+// SetSessionStatus sets the SessionStatus field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetSessionStatus(sessionStatus *string) {
+	u.SessionStatus = sessionStatus
+	u.require(usageSessionFieldSessionStatus)
+}
+
+// SetTotalCostMicrodollars sets the TotalCostMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetTotalCostMicrodollars(totalCostMicrodollars int64) {
+	u.TotalCostMicrodollars = totalCostMicrodollars
+	u.require(usageSessionFieldTotalCostMicrodollars)
+}
+
+// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetWorkflowID(workflowID string) {
+	u.WorkflowID = workflowID
+	u.require(usageSessionFieldWorkflowID)
+}
+
+func (u *UsageSession) UnmarshalJSON(data []byte) error {
+	type unmarshaler UsageSession
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*u = UsageSession(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *u)
+	if err != nil {
+		return err
+	}
+	u.extraProperties = extraProperties
+	u.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (u *UsageSession) MarshalJSON() ([]byte, error) {
+	type embed UsageSession
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*u),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (u *UsageSession) String() string {
+	if u == nil {
+		return "<nil>"
+	}
+	if len(u.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(u); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", u)
+}
+
+// Paginated list of phone sessions.
+var (
+	usageSessionsResponseFieldSchema   = big.NewInt(1 << 0)
+	usageSessionsResponseFieldLimit    = big.NewInt(1 << 1)
+	usageSessionsResponseFieldOffset   = big.NewInt(1 << 2)
+	usageSessionsResponseFieldSessions = big.NewInt(1 << 3)
+	usageSessionsResponseFieldTotal    = big.NewInt(1 << 4)
+)
+
+type UsageSessionsResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Page size used for this response.
+	Limit int64 `json:"limit" url:"limit"`
+	// Pagination offset used for this response.
+	Offset int64 `json:"offset" url:"offset"`
+	// Page of session records.
+	Sessions []*UsageSession `json:"sessions,omitempty" url:"sessions,omitempty"`
+	// Total number of sessions matching the query.
+	Total int64 `json:"total" url:"total"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (u *UsageSessionsResponse) GetSchema() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Schema
+}
+
+func (u *UsageSessionsResponse) GetLimit() int64 {
+	if u == nil {
+		return 0
+	}
+	return u.Limit
+}
+
+func (u *UsageSessionsResponse) GetOffset() int64 {
+	if u == nil {
+		return 0
+	}
+	return u.Offset
+}
+
+func (u *UsageSessionsResponse) GetSessions() []*UsageSession {
+	if u == nil {
+		return nil
+	}
+	return u.Sessions
+}
+
+func (u *UsageSessionsResponse) GetTotal() int64 {
+	if u == nil {
+		return 0
+	}
+	return u.Total
+}
+
+func (u *UsageSessionsResponse) GetExtraProperties() map[string]interface{} {
+	if u == nil {
+		return nil
+	}
+	return u.extraProperties
+}
+
+func (u *UsageSessionsResponse) require(field *big.Int) {
+	if u.explicitFields == nil {
+		u.explicitFields = big.NewInt(0)
+	}
+	u.explicitFields.Or(u.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSessionsResponse) SetSchema(schema *string) {
+	u.Schema = schema
+	u.require(usageSessionsResponseFieldSchema)
+}
+
+// SetLimit sets the Limit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSessionsResponse) SetLimit(limit int64) {
+	u.Limit = limit
+	u.require(usageSessionsResponseFieldLimit)
+}
+
+// SetOffset sets the Offset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSessionsResponse) SetOffset(offset int64) {
+	u.Offset = offset
+	u.require(usageSessionsResponseFieldOffset)
+}
+
+// SetSessions sets the Sessions field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSessionsResponse) SetSessions(sessions []*UsageSession) {
+	u.Sessions = sessions
+	u.require(usageSessionsResponseFieldSessions)
+}
+
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSessionsResponse) SetTotal(total int64) {
+	u.Total = total
+	u.require(usageSessionsResponseFieldTotal)
+}
+
+func (u *UsageSessionsResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler UsageSessionsResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*u = UsageSessionsResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *u)
+	if err != nil {
+		return err
+	}
+	u.extraProperties = extraProperties
+	u.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (u *UsageSessionsResponse) MarshalJSON() ([]byte, error) {
+	type embed UsageSessionsResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*u),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (u *UsageSessionsResponse) String() string {
+	if u == nil {
+		return "<nil>"
+	}
+	if len(u.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(u); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", u)
 }
 
 // bucket resolution

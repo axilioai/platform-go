@@ -49,6 +49,23 @@ func (c *Client) GetAutoRecharge(
 	return response.Body, nil
 }
 
+// Configures automatic balance top-up: when the balance drops below the threshold, a one-off invoice charges the saved payment method to restore it to the target. Requires an admin-role caller: an API key carries its creator's organization role, so the key must belong to an org admin. This only tunes when the saved payment method is charged — adding funds or payment methods stays in the dashboard.
+func (c *Client) UpdateAutoRecharge(
+	ctx context.Context,
+	request *platformgo.SubscriptionAutoRechargeSettings,
+	opts ...option.RequestOption,
+) (*platformgo.SubscriptionAutoRechargeSettingsResponse, error) {
+	response, err := c.WithRawResponse.UpdateAutoRecharge(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Returns the organization's current credit balance in microdollars plus a display string.
 func (c *Client) GetBalance(
 	ctx context.Context,
@@ -71,6 +88,23 @@ func (c *Client) GetHistory(
 	opts ...option.RequestOption,
 ) (*platformgo.BillingHistoryResponse, error) {
 	response, err := c.WithRawResponse.GetHistory(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Returns a temporary PDF download URL for an invoice the caller's org owns. The URL expires; re-request it rather than storing it.
+func (c *Client) DownloadInvoice(
+	ctx context.Context,
+	request *platformgo.BillingDownloadInvoiceRequest,
+	opts ...option.RequestOption,
+) (*platformgo.BillingHistoryInvoiceDownloadResponse, error) {
+	response, err := c.WithRawResponse.DownloadInvoice(
 		ctx,
 		request,
 		opts...,
@@ -118,6 +152,23 @@ func (c *Client) GetUsageAlerts(
 ) (*platformgo.SubscriptionUsageAlertSettingsResponse, error) {
 	response, err := c.WithRawResponse.GetUsageAlerts(
 		ctx,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Configures the low-balance alert: while enabled and the balance sits below the threshold, an alert stays open and surfaces in the dashboard. Negative-balance alerts are always on. Requires an admin-role caller: an API key carries its creator's organization role, so the key must belong to an org admin.
+func (c *Client) UpdateUsageAlerts(
+	ctx context.Context,
+	request *platformgo.SubscriptionUsageAlertSettings,
+	opts ...option.RequestOption,
+) (*platformgo.SubscriptionUsageAlertSettingsResponse, error) {
+	response, err := c.WithRawResponse.UpdateUsageAlerts(
+		ctx,
+		request,
 		opts...,
 	)
 	if err != nil {
