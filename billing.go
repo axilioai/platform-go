@@ -11,6 +11,32 @@ import (
 )
 
 var (
+	billingDownloadInvoiceRequestFieldInvoiceID = big.NewInt(1 << 0)
+)
+
+type BillingDownloadInvoiceRequest struct {
+	// Billing history item ID to download.
+	InvoiceID string `json:"-" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (b *BillingDownloadInvoiceRequest) require(field *big.Int) {
+	if b.explicitFields == nil {
+		b.explicitFields = big.NewInt(0)
+	}
+	b.explicitFields.Or(b.explicitFields, field)
+}
+
+// SetInvoiceID sets the InvoiceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingDownloadInvoiceRequest) SetInvoiceID(invoiceID string) {
+	b.InvoiceID = invoiceID
+	b.require(billingDownloadInvoiceRequestFieldInvoiceID)
+}
+
+var (
 	billingGetHistoryRequestFieldLimit        = big.NewInt(1 << 0)
 	billingGetHistoryRequestFieldOffset       = big.NewInt(1 << 1)
 	billingGetHistoryRequestFieldSearch       = big.NewInt(1 << 2)
@@ -134,6 +160,134 @@ func (b *BillingGetHistoryRequest) SetPlanName(planName *string) {
 func (b *BillingGetHistoryRequest) SetPhoneID(phoneID *string) {
 	b.PhoneID = phoneID
 	b.require(billingGetHistoryRequestFieldPhoneID)
+}
+
+// Response containing a temporary invoice download URL.
+var (
+	billingHistoryInvoiceDownloadResponseFieldSchema      = big.NewInt(1 << 0)
+	billingHistoryInvoiceDownloadResponseFieldDownloadURL = big.NewInt(1 << 1)
+	billingHistoryInvoiceDownloadResponseFieldExpiresAt   = big.NewInt(1 << 2)
+)
+
+type BillingHistoryInvoiceDownloadResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Direct download URL for the invoice PDF.
+	DownloadURL string `json:"download_url" url:"download_url"`
+	// Timestamp when the download URL expires.
+	ExpiresAt time.Time `json:"expires_at" url:"expires_at"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (b *BillingHistoryInvoiceDownloadResponse) GetSchema() *string {
+	if b == nil {
+		return nil
+	}
+	return b.Schema
+}
+
+func (b *BillingHistoryInvoiceDownloadResponse) GetDownloadURL() string {
+	if b == nil {
+		return ""
+	}
+	return b.DownloadURL
+}
+
+func (b *BillingHistoryInvoiceDownloadResponse) GetExpiresAt() time.Time {
+	if b == nil {
+		return time.Time{}
+	}
+	return b.ExpiresAt
+}
+
+func (b *BillingHistoryInvoiceDownloadResponse) GetExtraProperties() map[string]interface{} {
+	if b == nil {
+		return nil
+	}
+	return b.extraProperties
+}
+
+func (b *BillingHistoryInvoiceDownloadResponse) require(field *big.Int) {
+	if b.explicitFields == nil {
+		b.explicitFields = big.NewInt(0)
+	}
+	b.explicitFields.Or(b.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingHistoryInvoiceDownloadResponse) SetSchema(schema *string) {
+	b.Schema = schema
+	b.require(billingHistoryInvoiceDownloadResponseFieldSchema)
+}
+
+// SetDownloadURL sets the DownloadURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingHistoryInvoiceDownloadResponse) SetDownloadURL(downloadURL string) {
+	b.DownloadURL = downloadURL
+	b.require(billingHistoryInvoiceDownloadResponseFieldDownloadURL)
+}
+
+// SetExpiresAt sets the ExpiresAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingHistoryInvoiceDownloadResponse) SetExpiresAt(expiresAt time.Time) {
+	b.ExpiresAt = expiresAt
+	b.require(billingHistoryInvoiceDownloadResponseFieldExpiresAt)
+}
+
+func (b *BillingHistoryInvoiceDownloadResponse) UnmarshalJSON(data []byte) error {
+	type embed BillingHistoryInvoiceDownloadResponse
+	var unmarshaler = struct {
+		embed
+		ExpiresAt *internal.DateTime `json:"expires_at"`
+	}{
+		embed: embed(*b),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*b = BillingHistoryInvoiceDownloadResponse(unmarshaler.embed)
+	b.ExpiresAt = unmarshaler.ExpiresAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *b)
+	if err != nil {
+		return err
+	}
+	b.extraProperties = extraProperties
+	b.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (b *BillingHistoryInvoiceDownloadResponse) MarshalJSON() ([]byte, error) {
+	type embed BillingHistoryInvoiceDownloadResponse
+	var marshaler = struct {
+		embed
+		ExpiresAt *internal.DateTime `json:"expires_at"`
+	}{
+		embed:     embed(*b),
+		ExpiresAt: internal.NewDateTime(b.ExpiresAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, b.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (b *BillingHistoryInvoiceDownloadResponse) String() string {
+	if b == nil {
+		return "<nil>"
+	}
+	if len(b.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(b.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(b); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", b)
 }
 
 // Single invoice record in the billing history.
@@ -2734,4 +2888,128 @@ func (s *SubscriptionUsageAlertSettingsResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", s)
+}
+
+var (
+	subscriptionAutoRechargeSettingsFieldEnabled        = big.NewInt(1 << 0)
+	subscriptionAutoRechargeSettingsFieldTargetCents    = big.NewInt(1 << 1)
+	subscriptionAutoRechargeSettingsFieldThresholdCents = big.NewInt(1 << 2)
+)
+
+type SubscriptionAutoRechargeSettings struct {
+	// Whether auto-recharge is active.
+	Enabled bool `json:"enabled" url:"-"`
+	// Balance the recharge restores to, in cents (minimum 500 = $5.00). The charge is target minus current balance.
+	TargetCents int64 `json:"target_cents" url:"-"`
+	// Recharge when the balance drops below this amount, in cents.
+	ThresholdCents int64 `json:"threshold_cents" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (s *SubscriptionAutoRechargeSettings) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetEnabled sets the Enabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeSettings) SetEnabled(enabled bool) {
+	s.Enabled = enabled
+	s.require(subscriptionAutoRechargeSettingsFieldEnabled)
+}
+
+// SetTargetCents sets the TargetCents field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeSettings) SetTargetCents(targetCents int64) {
+	s.TargetCents = targetCents
+	s.require(subscriptionAutoRechargeSettingsFieldTargetCents)
+}
+
+// SetThresholdCents sets the ThresholdCents field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeSettings) SetThresholdCents(thresholdCents int64) {
+	s.ThresholdCents = thresholdCents
+	s.require(subscriptionAutoRechargeSettingsFieldThresholdCents)
+}
+
+func (s *SubscriptionAutoRechargeSettings) UnmarshalJSON(data []byte) error {
+	type unmarshaler SubscriptionAutoRechargeSettings
+	var body unmarshaler
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	*s = SubscriptionAutoRechargeSettings(body)
+	return nil
+}
+
+func (s *SubscriptionAutoRechargeSettings) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionAutoRechargeSettings
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*s),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+var (
+	subscriptionUsageAlertSettingsFieldEnabled        = big.NewInt(1 << 0)
+	subscriptionUsageAlertSettingsFieldThresholdCents = big.NewInt(1 << 1)
+)
+
+type SubscriptionUsageAlertSettings struct {
+	// Whether low-balance alerts are active. Negative-balance alerts are always on.
+	Enabled bool `json:"enabled" url:"-"`
+	// Alert while the balance sits below this amount, in cents. Must be positive.
+	ThresholdCents int64 `json:"threshold_cents" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (s *SubscriptionUsageAlertSettings) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetEnabled sets the Enabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionUsageAlertSettings) SetEnabled(enabled bool) {
+	s.Enabled = enabled
+	s.require(subscriptionUsageAlertSettingsFieldEnabled)
+}
+
+// SetThresholdCents sets the ThresholdCents field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionUsageAlertSettings) SetThresholdCents(thresholdCents int64) {
+	s.ThresholdCents = thresholdCents
+	s.require(subscriptionUsageAlertSettingsFieldThresholdCents)
+}
+
+func (s *SubscriptionUsageAlertSettings) UnmarshalJSON(data []byte) error {
+	type unmarshaler SubscriptionUsageAlertSettings
+	var body unmarshaler
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	*s = SubscriptionUsageAlertSettings(body)
+	return nil
+}
+
+func (s *SubscriptionUsageAlertSettings) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionUsageAlertSettings
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*s),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
 }

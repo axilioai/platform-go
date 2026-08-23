@@ -68,6 +68,23 @@ func (c *Client) SupportedApps(
 	return response.Body, nil
 }
 
+// Returns a capacity snapshot to check before POST /phones:allocate: shared-pool availability broken down by phone type and by location, plus the caller org's dedicated phones with how many are idle (claimable right now). Optional phone_type and location filters narrow every count. Advisory only - availability can change between this read and an allocate, so allocation remains the authority and can still refuse.
+func (c *Client) Availability(
+	ctx context.Context,
+	request *platformgo.PhonesAvailabilityRequest,
+	opts ...option.RequestOption,
+) (*platformgo.PhoneAvailabilityResponse, error) {
+	response, err := c.WithRawResponse.Availability(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Returns one page of the org's phone sessions for the Session Inspector table: active/unbilled sessions pinned on top, terminal history paginated beneath. Covers workflow runs and workflow-less interactive leases; each row links to a session. Filters: search, workflow_id, status.
 func (c *Client) ListSessions(
 	ctx context.Context,
@@ -119,6 +136,23 @@ func (c *Client) GetSession(
 	return response.Body, nil
 }
 
+// Mints a fresh live-view token (and hosted viewer URL) for an active session, per the session's allocate-time live_view settings: token-mode sessions re-issue the bearer link allocate returned once, org-mode sessions exchange the caller's identity. Refused for sessions allocated with live_view.disabled, for inactive sessions, and for sessions outside the caller's organization (reads as not found). Sharp edge: the returned URL embeds the token and is a bearer capability — whoever holds it can watch (and, unless the session was allocated view-only, drive) the phone until the session ends, at which point both stop working.
+func (c *Client) SessionLiveViewToken(
+	ctx context.Context,
+	request *platformgo.PhonesSessionLiveViewTokenRequest,
+	opts ...option.RequestOption,
+) (*platformgo.PhoneLiveViewTokenResponse, error) {
+	response, err := c.WithRawResponse.SessionLiveViewToken(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for workflow runs and workflow-less interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet. Org-scoped: another org's session reads as not found.
 func (c *Client) SessionRecording(
 	ctx context.Context,
@@ -126,6 +160,23 @@ func (c *Client) SessionRecording(
 	opts ...option.RequestOption,
 ) (*platformgo.PhoneSessionRecordingResponse, error) {
 	response, err := c.WithRawResponse.SessionRecording(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Mints a fresh telemetry_url for an active session — the same read-only WebSocket URL POST /phones:allocate returns once (live trace spans + output logs for exactly this session, 3h token). This is the telemetry/frames leg, distinct from the live-view (video) token: it can only watch the trace, never the screen, and never drive the phone. The stream's end frame is the session-end signal. Refused for inactive sessions — an ended session's telemetry is served by GET /phones/sessions/{session_id}/frames — and for sessions outside the caller's organization (reads as not found).
+func (c *Client) SessionTelemetryToken(
+	ctx context.Context,
+	request *platformgo.PhonesSessionTelemetryTokenRequest,
+	opts ...option.RequestOption,
+) (*platformgo.PhoneTelemetryTokenResponse, error) {
+	response, err := c.WithRawResponse.SessionTelemetryToken(
 		ctx,
 		request,
 		opts...,

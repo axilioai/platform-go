@@ -72,6 +72,49 @@ func (r *RawClient) GetAutoRecharge(
 	}, nil
 }
 
+func (r *RawClient) UpdateAutoRecharge(
+	ctx context.Context,
+	request *platformgo.SubscriptionAutoRechargeSettings,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.SubscriptionAutoRechargeSettingsResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := baseURL + "/billing/auto-recharge"
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	headers.Add("Content-Type", "application/json")
+	var response *platformgo.SubscriptionAutoRechargeSettingsResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPut,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.SubscriptionAutoRechargeSettingsResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
 func (r *RawClient) GetBalance(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -154,6 +197,50 @@ func (r *RawClient) GetHistory(
 		return nil, err
 	}
 	return &core.Response[*platformgo.BillingHistoryResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) DownloadInvoice(
+	ctx context.Context,
+	request *platformgo.BillingDownloadInvoiceRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.BillingHistoryInvoiceDownloadResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/billing/history/%v/pdf",
+		request.InvoiceID,
+	)
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.BillingHistoryInvoiceDownloadResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.BillingHistoryInvoiceDownloadResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
@@ -267,6 +354,49 @@ func (r *RawClient) GetUsageAlerts(
 			BodyProperties:  options.BodyProperties,
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
+			Response:        &response,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.SubscriptionUsageAlertSettingsResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) UpdateUsageAlerts(
+	ctx context.Context,
+	request *platformgo.SubscriptionUsageAlertSettings,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.SubscriptionUsageAlertSettingsResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := baseURL + "/billing/usage-alerts"
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	headers.Add("Content-Type", "application/json")
+	var response *platformgo.SubscriptionUsageAlertSettingsResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPut,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
 			Response:        &response,
 		},
 	)

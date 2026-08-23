@@ -2441,8 +2441,8 @@ var (
 type RunSpanFrame struct {
 	// Every attribute the producer stamped (axilio.* vocabulary), verbatim. Attributes are the contract's extension seam: new keys appear here without a version bump.
 	Attributes map[string]any `json:"attributes,omitempty" url:"attributes,omitempty"`
-	// Span end, nanoseconds since the Unix epoch.
-	EndTimeUnixNano int64 `json:"end_time_unix_nano" url:"end_time_unix_nano"`
+	// Span end, nanoseconds since the Unix epoch. Always set in the archive; omitted on the live stream's "start" phase, where the span is still in flight.
+	EndTimeUnixNano *int64 `json:"end_time_unix_nano,omitempty" url:"end_time_unix_nano,omitempty"`
 	// Span name (for sdk_call spans, the SDK operation, e.g. Screen.observe).
 	Name string `json:"name" url:"name"`
 	// Parent span id; omitted on root spans.
@@ -2455,8 +2455,8 @@ type RunSpanFrame struct {
 	SpanType string `json:"span_type" url:"span_type"`
 	// Span start, nanoseconds since the Unix epoch.
 	StartTimeUnixNano int64 `json:"start_time_unix_nano" url:"start_time_unix_nano"`
-	// Span outcome.
-	Status *RunFrameStatus `json:"status" url:"status"`
+	// Span outcome. Always set in the archive; omitted on the live stream's "start" phase, where the span has no outcome yet.
+	Status *RunFrameStatus `json:"status,omitempty" url:"status,omitempty"`
 	// OTel trace id (32 lowercase hex chars), derived from the session id: one session is one trace.
 	TraceID string `json:"trace_id" url:"trace_id"`
 
@@ -2474,9 +2474,9 @@ func (r *RunSpanFrame) GetAttributes() map[string]any {
 	return r.Attributes
 }
 
-func (r *RunSpanFrame) GetEndTimeUnixNano() int64 {
+func (r *RunSpanFrame) GetEndTimeUnixNano() *int64 {
 	if r == nil {
-		return 0
+		return nil
 	}
 	return r.EndTimeUnixNano
 }
@@ -2560,7 +2560,7 @@ func (r *RunSpanFrame) SetAttributes(attributes map[string]any) {
 
 // SetEndTimeUnixNano sets the EndTimeUnixNano field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunSpanFrame) SetEndTimeUnixNano(endTimeUnixNano int64) {
+func (r *RunSpanFrame) SetEndTimeUnixNano(endTimeUnixNano *int64) {
 	r.EndTimeUnixNano = endTimeUnixNano
 	r.require(runSpanFrameFieldEndTimeUnixNano)
 }

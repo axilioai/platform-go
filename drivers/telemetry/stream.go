@@ -291,7 +291,7 @@ func isSessionEndFrame(f *Frame) bool {
 	if span.SpanType != spanTypeSession && span.SpanType != spanTypeSessionLegacy {
 		return false
 	}
-	return span.Phase == spanPhaseEnd || span.EndTimeUnixNano > 0
+	return span.Phase == spanPhaseEnd || spanEndNano(span) > 0
 }
 
 // attachURL is the telemetry URL plus the resume params: every attach opts

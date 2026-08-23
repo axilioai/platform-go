@@ -5667,7 +5667,7 @@ func TestSettersRunSpanFrame(t *testing.T) {
 
 	t.Run("SetEndTimeUnixNano", func(t *testing.T) {
 		obj := &RunSpanFrame{}
-		var fernTestValueEndTimeUnixNano int64
+		var fernTestValueEndTimeUnixNano *int64
 		obj.SetEndTimeUnixNano(fernTestValueEndTimeUnixNano)
 		assert.Equal(t, fernTestValueEndTimeUnixNano, obj.EndTimeUnixNano)
 		assert.NotNil(t, obj.explicitFields)
@@ -5777,11 +5777,21 @@ func TestGettersRunSpanFrame(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &RunSpanFrame{}
-		var expected int64
+		var expected *int64
 		obj.EndTimeUnixNano = expected
 
 		// Act & Assert
 		assert.Equal(t, expected, obj.GetEndTimeUnixNano(), "getter should return the property value")
+	})
+
+	t.Run("GetEndTimeUnixNano_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &RunSpanFrame{}
+		obj.EndTimeUnixNano = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetEndTimeUnixNano(), "getter should return nil when property is nil")
 	})
 
 	t.Run("GetEndTimeUnixNano_NilReceiver", func(t *testing.T) {
@@ -6038,7 +6048,7 @@ func TestSettersMarkExplicitRunSpanFrame(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &RunSpanFrame{}
-		var fernTestValueEndTimeUnixNano int64
+		var fernTestValueEndTimeUnixNano *int64
 
 		// Act
 		obj.SetEndTimeUnixNano(fernTestValueEndTimeUnixNano)

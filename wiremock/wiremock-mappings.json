@@ -132,6 +132,37 @@
       "postServeActions": []
     },
     {
+      "id": "f58f4296-fb7b-48af-8c7e-25ee6eadf559",
+      "name": "Update auto-recharge settings - default",
+      "request": {
+        "urlPathTemplate": "/billing/auto-recharge",
+        "method": "PUT",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionAutoRechargeSettingsResponse.json\",\n  \"disabled_reason\": \"payment_failed\",\n  \"enabled\": true,\n  \"target_cents\": 1000000,\n  \"threshold_cents\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "f58f4296-fb7b-48af-8c7e-25ee6eadf559",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
       "id": "17a5fcc4-ccc8-4e7a-9ca3-bdc00a3942e1",
       "name": "Get account balance - default",
       "request": {
@@ -194,6 +225,42 @@
         }
       },
       "postServeActions": []
+    },
+    {
+      "id": "6bf47ca3-8b4d-4bbf-add6-28d54dd0883c",
+      "name": "Get an invoice PDF URL - default",
+      "request": {
+        "urlPathTemplate": "/billing/history/{invoice_id}/pdf",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "invoice_id": {
+            "equalTo": "invoice_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/BillingHistoryInvoiceDownloadResponse.json\",\n  \"download_url\": \"download_url\",\n  \"expires_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "6bf47ca3-8b4d-4bbf-add6-28d54dd0883c",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
     },
     {
       "id": "17583982-4f3d-40b4-ada2-db87a1a5e208",
@@ -290,6 +357,37 @@
         }
       },
       "postServeActions": []
+    },
+    {
+      "id": "f0b88577-28af-4b5d-b847-972202513966",
+      "name": "Update usage-alert settings - default",
+      "request": {
+        "urlPathTemplate": "/billing/usage-alerts",
+        "method": "PUT",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionUsageAlertSettingsResponse.json\",\n  \"active_alerts\": [\n    {\n      \"balance_cents\": 1000000,\n      \"kind\": \"low_balance\",\n      \"threshold_cents\": 1000000,\n      \"triggered_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"enabled\": true,\n  \"threshold_cents\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "f0b88577-28af-4b5d-b847-972202513966",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
     },
     {
       "id": "44ff6bbe-4cdb-4509-898d-d9e9bead8864",
@@ -396,6 +494,102 @@
       }
     },
     {
+      "id": "1a4a1c69-581c-4965-b951-fe5d381a781a",
+      "name": "Get the caller's organization - default",
+      "request": {
+        "urlPathTemplate": "/organization",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/OrganizationDescriptorResponse.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"name\": \"name\",\n  \"plan_name\": \"plan_name\",\n  \"slug\": \"slug\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "1a4a1c69-581c-4965-b951-fe5d381a781a",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "df5a0902-8770-4e28-80a0-72c8958af3bb",
+      "name": "List pending invitations - default",
+      "request": {
+        "urlPathTemplate": "/organization/invitations",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/OrganizationInvitationSummaryListResponse.json\",\n  \"invitations\": [\n    {\n      \"email\": \"email\",\n      \"invited_at\": \"2024-01-15T09:30:00Z\",\n      \"invited_by_name\": \"invited_by_name\",\n      \"role\": \"role\"\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "df5a0902-8770-4e28-80a0-72c8958af3bb",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "928d7010-aa95-4c23-88f9-c7c67b8282aa",
+      "name": "List the organization's members - default",
+      "request": {
+        "urlPathTemplate": "/organization/members",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/OrganizationMemberSummaryListResponse.json\",\n  \"members\": [\n    {\n      \"email\": \"email\",\n      \"joined_at\": \"2024-01-15T09:30:00Z\",\n      \"role\": \"role\"\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "928d7010-aa95-4c23-88f9-c7c67b8282aa",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
       "id": "de58cbc0-df9e-4f08-a54a-ff56b4fd91e7",
       "name": "List the org's phones - default",
       "request": {
@@ -452,6 +646,38 @@
         }
       },
       "uuid": "474d64fe-d16f-4e65-8c6e-3d8c0da2e7fa",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "b6afbe6a-fdf2-42a2-bf4b-68be5d3ef908",
+      "name": "Phone availability summary - default",
+      "request": {
+        "urlPathTemplate": "/phones/availability",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneAvailabilityResponse.json\",\n  \"dedicated\": {\n    \"by_type\": [\n      {\n        \"idle\": 1000000,\n        \"phone_type\": \"phone_type\",\n        \"total\": 1000000\n      }\n    ],\n    \"idle\": 1000000,\n    \"total\": 1000000\n  },\n  \"shared\": {\n    \"available\": 1000000,\n    \"by_location\": [\n      {\n        \"available\": 1000000,\n        \"city\": \"city\",\n        \"location\": \"location\",\n        \"region\": \"region\",\n        \"state\": \"state\",\n        \"total\": 1000000\n      }\n    ],\n    \"by_type\": [\n      {\n        \"available\": 1000000,\n        \"phone_type\": \"phone_type\",\n        \"total\": 1000000\n      }\n    ],\n    \"total\": 1000000\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "b6afbe6a-fdf2-42a2-bf4b-68be5d3ef908",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -565,6 +791,42 @@
       }
     },
     {
+      "id": "dd25dab9-3b31-4381-b9ff-b9fe12d4df2d",
+      "name": "Mint a live-view token - default",
+      "request": {
+        "urlPathTemplate": "/phones/sessions/{session_id}/live-view-token",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "session_id": {
+            "equalTo": "session_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneLiveViewTokenResponse.json\",\n  \"live_view_url\": \"live_view_url\",\n  \"phone_id\": \"phone_id\",\n  \"session_id\": \"session_id\",\n  \"token\": \"token\",\n  \"view_only\": true\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "dd25dab9-3b31-4381-b9ff-b9fe12d4df2d",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
       "id": "234538ab-c1d5-4e91-adeb-b3e93c17d983",
       "name": "Get a session recording - default",
       "request": {
@@ -589,6 +851,42 @@
         }
       },
       "uuid": "234538ab-c1d5-4e91-adeb-b3e93c17d983",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "1f7ae52b-3315-4cfb-a0e6-7befba7dd7ea",
+      "name": "Mint a telemetry stream URL - default",
+      "request": {
+        "urlPathTemplate": "/phones/sessions/{session_id}/telemetry-token",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "session_id": {
+            "equalTo": "session_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneTelemetryTokenResponse.json\",\n  \"session_id\": \"session_id\",\n  \"telemetry_url\": \"telemetry_url\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "1f7ae52b-3315-4cfb-a0e6-7befba7dd7ea",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1489,6 +1787,46 @@
       "postServeActions": []
     },
     {
+      "id": "21f938ff-ad85-482a-b029-12c9210b3fc0",
+      "name": "List phone sessions with cost - default",
+      "request": {
+        "urlPathTemplate": "/usage/sessions",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "queryParameters": {
+          "start_date": {
+            "equalTo": "2024-01-15T09:30:00.000Z"
+          },
+          "end_date": {
+            "equalTo": "2024-01-15T09:30:00.000Z"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/UsageSessionsResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"sessions\": [\n    {\n      \"allocated_at\": \"allocated_at\",\n      \"allocated_by\": \"allocated_by\",\n      \"billing_plan_id\": \"billing_plan_id\",\n      \"cost_microdollars\": 1000000,\n      \"deallocated_at\": \"deallocated_at\",\n      \"duration_seconds\": 1000000,\n      \"inference_cost_microdollars\": 1000000,\n      \"is_dedicated_phone\": true,\n      \"phone_id\": \"phone_id\",\n      \"processed_status\": \"processed_status\",\n      \"session_id\": \"session_id\",\n      \"session_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_status\": \"session_status\",\n      \"total_cost_microdollars\": 1000000,\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "21f938ff-ad85-482a-b029-12c9210b3fc0",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
       "id": "9cba0546-1960-443c-b6b0-7b501e094658",
       "name": "List workflows - default",
       "request": {
@@ -1844,6 +2182,6 @@
     }
   ],
   "meta": {
-    "total": 53
+    "total": 63
   }
 }

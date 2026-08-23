@@ -232,6 +232,85 @@ client.Billing.GetAutoRecharge(
 </dl>
 </details>
 
+<details><summary><code>client.Billing.UpdateAutoRecharge(request) -> *platformgo.SubscriptionAutoRechargeSettingsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Configures automatic balance top-up: when the balance drops below the threshold, a one-off invoice charges the saved payment method to restore it to the target. Requires an admin-role caller: an API key carries its creator's organization role, so the key must belong to an org admin. This only tunes when the saved payment method is charged — adding funds or payment methods stays in the dashboard.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.SubscriptionAutoRechargeSettings{
+        Enabled: true,
+        TargetCents: int64(1000000),
+        ThresholdCents: int64(1000000),
+    }
+client.Billing.UpdateAutoRecharge(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**enabled:** `bool` — Whether auto-recharge is active.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**targetCents:** `int64` — Balance the recharge restores to, in cents (minimum 500 = $5.00). The charge is target minus current balance.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**thresholdCents:** `int64` — Recharge when the balance drops below this amount, in cents.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Billing.GetBalance() -> *platformgo.SubscriptionBalanceResponse</code></summary>
 <dl>
 <dd>
@@ -413,6 +492,67 @@ client.Billing.GetHistory(
 </dl>
 </details>
 
+<details><summary><code>client.Billing.DownloadInvoice(InvoiceID) -> *platformgo.BillingHistoryInvoiceDownloadResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns a temporary PDF download URL for an invoice the caller's org owns. The URL expires; re-request it rather than storing it.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.BillingDownloadInvoiceRequest{
+        InvoiceID: "invoice_id",
+    }
+client.Billing.DownloadInvoice(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**invoiceID:** `string` — Billing history item ID to download.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Billing.GetRentalSubscriptions() -> *platformgo.PhoneRentalSubscriptionListResponse</code></summary>
 <dl>
 <dd>
@@ -529,6 +669,76 @@ client.Billing.GetUsageAlerts(
     )
 }
 ```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Billing.UpdateUsageAlerts(request) -> *platformgo.SubscriptionUsageAlertSettingsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Configures the low-balance alert: while enabled and the balance sits below the threshold, an alert stays open and surfaces in the dashboard. Negative-balance alerts are always on. Requires an admin-role caller: an API key carries its creator's organization role, so the key must belong to an org admin.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.SubscriptionUsageAlertSettings{
+        Enabled: true,
+        ThresholdCents: int64(1000000),
+    }
+client.Billing.UpdateUsageAlerts(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**enabled:** `bool` — Whether low-balance alerts are active. Negative-balance alerts are always on.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**thresholdCents:** `int64` — Alert while the balance sits below this amount, in cents. Must be positive.
+    
 </dd>
 </dl>
 </dd>
@@ -865,6 +1075,133 @@ client.Downloads.PhonesSessionDownloads(
 </dl>
 </details>
 
+## Organization
+<details><summary><code>client.Organization.Get() -> *platformgo.OrganizationDescriptorResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns a descriptor of the organization the API key belongs to: name, slug, id, active plan name. Organization management (rename, members, invitations) is deliberately not part of the public API: it is dashboard-only so an API key can never modify the organization that issued it.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+client.Organization.Get(
+        context.TODO(),
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Organization.ListInvitations() -> *platformgo.OrganizationInvitationSummaryListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns every outstanding invitation for the caller's organization. Requires the admin role, matching the dashboard. Organization management (rename, members, invitations) is deliberately not part of the public API: it is dashboard-only so an API key can never modify the organization that issued it.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+client.Organization.ListInvitations(
+        context.TODO(),
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Organization.ListMembers() -> *platformgo.OrganizationMemberSummaryListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns every member of the caller's organization with email, role, and join date. Organization management (rename, members, invitations) is deliberately not part of the public API: it is dashboard-only so an API key can never modify the organization that issued it.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+client.Organization.ListMembers(
+        context.TODO(),
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 ## Phones
 <details><summary><code>client.Phones.List() -> *platformgo.PhonePrivateListResponse</code></summary>
 <dl>
@@ -1079,6 +1416,73 @@ client.Phones.SupportedApps(
 <dd>
 
 **category:** `*string` — filter by app category
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Phones.Availability() -> *platformgo.PhoneAvailabilityResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns a capacity snapshot to check before POST /phones:allocate: shared-pool availability broken down by phone type and by location, plus the caller org's dedicated phones with how many are idle (claimable right now). Optional phone_type and location filters narrow every count. Advisory only - availability can change between this read and an allocate, so allocation remains the authority and can still refuse.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesAvailabilityRequest{}
+client.Phones.Availability(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**phoneType:** `*platformgo.PhonesAvailabilityRequestPhoneType` — Only count phones of this platform.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**location:** `*string` — Only count phones at this location slug.
     
 </dd>
 </dl>
@@ -1397,6 +1801,67 @@ client.Phones.GetSession(
 </dl>
 </details>
 
+<details><summary><code>client.Phones.SessionLiveViewToken(SessionID) -> *platformgo.PhoneLiveViewTokenResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Mints a fresh live-view token (and hosted viewer URL) for an active session, per the session's allocate-time live_view settings: token-mode sessions re-issue the bearer link allocate returned once, org-mode sessions exchange the caller's identity. Refused for sessions allocated with live_view.disabled, for inactive sessions, and for sessions outside the caller's organization (reads as not found). Sharp edge: the returned URL embeds the token and is a bearer capability — whoever holds it can watch (and, unless the session was allocated view-only, drive) the phone until the session ends, at which point both stop working.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesSessionLiveViewTokenRequest{
+        SessionID: "session_id",
+    }
+client.Phones.SessionLiveViewToken(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**sessionID:** `string` — Phone session identifier
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Phones.SessionRecording(SessionID) -> *platformgo.PhoneSessionRecordingResponse</code></summary>
 <dl>
 <dd>
@@ -1428,6 +1893,67 @@ request := &platformgo.PhonesSessionRecordingRequest{
         SessionID: "session_id",
     }
 client.Phones.SessionRecording(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**sessionID:** `string` — Phone session identifier
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Phones.SessionTelemetryToken(SessionID) -> *platformgo.PhoneTelemetryTokenResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Mints a fresh telemetry_url for an active session — the same read-only WebSocket URL POST /phones:allocate returns once (live trace spans + output logs for exactly this session, 3h token). This is the telemetry/frames leg, distinct from the live-view (video) token: it can only watch the trace, never the screen, and never drive the phone. The stream's end frame is the session-end signal. Refused for inactive sessions — an ended session's telemetry is served by GET /phones/sessions/{session_id}/frames — and for sessions outside the caller's organization (reads as not found).
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesSessionTelemetryTokenRequest{
+        SessionID: "session_id",
+    }
+client.Phones.SessionTelemetryToken(
         context.TODO(),
         request,
     )
@@ -3377,6 +3903,144 @@ client.Usage.GetMetrics(
 <dd>
 
 **timezone:** `*string` — IANA timezone for bucketing periods (e.g., America/Los_Angeles)
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Usage.ListSessions() -> *platformgo.UsageSessionsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Paginated, filterable list of the caller's phone sessions over a required time window (start_date/end_date), each row carrying billing detail: phone-time cost, inference cost, and combined total in microdollars, billing processing status, and allocation source. Filters: session status, billing processing status, workflow, allocation source, free-text search. Order with order_by ('<field> <asc|desc>').
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.UsageListSessionsRequest{
+        StartDate: platformgo.MustParseDateTime(
+            "2024-01-15T09:30:00Z",
+        ),
+        EndDate: platformgo.MustParseDateTime(
+            "2024-01-15T09:30:00Z",
+        ),
+    }
+client.Usage.ListSessions(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**startDate:** `time.Time` — Beginning of the sessions query window (RFC 3339).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**endDate:** `time.Time` — End of the sessions query window (RFC 3339).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Number of sessions per page (1-100).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — Pagination offset.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sessionStatusFilter:** `[]string` — Restrict results to the given session lifecycle statuses.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**processedStatusFilter:** `[]string` — Restrict results to the given billing processing statuses.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**workflowID:** `*string` — Restrict results to sessions of a single workflow.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**allocatedBy:** `[]string` — Restrict results to the given allocation sources.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**search:** `*string` — Filter by session, workflow, or phone id substring.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**orderBy:** `*string` — Sort expression '<field> <asc|desc>'; field one of allocated_at, deallocated_at, duration, cost_microdollars, session_status, processed_status, allocated_by, session_id, workflow_id. Defaults to allocated_at desc.
     
 </dd>
 </dl>
