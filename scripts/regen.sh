@@ -39,6 +39,7 @@ rsync -a --delete \
   --exclude='VERSION' \
   --exclude='.gitignore' \
   --exclude='CONTRIBUTING.md' \
+  --exclude='frames_tolerantreader_test.go' \
   .gen/ ./
 
 rm -rf .gen
