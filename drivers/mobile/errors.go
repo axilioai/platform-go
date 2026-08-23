@@ -25,8 +25,21 @@ const (
 	CodeInternal Code = "internal"
 	// CodeCanceled — the operation was canceled (deadline or context).
 	CodeCanceled Code = "canceled"
-	// CodeConnection — the SDK couldn't open the control WebSocket.
+	// CodeConnection means the control WebSocket failed and could not be
+	// re-established within the transport's bounded reconnect budget.
+	// Retryable: the allocation may still be live, so a later call (or a
+	// caller-level retry) can succeed.
 	CodeConnection Code = "connection"
+	// CodeSessionEnded means the session is over: the server closed with 1000
+	// ("session ended", or this connection was superseded by a newer one)
+	// or refused the reattach with HTTP 403 (allocation no longer active).
+	// Terminal; never retried.
+	CodeSessionEnded Code = "session_ended"
+	// CodeControlHeld means another controller holds the session's control
+	// lease (close code 4409). Terminal for this transport; surfaced, never
+	// auto-retried (a retry loop against a held lease is a thundering herd
+	// aimed at the one-controller guardrail).
+	CodeControlHeld Code = "control_held"
 	// CodeElementNotFound — a selector found nothing.
 	CodeElementNotFound Code = "element_not_found"
 	// CodeTimeout — a call or a wait loop exceeded its deadline (retryable).
