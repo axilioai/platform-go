@@ -270,7 +270,7 @@ type FileDeliveryCreateRequest struct {
 	PhoneID string `json:"-" url:"-"`
 	// Media collection to insert into on the phone; defaults to Pictures for images and Movies for videos.
 	Collection *FileDeliveryCreateRequestCollection `json:"collection,omitempty" url:"-"`
-	// Library file to deliver; accepts an upload or a download id.
+	// Library file to deliver; accepts any file id regardless of source.
 	FileID string `json:"file_id" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted

@@ -238,7 +238,7 @@ func (c *Client) ListDeliveries(
 	return response.Body, nil
 }
 
-// Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts either an upload or a download by id, and the file must already be ready - finish an upload with POST /uploads/{upload_id}/complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
+// Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts any file by id regardless of source (uploaded or captured), and the file must already be ready - finish an uploaded file with POST /files/{file_id}/complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
 func (c *Client) CreateDelivery(
 	ctx context.Context,
 	request *platformgo.FileDeliveryCreateRequest,

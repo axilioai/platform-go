@@ -1,6 +1,6 @@
 // Package files is the hand-written convenience layer for the org file
 // library: upload a local file, manage the library, and deliver a file to a
-// phone, on top of the generated uploads + phones REST clients.
+// phone, on top of the generated files + phones REST clients.
 //
 //	f, _ := files.Upload(ctx, c, "./demo.mp4")           // register + PUT + complete
 //	files.Push(ctx, c, "phn_abc", f.ID)                  // reuse across phones
@@ -15,9 +15,10 @@
 // Preserved across regen by scripts/regen.sh's drivers/ exclude.
 //
 // Vocabulary, one word per concept: UPLOAD puts a local file into the library,
-// PUSH sends a library file to a phone, SEND does both. The API these call is
-// named by direction — /uploads for what you put in, /phones/{id}/deliveries
-// for the record of what we sent to a phone.
+// PUSH sends a library file to a phone, SEND does both. These call the unified
+// /files collection (a file's provenance is the source attribute: source=upload
+// for what you put in) and /phones/{id}/deliveries for the record of what we
+// sent to a phone.
 package files
 
 import (
@@ -210,7 +211,7 @@ func Upload(ctx context.Context, c *client.Client, path string, opts ...Option) 
 		mimeType = detectMIME(name)
 	}
 
-	registered, err := c.Uploads.Create(ctx, &platformgo.FileCreateRequest{
+	registered, err := c.Files.Create(ctx, &platformgo.FileCreateRequest{
 		Filename:  name,
 		MimeType:  mimeType,
 		SizeBytes: size,
@@ -243,8 +244,8 @@ func Upload(ctx context.Context, c *client.Client, path string, opts ...Option) 
 	// stuck 'uploading' that every delivery would reject — previously the first
 	// push did this verification lazily, which only worked because Send always
 	// pushed. Upload on its own now finishes the job.
-	completed, err := c.Uploads.Complete(ctx, &platformgo.UploadsCompleteRequest{
-		UploadID: registered.File.GetID(),
+	completed, err := c.Files.Complete(ctx, &platformgo.FilesCompleteRequest{
+		FileID: registered.File.GetID(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("complete upload %s: %w", registered.File.GetID(), err)
@@ -255,18 +256,18 @@ func Upload(ctx context.Context, c *client.Client, path string, opts ...Option) 
 // List returns one page of the org's library along with its standing usage
 // against the storage quota, so a caller can show "X of Y" without a second
 // call. Options are the generated request's own (limit/offset/search/sort).
-func List(ctx context.Context, c *client.Client, request *platformgo.UploadsListRequest) (*platformgo.FileListResponse, error) {
+func List(ctx context.Context, c *client.Client, request *platformgo.FilesListRequest) (*platformgo.FileListResponse, error) {
 	if request == nil {
-		request = &platformgo.UploadsListRequest{}
+		request = &platformgo.FilesListRequest{}
 	}
-	return c.Uploads.List(ctx, request)
+	return c.Files.List(ctx, request)
 }
 
 // Delete removes a file from the org's library: the stored object, the entry,
 // and its delivery history. This is the other half of a quota — without it a
 // caller can fill the library and has no supported way to clear it.
-func Delete(ctx context.Context, c *client.Client, uploadID string) error {
-	_, err := c.Uploads.Delete(ctx, &platformgo.UploadsDeleteRequest{UploadID: uploadID})
+func Delete(ctx context.Context, c *client.Client, fileID string) error {
+	_, err := c.Files.Delete(ctx, &platformgo.FilesDeleteRequest{FileID: fileID})
 	return err
 }
 

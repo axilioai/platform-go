@@ -749,8 +749,8 @@ client.Billing.UpdateUsageAlerts(
 </dl>
 </details>
 
-## Downloads
-<details><summary><code>client.Downloads.List() -> *platformgo.FileDownloadListResponse</code></summary>
+## Files
+<details><summary><code>client.Files.List() -> *platformgo.FileListResponse</code></summary>
 <dl>
 <dd>
 
@@ -762,7 +762,7 @@ client.Billing.UpdateUsageAlerts(
 <dl>
 <dd>
 
-Returns one page of the files captured off phones during sessions (AXI-1449), newest first. Each row carries its capture state: a skipped or failed capture is a visible entry with a reason, not an absence. Downloads share the library and its storage quota with uploads, and a ready download can be delivered to a phone by its id like any upload.
+Returns one page of the org's file library, newest first, with the org's standing usage against its storage quota. Every file carries its source (upload or capture) and, for a capture, its surface and capture state. Filter with source, surface and session_id. Files persist until deleted and any ready file can be delivered to a phone the org holds.
 </dd>
 </dl>
 </dd>
@@ -777,8 +777,8 @@ Returns one page of the files captured off phones during sessions (AXI-1449), ne
 <dd>
 
 ```go
-request := &platformgo.DownloadsListRequest{}
-client.Downloads.List(
+request := &platformgo.FilesListRequest{}
+client.Files.List(
         context.TODO(),
         request,
     )
@@ -793,54 +793,6 @@ client.Downloads.List(
 
 <dl>
 <dd>
-
-<dl>
-<dd>
-
-**q:** `*string` — filter by filename, case-insensitive substring match
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**mimeType:** `*string` — only downloads of exactly this media type
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**minSizeBytes:** `*int64` — only downloads at least this many bytes (0 = no bound)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**maxSizeBytes:** `*int64` — only downloads at most this many bytes (0 = no bound)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**createdAfter:** `*time.Time` — only downloads registered at or after this time (RFC 3339)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**createdBefore:** `*time.Time` — only downloads registered at or before this time (RFC 3339)
-    
-</dd>
-</dl>
 
 <dl>
 <dd>
@@ -861,7 +813,7 @@ client.Downloads.List(
 <dl>
 <dd>
 
-**sessionID:** `*string` — only downloads captured by this session
+**q:** `*string` — filter by filename, case-insensitive substring match
     
 </dd>
 </dl>
@@ -869,7 +821,7 @@ client.Downloads.List(
 <dl>
 <dd>
 
-**sort:** `*platformgo.DownloadsListRequestSort` — field to sort by
+**source:** `*platformgo.FilesListRequestSource` — only files of this source
     
 </dd>
 </dl>
@@ -877,7 +829,71 @@ client.Downloads.List(
 <dl>
 <dd>
 
-**order:** `*platformgo.DownloadsListRequestOrder` — sort direction
+**surface:** `*platformgo.FilesListRequestSurface` — only captures off this surface
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sessionID:** `*string` — only files captured by this session
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**mimeType:** `*string` — only files of exactly this media type
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**minSizeBytes:** `*int64` — only files at least this many bytes (0 = no bound)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxSizeBytes:** `*int64` — only files at most this many bytes (0 = no bound)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdAfter:** `*time.Time` — only files registered at or after this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdBefore:** `*time.Time` — only files registered at or before this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sort:** `*platformgo.FilesListRequestSort` — field to sort by; source groups uploads and captures
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**order:** `*platformgo.FilesListRequestOrder` — sort direction
     
 </dd>
 </dl>
@@ -889,7 +905,7 @@ client.Downloads.List(
 </dl>
 </details>
 
-<details><summary><code>client.Downloads.Delete(DownloadID) -> *platformgo.DeleteFileOutputBody</code></summary>
+<details><summary><code>client.Files.Create(request) -> *platformgo.FileUploadResponse</code></summary>
 <dl>
 <dd>
 
@@ -901,7 +917,7 @@ client.Downloads.List(
 <dl>
 <dd>
 
-Removes a captured file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone the file was pushed to is scheduled to remove its copy (removal is confirmed per phone and retried until it lands), the same recall an upload's delete runs. The response reports how many phones that recall reaches. The source phone's own copy from the capture session is outside the recall: it belongs to the session, not the library.
+Registers an image or video in the org's file library and returns a presigned S3 URL to upload the bytes to. PUT the raw file to upload_url with the declared Content-Type and Content-Length headers before the URL expires, then call the complete endpoint to make it ready. The registered file has source=upload. Uploads are capped per file and per org by total size.
 </dd>
 </dl>
 </dd>
@@ -916,10 +932,12 @@ Removes a captured file from the org's library and everywhere it was delivered: 
 <dd>
 
 ```go
-request := &platformgo.DownloadsDeleteRequest{
-        DownloadID: "download_id",
+request := &platformgo.FileCreateRequest{
+        Filename: "filename",
+        MimeType: "mime_type",
+        SizeBytes: int64(1000000),
     }
-client.Downloads.Delete(
+client.Files.Create(
         context.TODO(),
         request,
     )
@@ -938,7 +956,23 @@ client.Downloads.Delete(
 <dl>
 <dd>
 
-**downloadID:** `string` — download identifier to delete
+**filename:** `string` — Display name for the file (also its name on the phone).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**mimeType:** `string` — MIME type of the upload; must be an allowed image or video type.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sizeBytes:** `int64` — Exact size of the upload in bytes, up to 1 GiB; the presigned URL pins it.
     
 </dd>
 </dl>
@@ -950,7 +984,7 @@ client.Downloads.Delete(
 </dl>
 </details>
 
-<details><summary><code>client.Downloads.PhonesSessionDownloads(SessionID) -> *platformgo.FileDownloadListResponse</code></summary>
+<details><summary><code>client.Files.Delete(FileID) -> *platformgo.DeleteFileOutputBody</code></summary>
 <dl>
 <dd>
 
@@ -962,7 +996,7 @@ client.Downloads.Delete(
 <dl>
 <dd>
 
-Returns the files this session captured off its phone, newest first — the direct answer to "what did this session download". Rows appear at detection, before the bytes finish moving, so a caller waiting on a file watches its capture state progress rather than an empty list.
+Removes a file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone holding a copy is scheduled to remove it (removal is confirmed per phone and retried until it lands). The response reports how many phones that recall reaches. This runs the same for an uploaded or a captured file; a capture's source phone keeps its own session copy, which belongs to the session, not the library.
 </dd>
 </dl>
 </dd>
@@ -977,10 +1011,202 @@ Returns the files this session captured off its phone, newest first — the dire
 <dd>
 
 ```go
-request := &platformgo.PhonesSessionDownloadsRequest{
+request := &platformgo.FilesDeleteRequest{
+        FileID: "file_id",
+    }
+client.Files.Delete(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**fileID:** `string` — file identifier to delete
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Files.Rename(FileID, request) -> *platformgo.RenameFileOutputBody</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Updates the file's display name. Metadata only: storage is keyed by id, so the object never moves and existing URLs keep working, and past deliveries keep the name they were sent under. Only an uploaded file can be renamed; a captured file's name is part of its provenance, so renaming one is rejected.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.FileRenameRequest{
+        FileID: "file_id",
+        Filename: "filename",
+    }
+client.Files.Rename(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**fileID:** `string` — file identifier to rename
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**filename:** `string` — New display name for the file.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Files.Complete(FileID) -> *platformgo.CompleteFileOutputBody</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Call after PUTting the bytes to the upload URL. Verifies the object landed at the declared size and type, checks the content really is the media it claims to be, and moves the file to ready so it can be delivered. Idempotent: completing an already-ready file just returns it. Applies to source=upload files; a captured file finalizes on its own from the phone's report.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.FilesCompleteRequest{
+        FileID: "file_id",
+    }
+client.Files.Complete(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**fileID:** `string` — file identifier to finalize
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Files.PhonesSessionFiles(SessionID) -> *platformgo.FileListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns the files this session captured off its phone, newest first — the direct answer to "what did this session capture". Every row is source=capture. Rows appear at detection, before the bytes finish moving, so a caller waiting on a file watches its capture state progress rather than an empty list.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhonesSessionFilesRequest{
         SessionID: "session_id",
     }
-client.Downloads.PhonesSessionDownloads(
+client.Files.PhonesSessionFiles(
         context.TODO(),
         request,
     )
@@ -1007,54 +1233,6 @@ client.Downloads.PhonesSessionDownloads(
 <dl>
 <dd>
 
-**q:** `*string` — filter by filename, case-insensitive substring match
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**mimeType:** `*string` — only downloads of exactly this media type
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**minSizeBytes:** `*int64` — only downloads at least this many bytes (0 = no bound)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**maxSizeBytes:** `*int64` — only downloads at most this many bytes (0 = no bound)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**createdAfter:** `*time.Time` — only downloads registered at or after this time (RFC 3339)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**createdBefore:** `*time.Time` — only downloads registered at or before this time (RFC 3339)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
 **limit:** `*int64` — max items per page
     
 </dd>
@@ -1064,6 +1242,54 @@ client.Downloads.PhonesSessionDownloads(
 <dd>
 
 **offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**q:** `*string` — filter by filename, case-insensitive substring match
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**mimeType:** `*string` — only files of exactly this media type
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**minSizeBytes:** `*int64` — only files at least this many bytes (0 = no bound)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxSizeBytes:** `*int64` — only files at most this many bytes (0 = no bound)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdAfter:** `*time.Time` — only files registered at or after this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdBefore:** `*time.Time` — only files registered at or before this time (RFC 3339)
     
 </dd>
 </dl>
@@ -2195,7 +2421,7 @@ client.Phones.ListDeliveries(
 <dl>
 <dd>
 
-Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts either an upload or a download by id, and the file must already be ready - finish an upload with POST /uploads/{upload_id}/complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
+Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts any file by id regardless of source (uploaded or captured), and the file must already be ready - finish an uploaded file with POST /files/{file_id}/complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
 </dd>
 </dl>
 </dd>
@@ -2249,7 +2475,7 @@ client.Phones.CreateDelivery(
 <dl>
 <dd>
 
-**fileID:** `string` — Library file to deliver; accepts an upload or a download id.
+**fileID:** `string` — Library file to deliver; accepts any file id regardless of source.
     
 </dd>
 </dl>
@@ -3320,369 +3546,6 @@ client.Skill.GetSkill(
     )
 }
 ```
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-## Uploads
-<details><summary><code>client.Uploads.List() -> *platformgo.FileListResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns one page of the files the org uploaded, newest first, with the org's standing usage against its storage quota. Uploads persist until deleted and can be delivered to any phone the org holds.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.UploadsListRequest{}
-client.Uploads.List(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**limit:** `*int64` — max items per page
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `*int64` — pagination offset
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**q:** `*string` — filter by filename, case-insensitive substring match
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sort:** `*platformgo.UploadsListRequestSort` — field to sort by
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**order:** `*platformgo.UploadsListRequestOrder` — sort direction
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Uploads.Create(request) -> *platformgo.FileUploadResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Registers an image or video in the org's file library and returns a presigned S3 URL to upload the bytes to. PUT the raw file to upload_url with the declared Content-Type and Content-Length headers before the URL expires, then call the complete endpoint to make it ready. Uploads are capped per file and per org by total size.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.FileCreateRequest{
-        Filename: "filename",
-        MimeType: "mime_type",
-        SizeBytes: int64(1000000),
-    }
-client.Uploads.Create(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**filename:** `string` — Display name for the file (also its name on the phone).
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**mimeType:** `string` — MIME type of the upload; must be an allowed image or video type.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sizeBytes:** `int64` — Exact size of the upload in bytes, up to 1 GiB; the presigned URL pins it.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Uploads.Delete(UploadID) -> *platformgo.DeleteFileOutputBody</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Removes a file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone holding a copy is scheduled to remove it (removal is confirmed per phone and retried until it lands). The response reports how many phones that recall reaches. Deleting a download runs the same recall.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.UploadsDeleteRequest{
-        UploadID: "upload_id",
-    }
-client.Uploads.Delete(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**uploadID:** `string` — upload identifier to delete
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Uploads.Rename(UploadID, request) -> *platformgo.RenameFileOutputBody</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Updates the file's display name. Metadata only: storage is keyed by id, so the object never moves and existing URLs keep working, and past deliveries keep the name they were sent under. Downloads cannot be renamed — a captured file's name is part of its provenance.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.FileRenameRequest{
-        UploadID: "upload_id",
-        Filename: "filename",
-    }
-client.Uploads.Rename(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**uploadID:** `string` — upload identifier to rename
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**filename:** `string` — New display name for the file.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Uploads.Complete(UploadID) -> *platformgo.CompleteFileOutputBody</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Call after PUTting the bytes to the upload URL. Verifies the object landed at the declared size and type, checks the content really is the media it claims to be, and moves the file to ready so it can be delivered. Idempotent: completing an already-ready file just returns it.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.UploadsCompleteRequest{
-        UploadID: "upload_id",
-    }
-client.Uploads.Complete(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**uploadID:** `string` — upload identifier to finalize
-    
 </dd>
 </dl>
 </dd>
