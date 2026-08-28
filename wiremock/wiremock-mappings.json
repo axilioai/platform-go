@@ -390,10 +390,10 @@
       }
     },
     {
-      "id": "44ff6bbe-4cdb-4509-898d-d9e9bead8864",
-      "name": "List the org's captured downloads - default",
+      "id": "8e49e62a-cc95-4247-8f78-0e99d06bd781",
+      "name": "List the org's files - default",
       "request": {
-        "urlPathTemplate": "/downloads",
+        "urlPathTemplate": "/files",
         "method": "GET",
         "headers": {
           "X-Axilio-Api-Key": {
@@ -403,12 +403,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileDownloadListResponse.json\",\n  \"downloads\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"source\": \"upload\",\n      \"status\": \"uploading\",\n      \"surface\": \"phone\",\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "44ff6bbe-4cdb-4509-898d-d9e9bead8864",
+      "uuid": "8e49e62a-cc95-4247-8f78-0e99d06bd781",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -422,30 +422,25 @@
       "postServeActions": []
     },
     {
-      "id": "96ff2a8a-cf50-4c64-b2d7-1fb21354a140",
-      "name": "Delete a download - default",
+      "id": "d2b45954-4c48-49c0-9dac-552ae4cd96d4",
+      "name": "Register a file upload - default",
       "request": {
-        "urlPathTemplate": "/downloads/{download_id}",
-        "method": "DELETE",
+        "urlPathTemplate": "/files",
+        "method": "POST",
         "headers": {
           "X-Axilio-Api-Key": {
             "matches": ".+"
           }
-        },
-        "pathParameters": {
-          "download_id": {
-            "equalTo": "download_id"
-          }
         }
       },
       "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\",\n  \"phones_pending_removal\": 1000000\n}",
+        "status": 201,
+        "body": "{\n  \"$schema\": \"/api/v1/FileUploadResponse.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"capture_error\": \"capture_error\",\n    \"capture_state\": \"detected\",\n    \"checksum\": \"checksum\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"session_id\": \"session_id\",\n    \"size_bytes\": 1000000,\n    \"source\": \"upload\",\n    \"status\": \"uploading\",\n    \"surface\": \"phone\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  },\n  \"upload_expires_in_seconds\": 1000000,\n  \"upload_url\": \"upload_url\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "96ff2a8a-cf50-4c64-b2d7-1fb21354a140",
+      "uuid": "d2b45954-4c48-49c0-9dac-552ae4cd96d4",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -458,10 +453,118 @@
       }
     },
     {
-      "id": "b7d1e8a4-cf66-48f5-944b-ccc68cea6b2e",
-      "name": "List a session's captured downloads - default",
+      "id": "8d8e341c-ff0e-4f0d-938d-13274a4c3bac",
+      "name": "Delete a file - default",
       "request": {
-        "urlPathTemplate": "/phones/sessions/{session_id}/downloads",
+        "urlPathTemplate": "/files/{file_id}",
+        "method": "DELETE",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "file_id": {
+            "equalTo": "file_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\",\n  \"phones_pending_removal\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "8d8e341c-ff0e-4f0d-938d-13274a4c3bac",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "fc3bd046-a999-416e-b8a4-93886dd41d85",
+      "name": "Rename a file - default",
+      "request": {
+        "urlPathTemplate": "/files/{file_id}",
+        "method": "PATCH",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "file_id": {
+            "equalTo": "file_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/RenameFileOutputBody.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"capture_error\": \"capture_error\",\n    \"capture_state\": \"detected\",\n    \"checksum\": \"checksum\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"session_id\": \"session_id\",\n    \"size_bytes\": 1000000,\n    \"source\": \"upload\",\n    \"status\": \"uploading\",\n    \"surface\": \"phone\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "fc3bd046-a999-416e-b8a4-93886dd41d85",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "47dd6b5a-6a95-4efe-a460-e92940a1bcec",
+      "name": "Mark an upload complete - default",
+      "request": {
+        "urlPathTemplate": "/files/{file_id}/complete",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "file_id": {
+            "equalTo": "file_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/CompleteFileOutputBody.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"capture_error\": \"capture_error\",\n    \"capture_state\": \"detected\",\n    \"checksum\": \"checksum\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"session_id\": \"session_id\",\n    \"size_bytes\": 1000000,\n    \"source\": \"upload\",\n    \"status\": \"uploading\",\n    \"surface\": \"phone\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "47dd6b5a-6a95-4efe-a460-e92940a1bcec",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "a522900a-46e9-4bfc-9a80-deb62ddaddc1",
+      "name": "List a session's captured files - default",
+      "request": {
+        "urlPathTemplate": "/phones/sessions/{session_id}/files",
         "method": "GET",
         "headers": {
           "X-Axilio-Api-Key": {
@@ -476,12 +579,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileDownloadListResponse.json\",\n  \"downloads\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"source\": \"upload\",\n      \"status\": \"uploading\",\n      \"surface\": \"phone\",\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "b7d1e8a4-cf66-48f5-944b-ccc68cea6b2e",
+      "uuid": "a522900a-46e9-4bfc-9a80-deb62ddaddc1",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1536,177 +1639,6 @@
       "postServeActions": []
     },
     {
-      "id": "be3f98d9-15fc-464e-a205-c7792a75a291",
-      "name": "List the org's uploads - default",
-      "request": {
-        "urlPathTemplate": "/uploads",
-        "method": "GET",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"size_bytes\": 1000000,\n      \"status\": \"uploading\",\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "be3f98d9-15fc-464e-a205-c7792a75a291",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      },
-      "postServeActions": []
-    },
-    {
-      "id": "c41a6cea-c983-4e58-87aa-982b03050687",
-      "name": "Register a file upload - default",
-      "request": {
-        "urlPathTemplate": "/uploads",
-        "method": "POST",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": "{\n  \"$schema\": \"/api/v1/FileUploadResponse.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  },\n  \"upload_expires_in_seconds\": 1000000,\n  \"upload_url\": \"upload_url\"\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "c41a6cea-c983-4e58-87aa-982b03050687",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
-      "id": "181d0be6-e739-4bf4-81a4-8cceda1a6f58",
-      "name": "Delete an upload - default",
-      "request": {
-        "urlPathTemplate": "/uploads/{upload_id}",
-        "method": "DELETE",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "upload_id": {
-            "equalTo": "upload_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\",\n  \"phones_pending_removal\": 1000000\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "181d0be6-e739-4bf4-81a4-8cceda1a6f58",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
-      "id": "c00a6bdb-8046-4d6f-b055-3e091025e8bb",
-      "name": "Rename an upload - default",
-      "request": {
-        "urlPathTemplate": "/uploads/{upload_id}",
-        "method": "PATCH",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "upload_id": {
-            "equalTo": "upload_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RenameFileOutputBody.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "c00a6bdb-8046-4d6f-b055-3e091025e8bb",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
-      "id": "bee2012f-3d21-4da9-9990-d18370856181",
-      "name": "Mark an upload complete - default",
-      "request": {
-        "urlPathTemplate": "/uploads/{upload_id}/complete",
-        "method": "POST",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "upload_id": {
-            "equalTo": "upload_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/CompleteFileOutputBody.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"size_bytes\": 1000000,\n    \"status\": \"uploading\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "bee2012f-3d21-4da9-9990-d18370856181",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
       "id": "546ab47d-bedc-4e6e-a6ad-e127dd136b27",
       "name": "List inference calls - default",
       "request": {
@@ -2182,6 +2114,6 @@
     }
   ],
   "meta": {
-    "total": 63
+    "total": 61
   }
 }

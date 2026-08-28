@@ -127,13 +127,13 @@ func TestSendWaitMatchesPushWait(t *testing.T) {
 		case r.Method == http.MethodPut:
 			puts++
 			w.WriteHeader(http.StatusOK)
-		case r.URL.Path == "/api/v1/uploads":
+		case r.URL.Path == "/api/v1/files":
 			writeJSON(t, w, map[string]any{
 				"file":                      fileJSON("uploading"),
 				"upload_url":                "http://" + r.Host + "/put-here",
 				"upload_expires_in_seconds": 900,
 			})
-		case r.URL.Path == "/api/v1/uploads/file_1/complete":
+		case r.URL.Path == "/api/v1/files/file_1/complete":
 			writeJSON(t, w, map[string]any{"file": fileJSON("ready")})
 		case r.Method == http.MethodPost:
 			writeJSON(t, w, map[string]any{"delivery": deliveryJSON("dispatched")})
@@ -230,7 +230,7 @@ func TestUploadStreamsAndPinsHeaders(t *testing.T) {
 			gotChunked = len(r.TransferEncoding) > 0
 			gotBody, _ = io.ReadAll(r.Body)
 			w.WriteHeader(http.StatusOK)
-		case r.URL.Path == "/api/v1/uploads":
+		case r.URL.Path == "/api/v1/files":
 			var body map[string]any
 			_ = json.NewDecoder(r.Body).Decode(&body)
 			registeredType, _ = body["mime_type"].(string)
@@ -278,7 +278,7 @@ func TestUploadUsesInjectedHTTPClient(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		if r.URL.Path == "/api/v1/uploads" {
+		if r.URL.Path == "/api/v1/files" {
 			writeJSON(t, w, map[string]any{
 				"file":                      fileJSON("uploading"),
 				"upload_url":                "http://" + r.Host + "/put-here",

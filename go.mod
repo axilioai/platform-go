@@ -2,8 +2,6 @@ module github.com/axilioai/platform-go
 
 go 1.23
 
-toolchain go1.26.6
-
 require github.com/google/uuid v1.6.0
 
 require (

@@ -6,14 +6,13 @@ import (
 	apikeys "github.com/axilioai/platform-go/apikeys"
 	billing "github.com/axilioai/platform-go/billing"
 	core "github.com/axilioai/platform-go/core"
-	downloads "github.com/axilioai/platform-go/downloads"
+	files "github.com/axilioai/platform-go/files"
 	internal "github.com/axilioai/platform-go/internal"
 	option "github.com/axilioai/platform-go/option"
 	organization "github.com/axilioai/platform-go/organization"
 	phones "github.com/axilioai/platform-go/phones"
 	runs "github.com/axilioai/platform-go/runs"
 	skill "github.com/axilioai/platform-go/skill"
-	uploads "github.com/axilioai/platform-go/uploads"
 	usage "github.com/axilioai/platform-go/usage"
 	workflows "github.com/axilioai/platform-go/workflows"
 )
@@ -21,12 +20,11 @@ import (
 type Client struct {
 	APIKeys      *apikeys.Client
 	Billing      *billing.Client
-	Downloads    *downloads.Client
+	Files        *files.Client
 	Organization *organization.Client
 	Phones       *phones.Client
 	Runs         *runs.Client
 	Skill        *skill.Client
-	Uploads      *uploads.Client
 	Usage        *usage.Client
 	Workflows    *workflows.Client
 
@@ -40,12 +38,11 @@ func NewClient(opts ...option.RequestOption) *Client {
 	return &Client{
 		APIKeys:      apikeys.NewClient(options),
 		Billing:      billing.NewClient(options),
-		Downloads:    downloads.NewClient(options),
+		Files:        files.NewClient(options),
 		Organization: organization.NewClient(options),
 		Phones:       phones.NewClient(options),
 		Runs:         runs.NewClient(options),
 		Skill:        skill.NewClient(options),
-		Uploads:      uploads.NewClient(options),
 		Usage:        usage.NewClient(options),
 		Workflows:    workflows.NewClient(options),
 		options:      options,
