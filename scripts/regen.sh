@@ -5,8 +5,8 @@
 # directory (verified: it deletes drivers/, .github/, VERSION even when they are
 # .fernignore-listed). So we generate into a throwaway ./.gen and rsync the
 # result up to the repo root, preserving hand-written paths: the Go MobileDriver
-# (drivers/, AXI-1253), CI (.github/), the release VERSION, the fern config, and
-# the spec. Run from the repo root.
+# (drivers/, AXI-1253), the telemetry compatibility probe, CI (.github/), the
+# release VERSION, the fern config, and the spec. Run from the repo root.
 set -euo pipefail
 
 command -v fern >/dev/null || { echo "fern CLI not found: npm i -g fern-api" >&2; exit 1; }
@@ -35,6 +35,7 @@ rsync -a --delete \
   --exclude='argus' \
   --exclude='.gen-argus' \
   --exclude='contracts' \
+  --exclude='cmd/telemetry-compat-probe' \
   --exclude='.github' \
   --exclude='VERSION' \
   --exclude='.gitignore' \

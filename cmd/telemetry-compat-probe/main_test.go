@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,6 +48,123 @@ func TestReplayMatrixPasses(t *testing.T) {
 		if rec.Results[i].ID != want[i] {
 			t.Errorf("check[%d] = %s, want %s", i, rec.Results[i].ID, want[i])
 		}
+	}
+}
+
+func TestValidateCandidateProvenanceRequiresCanonicalDigests(t *testing.T) {
+	validRef := strings.Repeat("a", 40)
+	validArtifact := strings.Repeat("b", 64)
+	tests := []struct {
+		name, sdkRef, artifactSHA string
+		wantErr                   bool
+	}{
+		{"canonical", validRef, validArtifact, false},
+		{"placeholder ref", "candidate-sha", validArtifact, true},
+		{"short ref", strings.Repeat("a", 39), validArtifact, true},
+		{"uppercase ref", strings.Repeat("A", 40), validArtifact, true},
+		{"non-hex ref", strings.Repeat("g", 40), validArtifact, true},
+		{"placeholder artifact", validRef, "artifact-sha", true},
+		{"short artifact", validRef, strings.Repeat("b", 63), true},
+		{"uppercase artifact", validRef, strings.Repeat("B", 64), true},
+		{"non-hex artifact", validRef, strings.Repeat("z", 64), true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateCandidateProvenance(tt.sdkRef, tt.artifactSHA)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("validateCandidateProvenance() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestExecuteRejectsPlaceholderProvenanceBeforeWritingEvidence(t *testing.T) {
+	outputPath := filepath.Join(t.TempDir(), "go.json")
+	err := execute(context.Background(), "dev", "http://127.0.0.1", "", "", outputPath, "candidate-sha", "artifact-sha", true, "")
+	if err == nil || !strings.Contains(err.Error(), "--sdk-ref") {
+		t.Fatalf("execute() error = %v, want strict sdk-ref error", err)
+	}
+	if _, statErr := os.Stat(outputPath); !os.IsNotExist(statErr) {
+		t.Fatalf("evidence file was created for invalid provenance: %v", statErr)
+	}
+}
+
+func TestValidateNormalEmptyPageRequiresExactShape(t *testing.T) {
+	tests := []struct {
+		name, body string
+		wantErr    bool
+	}{
+		{
+			"exact empty page",
+			`{"frames":[],"total":0,"limit":7,"offset":3,"retention_expired":false,"sdk_call_costs":{},"inference_costs":{}}`,
+			false,
+		},
+		{
+			"null frames",
+			`{"frames":null,"total":0,"limit":7,"offset":3,"retention_expired":false,"sdk_call_costs":{},"inference_costs":{}}`,
+			true,
+		},
+		{
+			"null maps",
+			`{"frames":[],"total":0,"limit":7,"offset":3,"retention_expired":false,"sdk_call_costs":null,"inference_costs":null}`,
+			true,
+		},
+		{
+			"nonempty maps",
+			`{"frames":[],"total":0,"limit":7,"offset":3,"retention_expired":false,"sdk_call_costs":{"span":1},"inference_costs":{"inference":1}}`,
+			true,
+		},
+		{
+			"retention expired",
+			`{"frames":[],"total":0,"limit":7,"offset":3,"retention_expired":true,"sdk_call_costs":{},"inference_costs":{}}`,
+			true,
+		},
+		{
+			"wrong pagination",
+			`{"frames":[],"total":0,"limit":100,"offset":0,"retention_expired":false,"sdk_call_costs":{},"inference_costs":{}}`,
+			true,
+		},
+		{
+			"nonempty frames",
+			`{"frames":[{"kind":"metric","value":1}],"total":1,"limit":7,"offset":3,"retention_expired":false,"sdk_call_costs":{},"inference_costs":{}}`,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != "/api/v1/phones/sessions/normal-empty/frames" || r.URL.Query().Get("limit") != "7" || r.URL.Query().Get("offset") != "3" {
+					http.Error(w, `{"error":"unexpected request"}`, http.StatusBadRequest)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(tt.body))
+			}))
+			defer server.Close()
+
+			_, err := validateNormalEmptyPage(context.Background(), newClient(server.URL, "axl_test"), "normal-empty")
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("validateNormalEmptyPage() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestRegenPreservesTelemetryCompatibilityProbe(t *testing.T) {
+	repoRoot := filepath.Clean(filepath.Join("..", ".."))
+	regen, err := os.ReadFile(filepath.Join(repoRoot, "scripts", "regen.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(regen), "--exclude='cmd/telemetry-compat-probe'") {
+		t.Fatal("scripts/regen.sh does not preserve cmd/telemetry-compat-probe")
+	}
+	workflow, err := os.ReadFile(filepath.Join(repoRoot, ".github", "workflows", "regen.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(workflow), "cmd/telemetry-compat-probe/**") {
+		t.Fatal("regen workflow add-paths does not include cmd/telemetry-compat-probe")
 	}
 }
 
@@ -98,7 +217,7 @@ func TestOutputIncludesFixtureAndFileProvenance(t *testing.T) {
 		t.Fatal(err)
 	}
 	outputPath := filepath.Join(tempDir, "go.json")
-	if err := execute(context.Background(), "dev", "http://127.0.0.1", "", manifestPath, outputPath, "candidate-sha", "artifact-sha", true, ""); err != nil {
+	if err := execute(context.Background(), "dev", "http://127.0.0.1", "", manifestPath, outputPath, strings.Repeat("a", 40), strings.Repeat("b", 64), true, ""); err != nil {
 		t.Fatal(err)
 	}
 	body, err := os.ReadFile(outputPath)

@@ -127,6 +127,9 @@ func execute(ctx context.Context, environment, baseURL, approvedDevOrigin, manif
 	if outputPath == "" || sdkRef == "" || artifactSHA == "" {
 		return errors.New("--output, --sdk-ref, and --artifact-sha256 are required")
 	}
+	if err := validateCandidateProvenance(sdkRef, artifactSHA); err != nil {
+		return err
+	}
 	manifest, fixtureManifestSHA256, err := loadManifest(manifestPath, environment)
 	if err != nil {
 		return err
@@ -161,6 +164,28 @@ func execute(ctx context.Context, environment, baseURL, approvedDevOrigin, manif
 	}
 	fmt.Printf("AXI-1982 Go validation PASS; evidence %s\n", outputPath)
 	return nil
+}
+
+func validateCandidateProvenance(sdkRef, artifactSHA string) error {
+	if !isLowerHex(sdkRef, 40) {
+		return errors.New("--sdk-ref must be a full lowercase 40-hex Git commit SHA")
+	}
+	if !isLowerHex(artifactSHA, 64) {
+		return errors.New("--artifact-sha256 must be a full lowercase 64-hex SHA-256 digest")
+	}
+	return nil
+}
+
+func isLowerHex(value string, width int) bool {
+	if len(value) != width {
+		return false
+	}
+	for i := range value {
+		if (value[i] < '0' || value[i] > '9') && (value[i] < 'a' || value[i] > 'f') {
+			return false
+		}
+	}
+	return true
 }
 
 func validateTarget(environment, rawBaseURL, approvedDevOrigin string) (string, error) {
@@ -255,6 +280,17 @@ func getPage(ctx context.Context, c *client.Client, sessionID string, limit, off
 	return c.Runs.SessionsListFrames(ctx, request)
 }
 
+func validateNormalEmptyPage(ctx context.Context, c *client.Client, sessionID string) (string, error) {
+	page, err := getPage(ctx, c, sessionID, 7, 3)
+	if err != nil {
+		return "", err
+	}
+	if page.RetentionExpired || page.Frames == nil || len(page.Frames) != 0 || page.Total != 0 || page.Limit != 7 || page.Offset != 3 || page.SdkCallCosts == nil || len(page.SdkCallCosts) != 0 || page.InferenceCosts == nil || len(page.InferenceCosts) != 0 {
+		return "", errors.New("normal-empty page shape mismatch")
+	}
+	return "retention=false frames=[] total=0 maps=object-empty pagination=7/3", nil
+}
+
 func runLive(ctx context.Context, baseURL, apiKey string, manifest fixtureManifest, sdkRef, artifactSHA string, rec *recorder) {
 	c := newClient(baseURL, apiKey)
 	rec.check("GO-01", "generated client parses the normal page as today's known frames", func() (string, error) {
@@ -318,11 +354,14 @@ func runLive(ctx context.Context, baseURL, apiKey string, manifest fixtureManife
 		}
 		return fmt.Sprintf("spans=%d logs=%d unknown=0", len(trace.Spans), len(trace.Logs)), nil
 	})
-	rec.check("GO-05", "candidate source/artifact provenance is explicit", func() (string, error) {
-		if sdkRef == "" || artifactSHA == "" {
-			return "", errors.New("candidate provenance missing")
+	rec.check("GO-05", "candidate source/artifact provenance is canonical lowercase full-length hex", func() (string, error) {
+		if err := validateCandidateProvenance(sdkRef, artifactSHA); err != nil {
+			return "", err
 		}
 		return fmt.Sprintf("sdk_ref=%s artifact_sha256=%s", sdkRef, artifactSHA), nil
+	})
+	rec.check("GO-06", "normal empty session is non-expired with empty arrays and object cost maps", func() (string, error) {
+		return validateNormalEmptyPage(ctx, c, manifest.Fixtures.NormalEmptySession.ID)
 	})
 }
 
