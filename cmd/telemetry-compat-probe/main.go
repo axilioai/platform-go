@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -52,6 +53,7 @@ type result struct {
 	Attempts         int    `json:"attempts"`
 	Expected         string `json:"expected"`
 	ObservedRedacted string `json:"observed_redacted"`
+	EvidenceFile     string `json:"evidence_file"`
 }
 
 type recorder struct {
@@ -64,13 +66,18 @@ func (r *recorder) check(id, expected string, fn func() (string, error)) {
 	status, classification := "PASS", "PASS"
 	if err != nil {
 		status, classification = "FAIL", "SDK_ARTIFACT_FAILURE"
-		observed = err.Error()
+		observed = redactedFailure(err)
 	}
 	r.Results = append(r.Results, result{
 		ID: id, Status: status, Classification: classification,
 		StartedAt: started.Format(time.RFC3339), DurationMillis: time.Since(started).Milliseconds(),
 		Attempts: 1, Expected: expected, ObservedRedacted: observed,
 	})
+}
+
+func redactedFailure(err error) string {
+	fingerprint := sha256.Sum256([]byte(err.Error()))
+	return fmt.Sprintf("error_type=%T fingerprint=%x", err, fingerprint)
 }
 
 func (r *recorder) passed() bool {
@@ -83,20 +90,22 @@ func (r *recorder) passed() bool {
 }
 
 type output struct {
-	Environment    string   `json:"environment"`
-	SDK            string   `json:"sdk"`
-	SDKRef         string   `json:"sdk_ref"`
-	ArtifactSHA256 string   `json:"artifact_sha256"`
-	SeedRevision   string   `json:"seed_revision"`
-	Verdict        string   `json:"verdict"`
-	Results        []result `json:"results"`
+	Environment           string   `json:"environment"`
+	SDK                   string   `json:"sdk"`
+	SDKRef                string   `json:"sdk_ref"`
+	ArtifactSHA256        string   `json:"artifact_sha256"`
+	SeedRevision          string   `json:"seed_revision"`
+	FixtureManifestSHA256 string   `json:"fixture_manifest_sha256"`
+	Verdict               string   `json:"verdict"`
+	Results               []result `json:"results"`
 }
 
 func main() {
-	var environment, baseURL, manifestPath, outputPath, sdkRef, artifactSHA string
+	var environment, baseURL, approvedDevOrigin, manifestPath, outputPath, sdkRef, artifactSHA string
 	var replayOnly bool
 	flag.StringVar(&environment, "env", "", "target environment: dev or staging")
 	flag.StringVar(&baseURL, "base-url", "", "target API origin, without /api/v1")
+	flag.StringVar(&approvedDevOrigin, "approved-dev-origin", "", "approved non-loopback dev API origin")
 	flag.StringVar(&manifestPath, "fixture-manifest", "", "telemetry-compat fixture manifest")
 	flag.StringVar(&outputPath, "output", "", "redacted JSON evidence output")
 	flag.StringVar(&sdkRef, "sdk-ref", "", "exact candidate Go SDK git ref")
@@ -104,21 +113,21 @@ func main() {
 	flag.BoolVar(&replayOnly, "replay-only", false, "skip deployed read-only checks")
 	flag.Parse()
 
-	if err := execute(context.Background(), environment, baseURL, manifestPath, outputPath, sdkRef, artifactSHA, replayOnly, os.Getenv(apiKeyEnv)); err != nil {
+	if err := execute(context.Background(), environment, baseURL, approvedDevOrigin, manifestPath, outputPath, sdkRef, artifactSHA, replayOnly, os.Getenv(apiKeyEnv)); err != nil {
 		fmt.Fprintf(os.Stderr, "telemetry-compat-probe: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func execute(ctx context.Context, environment, baseURL, manifestPath, outputPath, sdkRef, artifactSHA string, replayOnly bool, apiKey string) error {
-	origin, err := validateTarget(environment, baseURL)
+func execute(ctx context.Context, environment, baseURL, approvedDevOrigin, manifestPath, outputPath, sdkRef, artifactSHA string, replayOnly bool, apiKey string) error {
+	origin, err := validateTarget(environment, baseURL, approvedDevOrigin)
 	if err != nil {
 		return err
 	}
 	if outputPath == "" || sdkRef == "" || artifactSHA == "" {
 		return errors.New("--output, --sdk-ref, and --artifact-sha256 are required")
 	}
-	manifest, err := loadManifest(manifestPath, environment)
+	manifest, fixtureManifestSHA256, err := loadManifest(manifestPath, environment)
 	if err != nil {
 		return err
 	}
@@ -136,10 +145,14 @@ func execute(ctx context.Context, environment, baseURL, manifestPath, outputPath
 	if !rec.passed() {
 		verdict = "SDK_ARTIFACT_FAILURE"
 	}
+	for index := range rec.Results {
+		rec.Results[index].EvidenceFile = filepath.Base(outputPath)
+	}
 	if err := writeOutput(outputPath, output{
 		Environment: environment, SDK: "go", SDKRef: sdkRef,
 		ArtifactSHA256: artifactSHA, SeedRevision: manifest.SeedRevision,
-		Verdict: verdict, Results: rec.Results,
+		FixtureManifestSHA256: fixtureManifestSHA256,
+		Verdict:               verdict, Results: rec.Results,
 	}); err != nil {
 		return err
 	}
@@ -150,7 +163,7 @@ func execute(ctx context.Context, environment, baseURL, manifestPath, outputPath
 	return nil
 }
 
-func validateTarget(environment, rawBaseURL string) (string, error) {
+func validateTarget(environment, rawBaseURL, approvedDevOrigin string) (string, error) {
 	if environment != "dev" && environment != "staging" {
 		return "", errors.New("environment must be dev or staging; production is refused")
 	}
@@ -159,7 +172,8 @@ func validateTarget(environment, rawBaseURL string) (string, error) {
 	if err != nil || parsed.Hostname() == "" {
 		return "", errors.New("base URL must be an absolute origin")
 	}
-	if parsed.Hostname() == "api.axilio.ai" {
+	hostname := strings.TrimRight(strings.ToLower(parsed.Hostname()), ".")
+	if hostname == "api.axilio.ai" {
 		return "", errors.New("production origin is refused")
 	}
 	if parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" || (parsed.Path != "" && parsed.Path != "/") {
@@ -168,35 +182,56 @@ func validateTarget(environment, rawBaseURL string) (string, error) {
 	if environment == "staging" && rawBaseURL != "https://staging-api.axilio.ai" {
 		return "", errors.New("staging must use exactly https://staging-api.axilio.ai")
 	}
-	loopback := parsed.Hostname() == "127.0.0.1" || parsed.Hostname() == "localhost" || parsed.Hostname() == "::1"
+	loopback := hostname == "127.0.0.1" || hostname == "localhost" || hostname == "::1"
 	if parsed.Scheme != "https" && !(environment == "dev" && parsed.Scheme == "http" && loopback) {
 		return "", errors.New("HTTPS is required; only loopback dev may use HTTP")
+	}
+	if environment == "dev" && !loopback {
+		if approvedDevOrigin == "" {
+			return "", errors.New("non-loopback dev requires --approved-dev-origin")
+		}
+		approvedDevOrigin = strings.TrimRight(approvedDevOrigin, "/")
+		approved, approvedErr := url.Parse(approvedDevOrigin)
+		if approvedErr != nil || approved == nil {
+			return "", errors.New("approved dev origin must be an HTTPS origin")
+		}
+		approvedHostname := strings.TrimRight(strings.ToLower(approved.Hostname()), ".")
+		if approved.Scheme != "https" || approvedHostname == "" || approved.User != nil || approved.RawQuery != "" || approved.Fragment != "" || (approved.Path != "" && approved.Path != "/") {
+			return "", errors.New("approved dev origin must be an HTTPS origin")
+		}
+		if approvedHostname == "api.axilio.ai" {
+			return "", errors.New("production origin is refused")
+		}
+		if rawBaseURL != approvedDevOrigin {
+			return "", errors.New("dev base URL does not match approved dev origin")
+		}
 	}
 	return rawBaseURL, nil
 }
 
-func loadManifest(path, environment string) (fixtureManifest, error) {
+func loadManifest(path, environment string) (fixtureManifest, string, error) {
 	var manifest fixtureManifest
 	if path == "" {
-		return manifest, errors.New("--fixture-manifest is required")
+		return manifest, "", errors.New("--fixture-manifest is required")
 	}
 	body, err := os.ReadFile(path)
 	if err != nil {
-		return manifest, fmt.Errorf("read fixture manifest: %w", err)
+		return manifest, "", fmt.Errorf("read fixture manifest: %w", err)
 	}
 	if err := json.Unmarshal(body, &manifest); err != nil {
-		return manifest, fmt.Errorf("parse fixture manifest: %w", err)
+		return manifest, "", fmt.Errorf("parse fixture manifest: %w", err)
 	}
 	if manifest.ManifestVersion != 1 || manifest.Environment != environment {
-		return manifest, errors.New("fixture manifest version/environment mismatch")
+		return manifest, "", errors.New("fixture manifest version/environment mismatch")
 	}
 	if manifest.SeedRevision == "" || manifest.SeedRevision == "unknown" {
-		return manifest, errors.New("fixture manifest provenance missing")
+		return manifest, "", errors.New("fixture manifest provenance missing")
 	}
 	if manifest.Fixtures.NormalSession.ID == "" || manifest.Fixtures.NormalEmptySession.ID == "" || manifest.Fixtures.ExpiredSession.ID == "" {
-		return manifest, errors.New("fixture manifest is missing a required session")
+		return manifest, "", errors.New("fixture manifest is missing a required session")
 	}
-	return manifest, nil
+	digest := sha256.Sum256(body)
+	return manifest, fmt.Sprintf("%x", digest), nil
 }
 
 func newClient(baseURL, apiKey string) *client.Client {
@@ -242,7 +277,7 @@ func runLive(ctx context.Context, baseURL, apiKey string, manifest fixtureManife
 		if err != nil {
 			return "", err
 		}
-		if !page.RetentionExpired || len(page.Frames) != 0 || page.SdkCallCosts != nil || page.InferenceCosts != nil || page.Limit != 7 || page.Offset != 3 {
+		if !page.RetentionExpired || len(page.Frames) != 0 || page.Total != 0 || page.SdkCallCosts != nil || page.InferenceCosts != nil || page.Limit != 7 || page.Offset != 3 {
 			return "", errors.New("expired page shape mismatch")
 		}
 		return "retention=true frames=[] maps=nil pagination=7/3", nil
@@ -258,11 +293,27 @@ func runLive(ctx context.Context, baseURL, apiKey string, manifest fixtureManife
 		return "retention=true spans=0 logs=0 unknown=0", nil
 	})
 	rec.check("GO-04", "high-level normal trace keeps every known frame", func() (string, error) {
+		page, err := getPage(ctx, c, manifest.Fixtures.NormalSession.ID, 1000, 0)
+		if err != nil {
+			return "", err
+		}
+		if page.Total != int64(len(page.Frames)) {
+			return "", errors.New("normal fixture no longer fits one raw page")
+		}
+		rawSpans, rawLogs := 0, 0
+		for _, frame := range page.Frames {
+			if frame.GetSpan() != nil {
+				rawSpans++
+			}
+			if frame.GetLog() != nil {
+				rawLogs++
+			}
+		}
 		trace, err := telemetry.NewSession(c, manifest.Fixtures.NormalSession.ID).Trace(ctx)
 		if err != nil {
 			return "", err
 		}
-		if trace.RetentionExpired || len(trace.Spans)+len(trace.Logs) < max(1, manifest.Fixtures.NormalSession.MinFrames) || len(trace.Unknown) != 0 {
+		if trace.RetentionExpired || len(trace.Spans) != rawSpans || len(trace.Logs) != rawLogs || len(trace.Unknown) != 0 {
 			return "", errors.New("normal high-level trace mismatch")
 		}
 		return fmt.Sprintf("spans=%d logs=%d unknown=0", len(trace.Spans), len(trace.Logs)), nil
@@ -380,6 +431,20 @@ func runReplay(ctx context.Context, rec *recorder) {
 		if err != nil || len(trace.Spans) != 1 || len(trace.Logs) != 1 || len(trace.Unknown) != 1 {
 			return "", errors.New("mixed high-level classification mismatch")
 		}
+		unknownBody, err := json.Marshal(trace.Unknown[0])
+		if err != nil {
+			return "", err
+		}
+		var unknownPayload any
+		if err := json.Unmarshal(unknownBody, &unknownPayload); err != nil {
+			return "", errors.New("high-level unknown is not JSON")
+		}
+		metricBody, _ := json.Marshal(metricFrame)
+		var metricPayload any
+		_ = json.Unmarshal(metricBody, &metricPayload)
+		if !reflect.DeepEqual(unknownPayload, metricPayload) {
+			return "", errors.New("high-level unknown payload changed")
+		}
 		return "generated=span,unknown,log high=1/1/1", nil
 	})
 	rec.check("GO-REPLAY-02", "new fields and role strings remain additive inside known kinds", func() (string, error) {
@@ -429,10 +494,13 @@ func runReplay(ctx context.Context, rec *recorder) {
 		if err != nil {
 			return "", err
 		}
-		if page.SdkCallCosts != nil || page.InferenceCosts != nil || !trace.RetentionExpired {
+		if !page.RetentionExpired || len(page.Frames) != 0 || page.Total != 0 || page.Limit != 7 || page.Offset != 3 || page.SdkCallCosts != nil || page.InferenceCosts != nil {
+			return "", errors.New("expired generated replay semantics mismatch")
+		}
+		if !trace.RetentionExpired || len(trace.Spans) != 0 || len(trace.Logs) != 0 || len(trace.Unknown) != 0 {
 			return "", errors.New("expired replay semantics mismatch")
 		}
-		return "generated maps=nil high trace empty/expired", nil
+		return "generated retention/empty/0/7/3/maps=nil high empty/expired", nil
 	})
 	rec.check("GO-REPLAY-06", "two-page aggregation keeps 1001 items and page-one cost", func() (string, error) {
 		trace, err := telemetry.NewSession(c, "paged").Trace(ctx)
