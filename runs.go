@@ -2109,7 +2109,7 @@ type RunSessionFramesResponse struct {
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	// Page of frames, ordered by span start / log time.
 	Frames []*RunSessionFramesResponseFramesItem `json:"frames,omitempty" url:"frames,omitempty"`
-	// Billed microdollars per inference_id, the per-inference detail behind sdk_call_costs.
+	// Billed microdollars per inference_id, the per-inference detail behind sdk_call_costs. Null when retention has withheld the trace before the billing lookup runs.
 	InferenceCosts map[string]int64 `json:"inference_costs" url:"inference_costs"`
 	// Page size used for this response.
 	Limit int64 `json:"limit" url:"limit"`
@@ -2117,7 +2117,7 @@ type RunSessionFramesResponse struct {
 	Offset int64 `json:"offset" url:"offset"`
 	// True when the trace is past the org's retention window; frames are withheld and the underlying data is deleted by a daily sweep.
 	RetentionExpired bool `json:"retention_expired" url:"retention_expired"`
-	// Billed microdollars per sdk_call span_id (post-markup, what the invoice charges). Response-level by design: billed cost is a read-time billing join, never a frame attribute.
+	// Billed microdollars per sdk_call span_id (post-markup, what the invoice charges). Null when retention has withheld the trace before the billing lookup runs. Response-level by design: billed cost is a read-time billing join, never a frame attribute.
 	SdkCallCosts map[string]int64 `json:"sdk_call_costs" url:"sdk_call_costs"`
 	// Total number of frames for the session.
 	Total int64 `json:"total" url:"total"`

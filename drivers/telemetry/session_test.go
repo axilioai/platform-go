@@ -122,7 +122,7 @@ func TestSummaryMirrorsTimelineMath(t *testing.T) {
 }
 
 func TestTraceRetentionExpired(t *testing.T) {
-	lister := &fakeLister{pages: []string{`{"frames":[],"sdk_call_costs":{},"inference_costs":{},"limit":1000,"offset":0,"total":0,"retention_expired":true}`}}
+	lister := &fakeLister{pages: []string{`{"frames":[],"sdk_call_costs":null,"inference_costs":null,"limit":1000,"offset":0,"total":0,"retention_expired":true}`}}
 	trace, err := newTestSession(lister).Trace(context.Background())
 	if err != nil {
 		t.Fatalf("Trace: %v", err)

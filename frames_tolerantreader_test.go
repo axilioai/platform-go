@@ -57,6 +57,14 @@ func TestFramesTolerantReader(t *testing.T) {
 		assert.NotNil(t, response.GetFrames()[2].GetLog())
 	})
 
+	t.Run("retention page accepts required null cost maps", func(t *testing.T) {
+		var response RunSessionFramesResponse
+		requiredNullMaps := `{"frames":[],"inference_costs":null,"limit":100,"offset":0,"retention_expired":true,"sdk_call_costs":null,"total":0}`
+		require.NoError(t, json.Unmarshal([]byte(requiredNullMaps), &response))
+		assert.Nil(t, response.GetSdkCallCosts())
+		assert.Nil(t, response.GetInferenceCosts())
+	})
+
 	t.Run("unknown field in a known kind is kept as an extra property", func(t *testing.T) {
 		var response RunSessionFramesResponse
 		require.NoError(t, json.Unmarshal([]byte(framesResponsePage), &response))
