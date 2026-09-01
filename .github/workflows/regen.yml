@@ -12,8 +12,7 @@ name: SDK Regenerate
 # fern-go-sdk's --local generation wipes non-generated files in its output dir,
 # so regen.sh generates into a throwaway ./.gen and rsyncs the result up to the
 # repo root, preserving hand-written paths (drivers/ — the Go MobileDriver,
-# AXI-1253 — cmd/telemetry-compat-probe/, .github/, VERSION, the fern config,
-# and the spec).
+# AXI-1253 — plus .github/, VERSION, the fern config, the spec).
 #
 # Merging a regen PR does NOT cut a release: the SDK owns its own SemVer in the
 # VERSION file, bumped deliberately. tag-on-merge.yml turns a VERSION bump into a
@@ -92,7 +91,6 @@ jobs:
           add-paths: |
             *.go
             **/*.go
-            cmd/telemetry-compat-probe/**
             go.mod
             go.sum
             reference.md
