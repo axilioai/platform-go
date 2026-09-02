@@ -972,7 +972,7 @@ client.Files.Create(
 <dl>
 <dd>
 
-**sizeBytes:** `int64` — Exact size of the upload in bytes, up to 1 GiB; the presigned URL pins it.
+**sizeBytes:** `int64` — Exact size of the upload in bytes, up to 100 MiB (the phone-delivery ceiling); the presigned URL pins it.
     
 </dd>
 </dl>
