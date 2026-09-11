@@ -88,6 +88,7 @@ Hand-written, and safe to edit:
 | `.github/` | CI and the regen/release pipeline |
 | `VERSION` | The release version (see Releasing, below) |
 | `CONTRIBUTING.md` | This file |
+| `README.md` | The quickstart and usage guide (the generated API reference is `reference.md`) |
 
 ### How regen actually preserves hand-written code
 
