@@ -4020,7 +4020,7 @@ type PhoneSessionDetailResponse struct {
 	PhoneID string `json:"phone_id" url:"phone_id"`
 	// Display name of the phone.
 	PhoneName *string `json:"phone_name,omitempty" url:"phone_name,omitempty"`
-	// Fleet status of the phone.
+	// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
 	PhoneStatus PhoneSessionDetailResponsePhoneStatus `json:"phone_status" url:"phone_status"`
 	// Platform of the phone.
 	PhoneType *PhoneSessionDetailResponsePhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
@@ -4469,7 +4469,7 @@ func (p PhoneSessionDetailResponseAllocatedBy) Ptr() *PhoneSessionDetailResponse
 	return &p
 }
 
-// Fleet status of the phone.
+// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
 type PhoneSessionDetailResponsePhoneStatus string
 
 const (
@@ -5934,7 +5934,7 @@ type PhoneSummary struct {
 	PhoneType *PhoneSummaryPhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
 	// When the current rental ends, for rented phones.
 	RentalExpiresAt *time.Time `json:"rental_expires_at,omitempty" url:"rental_expires_at,omitempty"`
-	// Fleet status of the phone.
+	// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
 	Status PhoneSummaryStatus `json:"status" url:"status"`
 	// When the phone record was last updated.
 	UpdatedAt time.Time `json:"updated_at" url:"updated_at"`
@@ -6313,7 +6313,7 @@ func (p PhoneSummaryPhoneType) Ptr() *PhoneSummaryPhoneType {
 	return &p
 }
 
-// Fleet status of the phone.
+// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
 type PhoneSummaryStatus string
 
 const (

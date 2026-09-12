@@ -47,7 +47,7 @@ type FileCreateRequest struct {
 	Filename string `json:"filename" url:"-"`
 	// MIME type of the upload; must be an allowed image or video type.
 	MimeType string `json:"mime_type" url:"-"`
-	// Exact size of the upload in bytes, up to 1 GiB; the presigned URL pins it.
+	// Exact size of the upload in bytes, up to 100 MiB (the phone-delivery ceiling); the presigned URL pins it.
 	SizeBytes int64 `json:"size_bytes" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -551,7 +551,7 @@ type DeleteFileOutputBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema  *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	Message string  `json:"message" url:"message"`
-	// Phones that still hold a copy and have been scheduled to remove it. Zero means the file is already gone everywhere.
+	// Deprecated: a library delete no longer removes copies from phones, so this is always 0. Kept for SDK compatibility and removed in a later version.
 	PhonesPendingRemoval int64 `json:"phones_pending_removal" url:"phones_pending_removal"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -847,7 +847,7 @@ type FileSummary struct {
 	ID string `json:"id" url:"id"`
 	// Declared MIME type, pinned by the presigned upload.
 	MimeType string `json:"mime_type" url:"mime_type"`
-	// Distinct phones currently holding or receiving a copy. Deleting the file recalls these.
+	// Distinct phones currently holding or receiving a delivered copy. Informational: deleting the file from the library does not remove these.
 	OnPhoneCount int64 `json:"on_phone_count" url:"on_phone_count"`
 	// Whether the preview exists, is still being generated, or will never be available for this format.
 	PreviewState FileSummaryPreviewState `json:"preview_state" url:"preview_state"`

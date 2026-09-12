@@ -68,7 +68,7 @@ func (c *Client) Create(
 	return response.Body, nil
 }
 
-// Removes a file from the org's library and everywhere it was delivered: the stored object and the library entry go immediately, and every phone holding a copy is scheduled to remove it (removal is confirmed per phone and retried until it lands). The response reports how many phones that recall reaches. This runs the same for an uploaded or a captured file; a capture's source phone keeps its own session copy, which belongs to the session, not the library.
+// Removes a file from the org's library: the stored object and the library entry go immediately. Copies already on phones are not removed, whether the file was pushed to them or captured from one; removing a file from a phone is a separate operation. This runs the same for an uploaded or a captured file.
 func (c *Client) Delete(
 	ctx context.Context,
 	request *platformgo.FilesDeleteRequest,
