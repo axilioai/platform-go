@@ -52,6 +52,11 @@ rm -rf .gen
 # those deps survive every regen. Needs network (CI has it).
 go mod tidy
 
+# fern-go-sdk also writes a `toolchain` directive for whatever Go the runner
+# had, which would pin every consumer to that toolchain on merge. The repo's
+# own `go` line is the only version statement go.mod carries.
+go mod edit -toolchain=none
+
 echo "platform-go regenerated from specs/production/openapi.json"
 
 # Strip Fern's SSE stream-reconnect surface. These generated options
