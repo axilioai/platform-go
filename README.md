@@ -2,10 +2,14 @@
 
 [![fern shield](https://img.shields.io/badge/%F0%9F%8C%BF-Built%20with%20Fern-brightgreen)](https://buildwithfern.com?utm_source=github&utm_medium=github&utm_campaign=readme&utm_source=Axilio%2FGo)
 
-The Axilio Go library provides convenient access to the Axilio APIs from Go.
+The Axilio Go library provides convenient access to the Axilio APIs from Go: a
+typed REST client for phones, workflows, runs, files, usage and billing, plus a
+hand-written mobile driver (`drivers/mobile`) that drives an allocated phone over
+its device control channel.
 
 ## Table of Contents
 
+- [Quickstart](#quickstart)
 - [Reference](#reference)
 - [Usage](#usage)
 - [Environments](#environments)
@@ -17,6 +21,96 @@ The Axilio Go library provides convenient access to the Axilio APIs from Go.
   - [Timeouts](#timeouts)
   - [Explicit Null](#explicit-null)
 - [Contributing](#contributing)
+
+## Quickstart
+
+The task-first walkthrough lives in the
+[Go quickstart](https://docs.axilio.ai/go-quickstart): install, authenticate,
+allocate a real Android phone, inspect its screen, and release it. The same
+flow in one file:
+
+```bash
+go get github.com/axilioai/platform-go@latest
+export AXILIO_API_KEY=axl_your_key_here
+```
+
+```go
+package main
+
+import (
+    "context"
+    "errors"
+    "fmt"
+    "log"
+    "os"
+
+    platformgo "github.com/axilioai/platform-go"
+    "github.com/axilioai/platform-go/client"
+    "github.com/axilioai/platform-go/drivers/mobile"
+    "github.com/axilioai/platform-go/option"
+)
+
+func main() {
+    if err := run(); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func run() error {
+    apiKey := os.Getenv("AXILIO_API_KEY")
+    if apiKey == "" {
+        return errors.New("AXILIO_API_KEY is not set")
+    }
+
+    ctx := context.Background()
+    c := client.NewClient(option.WithAPIKey(apiKey))
+
+    // Allocate a phone from the shared pool. Pass PhoneID to pin a dedicated one.
+    session, err := c.Phones.Allocate(ctx, &platformgo.PhoneAllocateRequest{
+        PhoneType: platformgo.PhoneAllocateRequestPhoneTypeAndroid,
+    })
+    if err != nil {
+        return fmt.Errorf("allocate phone: %w", err)
+    }
+    // Release the phone on every return path, including errors below.
+    defer func() {
+        if _, err := c.Phones.Deallocate(context.Background(), &platformgo.PhonesDeallocateRequest{
+            PhoneID: session.PhoneID,
+        }); err != nil {
+            log.Printf("release phone: %v", err)
+        }
+    }()
+
+    if session.ControlURL == nil {
+        return errors.New("allocation returned no control URL")
+    }
+
+    driver := mobile.ConnectRemote(*session.ControlURL)
+    defer func() { _ = driver.Close() }()
+
+    screen, err := driver.Observe()
+    if err != nil {
+        return fmt.Errorf("observe screen: %w", err)
+    }
+    fmt.Printf("Found %d text regions and %d icons\n", len(screen.Texts), len(screen.Icons))
+
+    png, err := driver.Screenshot()
+    if err != nil {
+        return fmt.Errorf("capture screenshot: %w", err)
+    }
+    if err := os.WriteFile("screen.png", png, 0o600); err != nil {
+        return fmt.Errorf("save screenshot: %w", err)
+    }
+    fmt.Println("Saved screen.png")
+    return nil
+}
+```
+
+The driver is built around selectors that return an `Element` you act on:
+`driver.FindText("Settings", true)` and `driver.Find("the blue Continue button")`
+each return one, and `el.Tap()`, `el.TypeInto(text)`, `el.SwipeTo(other, ms)`
+act on it. Waits (`WaitForText`, `WaitUntilGone`, `WaitFor`) and raw input
+(`Tap`, `Swipe`, `TypeText`, `KeyPress`) are on the driver.
 
 ## Reference
 
@@ -204,4 +298,5 @@ otherwise they would be overwritten upon the next generated release. Feel free t
 a proof of concept, but know that we will not be able to merge it as-is. We suggest opening
 an issue first to discuss with us!
 
-On the other hand, contributions to the README are always very welcome!
+This README is hand-maintained and survives regeneration (see CONTRIBUTING.md),
+so contributions to it are always welcome.

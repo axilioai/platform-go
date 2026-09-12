@@ -23,8 +23,9 @@ fern generate --local --group go-sdk --api backend --force --log-level warn
 # CONTRIBUTING.md is excluded because Fern's generated version documents the
 # .fernignore mechanism that this generator ignores in --local mode, i.e. it
 # actively instructs contributors into silent data loss. The repo owns it.
-# README.md is deliberately NOT excluded: it is mostly generated API reference
-# that should track the spec.
+# README.md is repo-owned as well (AXI-1924): it carries the quickstart and the
+# hand-written driver's usage, which the generator would otherwise overwrite on
+# every regen. The generated API reference still lands in reference.md.
 rsync -a --delete \
   --exclude='.git' \
   --exclude='.gen' \
@@ -39,6 +40,7 @@ rsync -a --delete \
   --exclude='VERSION' \
   --exclude='.gitignore' \
   --exclude='CONTRIBUTING.md' \
+  --exclude='README.md' \
   --exclude='frames_tolerantreader_test.go' \
   .gen/ ./
 
