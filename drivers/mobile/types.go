@@ -43,7 +43,7 @@ const (
 // Element is one element observed on screen (the Screen.Texts/Icons raw
 // tier): plain data, not a handle: it carries no back-reference to the
 // driver and has no action methods. To act on a target, describe it with a
-// Locator (MobileDriver.GetByText / GetByRole / GetByID / Locator) and call
+// Locator (MobileDriver.GetByText / Locator) and call
 // Tap/Fill/Press/WaitFor/BoundingBox/Text on that instead: the device
 // resolves, auto-waits, and acts in one round trip, rather than this
 // package computing a coordinate client-side against a frame that may

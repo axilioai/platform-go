@@ -24,7 +24,7 @@ func TestLocatorIsLazy(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return dcpResponse{ID: cmd.ID} }}
 	d := driverWith(fc)
 
-	loc := d.GetByText("Continue").Within(d.GetByID("panel")).Nth(2).Filter("the enabled one")
+	loc := d.GetByText("Continue").Within(d.GetByText("Panel")).Nth(2).Filter("the enabled one")
 	if len(fc.sent) != 0 {
 		t.Fatalf("building a locator must send nothing, sent=%d", len(fc.sent))
 	}
@@ -84,8 +84,7 @@ func TestLocatorTapWireShapeAndDefaults(t *testing.T) {
 
 func TestLocatorOptionPrecedenceOverDriverDefault(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
-	d := driverWithOpts(fc,
-		WithDefaultStrategy(StrategyAccessibility), WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
+	d := driverWithOpts(fc, WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
 
 	// Driver defaults flow through when the locator sets nothing.
 	if _, err := d.Locator(Text("x")).Tap(); err != nil {
@@ -93,16 +92,16 @@ func TestLocatorOptionPrecedenceOverDriverDefault(t *testing.T) {
 	}
 	var p locatorTapParams
 	_ = json.Unmarshal(fc.sent[0].Params, &p)
-	if p.Strategy != StrategyAccessibility || p.Model != "driver-model" || p.OcrEngine != "driver-engine" {
+	if p.Model != "driver-model" || p.OcrEngine != "driver-engine" {
 		t.Fatalf("want driver defaults, got %+v", p)
 	}
 
 	// A locator's own resolution option wins over the driver default.
-	if _, err := d.Locator(Text("x"), Strategy(StrategyVision), Model("call-model"), OCREngine("call-engine")).Tap(); err != nil {
+	if _, err := d.Locator(Text("x"), Model("call-model"), OCREngine("call-engine")).Tap(); err != nil {
 		t.Fatalf("Tap: %v", err)
 	}
 	_ = json.Unmarshal(fc.sent[1].Params, &p)
-	if p.Strategy != StrategyVision || p.Model != "call-model" || p.OcrEngine != "call-engine" {
+	if p.Model != "call-model" || p.OcrEngine != "call-engine" {
 		t.Fatalf("want locator overrides, got %+v", p)
 	}
 }
@@ -149,18 +148,17 @@ func TestLocatorActionsTakeOnlyTimeout(t *testing.T) {
 }
 
 func TestDriverPressTakesNoResolutionOptions(t *testing.T) {
-	// MobileDriver.Press has no locator to resolve, so its wire
-	// strategy/model/ocrEngine stay empty even with driver defaults set.
+	// MobileDriver.Press has no locator to resolve, so its wire model/ocrEngine
+	// stay empty even with driver defaults set.
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
-	d := driverWithOpts(fc,
-		WithDefaultStrategy(StrategyAccessibility), WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
+	d := driverWithOpts(fc, WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
 
 	if _, err := d.Press(KeyEnter); err != nil {
 		t.Fatalf("Press: %v", err)
 	}
 	var p locatorPressParams
 	_ = json.Unmarshal(fc.sent[0].Params, &p)
-	if p.Strategy != "" || p.Model != "" || p.OcrEngine != "" {
+	if p.Model != "" || p.OcrEngine != "" {
 		t.Fatalf("want no resolution fields with no locator, got %+v", p)
 	}
 }
@@ -169,9 +167,9 @@ func TestLocatorNestedFields(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWith(fc)
 
-	within := d.GetByID("panel")
+	within := d.GetByText("panel")
 	has := d.GetByText("badge")
-	loc := d.Locator(Role("button"), Name("Save"), States("checked"), AndroidClassName("android.widget.Button")).
+	loc := d.Locator(Text("Continue"), Query("the primary button")).
 		Within(within).Has(has).Nth(0)
 
 	if _, err := loc.Tap(); err != nil {
@@ -180,17 +178,19 @@ func TestLocatorNestedFields(t *testing.T) {
 	var p locatorTapParams
 	_ = json.Unmarshal(fc.sent[0].Params, &p)
 	w := p.Locator
-	if w.Role != "button" || w.Name != "Save" || len(w.States) != 1 || w.States[0] != "checked" {
+	if w.Text != "Continue" || w.Query != "the primary button" {
 		t.Fatalf("bad locator: %+v", w)
 	}
-	if w.Within == nil || w.Within.Id != "panel" {
+	// Role/Name/Id/States/Platform stay untouched on the wire shape (the
+	// vendored contract), but nothing in the public API sets them.
+	if w.Role != "" || w.Name != "" || w.Id != "" || len(w.States) != 0 || w.Platform != nil {
+		t.Fatalf("want role/name/id/states/platform never populated, got %+v", w)
+	}
+	if w.Within == nil || w.Within.Text != "panel" {
 		t.Fatalf("bad within: %+v", w.Within)
 	}
 	if w.Has == nil || w.Has.Text != "badge" {
 		t.Fatalf("bad has: %+v", w.Has)
-	}
-	if w.Platform == nil || w.Platform.Android == nil || w.Platform.Android.ClassName != "android.widget.Button" {
-		t.Fatalf("bad platform: %+v", w.Platform)
 	}
 	// Nth(0) must round-trip as an explicit 0, not an omitted field: a nil
 	// pointer and a pointer-to-zero are different states on the wire.
@@ -352,7 +352,7 @@ func TestLocatorErrorMapping(t *testing.T) {
 				}}
 			}}
 			d := driverWith(fc)
-			_, err := d.GetByRole("button").Tap()
+			_, err := d.GetByText("button").Tap()
 			if !c.is(err) {
 				t.Fatalf("%s: want matching error, got %v", c.name, err)
 			}
@@ -370,9 +370,9 @@ func TestWithinHasInnerLocatorWithoutOptionsStillWorks(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWith(fc)
 
-	within := d.GetByID("panel")
+	within := d.GetByText("panel")
 	has := d.GetByText("badge")
-	loc := d.Locator(Text("Continue"), Strategy(StrategyVision), Model("outer-model"), OCREngine("outer-engine")).
+	loc := d.Locator(Text("Continue"), Model("outer-model"), OCREngine("outer-engine")).
 		Within(within).Has(has)
 
 	if _, err := loc.Tap(); err != nil {
@@ -380,18 +380,18 @@ func TestWithinHasInnerLocatorWithoutOptionsStillWorks(t *testing.T) {
 	}
 	var p locatorTapParams
 	_ = json.Unmarshal(fc.sent[0].Params, &p)
-	if p.Strategy != StrategyVision || p.Model != "outer-model" || p.OcrEngine != "outer-engine" {
+	if p.Model != "outer-model" || p.OcrEngine != "outer-engine" {
 		t.Fatalf("want the outer locator's own options, got %+v", p)
 	}
 }
 
 func TestWithinHasRejectInnerOptions(t *testing.T) {
 	// A locator passed into Within/Has contributes only its selector: the
-	// outer locator's own Model/OCREngine/Strategy govern resolution. An
-	// inner locator that carries one of those options on itself (not
-	// inherited from a driver default) would otherwise have it silently
-	// dropped, so Within/Has now record a build error instead: every action
-	// fails locally with it, and nothing is sent.
+	// outer locator's own Model/OCREngine govern resolution. An inner
+	// locator that carries one of those options on itself (not inherited
+	// from a driver default) would otherwise have it silently dropped, so
+	// Within/Has now record a build error instead: every action fails
+	// locally with it, and nothing is sent.
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWith(fc)
 
@@ -402,18 +402,13 @@ func TestWithinHasRejectInnerOptions(t *testing.T) {
 	}{
 		{
 			"Within/Model",
-			d.Locator(Text("Continue")).Within(d.GetByID("panel", Model("nested-model"))),
+			d.Locator(Text("Continue")).Within(d.GetByText("panel", Model("nested-model"))),
 			[]string{"Within", "Model"},
 		},
 		{
 			"Within/OCREngine",
-			d.Locator(Text("Continue")).Within(d.GetByID("panel", OCREngine("nested-engine"))),
+			d.Locator(Text("Continue")).Within(d.GetByText("panel", OCREngine("nested-engine"))),
 			[]string{"Within", "OCREngine"},
-		},
-		{
-			"Within/Strategy",
-			d.Locator(Text("Continue")).Within(d.GetByID("panel", Strategy(StrategyAccessibility))),
-			[]string{"Within", "Strategy"},
 		},
 		{
 			"Has/Model",
@@ -446,7 +441,7 @@ func TestWithinHasRejectInnerOptionsPropagatesThroughRefinements(t *testing.T) {
 	// keeps the field, and it is what every action or query on the result
 	// answers, not just Tap.
 	d := &MobileDriver{}
-	bad := d.Locator(Text("Continue")).Within(d.GetByID("panel", Model("nested-model")))
+	bad := d.Locator(Text("Continue")).Within(d.GetByText("panel", Model("nested-model")))
 	refined := bad.Nth(2).Filter("the enabled one").Has(d.GetByText("ok"))
 
 	assertBuildErr := func(t *testing.T, err error) {

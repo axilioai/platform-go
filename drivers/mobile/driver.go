@@ -20,20 +20,18 @@ const (
 // WebSocket). It is the Go twin of platform-python's MobileDriver: an
 // ergonomic observe/locator/tap/type API over literal CDP method frames.
 //
-// The DefaultOCREngine / DefaultModel / DefaultStrategy session defaults feed
-// the vision call and every locator: a locator built with its own Model /
-// OCREngine / Strategy option uses that value; one that doesn't falls back to
-// the matching driver default; with neither set, a locator call omits the
-// field entirely so the server's own default applies. Observe (the vision
-// call) has no locator to carry the option, so it always sends an explicit
-// OCR engine instead: the call's own WithOCREngine, else the driver default,
-// else "free".
+// The DefaultOCREngine / DefaultModel session defaults feed the vision call
+// and every locator: a locator built with its own Model / OCREngine option
+// uses that value; one that doesn't falls back to the matching driver
+// default; with neither set, a locator call omits the field entirely so the
+// server's own default applies. Observe (the vision call) has no locator to
+// carry the option, so it always sends an explicit OCR engine instead: the
+// call's own WithOCREngine, else the driver default, else "free".
 type MobileDriver struct {
 	tp transport
 
 	defaultOCREngine string
 	defaultModel     string
-	defaultStrategy  string
 	openTimeout      time.Duration
 }
 
@@ -50,12 +48,6 @@ func WithDefaultOCREngine(engine string) Option {
 // to the vision model.
 func WithDefaultModel(model string) Option {
 	return func(d *MobileDriver) { d.defaultModel = model }
-}
-
-// WithDefaultStrategy sets the session-wide locator resolution strategy
-// (StrategyAuto/Vision/Accessibility).
-func WithDefaultStrategy(strategy string) Option {
-	return func(d *MobileDriver) { d.defaultStrategy = strategy }
 }
 
 // WithOpenTimeout sets how long the first call waits to open the control socket.
@@ -122,7 +114,7 @@ type CallOption interface {
 
 // ActionOption tunes a single locator action or query (Tap, Fill, Press,
 // WaitFor, BoundingBox, Text, Count, and MobileDriver.Press). Resolution
-// options (Model, OCREngine, Strategy) live on the locator instead (see
+// options (Model, OCREngine) live on the locator instead (see
 // Locator), so ActionOption only ever carries a timeout: WithOCREngine
 // implements CallOption, not ActionOption, so passing it to a locator action
 // is a compile error rather than a silent no-op.

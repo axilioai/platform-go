@@ -114,45 +114,47 @@ target without touching the device. Calling `loc.Tap()`, `loc.Fill(text)`,
 resolves the locator, auto-waits until it's actionable, and acts, all in one
 round trip. `Count` is the exception: it reports how many targets match the
 current screen right now, zero included, and never waits, so use `WaitFor`
-(not `Count`) to wait for something to appear. `driver.GetByRole`/`GetByID` need an accessibility tree, which
-today's phones don't have, so acting on them answers `StrategyUnavailable` by
-design until one is advertised. Raw input (`Tap`, `Swipe`, `TypeText`,
-`KeyPress`, `Press`) by literal coordinate stays on the driver, and `Observe`
-still returns a `Screen` of OCR/icon data you can filter locally with
-`Screen.FindText`/`FindAllText`.
+(not `Count`) to wait for something to appear. Raw input (`Tap`, `Swipe`,
+`TypeText`, `KeyPress`, `Press`) by literal coordinate stays on the driver,
+and `Observe` still returns a `Screen` of OCR/icon data you can filter
+locally with `Screen.FindText`/`FindAllText`.
 
-Resolution options (which model, which OCR engine, which strategy) belong to
-the locator, not the action: pass `mobile.Model("...")`, `mobile.OCREngine("premium")`
-or `mobile.Strategy(mobile.StrategyVision)` alongside the selector options
-(`mobile.Text`, `mobile.Exact`, `mobile.Query`, ...) to `driver.GetByText`,
-`driver.GetByRole`, `driver.GetByID` or `driver.Locator`. An action or query
-on the locator (`Tap`/`Fill`/`Press`/`WaitFor`/`BoundingBox`/`Text`/`Count`)
-takes a `mobile.ActionOption`, not a `mobile.CallOption`: the only one is
+Today's phones have no accessibility tree, so vision (OCR/VLM) is the only
+resolver: role/id selectors (`GetByRole`, `GetByID`, and the `Role`/`Name`/
+`ID`/`States`/`AndroidClassName` locator options) and a choice of resolution
+strategy aren't part of the public API yet. They arrive with accessibility
+support in a later release; acting on them today would only ever answer
+`StrategyUnavailable`.
+
+Resolution options (which model, which OCR engine) belong to the locator, not
+the action: pass `mobile.Model("...")` or `mobile.OCREngine("premium")`
+alongside the selector options (`mobile.Text`, `mobile.Exact`, `mobile.Query`)
+to `driver.GetByText` or `driver.Locator`. An action or query on the locator
+(`Tap`/`Fill`/`Press`/`WaitFor`/`BoundingBox`/`Text`/`Count`) takes a
+`mobile.ActionOption`, not a `mobile.CallOption`: the only one is
 `mobile.WithTimeout`, and it's a compile error to pass `mobile.WithOCREngine`
 (a `CallOption`, for `Observe`) to a locator action instead of setting
 `mobile.OCREngine` on the locator. The resolution follows the locator that
-resolves, else the driver's `WithDefaultModel`/`WithDefaultOCREngine`/
-`WithDefaultStrategy`, else it's left off the wire so the server's own
-default applies. Refining a locator (`Nth`, `First`, `Within`, `Has`,
-`Filter`) keeps the receiver's own resolution options; the locator passed
-into `Within`/`Has` only ever contributes its selector fields, since one call
-resolves the whole locator and the outer locator's options govern it. If that
-inner locator carries its own `Model`/`OCREngine`/`Strategy` (set on itself,
-not inherited from a driver default), `Within`/`Has` record a build error on
-the result instead of silently dropping them: every action or query on it
-(and on anything further refined from it) fails locally with a
-`CodeInvalidArgs` `*Error` naming what to do, and nothing is sent.
-`driver.Press(key, ...)` (no locator) takes no resolution options at all.
+resolves, else the driver's `WithDefaultModel`/`WithDefaultOCREngine`, else
+it's left off the wire so the server's own default applies. Refining a
+locator (`Nth`, `First`, `Within`, `Has`, `Filter`) keeps the receiver's own
+resolution options; the locator passed into `Within`/`Has` only ever
+contributes its selector fields, since one call resolves the whole locator
+and the outer locator's options govern it. If that inner locator carries its
+own `Model`/`OCREngine` (set on itself, not inherited from a driver default),
+`Within`/`Has` record a build error on the result instead of silently
+dropping them: every action or query on it (and on anything further refined
+from it) fails locally with a `CodeInvalidArgs` `*Error` naming what to do,
+and nothing is sent. `driver.Press(key, ...)` (no locator) takes no
+resolution options at all.
 
-Under vision resolution (`mobile.StrategyVision`, or `mobile.StrategyAuto` on
-a session with no accessibility tree), a plain `mobile.Text` locator is
-matched by OCR; a locator that also carries `mobile.Query`, `Within`, `Has`
-or `Nth` is instead resolved by one vision-model call, with a prompt composed
-from the whole locator, so `Nth` on a query-based locator now works. `Count`
-is the exception: under vision resolution it needs a plain text locator, and
-answers a `CodeInvalidArgs` error for one that also carries `Query`, `Within`
-or `Has`, since counting needs every independent match and a vision-model
-call only resolves a single target per prompt.
+A plain `mobile.Text` locator is matched by OCR; a locator that also carries
+`mobile.Query`, `Within`, `Has` or `Nth` is instead resolved by one
+vision-model call, with a prompt composed from the whole locator, so `Nth` on
+a query-based locator works. `Count` is the exception: it needs a plain text
+locator, and answers a `CodeInvalidArgs` error for one that also carries
+`Query`, `Within` or `Has`, since counting needs every independent match and
+a vision-model call only resolves a single target per prompt.
 
 ## Reference
 
