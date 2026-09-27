@@ -2,6 +2,7 @@ package mobile
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -122,15 +123,27 @@ func (d *MobileDriver) locatorCall(method string, params any, deviceTimeout time
 	return d.call(method, params, deviceTimeout+locatorCallMargin)
 }
 
+// maxLocatorTimeout is the protocol's ceiling on a locator call's device-side
+// budget (the wire's timeoutMs maximum).
+const maxLocatorTimeout = 60 * time.Second
+
 // locatorCallConfig applies a locator call's options against
 // defaultLocatorTimeout and resolves strategy/model/ocrEngine against the
-// driver's own defaults, per resolveOverride.
-func (d *MobileDriver) locatorCallConfig(opts []CallOption) callConfig {
+// driver's own defaults, per resolveOverride. A timeout outside the
+// protocol's range is an InvalidArgs error here rather than a rejected
+// request on the device.
+func (d *MobileDriver) locatorCallConfig(opts []CallOption) (callConfig, error) {
 	cfg := applyCall(defaultLocatorTimeout, opts)
+	if cfg.timeout < 0 || cfg.timeout > maxLocatorTimeout {
+		return callConfig{}, &Error{
+			Code:    CodeInvalidArgs,
+			Message: fmt.Sprintf("locator timeout %s is outside [0, %s]", cfg.timeout, maxLocatorTimeout),
+		}
+	}
 	cfg.strategy = resolveOverride(cfg.strategy, d.defaultStrategy)
 	cfg.ocrEngine = resolveOverride(cfg.ocrEngine, d.defaultOCREngine)
 	cfg.model = resolveOverride(cfg.model, d.defaultModel)
-	return cfg
+	return cfg, nil
 }
 
 // --- actions -----------------------------------------------------------
@@ -140,7 +153,10 @@ func (d *MobileDriver) locatorCallConfig(opts []CallOption) callConfig {
 // with ActionTimeout if the target never becomes actionable within the
 // call's timeout.
 func (l *Locator) Tap(opts ...CallOption) (LocatorResult, error) {
-	cfg := l.driver.locatorCallConfig(opts)
+	cfg, err := l.driver.locatorCallConfig(opts)
+	if err != nil {
+		return LocatorResult{}, err
+	}
 	p := locatorTapParams{
 		Locator:   l.toWire(),
 		Strategy:  cfg.strategy,
@@ -162,7 +178,10 @@ func (l *Locator) Tap(opts ...CallOption) (LocatorResult, error) {
 // Fill resolves and waits as Tap, focuses the target by tapping it, then
 // types text into it.
 func (l *Locator) Fill(text string, opts ...CallOption) (LocatorResult, error) {
-	cfg := l.driver.locatorCallConfig(opts)
+	cfg, err := l.driver.locatorCallConfig(opts)
+	if err != nil {
+		return LocatorResult{}, err
+	}
 	p := locatorFillParams{
 		Locator:   l.toWire(),
 		Text:      text,
@@ -196,7 +215,10 @@ func (d *MobileDriver) Press(key string, opts ...CallOption) (LocatorResult, err
 }
 
 func (d *MobileDriver) press(key string, loc *locatorWire, opts []CallOption) (LocatorResult, error) {
-	cfg := d.locatorCallConfig(opts)
+	cfg, err := d.locatorCallConfig(opts)
+	if err != nil {
+		return LocatorResult{}, err
+	}
 	p := locatorPressParams{
 		Locator:   loc,
 		Key:       key,
@@ -222,7 +244,10 @@ func (d *MobileDriver) press(key string, loc *locatorWire, opts []CallOption) (L
 // located, so there is nothing to report); for the other states it returns
 // where the target was found.
 func (l *Locator) WaitFor(state string, opts ...CallOption) (*LocatorResult, error) {
-	cfg := l.driver.locatorCallConfig(opts)
+	cfg, err := l.driver.locatorCallConfig(opts)
+	if err != nil {
+		return nil, err
+	}
 	p := locatorWaitForParams{
 		Locator:   l.toWire(),
 		State:     state,
@@ -276,7 +301,10 @@ func (l *Locator) Text(opts ...CallOption) (string, error) {
 // runQuery runs the shared LocatorQueryParams shape (BoundingBox and Text both
 // use it).
 func (l *Locator) runQuery(method string, opts []CallOption) (json.RawMessage, error) {
-	cfg := l.driver.locatorCallConfig(opts)
+	cfg, err := l.driver.locatorCallConfig(opts)
+	if err != nil {
+		return nil, err
+	}
 	p := locatorQueryParams{
 		Locator:   l.toWire(),
 		Strategy:  cfg.strategy,
@@ -291,7 +319,10 @@ func (l *Locator) runQuery(method string, opts []CallOption) (json.RawMessage, e
 // included. Never waits: use WaitFor first if the target may not be on
 // screen yet.
 func (l *Locator) Count(opts ...CallOption) (int, error) {
-	cfg := l.driver.locatorCallConfig(opts)
+	cfg, err := l.driver.locatorCallConfig(opts)
+	if err != nil {
+		return 0, err
+	}
 	p := locatorCountParams{
 		Locator:   l.toWire(),
 		Strategy:  cfg.strategy,

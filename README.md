@@ -112,7 +112,9 @@ target without touching the device. Calling `loc.Tap()`, `loc.Fill(text)`,
 `loc.Press(mobile.KeyEnter)`, `loc.WaitFor(mobile.StateVisible)`,
 `loc.BoundingBox()`, `loc.Text()` or `loc.Count()` sends it: the device
 resolves the locator, auto-waits until it's actionable, and acts, all in one
-round trip. `driver.GetByRole`/`GetByID` need an accessibility tree, which
+round trip. `Count` is the exception: it reports how many targets match the
+current screen right now, zero included, and never waits, so use `WaitFor`
+(not `Count`) to wait for something to appear. `driver.GetByRole`/`GetByID` need an accessibility tree, which
 today's phones don't have, so acting on them answers `StrategyUnavailable` by
 design until one is advertised. Raw input (`Tap`, `Swipe`, `TypeText`,
 `KeyPress`, `Press`) by literal coordinate stays on the driver, and `Observe`

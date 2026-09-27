@@ -3,6 +3,7 @@ package mobile
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 )
@@ -22,7 +23,7 @@ func TestLocatorIsLazy(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return dcpResponse{ID: cmd.ID} }}
 	d := driverWith(fc)
 
-	loc := d.GetByText("Continue").Within(d.GetByID("panel")).Nth(2).Filter(Exact())
+	loc := d.GetByText("Continue").Within(d.GetByID("panel")).Nth(2).Filter("the enabled one")
 	if len(fc.sent) != 0 {
 		t.Fatalf("building a locator must send nothing, sent=%d", len(fc.sent))
 	}
@@ -300,5 +301,32 @@ func TestLocatorErrorMapping(t *testing.T) {
 				t.Fatalf("%s: want not retryable, got retryable", c.name)
 			}
 		})
+	}
+}
+
+func TestRefinementsOnlyNarrow(t *testing.T) {
+	// A second Within keeps the first scope (chained, not replaced); a
+	// second Filter appends its query; the receivers are unchanged.
+	d := &MobileDriver{}
+	base := d.GetByText("Save")
+	loc := base.Within(d.GetByText("Dialog")).Within(d.GetByText("Card")).Filter("the primary one").Filter("enabled")
+	w := loc.toWire()
+	if w.Within == nil || w.Within.Text != "Card" || w.Within.Within == nil || w.Within.Within.Text != "Dialog" {
+		t.Fatalf("within chain = %+v, want Card inside Dialog", w.Within)
+	}
+	if w.Query != "the primary one, enabled" {
+		t.Fatalf("query = %q", w.Query)
+	}
+	if base.toWire().Within != nil || base.toWire().Query != "" {
+		t.Fatal("refinement mutated its receiver")
+	}
+}
+
+func TestLocatorTimeoutOutsideProtocolRangeFailsLocally(t *testing.T) {
+	d := &MobileDriver{}
+	_, err := d.GetByText("Save").Tap(WithTimeout(61 * time.Second))
+	var me *Error
+	if !errors.As(err, &me) || me.Code != CodeInvalidArgs {
+		t.Fatalf("err = %v, want a local CodeInvalidArgs", err)
 	}
 }

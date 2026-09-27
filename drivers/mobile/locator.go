@@ -106,28 +106,52 @@ func (l *Locator) Nth(n int) *Locator {
 func (l *Locator) First() *Locator { return l.Nth(0) }
 
 // Within returns a new locator that only matches inside a match of other.
+// Refinements only ever narrow: calling Within again scopes the new ancestor
+// inside the earlier one (target in other, other in the previous scope)
+// rather than dropping it.
 func (l *Locator) Within(other *Locator) *Locator {
 	out := l.clone()
-	out.within = other
+	out.within = chainScope(other, l.within, func(c *Locator) **Locator { return &c.within })
 	return out
 }
 
 // Has returns a new locator that only matches elements containing a match of
-// other.
+// other. Calling Has again chains the new descendant onto the earlier one
+// rather than dropping it, so the locator only ever narrows.
 func (l *Locator) Has(other *Locator) *Locator {
 	out := l.clone()
-	out.has = other
+	out.has = chainScope(other, l.has, func(c *Locator) **Locator { return &c.has })
 	return out
 }
 
-// Filter returns a new locator with opts applied on top of the receiver's own
-// predicates (AND'ed together).
-func (l *Locator) Filter(opts ...LocatorOption) *Locator {
+// Filter returns a new locator that keeps the receiver's literal selectors
+// (which narrow the candidates) and adds a natural-language query the model
+// ranks the survivors by. A second Filter appends to the first query rather
+// than replacing it.
+func (l *Locator) Filter(query string) *Locator {
 	out := l.clone()
-	for _, o := range opts {
-		o(out)
+	if out.query == "" {
+		out.query = query
+	} else {
+		out.query += ", " + query
 	}
 	return out
+}
+
+// chainScope returns a copy of scope with prev attached at the innermost end
+// of its chain (followed through field), so an earlier Within/Has scope is
+// kept, not replaced. The receivers are never mutated.
+func chainScope(scope, prev *Locator, field func(*Locator) **Locator) *Locator {
+	if prev == nil {
+		return scope
+	}
+	if scope == nil {
+		return prev
+	}
+	c := scope.clone()
+	next := field(c)
+	*next = chainScope(*next, prev, field)
+	return c
 }
 
 func (l *Locator) clone() *Locator {
