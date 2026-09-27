@@ -27,11 +27,15 @@ const (
 // server's own default applies. Observe (the vision call) has no locator to
 // carry the option, so it always sends an explicit OCR engine instead: the
 // call's own WithOCREngine, else the driver default, else "free".
+//
+// defaultStrategy is the equivalent default for the unexported strategy
+// option: held back until accessibility support ships (see locator_actions.go).
 type MobileDriver struct {
 	tp transport
 
 	defaultOCREngine string
 	defaultModel     string
+	defaultStrategy  locatorStrategy
 	openTimeout      time.Duration
 }
 
@@ -48,6 +52,13 @@ func WithDefaultOCREngine(engine string) Option {
 // to the vision model.
 func WithDefaultModel(model string) Option {
 	return func(d *MobileDriver) { d.defaultModel = model }
+}
+
+// withDefaultStrategy sets the session-wide locator resolution strategy
+// (strategyAuto/Vision/Accessibility). Held back until accessibility support
+// ships.
+func withDefaultStrategy(strategy locatorStrategy) Option {
+	return func(d *MobileDriver) { d.defaultStrategy = strategy }
 }
 
 // WithOpenTimeout sets how long the first call waits to open the control socket.
@@ -114,10 +125,10 @@ type CallOption interface {
 
 // ActionOption tunes a single locator action or query (Tap, Fill, Press,
 // WaitFor, BoundingBox, Text, Count, and MobileDriver.Press). Resolution
-// options (Model, OCREngine) live on the locator instead (see
-// Locator), so ActionOption only ever carries a timeout: WithOCREngine
-// implements CallOption, not ActionOption, so passing it to a locator action
-// is a compile error rather than a silent no-op.
+// options (Model, OCREngine, and the unexported strategy) live on the
+// locator instead (see Locator), so ActionOption only ever carries a
+// timeout: WithOCREngine implements CallOption, not ActionOption, so passing
+// it to a locator action is a compile error rather than a silent no-op.
 type ActionOption interface {
 	applyAction(*actionConfig)
 }

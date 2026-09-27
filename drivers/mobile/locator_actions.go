@@ -6,12 +6,35 @@ import (
 	"time"
 )
 
-// States for Locator.WaitFor (the wire's LocatorWaitForParams.state). A third
-// state, "enabled", needs the accessibility tree (vision cannot tell enabled
-// from disabled) and arrives with accessibility support in a later release.
+// locatorStrategy names the resolution strategy for the withStrategy locator
+// option / withDefaultStrategy (driver.go) (the wire's LocatorStrategy).
+// Held back until accessibility support ships: no phone advertises an
+// accessibility tree yet, so today they can only ever answer
+// StrategyUnavailable. Exported once one does.
+type locatorStrategy string
+
 const (
-	StateVisible = "visible"
-	StateHidden  = "hidden"
+	// strategyAuto uses the accessibility tree when the session has one and
+	// the screen otherwise. The server-side default when strategy is omitted.
+	strategyAuto locatorStrategy = "auto"
+	// strategyVision always resolves from the screen (OCR/VLM), even on a
+	// session that has an accessibility tree.
+	strategyVision locatorStrategy = "vision"
+	// strategyAccessibility always resolves from the accessibility tree;
+	// answers StrategyUnavailable on a session without one.
+	strategyAccessibility locatorStrategy = "accessibility"
+)
+
+// WaitState is the target state Locator.WaitFor waits for.
+type WaitState string
+
+// States for Locator.WaitFor (the wire's LocatorWaitForParams.state).
+const (
+	StateVisible WaitState = "visible"
+	StateHidden  WaitState = "hidden"
+	// stateEnabled needs the accessibility tree (vision cannot tell enabled
+	// from disabled) and is held back until accessibility support ships.
+	stateEnabled WaitState = "enabled"
 )
 
 // Locator call budgets. defaultLocatorTimeout is the device-side auto-wait
@@ -82,8 +105,8 @@ func locatorResultFromWire(w wireLocatorResult) LocatorResult {
 // driverDefault (which is "" if the driver has none either: a locator call
 // omits a field entirely rather than forcing a client-side default onto it,
 // unlike the vision call's resolveEngine, so the server's own default
-// applies).
-func resolveOverride(locatorValue, driverDefault string) string {
+// applies). T covers both the model/ocrEngine strings and locatorStrategy.
+func resolveOverride[T ~string](locatorValue, driverDefault T) T {
 	if locatorValue != "" {
 		return locatorValue
 	}
@@ -108,13 +131,12 @@ func (d *MobileDriver) locatorCall(method string, params any, deviceTimeout time
 const maxLocatorTimeout = 60 * time.Second
 
 // locatorParams is what one locator round trip resolves before it builds its
-// wire params: the model/ocrEngine to send (precedence: the locator's own
-// Model/OCREngine option, else the driver's WithDefault*, else omitted so
-// the server's own default applies) and the call's timeout budget. The wire
-// also carries a strategy field (the vendored contract), but the public API
-// has nothing that sets it, so it is never sent: vision is the only
-// resolver today's phones support.
+// wire params: the strategy/model/ocrEngine to send (precedence: the
+// locator's own Model/OCREngine/Strategy option, else the driver's
+// WithDefault*, else omitted so the server's own default applies) and the
+// call's timeout budget.
 type locatorParams struct {
+	strategy         locatorStrategy
 	model, ocrEngine string
 	timeout          time.Duration
 	// timeoutSet records that the call passed WithTimeout, so Locator.Count
@@ -137,10 +159,10 @@ func validateLocatorTimeout(timeout time.Duration) error {
 }
 
 // resolveParams applies opts (a locator action or query's only ActionOption
-// is WithTimeout: model/ocrEngine are set on the locator itself, not per
-// call) against defaultLocatorTimeout, then resolves the locator's own
-// model/ocrEngine against the driver's defaults, per resolveOverride. If l
-// carries a buildErr (an inner Within/Has locator set its own resolution
+// is WithTimeout: strategy/model/ocrEngine are set on the locator itself, not
+// per call) against defaultLocatorTimeout, then resolves the locator's own
+// strategy/model/ocrEngine against the driver's defaults, per resolveOverride.
+// If l carries a buildErr (an inner Within/Has locator set its own resolution
 // options), that error is returned immediately and nothing is sent.
 func (l *Locator) resolveParams(opts []ActionOption) (locatorParams, error) {
 	if l.buildErr != nil {
@@ -152,6 +174,7 @@ func (l *Locator) resolveParams(opts []ActionOption) (locatorParams, error) {
 	}
 	d := l.driver
 	return locatorParams{
+		strategy:   resolveOverride(l.strategy, d.defaultStrategy),
 		model:      resolveOverride(l.model, d.defaultModel),
 		ocrEngine:  resolveOverride(l.ocrEngine, d.defaultOCREngine),
 		timeout:    cfg.timeout,
@@ -161,7 +184,7 @@ func (l *Locator) resolveParams(opts []ActionOption) (locatorParams, error) {
 
 // locatorCallTimeout resolves just the timeout budget for a locator call with
 // no locator to resolve against (MobileDriver.Press): it takes no resolution
-// options, so its wire model/ocrEngine stay empty.
+// options, so its wire strategy/model/ocrEngine stay empty.
 func locatorCallTimeout(opts []ActionOption) (locatorParams, error) {
 	cfg := newActionConfig(defaultLocatorTimeout, opts)
 	if err := validateLocatorTimeout(cfg.timeout); err != nil {
@@ -183,6 +206,7 @@ func (l *Locator) Tap(opts ...ActionOption) (LocatorResult, error) {
 	}
 	wp := locatorTapParams{
 		Locator:   l.toWire(),
+		Strategy:  string(p.strategy),
 		TimeoutMs: timeoutMsField(p.timeout),
 		OcrEngine: p.ocrEngine,
 		Model:     p.model,
@@ -208,6 +232,7 @@ func (l *Locator) Fill(text string, opts ...ActionOption) (LocatorResult, error)
 	wp := locatorFillParams{
 		Locator:   l.toWire(),
 		Text:      text,
+		Strategy:  string(p.strategy),
 		TimeoutMs: timeoutMsField(p.timeout),
 		OcrEngine: p.ocrEngine,
 		Model:     p.model,
@@ -249,6 +274,7 @@ func (d *MobileDriver) press(key string, loc *locatorWire, p locatorParams) (Loc
 	wp := locatorPressParams{
 		Locator:   loc,
 		Key:       key,
+		Strategy:  string(p.strategy),
 		TimeoutMs: timeoutMsField(p.timeout),
 		OcrEngine: p.ocrEngine,
 		Model:     p.model,
@@ -269,14 +295,15 @@ func (d *MobileDriver) press(key string, loc *locatorWire, p locatorParams) (Loc
 // client-side polling loop. Returns nil for StateHidden (nothing was
 // located, so there is nothing to report); for the other states it returns
 // where the target was found.
-func (l *Locator) WaitFor(state string, opts ...ActionOption) (*LocatorResult, error) {
+func (l *Locator) WaitFor(state WaitState, opts ...ActionOption) (*LocatorResult, error) {
 	p, err := l.resolveParams(opts)
 	if err != nil {
 		return nil, err
 	}
 	wp := locatorWaitForParams{
 		Locator:   l.toWire(),
-		State:     state,
+		State:     string(state),
+		Strategy:  string(p.strategy),
 		TimeoutMs: timeoutMsField(p.timeout),
 		OcrEngine: p.ocrEngine,
 		Model:     p.model,
@@ -332,6 +359,7 @@ func (l *Locator) runQuery(method string, opts []ActionOption) (json.RawMessage,
 	}
 	wp := locatorQueryParams{
 		Locator:   l.toWire(),
+		Strategy:  string(p.strategy),
 		TimeoutMs: timeoutMsField(p.timeout),
 		OcrEngine: p.ocrEngine,
 		Model:     p.model,
@@ -352,6 +380,7 @@ func (l *Locator) Count(opts ...ActionOption) (int, error) {
 	}
 	wp := locatorCountParams{
 		Locator:   l.toWire(),
+		Strategy:  string(p.strategy),
 		OcrEngine: p.ocrEngine,
 		Model:     p.model,
 	}
