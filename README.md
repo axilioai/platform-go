@@ -121,6 +121,31 @@ design until one is advertised. Raw input (`Tap`, `Swipe`, `TypeText`,
 still returns a `Screen` of OCR/icon data you can filter locally with
 `Screen.FindText`/`FindAllText`.
 
+Resolution options (which model, which OCR engine, which strategy) belong to
+the locator, not the action: pass `mobile.Model("...")`, `mobile.OCREngine("premium")`
+or `mobile.Strategy(mobile.StrategyVision)` alongside the selector options
+(`mobile.Text`, `mobile.Exact`, `mobile.Query`, ...) to `driver.GetByText`,
+`driver.GetByRole`, `driver.GetByID` or `driver.Locator`. An action or query
+on the locator (`Tap`/`Fill`/`Press`/`WaitFor`/`BoundingBox`/`Text`/`Count`)
+takes only `mobile.WithTimeout` from here on; the resolution follows the
+locator that resolves, else the driver's `WithDefaultModel`/
+`WithDefaultOCREngine`/`WithDefaultStrategy`, else it's left off the wire so
+the server's own default applies. Refining a locator (`Nth`, `First`,
+`Within`, `Has`, `Filter`) keeps the receiver's own resolution options; the
+locator passed into `Within`/`Has` only contributes its selector fields, since
+one call resolves the whole locator and the outer locator's options govern
+it. `driver.Press(key, ...)` (no locator) takes no resolution options at all.
+
+Under vision resolution (`mobile.StrategyVision`, or `mobile.StrategyAuto` on
+a session with no accessibility tree), a plain `mobile.Text` locator is
+matched by OCR; a locator that also carries `mobile.Query`, `Within`, `Has`
+or `Nth` is instead resolved by one vision-model call, with a prompt composed
+from the whole locator, so `Nth` on a query-based locator now works. `Count`
+is the exception: under vision resolution it needs a plain text locator, and
+answers a `CodeInvalidArgs` error for one that also carries `Query`, `Within`
+or `Has`, since counting needs every independent match and a vision-model
+call only resolves a single target per prompt.
+
 ## Reference
 
 A full reference for this library is available [here](./reference.md).

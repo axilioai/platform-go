@@ -86,7 +86,7 @@ func TestLocatorOptionPrecedenceOverDriverDefault(t *testing.T) {
 	d := driverWithOpts(fc,
 		WithDefaultStrategy(StrategyAccessibility), WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
 
-	// Driver defaults flow through when the call sets nothing.
+	// Driver defaults flow through when the locator sets nothing.
 	if _, err := d.Locator(Text("x")).Tap(); err != nil {
 		t.Fatalf("Tap: %v", err)
 	}
@@ -96,13 +96,52 @@ func TestLocatorOptionPrecedenceOverDriverDefault(t *testing.T) {
 		t.Fatalf("want driver defaults, got %+v", p)
 	}
 
-	// A per-call option wins over the driver default.
-	if _, err := d.Locator(Text("x")).Tap(WithStrategy(StrategyVision), WithModel("call-model"), WithOCREngine("call-engine")); err != nil {
+	// A locator's own resolution option wins over the driver default.
+	if _, err := d.Locator(Text("x"), Strategy(StrategyVision), Model("call-model"), OCREngine("call-engine")).Tap(); err != nil {
 		t.Fatalf("Tap: %v", err)
 	}
 	_ = json.Unmarshal(fc.sent[1].Params, &p)
 	if p.Strategy != StrategyVision || p.Model != "call-model" || p.OcrEngine != "call-engine" {
-		t.Fatalf("want call overrides, got %+v", p)
+		t.Fatalf("want locator overrides, got %+v", p)
+	}
+}
+
+func TestLocatorActionsTakeOnlyTimeout(t *testing.T) {
+	// A locator action/query's only meaningful CallOption is WithTimeout: it
+	// no longer accepts WithStrategy/WithModel (removed), and passing
+	// WithOCREngine (still a CallOption, for Observe) has no effect on the
+	// wire, since a locator resolves its OCR engine from its own OCREngine
+	// option or the driver default instead.
+	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
+	d := driverWithOpts(fc, WithDefaultOCREngine("driver-engine"))
+
+	if _, err := d.Locator(Text("x")).Tap(WithOCREngine("ignored"), WithTimeout(2*time.Second)); err != nil {
+		t.Fatalf("Tap: %v", err)
+	}
+	var p locatorTapParams
+	_ = json.Unmarshal(fc.sent[0].Params, &p)
+	if p.OcrEngine != "driver-engine" {
+		t.Fatalf("want the driver default (WithOCREngine ignored on a locator call), got %q", p.OcrEngine)
+	}
+	if p.TimeoutMs != 2000 {
+		t.Fatalf("want timeoutMs 2000, got %d", p.TimeoutMs)
+	}
+}
+
+func TestDriverPressTakesNoResolutionOptions(t *testing.T) {
+	// MobileDriver.Press has no locator to resolve, so its wire
+	// strategy/model/ocrEngine stay empty even with driver defaults set.
+	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
+	d := driverWithOpts(fc,
+		WithDefaultStrategy(StrategyAccessibility), WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
+
+	if _, err := d.Press(KeyEnter); err != nil {
+		t.Fatalf("Press: %v", err)
+	}
+	var p locatorPressParams
+	_ = json.Unmarshal(fc.sent[0].Params, &p)
+	if p.Strategy != "" || p.Model != "" || p.OcrEngine != "" {
+		t.Fatalf("want no resolution fields with no locator, got %+v", p)
 	}
 }
 
@@ -301,6 +340,28 @@ func TestLocatorErrorMapping(t *testing.T) {
 				t.Fatalf("%s: want not retryable, got retryable", c.name)
 			}
 		})
+	}
+}
+
+func TestNestedWithinHasOptionsIgnored(t *testing.T) {
+	// Within/Has only ever read the nested locator's selector fields: its
+	// own Model/OCREngine/Strategy never travel with it. One call resolves
+	// the whole locator, governed by the outer locator's own options.
+	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
+	d := driverWith(fc)
+
+	within := d.GetByID("panel", Strategy(StrategyAccessibility), Model("nested-model"), OCREngine("nested-engine"))
+	has := d.GetByText("badge", Strategy(StrategyAccessibility), Model("nested-model"), OCREngine("nested-engine"))
+	loc := d.Locator(Text("Continue"), Strategy(StrategyVision), Model("outer-model"), OCREngine("outer-engine")).
+		Within(within).Has(has)
+
+	if _, err := loc.Tap(); err != nil {
+		t.Fatalf("Tap: %v", err)
+	}
+	var p locatorTapParams
+	_ = json.Unmarshal(fc.sent[0].Params, &p)
+	if p.Strategy != StrategyVision || p.Model != "outer-model" || p.OcrEngine != "outer-engine" {
+		t.Fatalf("want the outer locator's own options, got %+v", p)
 	}
 }
 

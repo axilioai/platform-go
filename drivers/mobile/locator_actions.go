@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// Strategy names for WithStrategy / WithDefaultStrategy (the wire's
-// LocatorStrategy).
+// Strategy names for the Strategy locator option / WithDefaultStrategy (the
+// wire's LocatorStrategy).
 const (
 	// StrategyAuto uses the accessibility tree when the session has one and
 	// the screen otherwise. The server-side default when strategy is omitted.
@@ -39,12 +39,6 @@ const (
 	defaultLocatorTimeout = 5 * time.Second
 	locatorCallMargin     = 15 * time.Second
 )
-
-// WithStrategy overrides the resolution strategy (StrategyAuto/Vision/
-// Accessibility) for this locator call.
-func WithStrategy(strategy string) CallOption {
-	return func(c *callConfig) { c.strategy = strategy }
-}
 
 // LocatorResult is the outcome of a locator action or query: where the
 // target was when the device acted on it, how it was resolved, and how long
@@ -99,13 +93,14 @@ func locatorResultFromWire(w wireLocatorResult) LocatorResult {
 	}
 }
 
-// resolveOverride returns callValue if the call set one, else driverDefault
-// (which is "" if the driver has none either: a locator call omits a field
-// entirely rather than forcing a client-side default onto it, unlike the
-// vision calls' resolveEngine, so the server's own default applies).
-func resolveOverride(callValue, driverDefault string) string {
-	if callValue != "" {
-		return callValue
+// resolveOverride returns locatorValue if the locator set one, else
+// driverDefault (which is "" if the driver has none either: a locator call
+// omits a field entirely rather than forcing a client-side default onto it,
+// unlike the vision call's resolveEngine, so the server's own default
+// applies).
+func resolveOverride(locatorValue, driverDefault string) string {
+	if locatorValue != "" {
+		return locatorValue
 	}
 	return driverDefault
 }
@@ -127,23 +122,62 @@ func (d *MobileDriver) locatorCall(method string, params any, deviceTimeout time
 // budget (the wire's timeoutMs maximum).
 const maxLocatorTimeout = 60 * time.Second
 
-// locatorCallConfig applies a locator call's options against
-// defaultLocatorTimeout and resolves strategy/model/ocrEngine against the
-// driver's own defaults, per resolveOverride. A timeout outside the
-// protocol's range is an InvalidArgs error here rather than a rejected
-// request on the device.
-func (d *MobileDriver) locatorCallConfig(opts []CallOption) (callConfig, error) {
-	cfg := applyCall(defaultLocatorTimeout, opts)
+// locatorParams is what one locator round trip resolves before it builds its
+// wire params: the strategy/model/ocrEngine to send (precedence: the
+// locator's own Model/OCREngine/Strategy option, else the driver's
+// WithDefault*, else omitted so the server's own default applies) and the
+// call's timeout budget.
+type locatorParams struct {
+	strategy, model, ocrEngine string
+	timeout                    time.Duration
+	// timeoutSet records that the call passed WithTimeout, so Locator.Count
+	// (which sends no device-side budget) can treat it as the whole
+	// deadline instead of padding it with locatorCallMargin.
+	timeoutSet bool
+}
+
+// validateLocatorTimeout rejects a timeout outside the protocol's range
+// locally, as an InvalidArgs error, rather than sending a request the device
+// would reject anyway.
+func validateLocatorTimeout(cfg callConfig) error {
 	if cfg.timeout < 0 || cfg.timeout > maxLocatorTimeout {
-		return callConfig{}, &Error{
+		return &Error{
 			Code:    CodeInvalidArgs,
 			Message: fmt.Sprintf("locator timeout %s is outside [0, %s]", cfg.timeout, maxLocatorTimeout),
 		}
 	}
-	cfg.strategy = resolveOverride(cfg.strategy, d.defaultStrategy)
-	cfg.ocrEngine = resolveOverride(cfg.ocrEngine, d.defaultOCREngine)
-	cfg.model = resolveOverride(cfg.model, d.defaultModel)
-	return cfg, nil
+	return nil
+}
+
+// resolveParams applies opts (a locator action or query's only meaningful
+// CallOption is WithTimeout: strategy/model/ocrEngine are set on the locator
+// itself, not per call) against defaultLocatorTimeout, then resolves the
+// locator's own strategy/model/ocrEngine against the driver's defaults, per
+// resolveOverride.
+func (l *Locator) resolveParams(opts []CallOption) (locatorParams, error) {
+	cfg := applyCall(defaultLocatorTimeout, opts)
+	if err := validateLocatorTimeout(cfg); err != nil {
+		return locatorParams{}, err
+	}
+	d := l.driver
+	return locatorParams{
+		strategy:   resolveOverride(l.strategy, d.defaultStrategy),
+		model:      resolveOverride(l.model, d.defaultModel),
+		ocrEngine:  resolveOverride(l.ocrEngine, d.defaultOCREngine),
+		timeout:    cfg.timeout,
+		timeoutSet: cfg.timeoutSet,
+	}, nil
+}
+
+// locatorCallTimeout resolves just the timeout budget for a locator call with
+// no locator to resolve against (MobileDriver.Press): it takes no resolution
+// options, so its wire strategy/model/ocrEngine stay empty.
+func locatorCallTimeout(opts []CallOption) (locatorParams, error) {
+	cfg := applyCall(defaultLocatorTimeout, opts)
+	if err := validateLocatorTimeout(cfg); err != nil {
+		return locatorParams{}, err
+	}
+	return locatorParams{timeout: cfg.timeout, timeoutSet: cfg.timeoutSet}, nil
 }
 
 // --- actions -----------------------------------------------------------
@@ -153,18 +187,18 @@ func (d *MobileDriver) locatorCallConfig(opts []CallOption) (callConfig, error) 
 // with ActionTimeout if the target never becomes actionable within the
 // call's timeout.
 func (l *Locator) Tap(opts ...CallOption) (LocatorResult, error) {
-	cfg, err := l.driver.locatorCallConfig(opts)
+	p, err := l.resolveParams(opts)
 	if err != nil {
 		return LocatorResult{}, err
 	}
-	p := locatorTapParams{
+	wp := locatorTapParams{
 		Locator:   l.toWire(),
-		Strategy:  cfg.strategy,
-		TimeoutMs: timeoutMsField(cfg.timeout),
-		OcrEngine: cfg.ocrEngine,
-		Model:     cfg.model,
+		Strategy:  p.strategy,
+		TimeoutMs: timeoutMsField(p.timeout),
+		OcrEngine: p.ocrEngine,
+		Model:     p.model,
 	}
-	raw, err := l.driver.locatorCall(methodLocatorTap, p, cfg.timeout)
+	raw, err := l.driver.locatorCall(methodLocatorTap, wp, p.timeout)
 	if err != nil {
 		return LocatorResult{}, err
 	}
@@ -178,19 +212,19 @@ func (l *Locator) Tap(opts ...CallOption) (LocatorResult, error) {
 // Fill resolves and waits as Tap, focuses the target by tapping it, then
 // types text into it.
 func (l *Locator) Fill(text string, opts ...CallOption) (LocatorResult, error) {
-	cfg, err := l.driver.locatorCallConfig(opts)
+	p, err := l.resolveParams(opts)
 	if err != nil {
 		return LocatorResult{}, err
 	}
-	p := locatorFillParams{
+	wp := locatorFillParams{
 		Locator:   l.toWire(),
 		Text:      text,
-		Strategy:  cfg.strategy,
-		TimeoutMs: timeoutMsField(cfg.timeout),
-		OcrEngine: cfg.ocrEngine,
-		Model:     cfg.model,
+		Strategy:  p.strategy,
+		TimeoutMs: timeoutMsField(p.timeout),
+		OcrEngine: p.ocrEngine,
+		Model:     p.model,
 	}
-	raw, err := l.driver.locatorCall(methodLocatorFill, p, cfg.timeout)
+	raw, err := l.driver.locatorCall(methodLocatorFill, wp, p.timeout)
 	if err != nil {
 		return LocatorResult{}, err
 	}
@@ -203,31 +237,36 @@ func (l *Locator) Fill(text string, opts ...CallOption) (LocatorResult, error) {
 
 // Press resolves and waits as Tap, focuses the target, then presses key.
 // Use MobileDriver.Press to send the key to whatever currently has focus
-// instead, with no locator involved.
+// instead, with no locator involved (and so no resolution options).
 func (l *Locator) Press(key string, opts ...CallOption) (LocatorResult, error) {
-	return l.driver.press(key, l.toWire(), opts)
-}
-
-// Press sends a named key (see the Key* constants) to whatever currently has
-// focus. ResolvedBy/Bounds on the result are empty: nothing was located.
-func (d *MobileDriver) Press(key string, opts ...CallOption) (LocatorResult, error) {
-	return d.press(key, nil, opts)
-}
-
-func (d *MobileDriver) press(key string, loc *locatorWire, opts []CallOption) (LocatorResult, error) {
-	cfg, err := d.locatorCallConfig(opts)
+	p, err := l.resolveParams(opts)
 	if err != nil {
 		return LocatorResult{}, err
 	}
-	p := locatorPressParams{
+	return l.driver.press(key, l.toWire(), p)
+}
+
+// Press sends a named key (see the Key* constants) to whatever currently has
+// focus. ResolvedBy/Bounds on the result are empty: nothing was located, and
+// with no locator this call takes no resolution options, only WithTimeout.
+func (d *MobileDriver) Press(key string, opts ...CallOption) (LocatorResult, error) {
+	p, err := locatorCallTimeout(opts)
+	if err != nil {
+		return LocatorResult{}, err
+	}
+	return d.press(key, nil, p)
+}
+
+func (d *MobileDriver) press(key string, loc *locatorWire, p locatorParams) (LocatorResult, error) {
+	wp := locatorPressParams{
 		Locator:   loc,
 		Key:       key,
-		Strategy:  cfg.strategy,
-		TimeoutMs: timeoutMsField(cfg.timeout),
-		OcrEngine: cfg.ocrEngine,
-		Model:     cfg.model,
+		Strategy:  p.strategy,
+		TimeoutMs: timeoutMsField(p.timeout),
+		OcrEngine: p.ocrEngine,
+		Model:     p.model,
 	}
-	raw, err := d.locatorCall(methodLocatorPress, p, cfg.timeout)
+	raw, err := d.locatorCall(methodLocatorPress, wp, p.timeout)
 	if err != nil {
 		return LocatorResult{}, err
 	}
@@ -244,19 +283,19 @@ func (d *MobileDriver) press(key string, loc *locatorWire, opts []CallOption) (L
 // located, so there is nothing to report); for the other states it returns
 // where the target was found.
 func (l *Locator) WaitFor(state string, opts ...CallOption) (*LocatorResult, error) {
-	cfg, err := l.driver.locatorCallConfig(opts)
+	p, err := l.resolveParams(opts)
 	if err != nil {
 		return nil, err
 	}
-	p := locatorWaitForParams{
+	wp := locatorWaitForParams{
 		Locator:   l.toWire(),
 		State:     state,
-		Strategy:  cfg.strategy,
-		TimeoutMs: timeoutMsField(cfg.timeout),
-		OcrEngine: cfg.ocrEngine,
-		Model:     cfg.model,
+		Strategy:  p.strategy,
+		TimeoutMs: timeoutMsField(p.timeout),
+		OcrEngine: p.ocrEngine,
+		Model:     p.model,
 	}
-	raw, err := l.driver.locatorCall(methodLocatorWaitFor, p, cfg.timeout)
+	raw, err := l.driver.locatorCall(methodLocatorWaitFor, wp, p.timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -301,42 +340,45 @@ func (l *Locator) Text(opts ...CallOption) (string, error) {
 // runQuery runs the shared LocatorQueryParams shape (BoundingBox and Text both
 // use it).
 func (l *Locator) runQuery(method string, opts []CallOption) (json.RawMessage, error) {
-	cfg, err := l.driver.locatorCallConfig(opts)
+	p, err := l.resolveParams(opts)
 	if err != nil {
 		return nil, err
 	}
-	p := locatorQueryParams{
+	wp := locatorQueryParams{
 		Locator:   l.toWire(),
-		Strategy:  cfg.strategy,
-		TimeoutMs: timeoutMsField(cfg.timeout),
-		OcrEngine: cfg.ocrEngine,
-		Model:     cfg.model,
+		Strategy:  p.strategy,
+		TimeoutMs: timeoutMsField(p.timeout),
+		OcrEngine: p.ocrEngine,
+		Model:     p.model,
 	}
-	return l.driver.locatorCall(method, p, cfg.timeout)
+	return l.driver.locatorCall(method, wp, p.timeout)
 }
 
 // Count counts the targets matching the locator on the current screen, zero
 // included. Never waits: use WaitFor first if the target may not be on
-// screen yet.
+// screen yet. Under vision resolution, Count needs a plain text locator: one
+// that also carries Query, Within or Has answers CodeInvalidArgs, since
+// counting needs every independent match and a vision-model call only
+// resolves a single target per prompt.
 func (l *Locator) Count(opts ...CallOption) (int, error) {
-	cfg, err := l.driver.locatorCallConfig(opts)
+	p, err := l.resolveParams(opts)
 	if err != nil {
 		return 0, err
 	}
-	p := locatorCountParams{
+	wp := locatorCountParams{
 		Locator:   l.toWire(),
-		Strategy:  cfg.strategy,
-		OcrEngine: cfg.ocrEngine,
-		Model:     cfg.model,
+		Strategy:  p.strategy,
+		OcrEngine: p.ocrEngine,
+		Model:     p.model,
 	}
 	// Count sends no device-side budget, so the in-flight-inference margin
 	// that pads every waiting call does not apply to a timeout the caller
 	// gave it: that is the whole deadline.
 	var raw json.RawMessage
-	if cfg.timeoutSet {
-		raw, err = l.driver.call(methodLocatorCount, p, cfg.timeout)
+	if p.timeoutSet {
+		raw, err = l.driver.call(methodLocatorCount, wp, p.timeout)
 	} else {
-		raw, err = l.driver.locatorCall(methodLocatorCount, p, cfg.timeout)
+		raw, err = l.driver.locatorCall(methodLocatorCount, wp, p.timeout)
 	}
 	if err != nil {
 		return 0, err

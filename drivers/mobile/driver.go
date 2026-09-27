@@ -21,13 +21,13 @@ const (
 // ergonomic observe/locator/tap/type API over literal CDP method frames.
 //
 // The DefaultOCREngine / DefaultModel / DefaultStrategy session defaults feed
-// the vision and locator calls: any call that takes a per-call WithOCREngine /
-// WithModel / WithStrategy uses the driver default when the call omits one,
-// so a script sets the premium engine (or a specific VLM, or a resolution
-// strategy) once instead of on every call. A per-call option always wins.
-// Observe (the vision call) always sends an explicit OCR engine, falling
-// back to "free" when neither is set; a locator call, with neither set,
-// omits the field entirely so the server's own default applies.
+// the vision call and every locator: a locator built with its own Model /
+// OCREngine / Strategy option uses that value; one that doesn't falls back to
+// the matching driver default; with neither set, a locator call omits the
+// field entirely so the server's own default applies. Observe (the vision
+// call) has no locator to carry the option, so it always sends an explicit
+// OCR engine instead: the call's own WithOCREngine, else the driver default,
+// else "free".
 type MobileDriver struct {
 	tp transport
 
@@ -93,28 +93,24 @@ func (d *MobileDriver) Close() error { return d.tp.close() }
 
 type callConfig struct {
 	ocrEngine string
-	model     string
 	timeout   time.Duration
-	strategy  string
 	// timeoutSet records that the caller passed WithTimeout, so a call with
 	// no device-side budget (Locator.count) can treat it as the whole
 	// deadline.
 	timeoutSet bool
 }
 
-// CallOption tunes a single vision or locator call.
+// CallOption tunes a single vision or locator call. WithOCREngine only
+// affects Observe: a locator resolves with its own Model / OCREngine /
+// Strategy option instead (see Locator), so the only CallOption a locator
+// action or query (Tap, Fill, Press, WaitFor, BoundingBox, Text, Count) reads
+// is WithTimeout.
 type CallOption func(*callConfig)
 
-// WithOCREngine overrides the OCR engine for this call.
+// WithOCREngine overrides the OCR engine for this call. Only Observe reads
+// it; a locator's own OCREngine option controls how a locator call resolves.
 func WithOCREngine(engine string) CallOption {
 	return func(c *callConfig) { c.ocrEngine = engine }
-}
-
-// WithModel overrides the model for this call: the VLM under vision
-// resolution, or the model a locator's natural-language Query is ranked with
-// over the accessibility tree.
-func WithModel(model string) CallOption {
-	return func(c *callConfig) { c.model = model }
 }
 
 // WithTimeout overrides the deadline for this call.

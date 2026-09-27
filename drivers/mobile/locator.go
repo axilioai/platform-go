@@ -7,6 +7,16 @@ package mobile
 // resolves the locator, auto-waits until actionable, and acts, all in one
 // round trip. Nth, First, Within, Has and Filter each return a new Locator
 // rather than mutating the receiver.
+//
+// Under vision resolution (StrategyVision, or StrategyAuto on a session with
+// no accessibility tree), a plain Text locator resolves by OCR; a locator
+// that also carries Query, Within, Has or Nth is instead resolved by one
+// vision-model call, with a prompt composed from the whole locator (so Nth
+// on a Query-based locator works). Locator.Count is the exception: under
+// vision resolution it needs a plain text locator, and answers
+// CodeInvalidArgs for one that also carries Query, Within or Has, since
+// counting needs every independent match and a vision-model call only
+// resolves a single target per prompt.
 type Locator struct {
 	driver *MobileDriver
 
@@ -15,12 +25,25 @@ type Locator struct {
 	states                                        []string
 	nth                                           *int
 	within, has                                   *Locator
+
+	// model, ocrEngine and strategy are this locator's own resolution
+	// options (Model/OCREngine/Strategy). An action or query on the locator
+	// resolves with these, falling back to the driver's WithDefaultModel /
+	// WithDefaultOCREngine / WithDefaultStrategy, and omitting the wire
+	// field entirely if neither is set. Within/Has only ever read the
+	// selector fields off a nested locator: these three never travel with
+	// it (one call resolves the whole locator, governed by the outer
+	// locator's own options).
+	model, ocrEngine, strategy string
 }
 
-// LocatorOption sets one predicate on a Locator at construction (via
-// MobileDriver.Locator) or refinement (via Locator.Filter). Predicates
-// combine as AND; a literal selector that matches nothing fails after the
-// call's auto-wait.
+// LocatorOption configures a Locator at construction (via MobileDriver.Locator)
+// or refinement (via Locator.Filter). Most are selector predicates (Text,
+// Exact, Role, Name, ID, States, Query, AndroidClassName), which combine as
+// AND; a literal selector that matches nothing fails after the call's
+// auto-wait. Model, OCREngine and Strategy are different: they are
+// resolution options, setting how an action or query on this locator
+// resolves it rather than narrowing what it matches.
 type LocatorOption func(*Locator)
 
 // Text matches visible text: substring and case-insensitive unless Exact is
@@ -61,6 +84,27 @@ func Query(query string) LocatorOption { return func(l *Locator) { l.query = que
 func AndroidClassName(className string) LocatorOption {
 	return func(l *Locator) { l.androidClassName = className }
 }
+
+// --- resolution options -------------------------------------------------
+
+// Model sets the vision model this locator resolves with: the VLM that
+// reads the target off the screen when the locator resolves by a
+// vision-model call (see Locator). Locator value wins over the driver's
+// WithDefaultModel; with neither set, a locator call omits the field
+// entirely and the server's own default applies.
+func Model(model string) LocatorOption { return func(l *Locator) { l.model = model } }
+
+// OCREngine sets the OCR engine this locator resolves with when it resolves
+// as a plain-text OCR match (see Locator). Locator value wins over the
+// driver's WithDefaultOCREngine; with neither set, a locator call omits the
+// field entirely and the server's own default applies.
+func OCREngine(engine string) LocatorOption { return func(l *Locator) { l.ocrEngine = engine } }
+
+// Strategy overrides the resolution strategy (StrategyAuto, StrategyVision or
+// StrategyAccessibility) for this locator. Locator value wins over the
+// driver's WithDefaultStrategy; with neither set, a locator call omits the
+// field entirely and the server applies StrategyAuto.
+func Strategy(strategy string) LocatorOption { return func(l *Locator) { l.strategy = strategy } }
 
 // Locator builds a general-purpose locator from options. GetByText, GetByRole
 // and GetByID are shorthand for the common single-predicate cases.
