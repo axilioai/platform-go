@@ -44,6 +44,16 @@ const (
 	CodeElementNotFound Code = "element_not_found"
 	// CodeTimeout — a call or a wait loop exceeded its deadline (retryable).
 	CodeTimeout Code = "timeout"
+	// CodeActionTimeout: a locator action's device-side auto-wait exceeded
+	// its timeoutMs budget without the target becoming actionable. Not
+	// retryable: an inference already running when the budget ended was
+	// allowed to finish, so a bare retry races the same clock again.
+	CodeActionTimeout Code = "action_timeout"
+	// CodeStrategyUnavailable: the locator needs a resolver the session
+	// doesn't have (role/name/id/states/platform need the accessibility
+	// tree; today's phones have none, see charter DCP-9). Not retryable:
+	// the session's capabilities won't change mid-call.
+	CodeStrategyUnavailable Code = "strategy_unavailable"
 )
 
 // Error is the single error type this package returns. Classify it with the
@@ -84,6 +94,15 @@ func IsElementNotFound(err error) bool { return hasCode(err, CodeElementNotFound
 // IsDeviceOffline reports whether err is a transient device-offline (retryable).
 func IsDeviceOffline(err error) bool { return hasCode(err, CodeDeviceOffline) }
 
+// IsActionTimeout reports whether err is a locator action whose device-side
+// auto-wait exceeded its timeoutMs budget.
+func IsActionTimeout(err error) bool { return hasCode(err, CodeActionTimeout) }
+
+// IsStrategyUnavailable reports whether err is a locator that needs a
+// resolver the session doesn't have (e.g. role/id need the accessibility
+// tree, which today's phones don't advertise).
+func IsStrategyUnavailable(err error) bool { return hasCode(err, CodeStrategyUnavailable) }
+
 // IsRetryable reports whether err carries the retryable flag.
 func IsRetryable(err error) bool {
 	e := asError(err)
@@ -92,16 +111,18 @@ func IsRetryable(err error) bool {
 
 // _kindToCode maps a DCP error frame's data.kind (PascalCase) onto a Code.
 var _kindToCode = map[string]Code{
-	kindUnknownOp:       CodeUnknownOp,
-	kindInvalidArgs:     CodeInvalidArgs,
-	kindNoAllocation:    CodeNoAllocation,
-	kindNotConnected:    CodeNotConnected,
-	kindDeviceOffline:   CodeDeviceOffline,
-	kindElementNotFound: CodeElementNotFound,
-	kindTimeout:         CodeTimeout,
-	kindUnauthorized:    CodeUnauthorized,
-	kindInternal:        CodeInternal,
-	kindCanceled:        CodeCanceled,
+	kindUnknownOp:           CodeUnknownOp,
+	kindInvalidArgs:         CodeInvalidArgs,
+	kindNoAllocation:        CodeNoAllocation,
+	kindNotConnected:        CodeNotConnected,
+	kindDeviceOffline:       CodeDeviceOffline,
+	kindElementNotFound:     CodeElementNotFound,
+	kindTimeout:             CodeTimeout,
+	kindUnauthorized:        CodeUnauthorized,
+	kindInternal:            CodeInternal,
+	kindCanceled:            CodeCanceled,
+	kindActionTimeout:       CodeActionTimeout,
+	kindStrategyUnavailable: CodeStrategyUnavailable,
 }
 
 // fromDCPError maps a DCP error frame's error object onto an *Error. An unknown

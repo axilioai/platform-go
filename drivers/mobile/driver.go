@@ -6,44 +6,56 @@ import (
 	"time"
 )
 
-// Default deadlines. Input/screenshot calls use defaultCallTimeout; the vision
-// calls (observe/find) default to visionTimeout and take a per-call override.
+// Default deadlines. Input/screenshot calls use defaultCallTimeout; the
+// Observe vision call defaults to visionTimeout; locator calls have their own
+// budget (see defaultLocatorTimeout in locator_actions.go). All take a
+// per-call WithTimeout override.
 const (
 	defaultCallTimeout = 30 * time.Second
 	visionTimeout      = 10 * time.Second
 	defaultOpenTimeout = 10 * time.Second
-	defaultPollEvery   = 300 * time.Millisecond
 )
 
 // MobileDriver drives a paired phone through a transport (the DCP control
-// WebSocket). It is the Go twin of platform-python's MobileDriver: an ergonomic
-// observe/find/tap/type API over literal CDP method frames.
+// WebSocket). It is the Go twin of platform-python's MobileDriver: an
+// ergonomic observe/locator/tap/type API over literal CDP method frames.
 //
-// The DefaultOCREngine / DefaultModel session defaults feed the vision calls:
-// any call that takes a per-call WithOCREngine / WithModel uses the driver
-// default when the call omits one, so a script sets the premium engine (or a
-// specific VLM) once instead of on every call. A per-call option always wins;
-// with neither, the engine falls back to "free" and the model to the
-// server-side default.
+// The DefaultOCREngine / DefaultModel / DefaultStrategy session defaults feed
+// the vision and locator calls: any call that takes a per-call WithOCREngine /
+// WithModel / WithStrategy uses the driver default when the call omits one,
+// so a script sets the premium engine (or a specific VLM, or a resolution
+// strategy) once instead of on every call. A per-call option always wins.
+// Observe (the vision call) always sends an explicit OCR engine, falling
+// back to "free" when neither is set; a locator call, with neither set,
+// omits the field entirely so the server's own default applies.
 type MobileDriver struct {
 	tp transport
 
 	defaultOCREngine string
 	defaultModel     string
+	defaultStrategy  string
 	openTimeout      time.Duration
 }
 
 // Option configures a MobileDriver at construction.
 type Option func(*MobileDriver)
 
-// WithDefaultOCREngine sets the session-wide OCR engine for vision calls.
+// WithDefaultOCREngine sets the session-wide OCR engine for vision and
+// locator calls.
 func WithDefaultOCREngine(engine string) Option {
 	return func(d *MobileDriver) { d.defaultOCREngine = engine }
 }
 
-// WithDefaultModel sets the session-wide VLM for Find.
+// WithDefaultModel sets the session-wide VLM for locator calls that fall back
+// to the vision model.
 func WithDefaultModel(model string) Option {
 	return func(d *MobileDriver) { d.defaultModel = model }
+}
+
+// WithDefaultStrategy sets the session-wide locator resolution strategy
+// (StrategyAuto/Vision/Accessibility).
+func WithDefaultStrategy(strategy string) Option {
+	return func(d *MobileDriver) { d.defaultStrategy = strategy }
 }
 
 // WithOpenTimeout sets how long the first call waits to open the control socket.
@@ -83,9 +95,10 @@ type callConfig struct {
 	ocrEngine string
 	model     string
 	timeout   time.Duration
+	strategy  string
 }
 
-// CallOption tunes a single vision call.
+// CallOption tunes a single vision or locator call.
 type CallOption func(*callConfig)
 
 // WithOCREngine overrides the OCR engine for this call.
@@ -93,7 +106,9 @@ func WithOCREngine(engine string) CallOption {
 	return func(c *callConfig) { c.ocrEngine = engine }
 }
 
-// WithModel overrides the VLM for this Find call.
+// WithModel overrides the model for this call: the VLM under vision
+// resolution, or the model a locator's natural-language Query is ranked with
+// over the accessibility tree.
 func WithModel(model string) CallOption {
 	return func(c *callConfig) { c.model = model }
 }
@@ -128,108 +143,7 @@ func (d *MobileDriver) Observe(opts ...CallOption) (*Screen, error) {
 	if err != nil {
 		return nil, err
 	}
-	return d.screenFromWire(raw)
-}
-
-// FindText returns the first OCR element matching text (one Observe per call),
-// or nil if none. With exact=false the match is case-insensitive substring.
-func (d *MobileDriver) FindText(text string, exact bool, opts ...CallOption) (*Element, error) {
-	screen, err := d.Observe(opts...)
-	if err != nil {
-		return nil, err
-	}
-	return screen.FindText(text, exact), nil
-}
-
-// FindAllText returns every OCR element matching the criteria (one Observe per
-// call). contains and pattern are mutually exclusive.
-func (d *MobileDriver) FindAllText(contains, pattern string, opts ...CallOption) ([]Element, error) {
-	screen, err := d.Observe(opts...)
-	if err != nil {
-		return nil, err
-	}
-	return screen.FindAllText(contains, pattern)
-}
-
-// Find locates an element semantically via the vision model (through the
-// on-device agent). Returns an *Error with CodeElementNotFound if nothing
-// matches.
-func (d *MobileDriver) Find(query string, opts ...CallOption) (*Element, error) {
-	cfg := applyCall(visionTimeout, opts)
-	p := findParams{Query: query, OcrEngine: d.resolveEngine(cfg)}
-	if cfg.model != "" {
-		p.Model = cfg.model
-	} else if d.defaultModel != "" {
-		p.Model = d.defaultModel
-	}
-	raw, err := d.call(methodScreenFind, p, cfg.timeout)
-	if err != nil {
-		return nil, err
-	}
-	var wire wireFind
-	if err := unmarshalResult(raw, &wire); err != nil {
-		return nil, err
-	}
-	if wire.Found == nil {
-		return nil, &Error{Code: CodeElementNotFound, Message: "no element on screen matched query: " + query}
-	}
-	return d.elementFromFound(wire.Found), nil
-}
-
-// --- waits ------------------------------------------------------------------
-
-// WaitForText polls FindText until the target appears or timeout elapses.
-func (d *MobileDriver) WaitForText(text string, timeout time.Duration, exact bool, opts ...CallOption) (*Element, error) {
-	deadline := time.Now().Add(timeout)
-	for {
-		el, err := d.FindText(text, exact, opts...)
-		if err != nil {
-			return nil, err
-		}
-		if el != nil {
-			return el, nil
-		}
-		if time.Now().After(deadline) {
-			return nil, &Error{Code: CodeTimeout, Message: "text not found within deadline: " + text, Retryable: true}
-		}
-		time.Sleep(defaultPollEvery)
-	}
-}
-
-// WaitUntilGone polls until text disappears or timeout elapses.
-func (d *MobileDriver) WaitUntilGone(text string, timeout time.Duration, exact bool, opts ...CallOption) error {
-	deadline := time.Now().Add(timeout)
-	for {
-		el, err := d.FindText(text, exact, opts...)
-		if err != nil {
-			return err
-		}
-		if el == nil {
-			return nil
-		}
-		if time.Now().After(deadline) {
-			return &Error{Code: CodeTimeout, Message: "text still present after deadline: " + text, Retryable: true}
-		}
-		time.Sleep(defaultPollEvery)
-	}
-}
-
-// WaitFor polls Observe until predicate(screen) is true or timeout elapses.
-func (d *MobileDriver) WaitFor(predicate func(Screen) bool, timeout time.Duration) (*Screen, error) {
-	deadline := time.Now().Add(timeout)
-	for {
-		screen, err := d.Observe()
-		if err != nil {
-			return nil, err
-		}
-		if predicate(*screen) {
-			return screen, nil
-		}
-		if time.Now().After(deadline) {
-			return nil, &Error{Code: CodeTimeout, Message: "predicate not satisfied within deadline", Retryable: true}
-		}
-		time.Sleep(defaultPollEvery)
-	}
+	return screenFromWire(raw)
 }
 
 // --- input ------------------------------------------------------------------
@@ -334,16 +248,6 @@ type wireObserve struct {
 	CapturedAt int64      `json:"captured_at"` // epoch-millis
 }
 
-type wireFound struct {
-	BBox       wireBBox `json:"bbox"`
-	Text       string   `json:"text"`
-	Confidence float64  `json:"confidence"`
-}
-
-type wireFind struct {
-	Found *wireFound `json:"found"`
-}
-
 type wireScreenshot struct {
 	// Go's json decodes a base64 string straight into []byte.
 	PngBase64 []byte `json:"png_base64"`
@@ -363,27 +267,17 @@ func bboxFromWire(w wireBBox) BBox {
 	return BBox{X: w.X, Y: w.Y, Width: w.Width, Height: w.Height}
 }
 
-func (d *MobileDriver) elementFromText(w wireText) Element {
+func elementFromText(w wireText) Element {
 	b := bboxFromWire(w.BBox)
-	return Element{BBox: b, Center: b.Center(), Confidence: w.Confidence, Text: w.Text, Source: SourceOCR, driver: d}
+	return Element{BBox: b, Center: b.Center(), Confidence: w.Confidence, Text: w.Text, Source: SourceOCR}
 }
 
-func (d *MobileDriver) elementFromFound(w *wireFound) *Element {
-	b := bboxFromWire(w.BBox)
-	source := SourceVLM
-	if w.Text != "" {
-		source = SourceOCR
-	}
-	el := Element{BBox: b, Center: b.Center(), Confidence: w.Confidence, Text: w.Text, Source: source, driver: d}
-	return &el
-}
-
-func (d *MobileDriver) iconFromWire(w wireIcon) IconBox {
+func iconFromWire(w wireIcon) IconBox {
 	b := bboxFromWire(w.BBox)
 	return IconBox{BBox: b, Center: b.Center(), Confidence: w.Confidence}
 }
 
-func (d *MobileDriver) screenFromWire(raw json.RawMessage) (*Screen, error) {
+func screenFromWire(raw json.RawMessage) (*Screen, error) {
 	var w wireObserve
 	if err := unmarshalResult(raw, &w); err != nil {
 		return nil, err
@@ -395,10 +289,10 @@ func (d *MobileDriver) screenFromWire(raw json.RawMessage) (*Screen, error) {
 		CapturedAt: time.UnixMilli(w.CapturedAt).UTC(),
 	}
 	for _, t := range w.Texts {
-		s.Texts = append(s.Texts, d.elementFromText(t))
+		s.Texts = append(s.Texts, elementFromText(t))
 	}
 	for _, ic := range w.Icons {
-		s.Icons = append(s.Icons, d.iconFromWire(ic))
+		s.Icons = append(s.Icons, iconFromWire(ic))
 	}
 	return s, nil
 }

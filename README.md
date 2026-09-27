@@ -106,11 +106,18 @@ func run() error {
 }
 ```
 
-The driver is built around selectors that return an `Element` you act on:
-`driver.FindText("Settings", true)` and `driver.Find("the blue Continue button")`
-each return one, and `el.Tap()`, `el.TypeInto(text)`, `el.SwipeTo(other, ms)`
-act on it. Waits (`WaitForText`, `WaitUntilGone`, `WaitFor`) and raw input
-(`Tap`, `Swipe`, `TypeText`, `KeyPress`) are on the driver.
+The driver is built around locators: `driver.GetByText("Settings", mobile.Exact())`
+and `driver.Locator(mobile.Query("the blue Continue button"))` each describe a
+target without touching the device. Calling `loc.Tap()`, `loc.Fill(text)`,
+`loc.Press(mobile.KeyEnter)`, `loc.WaitFor(mobile.StateVisible)`,
+`loc.BoundingBox()`, `loc.Text()` or `loc.Count()` sends it: the device
+resolves the locator, auto-waits until it's actionable, and acts, all in one
+round trip. `driver.GetByRole`/`GetByID` need an accessibility tree, which
+today's phones don't have, so acting on them answers `StrategyUnavailable` by
+design until one is advertised. Raw input (`Tap`, `Swipe`, `TypeText`,
+`KeyPress`, `Press`) by literal coordinate stays on the driver, and `Observe`
+still returns a `Screen` of OCR/icon data you can filter locally with
+`Screen.FindText`/`FindAllText`.
 
 ## Reference
 

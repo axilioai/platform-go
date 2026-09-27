@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"math/rand/v2"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/coder/websocket"
@@ -89,16 +88,21 @@ func (t *RemoteTransport) attachURL() string {
 	return u.String()
 }
 
-// isMutatingMethod reports whether a DCP method mutates device state,
-// meaning the interaction domains (Touch.* / Keyboard.*). Only these
-// carry idempotency keys: reads are naturally safe to re-send, and
-// keyless reads are what keep the executor's ledger small.
+// isMutatingMethod reports whether a DCP method mutates device state. Only
+// these carry idempotency keys: reads are naturally safe to re-send, and
+// keyless reads are what keep the executor's ledger small. Touch.* and
+// Keyboard.* are entirely mutating, but Locator is a mixed domain (tap/fill/
+// press mutate; waitFor/boundingBox/text/count are reads), so this lists
+// methods rather than gating by domain prefix.
 func isMutatingMethod(method string) bool {
-	domain, _, ok := strings.Cut(method, ".")
-	if !ok {
+	switch method {
+	case methodTouchTap, methodTouchLongPress, methodTouchSwipe,
+		methodKeyboardTypeText, methodKeyboardKeyPress,
+		methodLocatorTap, methodLocatorFill, methodLocatorPress:
+		return true
+	default:
 		return false
 	}
-	return domain == "Touch" || domain == "Keyboard"
 }
 
 // withIdempotencyKey stamps a fresh client-generated key into a mutating

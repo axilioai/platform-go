@@ -1,10 +1,10 @@
 // Package mobile is the hand-written phone driver for the Axilio Go SDK: the Go
 // twin of platform-python's axilio.drivers.mobile. It drives a paired phone
 // through a Transport (the DCP control WebSocket), turning an ergonomic
-// observe/find/tap/type API into literal CDP method frames. It lives alongside
-// the Fern-generated REST client and is preserved across regen by the rsync
-// exclude list in scripts/regen.sh — .fernignore does not work here (see that
-// script's header).
+// observe/locator/tap/type API into literal CDP method frames. It lives
+// alongside the Fern-generated REST client and is preserved across regen by
+// the rsync exclude list in scripts/regen.sh (.fernignore does not work
+// here; see that script's header).
 package mobile
 
 import (
@@ -42,9 +42,14 @@ const (
 	SourceVLM Source = "vlm"
 )
 
-// Element is one located element — the universal selector return type; actions
-// chain off it (Tap, LongPress, TypeInto, SwipeTo). The unexported driver
-// back-reference is what those chained actions drive; it is never serialised.
+// Element is one element observed on screen (the Screen.Texts/Icons raw
+// tier): plain data, not a handle: it carries no back-reference to the
+// driver and has no action methods. To act on a target, describe it with a
+// Locator (MobileDriver.GetByText / GetByRole / GetByID / Locator) and call
+// Tap/Fill/Press/WaitFor/BoundingBox/Text on that instead: the device
+// resolves, auto-waits, and acts in one round trip, rather than this
+// package computing a coordinate client-side against a frame that may
+// already be stale.
 type Element struct {
 	BBox       BBox    `json:"bbox"`
 	Center     Coords  `json:"center"`
@@ -52,29 +57,6 @@ type Element struct {
 	// Text is the OCR text, empty for a VLM-sourced element.
 	Text   string `json:"text,omitempty"`
 	Source Source `json:"source"`
-
-	driver *MobileDriver
-}
-
-// Tap taps at the element's center.
-func (e Element) Tap() error { return e.driver.tapXY(e.Center.X, e.Center.Y) }
-
-// LongPress presses and holds at the element's center for durationMs.
-func (e Element) LongPress(durationMs int) error {
-	return e.driver.longPressXY(e.Center.X, e.Center.Y, durationMs)
-}
-
-// TypeInto taps the element, then types text into it.
-func (e Element) TypeInto(text string) error {
-	if err := e.Tap(); err != nil {
-		return err
-	}
-	return e.driver.typeText(text)
-}
-
-// SwipeTo swipes from this element's center to other's center over durationMs.
-func (e Element) SwipeTo(other Element, durationMs int) error {
-	return e.driver.swipeXY(e.Center.X, e.Center.Y, other.Center.X, other.Center.Y, durationMs)
 }
 
 // IconBox is one YOLO-detected icon (rectangle-only; the icon model has a single class).
