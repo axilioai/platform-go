@@ -16688,6 +16688,20 @@ func TestEnumPhoneActiveSessionPhoneStatus(t *testing.T) {
 		assert.Equal(t, PhoneActiveSessionPhoneStatus("suspended"), val, "enum value should match expected wire value")
 	})
 
+	t.Run("NewFromString_recovering", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneActiveSessionPhoneStatusFromString("recovering")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneActiveSessionPhoneStatus("recovering"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_out_of_service", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneActiveSessionPhoneStatusFromString("out_of_service")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneActiveSessionPhoneStatus("out_of_service"), val, "enum value should match expected wire value")
+	})
+
 	t.Run("NewFromString_Invalid", func(t *testing.T) {
 		_, err := NewPhoneActiveSessionPhoneStatusFromString("invalid_value_that_does_not_exist")
 		assert.Error(t, err)
@@ -16953,6 +16967,20 @@ func TestEnumPhoneSessionDetailResponsePhoneStatus(t *testing.T) {
 		val, err := NewPhoneSessionDetailResponsePhoneStatusFromString("suspended")
 		assert.NoError(t, err, "valid enum value should not return error")
 		assert.Equal(t, PhoneSessionDetailResponsePhoneStatus("suspended"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_recovering", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneSessionDetailResponsePhoneStatusFromString("recovering")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneSessionDetailResponsePhoneStatus("recovering"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_out_of_service", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneSessionDetailResponsePhoneStatusFromString("out_of_service")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneSessionDetailResponsePhoneStatus("out_of_service"), val, "enum value should match expected wire value")
 	})
 
 	t.Run("NewFromString_Invalid", func(t *testing.T) {
@@ -17421,6 +17449,20 @@ func TestEnumPhoneSummaryStatus(t *testing.T) {
 		val, err := NewPhoneSummaryStatusFromString("suspended")
 		assert.NoError(t, err, "valid enum value should not return error")
 		assert.Equal(t, PhoneSummaryStatus("suspended"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_recovering", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneSummaryStatusFromString("recovering")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneSummaryStatus("recovering"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_out_of_service", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewPhoneSummaryStatusFromString("out_of_service")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, PhoneSummaryStatus("out_of_service"), val, "enum value should match expected wire value")
 	})
 
 	t.Run("NewFromString_Invalid", func(t *testing.T) {
