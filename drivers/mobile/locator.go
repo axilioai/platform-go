@@ -34,8 +34,7 @@ func Exact() LocatorOption { return func(l *Locator) { l.exact = true } }
 
 // Role matches the accessibility role, e.g. "button", "textbox". Needs the
 // accessibility tree: on a session without one this answers
-// StrategyUnavailable regardless of strategy (today's phones have none; see
-// charter DCP-9).
+// StrategyUnavailable regardless of strategy (today's phones have none).
 func Role(role string) LocatorOption { return func(l *Locator) { l.role = role } }
 
 // Name matches the accessible name. Needs the accessibility tree; see Role.
@@ -82,14 +81,14 @@ func (d *MobileDriver) GetByText(text string, opts ...LocatorOption) *Locator {
 
 // GetByRole builds a locator matching an accessibility role. Today's phones
 // have no accessibility tree, so acting on it answers StrategyUnavailable by
-// design (charter DCP-9) until a phone advertises one.
+// design until a phone advertises one.
 func (d *MobileDriver) GetByRole(role string, opts ...LocatorOption) *Locator {
 	return d.Locator(append([]LocatorOption{Role(role)}, opts...)...)
 }
 
 // GetByID builds a locator matching a developer-assigned id. Today's phones
 // have no accessibility tree, so acting on it answers StrategyUnavailable by
-// design (charter DCP-9) until a phone advertises one.
+// design until a phone advertises one.
 func (d *MobileDriver) GetByID(id string, opts ...LocatorOption) *Locator {
 	return d.Locator(append([]LocatorOption{ID(id)}, opts...)...)
 }

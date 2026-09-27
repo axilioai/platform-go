@@ -51,7 +51,7 @@ const (
 	CodeActionTimeout Code = "action_timeout"
 	// CodeStrategyUnavailable: the locator needs a resolver the session
 	// doesn't have (role/name/id/states/platform need the accessibility
-	// tree; today's phones have none, see charter DCP-9). Not retryable:
+	// tree, and today's phones have none). Not retryable:
 	// the session's capabilities won't change mid-call.
 	CodeStrategyUnavailable Code = "strategy_unavailable"
 )
