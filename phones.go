@@ -465,7 +465,7 @@ type PhonesListRequest struct {
 	Offset         *int64 `json:"-" url:"offset,omitempty"`
 	// free-text search across nickname, name, model, location
 	Search *string `json:"-" url:"search,omitempty"`
-	// filter by phone status (active/inactive/maintenance/suspended); case-insensitive
+	// filter by phone status (active/inactive/maintenance/suspended/recovering/out_of_service); case-insensitive
 	Status []string `json:"-" url:"status,omitempty"`
 	// filter by phone type (iphone/android); case-insensitive
 	Type []string `json:"-" url:"type,omitempty"`
@@ -1553,7 +1553,7 @@ type PhoneActiveSession struct {
 	PhoneID string `json:"phone_id" url:"phone_id"`
 	// Phone's name, if set.
 	PhoneName *string `json:"phone_name,omitempty" url:"phone_name,omitempty"`
-	// Phone's lifecycle status (ACTIVE/INACTIVE/...).
+	// Fleet status of the phone. Only active is allocatable; see PhoneSummary.status for each value.
 	PhoneStatus PhoneActiveSessionPhoneStatus `json:"phone_status" url:"phone_status"`
 	// IPHONE or ANDROID.
 	PhoneType *PhoneActiveSessionPhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
@@ -1876,14 +1876,16 @@ func (p PhoneActiveSessionAllocatedBy) Ptr() *PhoneActiveSessionAllocatedBy {
 	return &p
 }
 
-// Phone's lifecycle status (ACTIVE/INACTIVE/...).
+// Fleet status of the phone. Only active is allocatable; see PhoneSummary.status for each value.
 type PhoneActiveSessionPhoneStatus string
 
 const (
-	PhoneActiveSessionPhoneStatusActive      PhoneActiveSessionPhoneStatus = "active"
-	PhoneActiveSessionPhoneStatusInactive    PhoneActiveSessionPhoneStatus = "inactive"
-	PhoneActiveSessionPhoneStatusMaintenance PhoneActiveSessionPhoneStatus = "maintenance"
-	PhoneActiveSessionPhoneStatusSuspended   PhoneActiveSessionPhoneStatus = "suspended"
+	PhoneActiveSessionPhoneStatusActive       PhoneActiveSessionPhoneStatus = "active"
+	PhoneActiveSessionPhoneStatusInactive     PhoneActiveSessionPhoneStatus = "inactive"
+	PhoneActiveSessionPhoneStatusMaintenance  PhoneActiveSessionPhoneStatus = "maintenance"
+	PhoneActiveSessionPhoneStatusSuspended    PhoneActiveSessionPhoneStatus = "suspended"
+	PhoneActiveSessionPhoneStatusRecovering   PhoneActiveSessionPhoneStatus = "recovering"
+	PhoneActiveSessionPhoneStatusOutOfService PhoneActiveSessionPhoneStatus = "out_of_service"
 )
 
 func NewPhoneActiveSessionPhoneStatusFromString(s string) (PhoneActiveSessionPhoneStatus, error) {
@@ -1896,6 +1898,10 @@ func NewPhoneActiveSessionPhoneStatusFromString(s string) (PhoneActiveSessionPho
 		return PhoneActiveSessionPhoneStatusMaintenance, nil
 	case "suspended":
 		return PhoneActiveSessionPhoneStatusSuspended, nil
+	case "recovering":
+		return PhoneActiveSessionPhoneStatusRecovering, nil
+	case "out_of_service":
+		return PhoneActiveSessionPhoneStatusOutOfService, nil
 	}
 	var t PhoneActiveSessionPhoneStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -4020,7 +4026,7 @@ type PhoneSessionDetailResponse struct {
 	PhoneID string `json:"phone_id" url:"phone_id"`
 	// Display name of the phone.
 	PhoneName *string `json:"phone_name,omitempty" url:"phone_name,omitempty"`
-	// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
+	// Fleet status of the phone. Only active is allocatable. inactive: unreachable, back on its next heartbeat. maintenance: planned work that releases itself. suspended: an administrative hold. recovering: being repaired automatically. out_of_service: needs a repair at the rack. Treat unknown values as unavailable.
 	PhoneStatus PhoneSessionDetailResponsePhoneStatus `json:"phone_status" url:"phone_status"`
 	// Platform of the phone.
 	PhoneType *PhoneSessionDetailResponsePhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
@@ -4469,14 +4475,16 @@ func (p PhoneSessionDetailResponseAllocatedBy) Ptr() *PhoneSessionDetailResponse
 	return &p
 }
 
-// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
+// Fleet status of the phone. Only active is allocatable. inactive: unreachable, back on its next heartbeat. maintenance: planned work that releases itself. suspended: an administrative hold. recovering: being repaired automatically. out_of_service: needs a repair at the rack. Treat unknown values as unavailable.
 type PhoneSessionDetailResponsePhoneStatus string
 
 const (
-	PhoneSessionDetailResponsePhoneStatusActive      PhoneSessionDetailResponsePhoneStatus = "active"
-	PhoneSessionDetailResponsePhoneStatusInactive    PhoneSessionDetailResponsePhoneStatus = "inactive"
-	PhoneSessionDetailResponsePhoneStatusMaintenance PhoneSessionDetailResponsePhoneStatus = "maintenance"
-	PhoneSessionDetailResponsePhoneStatusSuspended   PhoneSessionDetailResponsePhoneStatus = "suspended"
+	PhoneSessionDetailResponsePhoneStatusActive       PhoneSessionDetailResponsePhoneStatus = "active"
+	PhoneSessionDetailResponsePhoneStatusInactive     PhoneSessionDetailResponsePhoneStatus = "inactive"
+	PhoneSessionDetailResponsePhoneStatusMaintenance  PhoneSessionDetailResponsePhoneStatus = "maintenance"
+	PhoneSessionDetailResponsePhoneStatusSuspended    PhoneSessionDetailResponsePhoneStatus = "suspended"
+	PhoneSessionDetailResponsePhoneStatusRecovering   PhoneSessionDetailResponsePhoneStatus = "recovering"
+	PhoneSessionDetailResponsePhoneStatusOutOfService PhoneSessionDetailResponsePhoneStatus = "out_of_service"
 )
 
 func NewPhoneSessionDetailResponsePhoneStatusFromString(s string) (PhoneSessionDetailResponsePhoneStatus, error) {
@@ -4489,6 +4497,10 @@ func NewPhoneSessionDetailResponsePhoneStatusFromString(s string) (PhoneSessionD
 		return PhoneSessionDetailResponsePhoneStatusMaintenance, nil
 	case "suspended":
 		return PhoneSessionDetailResponsePhoneStatusSuspended, nil
+	case "recovering":
+		return PhoneSessionDetailResponsePhoneStatusRecovering, nil
+	case "out_of_service":
+		return PhoneSessionDetailResponsePhoneStatusOutOfService, nil
 	}
 	var t PhoneSessionDetailResponsePhoneStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -5934,7 +5946,7 @@ type PhoneSummary struct {
 	PhoneType *PhoneSummaryPhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
 	// When the current rental ends, for rented phones.
 	RentalExpiresAt *time.Time `json:"rental_expires_at,omitempty" url:"rental_expires_at,omitempty"`
-	// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
+	// Fleet status of the phone. Only active is allocatable. inactive: unreachable, back on its next heartbeat. maintenance: planned work that releases itself. suspended: an administrative hold. recovering: being repaired automatically. out_of_service: needs a repair at the rack. Treat unknown values as unavailable.
 	Status PhoneSummaryStatus `json:"status" url:"status"`
 	// When the phone record was last updated.
 	UpdatedAt time.Time `json:"updated_at" url:"updated_at"`
@@ -6313,14 +6325,16 @@ func (p PhoneSummaryPhoneType) Ptr() *PhoneSummaryPhoneType {
 	return &p
 }
 
-// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
+// Fleet status of the phone. Only active is allocatable. inactive: unreachable, back on its next heartbeat. maintenance: planned work that releases itself. suspended: an administrative hold. recovering: being repaired automatically. out_of_service: needs a repair at the rack. Treat unknown values as unavailable.
 type PhoneSummaryStatus string
 
 const (
-	PhoneSummaryStatusActive      PhoneSummaryStatus = "active"
-	PhoneSummaryStatusInactive    PhoneSummaryStatus = "inactive"
-	PhoneSummaryStatusMaintenance PhoneSummaryStatus = "maintenance"
-	PhoneSummaryStatusSuspended   PhoneSummaryStatus = "suspended"
+	PhoneSummaryStatusActive       PhoneSummaryStatus = "active"
+	PhoneSummaryStatusInactive     PhoneSummaryStatus = "inactive"
+	PhoneSummaryStatusMaintenance  PhoneSummaryStatus = "maintenance"
+	PhoneSummaryStatusSuspended    PhoneSummaryStatus = "suspended"
+	PhoneSummaryStatusRecovering   PhoneSummaryStatus = "recovering"
+	PhoneSummaryStatusOutOfService PhoneSummaryStatus = "out_of_service"
 )
 
 func NewPhoneSummaryStatusFromString(s string) (PhoneSummaryStatus, error) {
@@ -6333,6 +6347,10 @@ func NewPhoneSummaryStatusFromString(s string) (PhoneSummaryStatus, error) {
 		return PhoneSummaryStatusMaintenance, nil
 	case "suspended":
 		return PhoneSummaryStatusSuspended, nil
+	case "recovering":
+		return PhoneSummaryStatusRecovering, nil
+	case "out_of_service":
+		return PhoneSummaryStatusOutOfService, nil
 	}
 	var t PhoneSummaryStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
