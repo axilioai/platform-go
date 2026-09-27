@@ -52,15 +52,15 @@ type LocatorResult struct {
 	// ResolvedBy is how the target was found: "a11y", "ocr", or "vlm". Empty
 	// when the call carried no locator (MobileDriver.Press) or the result is
 	// from a WaitFor("hidden") (nothing to report).
-	ResolvedBy string
+	ResolvedBy string `json:"resolved_by,omitempty"`
 	// Bounds is where the target was when the device acted, in the pixel
 	// space the Touch methods address. Zero when ResolvedBy is empty.
-	Bounds BBox
+	Bounds BBox `json:"bounds"`
 	// TookMs is the end-to-end time on the device, auto-wait included.
-	TookMs int64
+	TookMs int64 `json:"took_ms"`
 	// ModelName is the model that resolved the target; set only when
 	// ResolvedBy is "vlm".
-	ModelName string
+	ModelName string `json:"model_name,omitempty"`
 }
 
 // wireLocatorResult decodes any of LocatorResult / LocatorPressResult /
