@@ -96,6 +96,10 @@ type callConfig struct {
 	model     string
 	timeout   time.Duration
 	strategy  string
+	// timeoutSet records that the caller passed WithTimeout, so a call with
+	// no device-side budget (Locator.count) can treat it as the whole
+	// deadline.
+	timeoutSet bool
 }
 
 // CallOption tunes a single vision or locator call.
@@ -115,7 +119,10 @@ func WithModel(model string) CallOption {
 
 // WithTimeout overrides the deadline for this call.
 func WithTimeout(d time.Duration) CallOption {
-	return func(c *callConfig) { c.timeout = d }
+	return func(c *callConfig) {
+		c.timeout = d
+		c.timeoutSet = d > 0
+	}
 }
 
 func (d *MobileDriver) resolveEngine(c callConfig) string {

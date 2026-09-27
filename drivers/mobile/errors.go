@@ -4,8 +4,7 @@ import "errors"
 
 // Code is a stable, machine-readable error classification. Each DCP error kind
 // maps 1:1 onto one of these (see fromDCPError); the driver also raises a few
-// locally (CodeTimeout from wait loops, CodeElementNotFound from find,
-// CodeConnection from a failed dial).
+// locally (CodeTimeout from a call deadline, CodeConnection from a failed dial).
 type Code string
 
 const (
@@ -40,8 +39,6 @@ const (
 	// auto-retried (a retry loop against a held lease is a thundering herd
 	// aimed at the one-controller guardrail).
 	CodeControlHeld Code = "control_held"
-	// CodeElementNotFound — a selector found nothing.
-	CodeElementNotFound Code = "element_not_found"
 	// CodeTimeout — a call or a wait loop exceeded its deadline (retryable).
 	CodeTimeout Code = "timeout"
 	// CodeActionTimeout: a locator action's device-side auto-wait exceeded
@@ -57,7 +54,7 @@ const (
 )
 
 // Error is the single error type this package returns. Classify it with the
-// helpers (IsTimeout, IsElementNotFound, ...) or by comparing .Code.
+// helpers (IsTimeout, IsActionTimeout, ...) or by comparing .Code.
 type Error struct {
 	Code      Code
 	Message   string
@@ -88,9 +85,6 @@ func hasCode(err error, code Code) bool {
 // IsTimeout reports whether err is a timeout (a call or wait loop deadline).
 func IsTimeout(err error) bool { return hasCode(err, CodeTimeout) }
 
-// IsElementNotFound reports whether err is a find that matched nothing.
-func IsElementNotFound(err error) bool { return hasCode(err, CodeElementNotFound) }
-
 // IsDeviceOffline reports whether err is a transient device-offline (retryable).
 func IsDeviceOffline(err error) bool { return hasCode(err, CodeDeviceOffline) }
 
@@ -116,7 +110,6 @@ var _kindToCode = map[string]Code{
 	kindNoAllocation:        CodeNoAllocation,
 	kindNotConnected:        CodeNotConnected,
 	kindDeviceOffline:       CodeDeviceOffline,
-	kindElementNotFound:     CodeElementNotFound,
 	kindTimeout:             CodeTimeout,
 	kindUnauthorized:        CodeUnauthorized,
 	kindInternal:            CodeInternal,

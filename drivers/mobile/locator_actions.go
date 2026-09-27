@@ -329,7 +329,15 @@ func (l *Locator) Count(opts ...CallOption) (int, error) {
 		OcrEngine: cfg.ocrEngine,
 		Model:     cfg.model,
 	}
-	raw, err := l.driver.locatorCall(methodLocatorCount, p, cfg.timeout)
+	// Count sends no device-side budget, so the in-flight-inference margin
+	// that pads every waiting call does not apply to a timeout the caller
+	// gave it: that is the whole deadline.
+	var raw json.RawMessage
+	if cfg.timeoutSet {
+		raw, err = l.driver.call(methodLocatorCount, p, cfg.timeout)
+	} else {
+		raw, err = l.driver.locatorCall(methodLocatorCount, p, cfg.timeout)
+	}
 	if err != nil {
 		return 0, err
 	}

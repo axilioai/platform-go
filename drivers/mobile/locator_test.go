@@ -330,3 +330,33 @@ func TestLocatorTimeoutOutsideProtocolRangeFailsLocally(t *testing.T) {
 		t.Fatalf("err = %v, want a local CodeInvalidArgs", err)
 	}
 }
+
+// stalledConn accepts every command and never answers, like a socket whose
+// far end has hung; recv returns only when the call's deadline ends it.
+type stalledConn struct{}
+
+func (stalledConn) send(context.Context, []byte) error { return nil }
+func (stalledConn) recv(ctx context.Context) ([]byte, error) {
+	<-ctx.Done()
+	return nil, ctx.Err()
+}
+func (stalledConn) closeConn() error { return nil }
+
+func TestCountTimeoutIsTheWholeDeadline(t *testing.T) {
+	// Count sends no device-side budget, so the in-flight-inference margin
+	// that pads every waiting call must not stretch a timeout it was given.
+	rt := &RemoteTransport{
+		url:         "wss://connect.test/api/v1/realtime/ws/control?token=abc",
+		openTimeout: time.Second,
+		dial:        func(context.Context, string) (rawConn, error) { return stalledConn{}, nil },
+	}
+	d := newDriver(rt)
+	start := time.Now()
+	_, err := d.GetByText("Save").Count(WithTimeout(200 * time.Millisecond))
+	if err == nil {
+		t.Fatal("a stalled count must fail")
+	}
+	if took := time.Since(start); took > 5*time.Second {
+		t.Fatalf("count waited %s; want about its 200ms timeout, not the 15s margin", took)
+	}
+}

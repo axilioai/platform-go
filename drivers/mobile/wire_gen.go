@@ -18,7 +18,6 @@ const (
 	methodLocatorText        = "Locator.text"
 	methodLocatorWaitFor     = "Locator.waitFor"
 	methodProtocolHandshake  = "Protocol.handshake"
-	methodScreenFind         = "Screen.find"
 	methodScreenObserve      = "Screen.observe"
 	methodScreenScreenshot   = "Screen.screenshot"
 	methodTouchLongPress     = "Touch.longPress"
@@ -31,7 +30,6 @@ const (
 	kindActionTimeout       = "ActionTimeout"
 	kindCanceled            = "Canceled"
 	kindDeviceOffline       = "DeviceOffline"
-	kindElementNotFound     = "ElementNotFound"
 	kindInternal            = "Internal"
 	kindInvalidArgs         = "InvalidArgs"
 	kindNoAllocation        = "NoAllocation"
@@ -103,12 +101,6 @@ type keyPressParams struct {
 
 type observeParams struct {
 	OcrEngine string `json:"ocr_engine,omitempty"`
-}
-
-type findParams struct {
-	Model     string `json:"model,omitempty"`
-	OcrEngine string `json:"ocr_engine,omitempty"`
-	Query     string `json:"query"`
 }
 
 type handshakeParams struct {

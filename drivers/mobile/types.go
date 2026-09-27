@@ -38,8 +38,6 @@ type Source string
 const (
 	// SourceOCR is an element found by OCR (carries text).
 	SourceOCR Source = "ocr"
-	// SourceVLM is an element found by the vision model (no text).
-	SourceVLM Source = "vlm"
 )
 
 // Element is one element observed on screen (the Screen.Texts/Icons raw

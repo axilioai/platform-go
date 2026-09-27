@@ -39,7 +39,6 @@ var paramStructs = []struct{ schema, goName string }{
 	{"KeyboardTypeTextParams", "typeTextParams"},
 	{"KeyboardKeyPressParams", "keyPressParams"},
 	{"ObserveParams", "observeParams"},
-	{"FindParams", "findParams"},
 	{"HandshakeParams", "handshakeParams"},
 	{"LocatorTapParams", "locatorTapParams"},
 	{"LocatorFillParams", "locatorFillParams"},

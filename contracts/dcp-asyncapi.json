@@ -225,16 +225,6 @@
           "$ref": "#/components/schemas/ObserveResult"
         }
       },
-      "Screen.find": {
-        "name": "Screen.find",
-        "x-dcp-kind": "command",
-        "x-dcp-params": {
-          "$ref": "#/components/schemas/FindParams"
-        },
-        "x-dcp-result": {
-          "$ref": "#/components/schemas/FindResult"
-        }
-      },
       "Locator.tap": {
         "name": "Locator.tap",
         "x-dcp-kind": "command",
@@ -481,23 +471,6 @@
           }
         }
       },
-      "FindParams": {
-        "type": "object",
-        "required": [
-          "query"
-        ],
-        "properties": {
-          "query": {
-            "type": "string"
-          },
-          "model": {
-            "type": "string"
-          },
-          "ocr_engine": {
-            "type": "string"
-          }
-        }
-      },
       "Locator": {
         "type": "object",
         "description": "A target on the screen. All fields are optional and combine as AND. role, name, id, states and platform assume the accessibility tree and answer StrategyUnavailable when the session has none, whatever the strategy. text matches visible text, against the tree when accessibility is on and OCR when it is off. query is natural language: a model ranks the tree's elements by default, and the VLM reads the screen under strategy vision or when there is no tree. A literal selector that matches nothing fails after the auto-wait. within (inside a match), has (containing a match) and nth refine the base match. platform is native matching and is not portable.\n",
@@ -541,6 +514,7 @@
           "nth": {
             "type": "integer",
             "minimum": 0,
+            "maximum": 2147483647,
             "description": "Pick the nth match in reading order, zero-based."
           },
           "platform": {
@@ -584,7 +558,7 @@
       },
       "LocatorOcrEngine": {
         "type": "string",
-        "description": "OCR tier for the vision resolver (\"free\" or \"premium\"), as on Screen.find. Omitted means the default.\n"
+        "description": "OCR tier for the vision resolver (\"free\" or \"premium\"), as on Screen.observe. Omitted means the default.\n"
       },
       "LocatorModel": {
         "type": "string",
@@ -872,43 +846,6 @@
           }
         }
       },
-      "FindResult": {
-        "type": "object",
-        "properties": {
-          "found": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/FindFound"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "null on a miss (a miss is a result, not an error)."
-          },
-          "model_name": {
-            "type": "string"
-          },
-          "model_cost_microdollars": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
-      "FindFound": {
-        "type": "object",
-        "properties": {
-          "bbox": {
-            "$ref": "#/components/schemas/Bbox"
-          },
-          "confidence": {
-            "type": "number"
-          },
-          "text": {
-            "type": "string"
-          }
-        }
-      },
       "LocatorResult": {
         "type": "object",
         "required": [
@@ -1154,10 +1091,6 @@
     "DeviceOffline": {
       "code": -32004,
       "retryable": true
-    },
-    "ElementNotFound": {
-      "code": -32005,
-      "retryable": false
     },
     "Timeout": {
       "code": -32006,
