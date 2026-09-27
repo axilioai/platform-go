@@ -127,14 +127,22 @@ or `mobile.Strategy(mobile.StrategyVision)` alongside the selector options
 (`mobile.Text`, `mobile.Exact`, `mobile.Query`, ...) to `driver.GetByText`,
 `driver.GetByRole`, `driver.GetByID` or `driver.Locator`. An action or query
 on the locator (`Tap`/`Fill`/`Press`/`WaitFor`/`BoundingBox`/`Text`/`Count`)
-takes only `mobile.WithTimeout` from here on; the resolution follows the
-locator that resolves, else the driver's `WithDefaultModel`/
-`WithDefaultOCREngine`/`WithDefaultStrategy`, else it's left off the wire so
-the server's own default applies. Refining a locator (`Nth`, `First`,
-`Within`, `Has`, `Filter`) keeps the receiver's own resolution options; the
-locator passed into `Within`/`Has` only contributes its selector fields, since
-one call resolves the whole locator and the outer locator's options govern
-it. `driver.Press(key, ...)` (no locator) takes no resolution options at all.
+takes a `mobile.ActionOption`, not a `mobile.CallOption`: the only one is
+`mobile.WithTimeout`, and it's a compile error to pass `mobile.WithOCREngine`
+(a `CallOption`, for `Observe`) to a locator action instead of setting
+`mobile.OCREngine` on the locator. The resolution follows the locator that
+resolves, else the driver's `WithDefaultModel`/`WithDefaultOCREngine`/
+`WithDefaultStrategy`, else it's left off the wire so the server's own
+default applies. Refining a locator (`Nth`, `First`, `Within`, `Has`,
+`Filter`) keeps the receiver's own resolution options; the locator passed
+into `Within`/`Has` only ever contributes its selector fields, since one call
+resolves the whole locator and the outer locator's options govern it. If that
+inner locator carries its own `Model`/`OCREngine`/`Strategy` (set on itself,
+not inherited from a driver default), `Within`/`Has` record a build error on
+the result instead of silently dropping them: every action or query on it
+(and on anything further refined from it) fails locally with a
+`CodeInvalidArgs` `*Error` naming what to do, and nothing is sent.
+`driver.Press(key, ...)` (no locator) takes no resolution options at all.
 
 Under vision resolution (`mobile.StrategyVision`, or `mobile.StrategyAuto` on
 a session with no accessibility tree), a plain `mobile.Text` locator is

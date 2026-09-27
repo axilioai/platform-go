@@ -1,5 +1,10 @@
 package mobile
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Locator is a lazy, immutable description of an on-screen target (the
 // Locator tier: DCP's Locator.tap/fill/press/waitFor/boundingBox/text/count).
 // Building one sends nothing; only an action or query method on it (Tap,
@@ -35,6 +40,15 @@ type Locator struct {
 	// it (one call resolves the whole locator, governed by the outer
 	// locator's own options).
 	model, ocrEngine, strategy string
+
+	// buildErr is set by Within/Has when the locator passed in as the scope
+	// carries its own Model/OCREngine/Strategy (or already carries a
+	// buildErr of its own): those options would otherwise be silently
+	// dropped, so instead every action and query on this locator (and on
+	// anything refined from it, since clone keeps the field) fails locally
+	// with this error rather than sending a request that ignored what the
+	// caller asked for.
+	buildErr *Error
 }
 
 // LocatorOption configures a Locator at construction (via MobileDriver.Locator)
@@ -153,8 +167,19 @@ func (l *Locator) First() *Locator { return l.Nth(0) }
 // Refinements only ever narrow: calling Within again scopes the new ancestor
 // inside the earlier one (target in other, other in the previous scope)
 // rather than dropping it.
+//
+// other contributes only its selector fields: the outer locator's own
+// Model/OCREngine/Strategy govern how the whole thing resolves. If other
+// itself carries one of those options, set on itself rather than inherited
+// from a driver default, that would silently ignore what the caller asked
+// for, so this records a build error on the returned locator instead: every
+// action or query on it (and on anything further refined from it) fails
+// locally with a CodeInvalidArgs *Error, without sending anything.
 func (l *Locator) Within(other *Locator) *Locator {
 	out := l.clone()
+	if out.buildErr == nil {
+		out.buildErr = scopeOptionsErr("Within", other)
+	}
 	out.within = chainScope(other, l.within, func(c *Locator) **Locator { return &c.within })
 	return out
 }
@@ -162,10 +187,49 @@ func (l *Locator) Within(other *Locator) *Locator {
 // Has returns a new locator that only matches elements containing a match of
 // other. Calling Has again chains the new descendant onto the earlier one
 // rather than dropping it, so the locator only ever narrows.
+//
+// other contributes only its selector fields; see Within for what happens
+// when it also carries its own Model/OCREngine/Strategy.
 func (l *Locator) Has(other *Locator) *Locator {
 	out := l.clone()
+	if out.buildErr == nil {
+		out.buildErr = scopeOptionsErr("Has", other)
+	}
 	out.has = chainScope(other, l.has, func(c *Locator) **Locator { return &c.has })
 	return out
+}
+
+// scopeOptionsErr reports the build error other's own resolution options (or
+// its own pre-existing build error) put on a locator that adopts it as a
+// Within/Has scope, or nil if other is a plain selector. who is "Within" or
+// "Has", named in the resulting message.
+func scopeOptionsErr(who string, other *Locator) *Error {
+	if other == nil {
+		return nil
+	}
+	if other.buildErr != nil {
+		return other.buildErr
+	}
+	var set []string
+	if other.model != "" {
+		set = append(set, "Model")
+	}
+	if other.ocrEngine != "" {
+		set = append(set, "OCREngine")
+	}
+	if other.strategy != "" {
+		set = append(set, "Strategy")
+	}
+	if len(set) == 0 {
+		return nil
+	}
+	return &Error{
+		Code: CodeInvalidArgs,
+		Message: fmt.Sprintf(
+			"%s: the inner locator sets %s; set Model, OCREngine and Strategy on the outer locator instead",
+			who, strings.Join(set, ", "),
+		),
+	}
 }
 
 // Filter returns a new locator that keeps the receiver's literal selectors

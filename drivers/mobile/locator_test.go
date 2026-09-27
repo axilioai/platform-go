@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 )
@@ -107,24 +108,43 @@ func TestLocatorOptionPrecedenceOverDriverDefault(t *testing.T) {
 }
 
 func TestLocatorActionsTakeOnlyTimeout(t *testing.T) {
-	// A locator action/query's only meaningful CallOption is WithTimeout: it
-	// no longer accepts WithStrategy/WithModel (removed), and passing
-	// WithOCREngine (still a CallOption, for Observe) has no effect on the
-	// wire, since a locator resolves its OCR engine from its own OCREngine
-	// option or the driver default instead.
+	// A locator action/query takes ActionOption, not CallOption: WithOCREngine
+	// (a CallOption, for Observe) does not implement ActionOption, so
+	// d.Locator(...).Tap(WithOCREngine("x")) is a compile error, not a silent
+	// no-op. A compile error has no runtime behavior a test can assert, so
+	// that guarantee is documented here rather than exercised: uncomment the
+	// line below and `go build` fails with "does not implement ActionOption".
+	//
+	//   d.Locator(Text("x")).Tap(WithOCREngine("ignored"))
+	//
+	// What a test can check is the positive half of the same design:
+	// WithTimeout's result (TimeoutOption) implements both interfaces, so it
+	// works unchanged as an ActionOption (Tap) and as a CallOption (Observe),
+	// with no second timeout name to learn for the locator tier. A locator
+	// action still resolves its own OCR engine (from its own OCREngine option
+	// or the driver default), never from a per-call option.
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWithOpts(fc, WithDefaultOCREngine("driver-engine"))
 
-	if _, err := d.Locator(Text("x")).Tap(WithOCREngine("ignored"), WithTimeout(2*time.Second)); err != nil {
+	if _, err := d.Locator(Text("x")).Tap(WithTimeout(2 * time.Second)); err != nil {
 		t.Fatalf("Tap: %v", err)
 	}
 	var p locatorTapParams
 	_ = json.Unmarshal(fc.sent[0].Params, &p)
 	if p.OcrEngine != "driver-engine" {
-		t.Fatalf("want the driver default (WithOCREngine ignored on a locator call), got %q", p.OcrEngine)
+		t.Fatalf("want the driver default (locator resolves its own OCR engine), got %q", p.OcrEngine)
 	}
 	if p.TimeoutMs != 2000 {
 		t.Fatalf("want timeoutMs 2000, got %d", p.TimeoutMs)
+	}
+
+	if _, err := d.Observe(WithTimeout(3 * time.Second)); err != nil {
+		t.Fatalf("Observe: %v", err)
+	}
+	var op observeParams
+	_ = json.Unmarshal(fc.sent[1].Params, &op)
+	if op.OcrEngine != "driver-engine" {
+		t.Fatalf("want the driver default ocr engine on Observe, got %q", op.OcrEngine)
 	}
 }
 
@@ -343,15 +363,15 @@ func TestLocatorErrorMapping(t *testing.T) {
 	}
 }
 
-func TestNestedWithinHasOptionsIgnored(t *testing.T) {
-	// Within/Has only ever read the nested locator's selector fields: its
-	// own Model/OCREngine/Strategy never travel with it. One call resolves
-	// the whole locator, governed by the outer locator's own options.
+func TestWithinHasInnerLocatorWithoutOptionsStillWorks(t *testing.T) {
+	// A locator passed into Within/Has that carries no resolution options of
+	// its own contributes only its selector, as always: the outer locator's
+	// own options are what reach the wire.
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWith(fc)
 
-	within := d.GetByID("panel", Strategy(StrategyAccessibility), Model("nested-model"), OCREngine("nested-engine"))
-	has := d.GetByText("badge", Strategy(StrategyAccessibility), Model("nested-model"), OCREngine("nested-engine"))
+	within := d.GetByID("panel")
+	has := d.GetByText("badge")
 	loc := d.Locator(Text("Continue"), Strategy(StrategyVision), Model("outer-model"), OCREngine("outer-engine")).
 		Within(within).Has(has)
 
@@ -363,6 +383,86 @@ func TestNestedWithinHasOptionsIgnored(t *testing.T) {
 	if p.Strategy != StrategyVision || p.Model != "outer-model" || p.OcrEngine != "outer-engine" {
 		t.Fatalf("want the outer locator's own options, got %+v", p)
 	}
+}
+
+func TestWithinHasRejectInnerOptions(t *testing.T) {
+	// A locator passed into Within/Has contributes only its selector: the
+	// outer locator's own Model/OCREngine/Strategy govern resolution. An
+	// inner locator that carries one of those options on itself (not
+	// inherited from a driver default) would otherwise have it silently
+	// dropped, so Within/Has now record a build error instead: every action
+	// fails locally with it, and nothing is sent.
+	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
+	d := driverWith(fc)
+
+	cases := []struct {
+		name    string
+		loc     *Locator
+		wantMsg []string
+	}{
+		{
+			"Within/Model",
+			d.Locator(Text("Continue")).Within(d.GetByID("panel", Model("nested-model"))),
+			[]string{"Within", "Model"},
+		},
+		{
+			"Within/OCREngine",
+			d.Locator(Text("Continue")).Within(d.GetByID("panel", OCREngine("nested-engine"))),
+			[]string{"Within", "OCREngine"},
+		},
+		{
+			"Within/Strategy",
+			d.Locator(Text("Continue")).Within(d.GetByID("panel", Strategy(StrategyAccessibility))),
+			[]string{"Within", "Strategy"},
+		},
+		{
+			"Has/Model",
+			d.Locator(Text("Continue")).Has(d.GetByText("badge", Model("nested-model"))),
+			[]string{"Has", "Model"},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			_, err := c.loc.Tap()
+			var me *Error
+			if !errors.As(err, &me) || me.Code != CodeInvalidArgs {
+				t.Fatalf("err = %v, want a local CodeInvalidArgs", err)
+			}
+			for _, want := range c.wantMsg {
+				if !strings.Contains(me.Message, want) {
+					t.Fatalf("message = %q, want it to mention %q", me.Message, want)
+				}
+			}
+		})
+	}
+	if len(fc.sent) != 0 {
+		t.Fatalf("want nothing sent, sent=%d: %+v", len(fc.sent), fc.sent)
+	}
+}
+
+func TestWithinHasRejectInnerOptionsPropagatesThroughRefinements(t *testing.T) {
+	// The build error travels with the locator through any further
+	// refinement (Nth, First, Filter, a further Within/Has), since clone
+	// keeps the field, and it is what every action or query on the result
+	// answers, not just Tap.
+	d := &MobileDriver{}
+	bad := d.Locator(Text("Continue")).Within(d.GetByID("panel", Model("nested-model")))
+	refined := bad.Nth(2).Filter("the enabled one").Has(d.GetByText("ok"))
+
+	assertBuildErr := func(t *testing.T, err error) {
+		t.Helper()
+		var me *Error
+		if !errors.As(err, &me) || me.Code != CodeInvalidArgs {
+			t.Fatalf("err = %v, want the build error to survive refinement", err)
+		}
+	}
+
+	_, err := refined.Tap()
+	assertBuildErr(t, err)
+	_, err = refined.Count()
+	assertBuildErr(t, err)
+	_, err = refined.Text()
+	assertBuildErr(t, err)
 }
 
 func TestRefinementsOnlyNarrow(t *testing.T) {

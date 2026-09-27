@@ -100,25 +100,69 @@ type callConfig struct {
 	timeoutSet bool
 }
 
-// CallOption tunes a single vision or locator call. WithOCREngine only
-// affects Observe: a locator resolves with its own Model / OCREngine /
-// Strategy option instead (see Locator), so the only CallOption a locator
-// action or query (Tap, Fill, Press, WaitFor, BoundingBox, Text, Count) reads
-// is WithTimeout.
-type CallOption func(*callConfig)
-
-// WithOCREngine overrides the OCR engine for this call. Only Observe reads
-// it; a locator's own OCREngine option controls how a locator call resolves.
-func WithOCREngine(engine string) CallOption {
-	return func(c *callConfig) { c.ocrEngine = engine }
+// actionConfig is callConfig's counterpart for a locator action or query
+// (Tap, Fill, Press, WaitFor, BoundingBox, Text, Count, and
+// MobileDriver.Press): it has no ocrEngine field, since those calls resolve
+// their OCR engine from the locator's own OCREngine option or the driver
+// default instead (see Locator, resolveParams).
+type actionConfig struct {
+	timeout time.Duration
+	// timeoutSet records that the caller passed WithTimeout, so Locator.Count
+	// (which sends no device-side budget) can treat it as the whole deadline.
+	timeoutSet bool
 }
 
-// WithTimeout overrides the deadline for this call.
-func WithTimeout(d time.Duration) CallOption {
-	return func(c *callConfig) {
-		c.timeout = d
-		c.timeoutSet = d > 0
-	}
+// CallOption tunes a single vision or handshake-tier call (Observe,
+// Handshake, DeviceInfo). It is a small interface rather than a locator
+// action's ActionOption so WithOCREngine, which only means something to
+// Observe, cannot be passed where it would be silently ignored.
+type CallOption interface {
+	applyCall(*callConfig)
+}
+
+// ActionOption tunes a single locator action or query (Tap, Fill, Press,
+// WaitFor, BoundingBox, Text, Count, and MobileDriver.Press). Resolution
+// options (Model, OCREngine, Strategy) live on the locator instead (see
+// Locator), so ActionOption only ever carries a timeout: WithOCREngine
+// implements CallOption, not ActionOption, so passing it to a locator action
+// is a compile error rather than a silent no-op.
+type ActionOption interface {
+	applyAction(*actionConfig)
+}
+
+// ocrEngineOption is WithOCREngine's concrete type: a call-only option, since
+// only Observe reads the OCR engine off a call rather than off a locator.
+type ocrEngineOption string
+
+func (o ocrEngineOption) applyCall(c *callConfig) { c.ocrEngine = string(o) }
+
+// WithOCREngine overrides the OCR engine for this call. Only Observe reads
+// it; a locator's own OCREngine option controls how a locator call resolves,
+// so this is not accepted by a locator action or query.
+func WithOCREngine(engine string) CallOption {
+	return ocrEngineOption(engine)
+}
+
+// TimeoutOption is WithTimeout's concrete type. It implements both
+// CallOption and ActionOption, so WithTimeout works everywhere a deadline
+// override makes sense without a second name to learn for the locator tier.
+type TimeoutOption time.Duration
+
+func (o TimeoutOption) applyCall(c *callConfig) {
+	c.timeout = time.Duration(o)
+	c.timeoutSet = time.Duration(o) > 0
+}
+
+func (o TimeoutOption) applyAction(c *actionConfig) {
+	c.timeout = time.Duration(o)
+	c.timeoutSet = time.Duration(o) > 0
+}
+
+// WithTimeout overrides the deadline for this call. It works both as a
+// CallOption (Observe, Handshake, DeviceInfo) and as an ActionOption (every
+// locator action and query, plus MobileDriver.Press).
+func WithTimeout(d time.Duration) TimeoutOption {
+	return TimeoutOption(d)
 }
 
 func (d *MobileDriver) resolveEngine(c callConfig) string {
@@ -141,7 +185,7 @@ func (d *MobileDriver) call(method string, params any, timeout time.Duration) (j
 
 // Observe captures the current frame and returns a typed Screen.
 func (d *MobileDriver) Observe(opts ...CallOption) (*Screen, error) {
-	cfg := applyCall(visionTimeout, opts)
+	cfg := newCallConfig(visionTimeout, opts)
 	raw, err := d.call(methodScreenObserve, observeParams{OcrEngine: d.resolveEngine(cfg)}, cfg.timeout)
 	if err != nil {
 		return nil, err
@@ -209,10 +253,25 @@ func (d *MobileDriver) typeText(text string) error {
 	return err
 }
 
-func applyCall(defaultTimeout time.Duration, opts []CallOption) callConfig {
+// newCallConfig folds opts onto defaultTimeout for a CallOption call
+// (Observe, Handshake, DeviceInfo). See newActionConfig for the locator tier.
+func newCallConfig(defaultTimeout time.Duration, opts []CallOption) callConfig {
 	cfg := callConfig{timeout: defaultTimeout}
 	for _, o := range opts {
-		o(&cfg)
+		o.applyCall(&cfg)
+	}
+	if cfg.timeout <= 0 {
+		cfg.timeout = defaultTimeout
+	}
+	return cfg
+}
+
+// newActionConfig folds opts onto defaultTimeout for an ActionOption call (a
+// locator action or query, or MobileDriver.Press).
+func newActionConfig(defaultTimeout time.Duration, opts []ActionOption) actionConfig {
+	cfg := actionConfig{timeout: defaultTimeout}
+	for _, o := range opts {
+		o.applyAction(&cfg)
 	}
 	if cfg.timeout <= 0 {
 		cfg.timeout = defaultTimeout

@@ -139,24 +139,28 @@ type locatorParams struct {
 // validateLocatorTimeout rejects a timeout outside the protocol's range
 // locally, as an InvalidArgs error, rather than sending a request the device
 // would reject anyway.
-func validateLocatorTimeout(cfg callConfig) error {
-	if cfg.timeout < 0 || cfg.timeout > maxLocatorTimeout {
+func validateLocatorTimeout(timeout time.Duration) error {
+	if timeout < 0 || timeout > maxLocatorTimeout {
 		return &Error{
 			Code:    CodeInvalidArgs,
-			Message: fmt.Sprintf("locator timeout %s is outside [0, %s]", cfg.timeout, maxLocatorTimeout),
+			Message: fmt.Sprintf("locator timeout %s is outside [0, %s]", timeout, maxLocatorTimeout),
 		}
 	}
 	return nil
 }
 
-// resolveParams applies opts (a locator action or query's only meaningful
-// CallOption is WithTimeout: strategy/model/ocrEngine are set on the locator
-// itself, not per call) against defaultLocatorTimeout, then resolves the
-// locator's own strategy/model/ocrEngine against the driver's defaults, per
-// resolveOverride.
-func (l *Locator) resolveParams(opts []CallOption) (locatorParams, error) {
-	cfg := applyCall(defaultLocatorTimeout, opts)
-	if err := validateLocatorTimeout(cfg); err != nil {
+// resolveParams applies opts (a locator action or query's only ActionOption
+// is WithTimeout: strategy/model/ocrEngine are set on the locator itself, not
+// per call) against defaultLocatorTimeout, then resolves the locator's own
+// strategy/model/ocrEngine against the driver's defaults, per resolveOverride.
+// If l carries a buildErr (an inner Within/Has locator set its own resolution
+// options), that error is returned immediately and nothing is sent.
+func (l *Locator) resolveParams(opts []ActionOption) (locatorParams, error) {
+	if l.buildErr != nil {
+		return locatorParams{}, l.buildErr
+	}
+	cfg := newActionConfig(defaultLocatorTimeout, opts)
+	if err := validateLocatorTimeout(cfg.timeout); err != nil {
 		return locatorParams{}, err
 	}
 	d := l.driver
@@ -172,9 +176,9 @@ func (l *Locator) resolveParams(opts []CallOption) (locatorParams, error) {
 // locatorCallTimeout resolves just the timeout budget for a locator call with
 // no locator to resolve against (MobileDriver.Press): it takes no resolution
 // options, so its wire strategy/model/ocrEngine stay empty.
-func locatorCallTimeout(opts []CallOption) (locatorParams, error) {
-	cfg := applyCall(defaultLocatorTimeout, opts)
-	if err := validateLocatorTimeout(cfg); err != nil {
+func locatorCallTimeout(opts []ActionOption) (locatorParams, error) {
+	cfg := newActionConfig(defaultLocatorTimeout, opts)
+	if err := validateLocatorTimeout(cfg.timeout); err != nil {
 		return locatorParams{}, err
 	}
 	return locatorParams{timeout: cfg.timeout, timeoutSet: cfg.timeoutSet}, nil
@@ -186,7 +190,7 @@ func locatorCallTimeout(opts []CallOption) (locatorParams, error) {
 // moving), then taps its centre, all on the device in one round trip. Fails
 // with ActionTimeout if the target never becomes actionable within the
 // call's timeout.
-func (l *Locator) Tap(opts ...CallOption) (LocatorResult, error) {
+func (l *Locator) Tap(opts ...ActionOption) (LocatorResult, error) {
 	p, err := l.resolveParams(opts)
 	if err != nil {
 		return LocatorResult{}, err
@@ -211,7 +215,7 @@ func (l *Locator) Tap(opts ...CallOption) (LocatorResult, error) {
 
 // Fill resolves and waits as Tap, focuses the target by tapping it, then
 // types text into it.
-func (l *Locator) Fill(text string, opts ...CallOption) (LocatorResult, error) {
+func (l *Locator) Fill(text string, opts ...ActionOption) (LocatorResult, error) {
 	p, err := l.resolveParams(opts)
 	if err != nil {
 		return LocatorResult{}, err
@@ -238,7 +242,7 @@ func (l *Locator) Fill(text string, opts ...CallOption) (LocatorResult, error) {
 // Press resolves and waits as Tap, focuses the target, then presses key.
 // Use MobileDriver.Press to send the key to whatever currently has focus
 // instead, with no locator involved (and so no resolution options).
-func (l *Locator) Press(key string, opts ...CallOption) (LocatorResult, error) {
+func (l *Locator) Press(key string, opts ...ActionOption) (LocatorResult, error) {
 	p, err := l.resolveParams(opts)
 	if err != nil {
 		return LocatorResult{}, err
@@ -249,7 +253,7 @@ func (l *Locator) Press(key string, opts ...CallOption) (LocatorResult, error) {
 // Press sends a named key (see the Key* constants) to whatever currently has
 // focus. ResolvedBy/Bounds on the result are empty: nothing was located, and
 // with no locator this call takes no resolution options, only WithTimeout.
-func (d *MobileDriver) Press(key string, opts ...CallOption) (LocatorResult, error) {
+func (d *MobileDriver) Press(key string, opts ...ActionOption) (LocatorResult, error) {
 	p, err := locatorCallTimeout(opts)
 	if err != nil {
 		return LocatorResult{}, err
@@ -282,7 +286,7 @@ func (d *MobileDriver) press(key string, loc *locatorWire, p locatorParams) (Loc
 // client-side polling loop. Returns nil for StateHidden (nothing was
 // located, so there is nothing to report); for the other states it returns
 // where the target was found.
-func (l *Locator) WaitFor(state string, opts ...CallOption) (*LocatorResult, error) {
+func (l *Locator) WaitFor(state string, opts ...ActionOption) (*LocatorResult, error) {
 	p, err := l.resolveParams(opts)
 	if err != nil {
 		return nil, err
@@ -312,7 +316,7 @@ func (l *Locator) WaitFor(state string, opts ...CallOption) (*LocatorResult, err
 
 // BoundingBox waits until the locator resolves, then returns the target's
 // bounds.
-func (l *Locator) BoundingBox(opts ...CallOption) (LocatorResult, error) {
+func (l *Locator) BoundingBox(opts ...ActionOption) (LocatorResult, error) {
 	raw, err := l.runQuery(methodLocatorBoundingBox, opts)
 	if err != nil {
 		return LocatorResult{}, err
@@ -325,7 +329,7 @@ func (l *Locator) BoundingBox(opts ...CallOption) (LocatorResult, error) {
 }
 
 // Text waits until the locator resolves, then returns the target's text.
-func (l *Locator) Text(opts ...CallOption) (string, error) {
+func (l *Locator) Text(opts ...ActionOption) (string, error) {
 	raw, err := l.runQuery(methodLocatorText, opts)
 	if err != nil {
 		return "", err
@@ -339,7 +343,7 @@ func (l *Locator) Text(opts ...CallOption) (string, error) {
 
 // runQuery runs the shared LocatorQueryParams shape (BoundingBox and Text both
 // use it).
-func (l *Locator) runQuery(method string, opts []CallOption) (json.RawMessage, error) {
+func (l *Locator) runQuery(method string, opts []ActionOption) (json.RawMessage, error) {
 	p, err := l.resolveParams(opts)
 	if err != nil {
 		return nil, err
@@ -360,7 +364,7 @@ func (l *Locator) runQuery(method string, opts []CallOption) (json.RawMessage, e
 // that also carries Query, Within or Has answers CodeInvalidArgs, since
 // counting needs every independent match and a vision-model call only
 // resolves a single target per prompt.
-func (l *Locator) Count(opts ...CallOption) (int, error) {
+func (l *Locator) Count(opts ...ActionOption) (int, error) {
 	p, err := l.resolveParams(opts)
 	if err != nil {
 		return 0, err
