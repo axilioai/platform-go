@@ -58,7 +58,7 @@ func (h *HandshakeResult) HasDomain(domain string) bool {
 // of assuming the phone surface. Any error (including UnknownOp from a server
 // that somehow lacks the method) is returned as-is.
 func (d *MobileDriver) Handshake(opts ...CallOption) (*HandshakeResult, error) {
-	cfg := applyCall(defaultCallTimeout, opts)
+	cfg := newCallConfig(defaultCallTimeout, opts)
 	raw, err := d.call(methodProtocolHandshake, handshakeParams{}, cfg.timeout)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (d *MobileDriver) Handshake(opts ...CallOption) (*HandshakeResult, error) {
 
 // DeviceInfo performs Device.info and returns the static device descriptor.
 func (d *MobileDriver) DeviceInfo(opts ...CallOption) (*DeviceInfo, error) {
-	cfg := applyCall(defaultCallTimeout, opts)
+	cfg := newCallConfig(defaultCallTimeout, opts)
 	raw, err := d.call(methodDeviceInfo, struct{}{}, cfg.timeout)
 	if err != nil {
 		return nil, err

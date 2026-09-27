@@ -148,37 +148,6 @@ func TestObserveParsesScreen(t *testing.T) {
 	}
 }
 
-func TestFindFoundAndNotFound(t *testing.T) {
-	// found
-	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse {
-		return okResp(cmd, map[string]any{
-			"found": map[string]any{"text": "Continue", "confidence": 0.8, "bbox": map[string]int{"x": 0, "y": 0, "width": 200, "height": 80}},
-		})
-	}}
-	d := driverWith(fc)
-	el, err := d.Find("the continue button", WithOCREngine("premium"), WithModel("openai/gpt-5"))
-	if err != nil {
-		t.Fatalf("Find: %v", err)
-	}
-	if el.Source != SourceOCR || el.Center.X != 100 || el.Center.Y != 40 {
-		t.Fatalf("bad element: %+v", el)
-	}
-	var fp findParams
-	_ = json.Unmarshal(fc.sent[0].Params, &fp)
-	if fp.Query != "the continue button" || fp.OcrEngine != "premium" || fp.Model != "openai/gpt-5" {
-		t.Fatalf("bad find params: %+v", fp)
-	}
-
-	// not found -> CodeElementNotFound
-	fc2 := &fakeConn{responder: func(cmd dcpCommand) dcpResponse {
-		return okResp(cmd, map[string]any{"found": nil})
-	}}
-	d2 := driverWith(fc2)
-	if _, err := d2.Find("nope"); !IsElementNotFound(err) {
-		t.Fatalf("want element-not-found, got %v", err)
-	}
-}
-
 func TestErrorFrameMapsToCode(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse {
 		return dcpResponse{ID: cmd.ID, Error: &dcpError{
@@ -194,34 +163,29 @@ func TestErrorFrameMapsToCode(t *testing.T) {
 	}
 }
 
-func TestElementChainTaps(t *testing.T) {
+func TestScreenObserveFindTextIsClientSideOnCachedData(t *testing.T) {
+	// Screen.FindText/FindAllText (the raw-tier data helpers) filter an
+	// already-observed Screen with no further round trip; Element is plain
+	// data with no action methods (see Locator for that).
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse {
-		if cmd.Method == methodScreenObserve {
-			return okResp(cmd, map[string]any{
-				"texts": []map[string]any{
-					{"text": "Settings", "confidence": 0.9, "bbox": map[string]int{"x": 0, "y": 0, "width": 100, "height": 20}},
-				},
-			})
-		}
-		return dcpResponse{ID: cmd.ID}
+		return okResp(cmd, map[string]any{
+			"texts": []map[string]any{
+				{"text": "Settings", "confidence": 0.9, "bbox": map[string]int{"x": 0, "y": 0, "width": 100, "height": 20}},
+			},
+		})
 	}}
 	d := driverWith(fc)
 
-	el, err := d.FindText("settings", false)
-	if err != nil || el == nil {
-		t.Fatalf("FindText: %v el=%v", err, el)
+	screen, err := d.Observe()
+	if err != nil {
+		t.Fatalf("Observe: %v", err)
 	}
-	if err := el.Tap(); err != nil {
-		t.Fatalf("chained Tap: %v", err)
+	el := screen.FindText("settings", false)
+	if el == nil || el.Text != "Settings" {
+		t.Fatalf("FindText: %+v", el)
 	}
-	last := fc.sent[len(fc.sent)-1]
-	if last.Method != methodTouchTap {
-		t.Fatalf("want chained Touch.tap, got %q", last.Method)
-	}
-	var p tapParams
-	_ = json.Unmarshal(last.Params, &p)
-	if p.X != 50 || p.Y != 10 { // center of {0,0,100,20}
-		t.Fatalf("want tap at center {50,10}, got %+v", p)
+	if len(fc.sent) != 1 {
+		t.Fatalf("FindText on a cached Screen must not call the device again, sent=%d", len(fc.sent))
 	}
 }
 

@@ -39,8 +39,23 @@ var paramStructs = []struct{ schema, goName string }{
 	{"KeyboardTypeTextParams", "typeTextParams"},
 	{"KeyboardKeyPressParams", "keyPressParams"},
 	{"ObserveParams", "observeParams"},
-	{"FindParams", "findParams"},
 	{"HandshakeParams", "handshakeParams"},
+	{"LocatorTapParams", "locatorTapParams"},
+	{"LocatorFillParams", "locatorFillParams"},
+	{"LocatorPressParams", "locatorPressParams"},
+	{"LocatorWaitForParams", "locatorWaitForParams"},
+	{"LocatorQueryParams", "locatorQueryParams"},
+	{"LocatorCountParams", "locatorCountParams"},
+}
+
+// pointerFields marks "SchemaName.fieldName" properties that must generate as
+// a pointer even though the property itself isn't a $ref to an object schema:
+// the field's zero value is a meaningful, distinct-from-omitted value on the
+// wire. Locator.nth is the one case in the contract today: nth=0 ("the first
+// match") must round-trip differently from no nth constraint at all, which
+// plain omitempty can't do for a bare int.
+var pointerFields = map[string]bool{
+	"Locator.nth": true,
 }
 
 func main() {
@@ -88,13 +103,36 @@ func main() {
 	}
 	b.WriteString(")\n\n")
 
-	b.WriteString("// Input param frames (snake_case on the wire), one per contract schema.\n")
+	// Nested object schemas the param structs above reference (directly or,
+	// for Locator's own within/has, recursively). Emitted once each, keyed by
+	// schema name so Locator's self-reference doesn't recurse forever.
+	objectSchemas := map[string]bool{}
 	for _, ps := range paramStructs {
 		schema, ok := schemas[ps.schema].(map[string]any)
 		if !ok {
 			fail("missing schema " + ps.schema)
 		}
-		emitStruct(&b, ps.goName, schema)
+		collectObjectRefs(schemas, schema, objectSchemas)
+	}
+	var objNames []string
+	for n := range objectSchemas {
+		objNames = append(objNames, n)
+	}
+	sort.Strings(objNames)
+
+	if len(objNames) > 0 {
+		b.WriteString("// Nested object schemas a locator param frame references (locator.go builds\n")
+		b.WriteString("// these from the hand-written Locator via toWire).\n")
+		for _, n := range objNames {
+			emitStruct(&b, wireTypeName(n), n, schemas[n].(map[string]any), schemas)
+		}
+	}
+
+	b.WriteString("// Input param frames (wire casing per contract: snake_case for the pre-locator\n")
+	b.WriteString("// domains, camelCase for Locator), one per contract schema.\n")
+	for _, ps := range paramStructs {
+		schema := schemas[ps.schema].(map[string]any)
+		emitStruct(&b, ps.goName, ps.schema, schema, schemas)
 	}
 
 	out, err := format.Source(b.Bytes())
@@ -109,7 +147,12 @@ func main() {
 		outPath, len(methods), len(kinds), len(paramStructs))
 }
 
-func emitStruct(b *bytes.Buffer, name string, schema map[string]any) {
+// emitStruct writes one Go struct for schema (named schemaName in the
+// contract, goName in Go). schemas is the full schema table, needed to
+// resolve $ref properties (a scalar $ref like LocatorTimeoutMs inlines to its
+// base type; an object $ref like Locator becomes a pointer to that schema's
+// own generated struct).
+func emitStruct(b *bytes.Buffer, goName, schemaName string, schema map[string]any, schemas map[string]any) {
 	props, _ := schema["properties"].(map[string]any)
 	required := map[string]bool{}
 	if req, ok := schema["required"].([]any); ok {
@@ -123,16 +166,105 @@ func emitStruct(b *bytes.Buffer, name string, schema map[string]any) {
 	}
 	sort.Strings(names)
 
-	fmt.Fprintf(b, "type %s struct {\n", name)
+	fmt.Fprintf(b, "type %s struct {\n", goName)
 	for _, n := range names {
 		p := props[n].(map[string]any)
 		tag := n
 		if !required[n] {
 			tag += ",omitempty"
 		}
-		fmt.Fprintf(b, "\t%s %s `json:%q`\n", pascal(n), goType(p), tag)
+		fmt.Fprintf(b, "\t%s %s `json:%q`\n", pascal(n), fieldGoType(schemas, schemaName, n, p), tag)
 	}
 	b.WriteString("}\n\n")
+}
+
+// fieldGoType resolves one property's Go type: a $ref to an object schema
+// becomes a pointer to that schema's generated struct (always a pointer,
+// since Locator.within/has reference Locator itself and a value type can't be
+// self-referential); a $ref to a scalar schema (LocatorStrategy,
+// LocatorTimeoutMs, LocatorOcrEngine, LocatorModel, IdempotencyKey, ...)
+// inlines to that schema's own base type; an array's element type resolves
+// the same way; everything else falls to goType. pointerFields overrides a
+// plain scalar to a pointer when 0/"" is a meaningful, distinct-from-omitted
+// value (see its doc comment).
+func fieldGoType(schemas map[string]any, schemaName, fieldName string, p map[string]any) string {
+	if target, refName, isRef := resolveRef(schemas, p); isRef {
+		if target["type"] == "object" {
+			return "*" + wireTypeName(refName)
+		}
+		t := goType(target)
+		if pointerFields[schemaName+"."+fieldName] {
+			return "*" + t
+		}
+		return t
+	}
+	if p["type"] == "array" {
+		elem := "string"
+		if items, ok := p["items"].(map[string]any); ok {
+			if target, refName, isRef := resolveRef(schemas, items); isRef {
+				if target["type"] == "object" {
+					elem = wireTypeName(refName)
+				} else {
+					elem = goType(target)
+				}
+			} else {
+				elem = goType(items)
+			}
+		}
+		return "[]" + elem
+	}
+	if p["type"] == "object" {
+		fail("inline (non-$ref) object schema unsupported: " + schemaName + "." + fieldName)
+	}
+	t := goType(p)
+	if pointerFields[schemaName+"."+fieldName] {
+		return "*" + t
+	}
+	return t
+}
+
+// collectObjectRefs walks schema's properties (and, through $ref, their
+// targets) for object schemas reachable from it, recording each once in out
+// so a cycle (Locator -> within/has -> Locator) terminates.
+func collectObjectRefs(schemas map[string]any, schema map[string]any, out map[string]bool) {
+	props, _ := schema["properties"].(map[string]any)
+	for _, v := range props {
+		p, ok := v.(map[string]any)
+		if !ok {
+			continue
+		}
+		if p["type"] == "array" {
+			if items, ok := p["items"].(map[string]any); ok {
+				p = items
+			}
+		}
+		target, name, isRef := resolveRef(schemas, p)
+		if !isRef || target["type"] != "object" || out[name] {
+			continue
+		}
+		out[name] = true
+		collectObjectRefs(schemas, target, out)
+	}
+}
+
+// resolveRef follows a property's $ref (if any) to its target schema.
+func resolveRef(schemas map[string]any, prop map[string]any) (target map[string]any, name string, ok bool) {
+	ref, isRef := prop["$ref"].(string)
+	if !isRef {
+		return nil, "", false
+	}
+	name = strings.TrimPrefix(ref, "#/components/schemas/")
+	target, exists := schemas[name].(map[string]any)
+	if !exists {
+		fail("missing schema " + name)
+	}
+	return target, name, true
+}
+
+// wireTypeName derives the generated Go struct name for a nested object
+// schema: "Locator" -> "locatorWire", "AndroidLocator" -> "androidLocatorWire".
+func wireTypeName(schemaName string) string {
+	return lowerFirst(schemaName) + "Wire"
 }
 
 func goType(p map[string]any) string {
@@ -172,6 +304,13 @@ func upperFirst(s string) string {
 		return s
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func lowerFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToLower(s[:1]) + s[1:]
 }
 
 func must(err error) {

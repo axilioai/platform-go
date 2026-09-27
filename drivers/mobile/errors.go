@@ -4,8 +4,7 @@ import "errors"
 
 // Code is a stable, machine-readable error classification. Each DCP error kind
 // maps 1:1 onto one of these (see fromDCPError); the driver also raises a few
-// locally (CodeTimeout from wait loops, CodeElementNotFound from find,
-// CodeConnection from a failed dial).
+// locally (CodeTimeout from a call deadline, CodeConnection from a failed dial).
 type Code string
 
 const (
@@ -40,14 +39,22 @@ const (
 	// auto-retried (a retry loop against a held lease is a thundering herd
 	// aimed at the one-controller guardrail).
 	CodeControlHeld Code = "control_held"
-	// CodeElementNotFound — a selector found nothing.
-	CodeElementNotFound Code = "element_not_found"
 	// CodeTimeout — a call or a wait loop exceeded its deadline (retryable).
 	CodeTimeout Code = "timeout"
+	// CodeActionTimeout: a locator action's device-side auto-wait exceeded
+	// its timeoutMs budget without the target becoming actionable. Not
+	// retryable: an inference already running when the budget ended was
+	// allowed to finish, so a bare retry races the same clock again.
+	CodeActionTimeout Code = "action_timeout"
+	// CodeStrategyUnavailable: the locator needs a resolver the session
+	// doesn't have (role/name/id/states/platform need the accessibility
+	// tree, and today's phones have none). Not retryable:
+	// the session's capabilities won't change mid-call.
+	CodeStrategyUnavailable Code = "strategy_unavailable"
 )
 
 // Error is the single error type this package returns. Classify it with the
-// helpers (IsTimeout, IsElementNotFound, ...) or by comparing .Code.
+// helpers (IsTimeout, IsActionTimeout, ...) or by comparing .Code.
 type Error struct {
 	Code      Code
 	Message   string
@@ -78,11 +85,17 @@ func hasCode(err error, code Code) bool {
 // IsTimeout reports whether err is a timeout (a call or wait loop deadline).
 func IsTimeout(err error) bool { return hasCode(err, CodeTimeout) }
 
-// IsElementNotFound reports whether err is a find that matched nothing.
-func IsElementNotFound(err error) bool { return hasCode(err, CodeElementNotFound) }
-
 // IsDeviceOffline reports whether err is a transient device-offline (retryable).
 func IsDeviceOffline(err error) bool { return hasCode(err, CodeDeviceOffline) }
+
+// IsActionTimeout reports whether err is a locator action whose device-side
+// auto-wait exceeded its timeoutMs budget.
+func IsActionTimeout(err error) bool { return hasCode(err, CodeActionTimeout) }
+
+// IsStrategyUnavailable reports whether err is a locator that needs a
+// resolver the session doesn't have (e.g. role/id need the accessibility
+// tree, which today's phones don't advertise).
+func IsStrategyUnavailable(err error) bool { return hasCode(err, CodeStrategyUnavailable) }
 
 // IsRetryable reports whether err carries the retryable flag.
 func IsRetryable(err error) bool {
@@ -92,16 +105,17 @@ func IsRetryable(err error) bool {
 
 // _kindToCode maps a DCP error frame's data.kind (PascalCase) onto a Code.
 var _kindToCode = map[string]Code{
-	kindUnknownOp:       CodeUnknownOp,
-	kindInvalidArgs:     CodeInvalidArgs,
-	kindNoAllocation:    CodeNoAllocation,
-	kindNotConnected:    CodeNotConnected,
-	kindDeviceOffline:   CodeDeviceOffline,
-	kindElementNotFound: CodeElementNotFound,
-	kindTimeout:         CodeTimeout,
-	kindUnauthorized:    CodeUnauthorized,
-	kindInternal:        CodeInternal,
-	kindCanceled:        CodeCanceled,
+	kindUnknownOp:           CodeUnknownOp,
+	kindInvalidArgs:         CodeInvalidArgs,
+	kindNoAllocation:        CodeNoAllocation,
+	kindNotConnected:        CodeNotConnected,
+	kindDeviceOffline:       CodeDeviceOffline,
+	kindTimeout:             CodeTimeout,
+	kindUnauthorized:        CodeUnauthorized,
+	kindInternal:            CodeInternal,
+	kindCanceled:            CodeCanceled,
+	kindActionTimeout:       CodeActionTimeout,
+	kindStrategyUnavailable: CodeStrategyUnavailable,
 }
 
 // fromDCPError maps a DCP error frame's error object onto an *Error. An unknown

@@ -7,33 +7,65 @@ const protocolVersion = 1
 
 // DCP command method names ("Domain.method").
 const (
-	methodDeviceInfo        = "Device.info"
-	methodKeyboardKeyPress  = "Keyboard.keyPress"
-	methodKeyboardTypeText  = "Keyboard.typeText"
-	methodProtocolHandshake = "Protocol.handshake"
-	methodScreenFind        = "Screen.find"
-	methodScreenObserve     = "Screen.observe"
-	methodScreenScreenshot  = "Screen.screenshot"
-	methodTouchLongPress    = "Touch.longPress"
-	methodTouchSwipe        = "Touch.swipe"
-	methodTouchTap          = "Touch.tap"
+	methodDeviceInfo         = "Device.info"
+	methodKeyboardKeyPress   = "Keyboard.keyPress"
+	methodKeyboardTypeText   = "Keyboard.typeText"
+	methodLocatorBoundingBox = "Locator.boundingBox"
+	methodLocatorCount       = "Locator.count"
+	methodLocatorFill        = "Locator.fill"
+	methodLocatorPress       = "Locator.press"
+	methodLocatorTap         = "Locator.tap"
+	methodLocatorText        = "Locator.text"
+	methodLocatorWaitFor     = "Locator.waitFor"
+	methodProtocolHandshake  = "Protocol.handshake"
+	methodScreenObserve      = "Screen.observe"
+	methodScreenScreenshot   = "Screen.screenshot"
+	methodTouchLongPress     = "Touch.longPress"
+	methodTouchSwipe         = "Touch.swipe"
+	methodTouchTap           = "Touch.tap"
 )
 
 // DCP error kinds (the data.kind on a CDP error frame).
 const (
-	kindCanceled        = "Canceled"
-	kindDeviceOffline   = "DeviceOffline"
-	kindElementNotFound = "ElementNotFound"
-	kindInternal        = "Internal"
-	kindInvalidArgs     = "InvalidArgs"
-	kindNoAllocation    = "NoAllocation"
-	kindNotConnected    = "NotConnected"
-	kindTimeout         = "Timeout"
-	kindUnauthorized    = "Unauthorized"
-	kindUnknownOp       = "UnknownOp"
+	kindActionTimeout       = "ActionTimeout"
+	kindCanceled            = "Canceled"
+	kindDeviceOffline       = "DeviceOffline"
+	kindInternal            = "Internal"
+	kindInvalidArgs         = "InvalidArgs"
+	kindNoAllocation        = "NoAllocation"
+	kindNotConnected        = "NotConnected"
+	kindStrategyUnavailable = "StrategyUnavailable"
+	kindTimeout             = "Timeout"
+	kindUnauthorized        = "Unauthorized"
+	kindUnknownOp           = "UnknownOp"
 )
 
-// Input param frames (snake_case on the wire), one per contract schema.
+// Nested object schemas a locator param frame references (locator.go builds
+// these from the hand-written Locator via toWire).
+type androidLocatorWire struct {
+	ClassName string `json:"className,omitempty"`
+}
+
+type locatorWire struct {
+	Exact    bool                 `json:"exact,omitempty"`
+	Has      *locatorWire         `json:"has,omitempty"`
+	Id       string               `json:"id,omitempty"`
+	Name     string               `json:"name,omitempty"`
+	Nth      *int                 `json:"nth,omitempty"`
+	Platform *locatorPlatformWire `json:"platform,omitempty"`
+	Query    string               `json:"query,omitempty"`
+	Role     string               `json:"role,omitempty"`
+	States   []string             `json:"states,omitempty"`
+	Text     string               `json:"text,omitempty"`
+	Within   *locatorWire         `json:"within,omitempty"`
+}
+
+type locatorPlatformWire struct {
+	Android *androidLocatorWire `json:"android,omitempty"`
+}
+
+// Input param frames (wire casing per contract: snake_case for the pre-locator
+// domains, camelCase for Locator), one per contract schema.
 type tapParams struct {
 	IdempotencyKey string `json:"idempotencyKey,omitempty"`
 	X              int    `json:"x"`
@@ -71,13 +103,60 @@ type observeParams struct {
 	OcrEngine string `json:"ocr_engine,omitempty"`
 }
 
-type findParams struct {
-	Model     string `json:"model,omitempty"`
-	OcrEngine string `json:"ocr_engine,omitempty"`
-	Query     string `json:"query"`
-}
-
 type handshakeParams struct {
 	ClientVersion string `json:"client_version,omitempty"`
 	MinProtocol   int    `json:"min_protocol,omitempty"`
+}
+
+type locatorTapParams struct {
+	IdempotencyKey string       `json:"idempotencyKey,omitempty"`
+	Locator        *locatorWire `json:"locator"`
+	Model          string       `json:"model,omitempty"`
+	OcrEngine      string       `json:"ocrEngine,omitempty"`
+	Strategy       string       `json:"strategy,omitempty"`
+	TimeoutMs      int          `json:"timeoutMs,omitempty"`
+}
+
+type locatorFillParams struct {
+	IdempotencyKey string       `json:"idempotencyKey,omitempty"`
+	Locator        *locatorWire `json:"locator"`
+	Model          string       `json:"model,omitempty"`
+	OcrEngine      string       `json:"ocrEngine,omitempty"`
+	Strategy       string       `json:"strategy,omitempty"`
+	Text           string       `json:"text"`
+	TimeoutMs      int          `json:"timeoutMs,omitempty"`
+}
+
+type locatorPressParams struct {
+	IdempotencyKey string       `json:"idempotencyKey,omitempty"`
+	Key            string       `json:"key"`
+	Locator        *locatorWire `json:"locator,omitempty"`
+	Model          string       `json:"model,omitempty"`
+	OcrEngine      string       `json:"ocrEngine,omitempty"`
+	Strategy       string       `json:"strategy,omitempty"`
+	TimeoutMs      int          `json:"timeoutMs,omitempty"`
+}
+
+type locatorWaitForParams struct {
+	Locator   *locatorWire `json:"locator"`
+	Model     string       `json:"model,omitempty"`
+	OcrEngine string       `json:"ocrEngine,omitempty"`
+	State     string       `json:"state,omitempty"`
+	Strategy  string       `json:"strategy,omitempty"`
+	TimeoutMs int          `json:"timeoutMs,omitempty"`
+}
+
+type locatorQueryParams struct {
+	Locator   *locatorWire `json:"locator"`
+	Model     string       `json:"model,omitempty"`
+	OcrEngine string       `json:"ocrEngine,omitempty"`
+	Strategy  string       `json:"strategy,omitempty"`
+	TimeoutMs int          `json:"timeoutMs,omitempty"`
+}
+
+type locatorCountParams struct {
+	Locator   *locatorWire `json:"locator"`
+	Model     string       `json:"model,omitempty"`
+	OcrEngine string       `json:"ocrEngine,omitempty"`
+	Strategy  string       `json:"strategy,omitempty"`
 }
