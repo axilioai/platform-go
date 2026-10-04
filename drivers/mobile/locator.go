@@ -13,36 +13,43 @@ import (
 // round trip. Nth, First, Within, Has and Filter each return a new Locator
 // rather than mutating the receiver.
 //
-// Today's phones have no accessibility tree, so vision (OCR/VLM) is the only
-// resolver: a plain Text locator resolves by OCR; a locator that also
-// carries Query, Within, Has or Nth is instead resolved by one vision-model
-// call, with a prompt composed from the whole locator (so Nth on a
-// Query-based locator works). Locator.Count is the exception: it needs a
-// plain text locator, and answers CodeInvalidArgs for one that also carries
-// Query, Within or Has, since counting needs every independent match and a
-// vision-model call only resolves a single target per prompt. Role/id
-// selectors and a choice of resolution strategy arrive with accessibility
-// support in a later release.
+// How a locator resolves depends on the session. With accessibility mode on
+// (see PhoneAllocateRequest.Accessibility and MobileDriver.Accessibility),
+// the device matches the literal selectors (Role, Name, Text, ID, Value,
+// States, ...) against the phone's accessibility tree, and a Query is
+// ranked by a model over the tree's nodes. With it off, vision is the only
+// resolver: a plain Text locator resolves by OCR, and a locator that also
+// carries Query, Within, Has or Nth is resolved by one vision-model call,
+// with a prompt composed from the whole locator. Under vision, Locator.Count
+// needs a plain text locator and answers CodeInvalidArgs for one that also
+// carries Query, Within or Has, since a vision-model call only resolves a
+// single target per prompt.
+//
+// The tree-only selectors (Role, Name, ID, States, Value, WindowID, NodeID
+// and the Android options) need the accessibility tree: on a session
+// without one they answer CodeStrategyUnavailable whatever the strategy.
+// They are never turned into a model prompt. Strategy picks the resolver
+// explicitly (StrategyVision skips the tree even when it is on).
 type Locator struct {
 	driver *MobileDriver
 
-	role, name, text, id, query, androidClassName string
-	exact                                         bool
-	states                                        []string
-	nth                                           *int
-	within, has                                   *Locator
+	role, name, text, id, query, value, windowID, nodeID string
+	androidClassName, androidPackageName                 string
+	exact                                                bool
+	states                                               []string
+	nth                                                  *int
+	within, has                                          *Locator
 
 	// model, ocrEngine and strategy are this locator's own resolution
-	// options (Model/OCREngine, plus the unexported strategy held back until
-	// accessibility ships). An action or query on the locator resolves with
-	// these, falling back to the driver's WithDefaultModel /
-	// WithDefaultOCREngine / withDefaultStrategy, and omitting the wire
-	// field entirely if neither is set. Within/Has only ever read the
+	// options (Model, OCREngine, Strategy). An action or query on the
+	// locator resolves with these, falling back to the driver's
+	// WithDefaultModel / WithDefaultOCREngine / WithDefaultStrategy, and
+	// omitting the wire field entirely if neither is set. Within/Has only ever read the
 	// selector fields off a nested locator: these three never travel with
 	// it (one call resolves the whole locator, governed by the outer
 	// locator's own options).
 	model, ocrEngine string
-	strategy         locatorStrategy
+	strategy         LocatorStrategy
 
 	// buildErr is set by Within/Has when the locator passed in as the scope
 	// carries its own Model/OCREngine/strategy (or already carries a
@@ -54,53 +61,74 @@ type Locator struct {
 	buildErr *Error
 }
 
-// LocatorOption configures a Locator at construction (via MobileDriver.Locator)
-// or refinement (via Locator.Filter). Most are selector predicates (Text,
-// Exact, Query), which combine as AND; a literal selector that matches
-// nothing fails after the call's auto-wait. Model and OCREngine are
-// different: they are resolution options, setting how an action or query on
-// this locator resolves it rather than narrowing what it matches.
+// LocatorOption configures a Locator at construction (via MobileDriver.Locator,
+// GetByText, GetByRole or GetByID). Most are selector predicates (Text, Role,
+// Name, ID, Exact, Query, ...), which combine as AND; a literal selector that
+// matches nothing fails after the call's auto-wait. Model, OCREngine and
+// Strategy are different: they are resolution options, setting how an
+// action or query on this locator resolves it rather than narrowing what it
+// matches.
 type LocatorOption func(*Locator)
 
 // Text matches visible text: substring and case-insensitive unless Exact is
 // also given. Matched by OCR (GetByText is this option alone).
 func Text(text string) LocatorOption { return func(l *Locator) { l.text = text } }
 
-// Exact requires an exact match on Text rather than a case-insensitive
-// substring.
+// Exact requires a case-sensitive exact match on Text, Name and Value rather
+// than a case-insensitive substring.
 func Exact() LocatorOption { return func(l *Locator) { l.exact = true } }
 
-// withRole matches the accessibility role, e.g. "button", "textbox". Needs
-// the accessibility tree: on a session without one this answers
-// StrategyUnavailable regardless of strategy (today's phones have none).
-// Held back until accessibility support ships.
-func withRole(role string) LocatorOption { return func(l *Locator) { l.role = role } }
+// Role matches the accessibility role, e.g. "button", "textbox". Needs the
+// accessibility tree (see Locator).
+func Role(role string) LocatorOption { return func(l *Locator) { l.role = role } }
 
-// withName matches the accessible name. Needs the accessibility tree; see
-// withRole. Held back until accessibility support ships.
-func withName(name string) LocatorOption { return func(l *Locator) { l.name = name } }
+// Name matches the accessible name: substring and case-insensitive unless
+// Exact is also given. Needs the accessibility tree.
+func Name(name string) LocatorOption { return func(l *Locator) { l.name = name } }
 
-// withID matches a developer-assigned id, e.g. an Android resource id
-// "com.example.app:id/save". Needs the accessibility tree; see withRole.
-// Held back until accessibility support ships.
-func withID(id string) LocatorOption { return func(l *Locator) { l.id = id } }
+// ID matches a developer-assigned id, e.g. an Android resource id
+// "com.example.app:id/save". Needs the accessibility tree.
+func ID(id string) LocatorOption { return func(l *Locator) { l.id = id } }
 
-// withStates requires the given accessibility states, e.g. "checked". Needs
-// the accessibility tree; see withRole. Held back until accessibility
-// support ships.
-func withStates(states ...string) LocatorOption {
+// States requires the given accessibility states, e.g. "checked". Needs the
+// accessibility tree.
+func States(states ...string) LocatorOption {
 	return func(l *Locator) { l.states = append([]string(nil), states...) }
 }
 
-// Query is a natural-language description of the target, read from the
-// screen by the VLM.
+// Value matches the node's current value (a text field's contents, a
+// slider's value): substring and case-insensitive unless Exact is also
+// given. Needs the accessibility tree.
+func Value(value string) LocatorOption { return func(l *Locator) { l.value = value } }
+
+// WindowID only matches nodes in this window, as AXTree.Windows lists it.
+// Needs the accessibility tree.
+func WindowID(windowID string) LocatorOption {
+	return func(l *Locator) { l.windowID = windowID }
+}
+
+// NodeID matches exactly the node with this id from an earlier
+// Accessibility snapshot. Fails with CodeStaleNode once that node is gone;
+// it never matches a different element. Needs the accessibility tree.
+func NodeID(nodeID string) LocatorOption { return func(l *Locator) { l.nodeID = nodeID } }
+
+// Query is a natural-language description of the target. With the
+// accessibility tree on, a model ranks the tree's nodes; otherwise (or under
+// StrategyVision) the VLM reads it off the screen.
 func Query(query string) LocatorOption { return func(l *Locator) { l.query = query } }
 
-// withAndroidClassName matches the Android view class, e.g.
+// AndroidClassName matches the Android view class, e.g.
 // "android.widget.Button". Native matching; not portable across device
-// classes. Held back until accessibility support ships.
-func withAndroidClassName(className string) LocatorOption {
+// classes. Needs the accessibility tree.
+func AndroidClassName(className string) LocatorOption {
 	return func(l *Locator) { l.androidClassName = className }
+}
+
+// AndroidPackageName only matches nodes owned by this app, e.g.
+// "com.example.app". Native matching; not portable across device classes.
+// Needs the accessibility tree.
+func AndroidPackageName(packageName string) LocatorOption {
+	return func(l *Locator) { l.androidPackageName = packageName }
 }
 
 // --- resolution options -------------------------------------------------
@@ -118,19 +146,17 @@ func Model(model string) LocatorOption { return func(l *Locator) { l.model = mod
 // field entirely and the server's own default applies.
 func OCREngine(engine string) LocatorOption { return func(l *Locator) { l.ocrEngine = engine } }
 
-// withStrategy overrides the resolution strategy (strategyAuto,
-// strategyVision or strategyAccessibility) for this locator. Locator value
-// wins over the driver's withDefaultStrategy; with neither set, a locator
-// call omits the field entirely and the server applies strategyAuto. Held
-// back until accessibility support ships.
-func withStrategy(strategy locatorStrategy) LocatorOption {
+// Strategy overrides the resolution strategy (StrategyAuto, StrategyVision
+// or StrategyAccessibility) for this locator. Locator value wins over the
+// driver's WithDefaultStrategy; with neither set, a locator call omits the
+// field entirely and the server applies StrategyAuto.
+func Strategy(strategy LocatorStrategy) LocatorOption {
 	return func(l *Locator) { l.strategy = strategy }
 }
 
-// Locator builds a general-purpose locator from options. GetByText is
-// shorthand for the common single-predicate case; getByRole and getByID
-// (unexported, held back until accessibility support ships) are the
-// equivalents for role/id selectors.
+// Locator builds a general-purpose locator from options. GetByText,
+// GetByRole and GetByID are shorthand for the common single-predicate
+// cases.
 func (d *MobileDriver) Locator(opts ...LocatorOption) *Locator {
 	l := &Locator{driver: d}
 	for _, o := range opts {
@@ -145,20 +171,21 @@ func (d *MobileDriver) GetByText(text string, opts ...LocatorOption) *Locator {
 	return d.Locator(append([]LocatorOption{Text(text)}, opts...)...)
 }
 
-// getByRole builds a locator matching an accessibility role. Today's phones
-// have no accessibility tree, so acting on it answers StrategyUnavailable by
-// design until a phone advertises one. Held back until accessibility
-// support ships.
-func (d *MobileDriver) getByRole(role string, opts ...LocatorOption) *Locator {
-	return d.Locator(append([]LocatorOption{withRole(role)}, opts...)...)
+// GetByRole builds a locator matching an accessibility role (Role(role)
+// plus any further opts, typically Name("Log in")), e.g.
+// d.GetByRole("button", mobile.Name("Log in")). Resolves against the
+// accessibility tree; on a session without one, acting on it answers
+// CodeStrategyUnavailable.
+func (d *MobileDriver) GetByRole(role string, opts ...LocatorOption) *Locator {
+	return d.Locator(append([]LocatorOption{Role(role)}, opts...)...)
 }
 
-// getByID builds a locator matching a developer-assigned id. Today's phones
-// have no accessibility tree, so acting on it answers StrategyUnavailable by
-// design until a phone advertises one. Held back until accessibility
-// support ships.
-func (d *MobileDriver) getByID(id string, opts ...LocatorOption) *Locator {
-	return d.Locator(append([]LocatorOption{withID(id)}, opts...)...)
+// GetByID builds a locator matching a developer-assigned id, e.g. an
+// Android resource id "com.example.app:id/login". Resolves against the
+// accessibility tree; on a session without one, acting on it answers
+// CodeStrategyUnavailable.
+func (d *MobileDriver) GetByID(id string, opts ...LocatorOption) *Locator {
+	return d.Locator(append([]LocatorOption{ID(id)}, opts...)...)
 }
 
 // Nth returns a new locator that picks the nth match in reading order
@@ -220,16 +247,7 @@ func scopeOptionsErr(who string, other *Locator) *Error {
 	if other.buildErr != nil {
 		return other.buildErr
 	}
-	var set []string
-	if other.model != "" {
-		set = append(set, "Model")
-	}
-	if other.ocrEngine != "" {
-		set = append(set, "OCREngine")
-	}
-	if other.strategy != "" {
-		set = append(set, "Strategy")
-	}
+	set := other.resolutionOptionsSet()
 	if len(set) == 0 {
 		return nil
 	}
@@ -240,6 +258,22 @@ func scopeOptionsErr(who string, other *Locator) *Error {
 			who, strings.Join(set, ", "),
 		),
 	}
+}
+
+// resolutionOptionsSet names the resolution options set on l itself (not
+// inherited from a driver default), in a fixed order.
+func (l *Locator) resolutionOptionsSet() []string {
+	var set []string
+	if l.model != "" {
+		set = append(set, "Model")
+	}
+	if l.ocrEngine != "" {
+		set = append(set, "OCREngine")
+	}
+	if l.strategy != "" {
+		set = append(set, "Strategy")
+	}
+	return set
 }
 
 // Filter returns a new locator that keeps the receiver's literal selectors
@@ -285,19 +319,25 @@ func (l *Locator) toWire() *locatorWire {
 		return nil
 	}
 	w := &locatorWire{
-		Role:   l.role,
-		Name:   l.name,
-		Text:   l.text,
-		Exact:  l.exact,
-		Id:     l.id,
-		States: l.states,
-		Query:  l.query,
-		Nth:    l.nth,
-		Within: l.within.toWire(),
-		Has:    l.has.toWire(),
+		Role:     l.role,
+		Name:     l.name,
+		Text:     l.text,
+		Exact:    l.exact,
+		Id:       l.id,
+		States:   l.states,
+		Query:    l.query,
+		Value:    l.value,
+		WindowId: l.windowID,
+		NodeId:   l.nodeID,
+		Nth:      l.nth,
+		Within:   l.within.toWire(),
+		Has:      l.has.toWire(),
 	}
-	if l.androidClassName != "" {
-		w.Platform = &locatorPlatformWire{Android: &androidLocatorWire{ClassName: l.androidClassName}}
+	if l.androidClassName != "" || l.androidPackageName != "" {
+		w.Platform = &locatorPlatformWire{Android: &androidLocatorWire{
+			ClassName:   l.androidClassName,
+			PackageName: l.androidPackageName,
+		}}
 	}
 	return w
 }

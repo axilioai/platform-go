@@ -27,15 +27,13 @@ const (
 // server's own default applies. Observe (the vision call) has no locator to
 // carry the option, so it always sends an explicit OCR engine instead: the
 // call's own WithOCREngine, else the driver default, else "free".
-//
-// defaultStrategy is the equivalent default for the unexported strategy
-// option: held back until accessibility support ships (see locator_actions.go).
+// WithDefaultStrategy is the equivalent default for the Strategy option.
 type MobileDriver struct {
 	tp transport
 
 	defaultOCREngine string
 	defaultModel     string
-	defaultStrategy  locatorStrategy
+	defaultStrategy  LocatorStrategy
 	openTimeout      time.Duration
 }
 
@@ -54,10 +52,10 @@ func WithDefaultModel(model string) Option {
 	return func(d *MobileDriver) { d.defaultModel = model }
 }
 
-// withDefaultStrategy sets the session-wide locator resolution strategy
-// (strategyAuto/Vision/Accessibility). Held back until accessibility support
-// ships.
-func withDefaultStrategy(strategy locatorStrategy) Option {
+// WithDefaultStrategy sets the session-wide locator resolution strategy
+// (StrategyAuto, StrategyVision or StrategyAccessibility). A locator's own
+// Strategy option wins over it.
+func WithDefaultStrategy(strategy LocatorStrategy) Option {
 	return func(d *MobileDriver) { d.defaultStrategy = strategy }
 }
 
@@ -124,9 +122,9 @@ type CallOption interface {
 }
 
 // ActionOption tunes a single locator action or query (Tap, Fill, Press,
-// WaitFor, BoundingBox, Text, Count, and MobileDriver.Press). Resolution
-// options (Model, OCREngine, and the unexported strategy) live on the
-// locator instead (see Locator), so ActionOption only ever carries a
+// WaitFor, BoundingBox, Text, Count, and MobileDriver.Press) or an
+// Accessibility call. Resolution options (Model, OCREngine, Strategy) live
+// on the locator instead (see Locator), so ActionOption only ever carries a
 // timeout: WithOCREngine implements CallOption, not ActionOption, so passing
 // it to a locator action is a compile error rather than a silent no-op.
 type ActionOption interface {
