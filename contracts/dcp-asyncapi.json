@@ -603,8 +603,7 @@
           },
           "windowId": {
             "type": "string",
-            "description": "Only nodes in this window",
-            "as a tree snapshot lists it.": null
+            "description": "Only nodes in this window, as a tree snapshot lists it."
           },
           "nodeId": {
             "type": "string",
@@ -1348,8 +1347,7 @@
           },
           "app": {
             "type": "string",
-            "description": "The package that owns the window",
-            "when known.": null
+            "description": "The package that owns the window, when known."
           },
           "focused": {
             "type": "boolean"
