@@ -2859,6 +2859,14 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
+**accessibility:** `*bool` — Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Omit to get it whenever the claimed phone supports it (never fails the allocation). true requires it: only phones that support it are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. false turns it off. While on, the accessibility service is visible to apps on the phone. The effective value is returned as accessibility.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **capture:** `*bool` — Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
     
 </dd>
@@ -4997,6 +5005,14 @@ client.Workflows.Create(
 <dl>
 <dd>
 
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs (default true: on whenever the claimed phone supports it, which never fails a run). false turns it off for every run dispatched through the scheduler.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **capture:** `*bool` — Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
     
 </dd>
@@ -5229,6 +5245,14 @@ client.Workflows.Update(
 <dd>
 
 **workflowID:** `string` — workflow identifier
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs (default true: on whenever the claimed phone supports it, which never fails a run). false turns it off for every run dispatched through the scheduler.
     
 </dd>
 </dl>
