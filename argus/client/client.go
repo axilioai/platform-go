@@ -3,14 +3,18 @@
 package client
 
 import (
+	accessibilitytrees "github.com/axilioai/platform-go/argus/accessibilitytrees"
 	core "github.com/axilioai/platform-go/argus/core"
 	internal "github.com/axilioai/platform-go/argus/internal"
+	models "github.com/axilioai/platform-go/argus/models"
 	option "github.com/axilioai/platform-go/argus/option"
-	vision "github.com/axilioai/platform-go/argus/vision"
+	screenshots "github.com/axilioai/platform-go/argus/screenshots"
 )
 
 type Client struct {
-	Vision *vision.Client
+	AccessibilityTrees *accessibilitytrees.Client
+	Models             *models.Client
+	Screenshots        *screenshots.Client
 
 	options *core.RequestOptions
 	baseURL string
@@ -20,9 +24,11 @@ type Client struct {
 func NewClient(opts ...option.RequestOption) *Client {
 	options := core.NewRequestOptions(opts...)
 	return &Client{
-		Vision:  vision.NewClient(options),
-		options: options,
-		baseURL: options.BaseURL,
+		AccessibilityTrees: accessibilitytrees.NewClient(options),
+		Models:             models.NewClient(options),
+		Screenshots:        screenshots.NewClient(options),
+		options:            options,
+		baseURL:            options.BaseURL,
 		caller: internal.NewCaller(
 			&internal.CallerParams{
 				Client:         options.HTTPClient,

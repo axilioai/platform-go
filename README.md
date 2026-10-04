@@ -11,6 +11,7 @@ its device control channel.
 
 - [Quickstart](#quickstart)
   - [Accessibility mode](#accessibility-mode)
+  - [Vision client (argus 2.0)](#vision-client-argus-20)
 - [Reference](#reference)
 - [Usage](#usage)
 - [Environments](#environments)
@@ -212,6 +213,24 @@ expect: `IsStrategyUnavailable` (the tree is off), `IsTreeUnavailable` (a
 system dialog such as a permission prompt covers the app; vision still sees
 it) and `IsStaleNode` (the node from an earlier snapshot is gone).
 `Enable` and `Disable` work only where `State().Toggleable` is true.
+
+### Vision client (argus 2.0)
+
+`github.com/axilioai/platform-go/argus` is the typed client for the vision
+inference service. Argus 2.0 is a breaking change, so 0.14.0 replaces the old
+`argus/vision` package (`Vision.Detect`, `Vision.Locate`, `Vision.ListModels`
+on `/api/v1/vision/*`) with one package per resource:
+
+| 2.0 call | Endpoint |
+| --- | --- |
+| `Models.ListModels` | `GET /api/v1/models` |
+| `Screenshots.Detect` | `POST /api/v1/screenshots:detect` |
+| `Screenshots.Locate` | `POST /api/v1/screenshots:locate` (image only) |
+| `AccessibilityTrees.AccessibilityTreesLocate` | `POST /api/v1/accessibility-trees:locate` (new: pick a node from an accessibility tree by query) |
+
+The old paths have no alias. Errors are RFC 9457 problem+json and decode into
+typed errors (`BadRequestError`, `BadGatewayError`, ...) carrying a `Problem`
+body.
 
 ## Reference
 
