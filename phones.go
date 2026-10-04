@@ -92,7 +92,7 @@ var (
 )
 
 type PhoneAllocateRequest struct {
-	// Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Omit to get it whenever the claimed phone supports it (never fails the allocation). true requires it: only phones that support it are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. false turns it off. While on, the accessibility service is visible to apps on the phone. The effective value is returned as accessibility.
+	// Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Defaults to true. true requires a phone that supports it: only such phones are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. false turns it off on any phone. While on, the accessibility service is visible to apps on the phone.
 	Accessibility *bool `json:"accessibility,omitempty" url:"-"`
 	// Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
 	Capture *bool `json:"capture,omitempty" url:"-"`
@@ -2083,7 +2083,7 @@ var (
 type PhoneAllocateResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// Whether accessibility mode is on for this session: the requested value, or, when the request omitted it, whether the claimed phone supports it. The phone confirms the state before the session goes live; if it cannot, the session ends with reason accessibility_unavailable.
+	// Whether accessibility mode is on for this session, as requested. The phone confirms the state before the session goes live; if it cannot, the session ends with reason accessibility_unavailable.
 	Accessibility bool `json:"accessibility" url:"accessibility"`
 	// WebSocket URL for driving the phone over the device control protocol.
 	ControlURL *string `json:"control_url,omitempty" url:"control_url,omitempty"`
@@ -4032,7 +4032,7 @@ var (
 type PhoneSessionDetailResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// Whether accessibility mode was on for this session at allocation: the requested value, or, when the request omitted it, whether the phone supported it. A mid-session enable or disable is not reflected here.
+	// Whether accessibility mode was on for this session at allocation. A mid-session enable or disable is recorded here too.
 	Accessibility bool `json:"accessibility" url:"accessibility"`
 	// When the session claimed the phone.
 	AllocatedAt time.Time `json:"allocated_at" url:"allocated_at"`

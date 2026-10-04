@@ -2859,7 +2859,7 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
-**accessibility:** `*bool` — Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Omit to get it whenever the claimed phone supports it (never fails the allocation). true requires it: only phones that support it are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. false turns it off. While on, the accessibility service is visible to apps on the phone. The effective value is returned as accessibility.
+**accessibility:** `*bool` — Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Defaults to true. true requires a phone that supports it: only such phones are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. false turns it off on any phone. While on, the accessibility service is visible to apps on the phone.
     
 </dd>
 </dl>
@@ -5005,7 +5005,7 @@ client.Workflows.Create(
 <dl>
 <dd>
 
-**accessibility:** `*bool` — Accessibility mode for this workflow's runs (default true: on whenever the claimed phone supports it, which never fails a run). false turns it off for every run dispatched through the scheduler.
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs (default true). true requires a phone that supports it for every run dispatched through the scheduler; false turns it off.
     
 </dd>
 </dl>
@@ -5252,7 +5252,7 @@ client.Workflows.Update(
 <dl>
 <dd>
 
-**accessibility:** `*bool` — Accessibility mode for this workflow's runs (default true: on whenever the claimed phone supports it, which never fails a run). false turns it off for every run dispatched through the scheduler.
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs. true requires a phone that supports it for every run dispatched through the scheduler; false turns it off. Omit to leave it unchanged.
     
 </dd>
 </dl>
