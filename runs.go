@@ -39,7 +39,8 @@ func (r *RunsCancelRequest) SetRunID(runID string) {
 var (
 	runCreateRequestFieldWorkflowID          = big.NewInt(1 << 0)
 	runCreateRequestFieldRuns                = big.NewInt(1 << 1)
-	runCreateRequestFieldStartTimeoutSeconds = big.NewInt(1 << 2)
+	runCreateRequestFieldStartAt             = big.NewInt(1 << 2)
+	runCreateRequestFieldStartTimeoutSeconds = big.NewInt(1 << 3)
 )
 
 type RunCreateRequest struct {
@@ -47,7 +48,9 @@ type RunCreateRequest struct {
 	WorkflowID string `json:"-" url:"-"`
 	// Per-run variable configurations. One run is created per entry; 1-1000 entries per request.
 	Runs []*RunConfig `json:"runs" url:"-"`
-	// How long a queued run may wait for a phone before it is auto-cancelled (60-86400). Defaults to 300.
+	// Start the runs at this time (RFC 3339) instead of now. Must be at least 60 seconds and at most 30 days ahead. The runs are listed as scheduled until then, can be cancelled, and start within about 15 seconds of this time plus the usual wait for a phone. Omit to start now.
+	StartAt *time.Time `json:"start_at,omitempty" url:"-"`
+	// How long a queued run may wait for a phone before it is auto-cancelled (60-86400). Defaults to 300. For a scheduled run the wait counts from when it is released at start_at, not from booking.
 	StartTimeoutSeconds *int64 `json:"start_timeout_seconds,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -75,6 +78,13 @@ func (r *RunCreateRequest) SetRuns(runs []*RunConfig) {
 	r.require(runCreateRequestFieldRuns)
 }
 
+// SetStartAt sets the StartAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunCreateRequest) SetStartAt(startAt *time.Time) {
+	r.StartAt = startAt
+	r.require(runCreateRequestFieldStartAt)
+}
+
 // SetStartTimeoutSeconds sets the StartTimeoutSeconds field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (r *RunCreateRequest) SetStartTimeoutSeconds(startTimeoutSeconds *int64) {
@@ -96,8 +106,10 @@ func (r *RunCreateRequest) MarshalJSON() ([]byte, error) {
 	type embed RunCreateRequest
 	var marshaler = struct {
 		embed
+		StartAt *internal.DateTime `json:"start_at,omitempty"`
 	}{
-		embed: embed(*r),
+		embed:   embed(*r),
+		StartAt: internal.NewOptionalDateTime(r.StartAt),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
 	return json.Marshal(explicitMarshaler)
@@ -1030,6 +1042,7 @@ func (r *RunHistoryItem) String() string {
 type RunHistoryItemStatus string
 
 const (
+	RunHistoryItemStatusScheduled RunHistoryItemStatus = "scheduled"
 	RunHistoryItemStatusQueued    RunHistoryItemStatus = "queued"
 	RunHistoryItemStatusRunning   RunHistoryItemStatus = "running"
 	RunHistoryItemStatusCompleted RunHistoryItemStatus = "completed"
@@ -1039,6 +1052,8 @@ const (
 
 func NewRunHistoryItemStatusFromString(s string) (RunHistoryItemStatus, error) {
 	switch s {
+	case "scheduled":
+		return RunHistoryItemStatusScheduled, nil
 	case "queued":
 		return RunHistoryItemStatusQueued, nil
 	case "running":
@@ -1591,18 +1606,19 @@ var (
 	runResponseFieldPhoneID             = big.NewInt(1 << 6)
 	runResponseFieldRunMetadata         = big.NewInt(1 << 7)
 	runResponseFieldSessionID           = big.NewInt(1 << 8)
-	runResponseFieldStartTimeoutSeconds = big.NewInt(1 << 9)
-	runResponseFieldStartedAt           = big.NewInt(1 << 10)
-	runResponseFieldStatus              = big.NewInt(1 << 11)
-	runResponseFieldSuccess             = big.NewInt(1 << 12)
-	runResponseFieldTraceExpiredAt      = big.NewInt(1 << 13)
-	runResponseFieldTrigger             = big.NewInt(1 << 14)
-	runResponseFieldUpdatedAt           = big.NewInt(1 << 15)
-	runResponseFieldUserID              = big.NewInt(1 << 16)
-	runResponseFieldVariables           = big.NewInt(1 << 17)
-	runResponseFieldVideoURL            = big.NewInt(1 << 18)
-	runResponseFieldWorkflowID          = big.NewInt(1 << 19)
-	runResponseFieldWorkflowName        = big.NewInt(1 << 20)
+	runResponseFieldStartAt             = big.NewInt(1 << 9)
+	runResponseFieldStartTimeoutSeconds = big.NewInt(1 << 10)
+	runResponseFieldStartedAt           = big.NewInt(1 << 11)
+	runResponseFieldStatus              = big.NewInt(1 << 12)
+	runResponseFieldSuccess             = big.NewInt(1 << 13)
+	runResponseFieldTraceExpiredAt      = big.NewInt(1 << 14)
+	runResponseFieldTrigger             = big.NewInt(1 << 15)
+	runResponseFieldUpdatedAt           = big.NewInt(1 << 16)
+	runResponseFieldUserID              = big.NewInt(1 << 17)
+	runResponseFieldVariables           = big.NewInt(1 << 18)
+	runResponseFieldVideoURL            = big.NewInt(1 << 19)
+	runResponseFieldWorkflowID          = big.NewInt(1 << 20)
+	runResponseFieldWorkflowName        = big.NewInt(1 << 21)
 )
 
 type RunResponse struct {
@@ -1624,6 +1640,8 @@ type RunResponse struct {
 	RunMetadata map[string]any `json:"run_metadata,omitempty" url:"run_metadata,omitempty"`
 	// Session associated with this run.
 	SessionID *string `json:"session_id,omitempty" url:"session_id,omitempty"`
+	// When the run was booked to start; absent for a run started on request.
+	StartAt *time.Time `json:"start_at,omitempty" url:"start_at,omitempty"`
 	// How long the queued run may wait for a phone before auto-cancel.
 	StartTimeoutSeconds *int64 `json:"start_timeout_seconds,omitempty" url:"start_timeout_seconds,omitempty"`
 	// Timestamp when the run began executing.
@@ -1717,6 +1735,13 @@ func (r *RunResponse) GetSessionID() *string {
 		return nil
 	}
 	return r.SessionID
+}
+
+func (r *RunResponse) GetStartAt() *time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.StartAt
 }
 
 func (r *RunResponse) GetStartTimeoutSeconds() *int64 {
@@ -1880,6 +1905,13 @@ func (r *RunResponse) SetSessionID(sessionID *string) {
 	r.require(runResponseFieldSessionID)
 }
 
+// SetStartAt sets the StartAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetStartAt(startAt *time.Time) {
+	r.StartAt = startAt
+	r.require(runResponseFieldStartAt)
+}
+
 // SetStartTimeoutSeconds sets the StartTimeoutSeconds field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (r *RunResponse) SetStartTimeoutSeconds(startTimeoutSeconds *int64) {
@@ -1971,6 +2003,7 @@ func (r *RunResponse) UnmarshalJSON(data []byte) error {
 		CanceledAt     *internal.DateTime `json:"canceled_at,omitempty"`
 		CompletedAt    *internal.DateTime `json:"completed_at,omitempty"`
 		CreatedAt      *internal.DateTime `json:"created_at"`
+		StartAt        *internal.DateTime `json:"start_at,omitempty"`
 		StartedAt      *internal.DateTime `json:"started_at,omitempty"`
 		TraceExpiredAt *internal.DateTime `json:"trace_expired_at,omitempty"`
 		UpdatedAt      *internal.DateTime `json:"updated_at"`
@@ -1984,6 +2017,7 @@ func (r *RunResponse) UnmarshalJSON(data []byte) error {
 	r.CanceledAt = unmarshaler.CanceledAt.TimePtr()
 	r.CompletedAt = unmarshaler.CompletedAt.TimePtr()
 	r.CreatedAt = unmarshaler.CreatedAt.Time()
+	r.StartAt = unmarshaler.StartAt.TimePtr()
 	r.StartedAt = unmarshaler.StartedAt.TimePtr()
 	r.TraceExpiredAt = unmarshaler.TraceExpiredAt.TimePtr()
 	r.UpdatedAt = unmarshaler.UpdatedAt.Time()
@@ -2003,6 +2037,7 @@ func (r *RunResponse) MarshalJSON() ([]byte, error) {
 		CanceledAt     *internal.DateTime `json:"canceled_at,omitempty"`
 		CompletedAt    *internal.DateTime `json:"completed_at,omitempty"`
 		CreatedAt      *internal.DateTime `json:"created_at"`
+		StartAt        *internal.DateTime `json:"start_at,omitempty"`
 		StartedAt      *internal.DateTime `json:"started_at,omitempty"`
 		TraceExpiredAt *internal.DateTime `json:"trace_expired_at,omitempty"`
 		UpdatedAt      *internal.DateTime `json:"updated_at"`
@@ -2011,6 +2046,7 @@ func (r *RunResponse) MarshalJSON() ([]byte, error) {
 		CanceledAt:     internal.NewOptionalDateTime(r.CanceledAt),
 		CompletedAt:    internal.NewOptionalDateTime(r.CompletedAt),
 		CreatedAt:      internal.NewDateTime(r.CreatedAt),
+		StartAt:        internal.NewOptionalDateTime(r.StartAt),
 		StartedAt:      internal.NewOptionalDateTime(r.StartedAt),
 		TraceExpiredAt: internal.NewOptionalDateTime(r.TraceExpiredAt),
 		UpdatedAt:      internal.NewDateTime(r.UpdatedAt),
@@ -2038,6 +2074,7 @@ func (r *RunResponse) String() string {
 type RunResponseStatus string
 
 const (
+	RunResponseStatusScheduled RunResponseStatus = "scheduled"
 	RunResponseStatusQueued    RunResponseStatus = "queued"
 	RunResponseStatusRunning   RunResponseStatus = "running"
 	RunResponseStatusCompleted RunResponseStatus = "completed"
@@ -2047,6 +2084,8 @@ const (
 
 func NewRunResponseStatusFromString(s string) (RunResponseStatus, error) {
 	switch s {
+	case "scheduled":
+		return RunResponseStatusScheduled, nil
 	case "queued":
 		return RunResponseStatusQueued, nil
 	case "running":
@@ -2786,6 +2825,7 @@ func (r *RunStatsResponse) String() string {
 type RunsListHistoricRequestStatusFilterItem string
 
 const (
+	RunsListHistoricRequestStatusFilterItemScheduled RunsListHistoricRequestStatusFilterItem = "scheduled"
 	RunsListHistoricRequestStatusFilterItemQueued    RunsListHistoricRequestStatusFilterItem = "queued"
 	RunsListHistoricRequestStatusFilterItemRunning   RunsListHistoricRequestStatusFilterItem = "running"
 	RunsListHistoricRequestStatusFilterItemCompleted RunsListHistoricRequestStatusFilterItem = "completed"
@@ -2795,6 +2835,8 @@ const (
 
 func NewRunsListHistoricRequestStatusFilterItemFromString(s string) (RunsListHistoricRequestStatusFilterItem, error) {
 	switch s {
+	case "scheduled":
+		return RunsListHistoricRequestStatusFilterItemScheduled, nil
 	case "queued":
 		return RunsListHistoricRequestStatusFilterItemQueued, nil
 	case "running":
@@ -2817,6 +2859,7 @@ func (r RunsListHistoricRequestStatusFilterItem) Ptr() *RunsListHistoricRequestS
 type RunsListRequestStatusFilterItem string
 
 const (
+	RunsListRequestStatusFilterItemScheduled RunsListRequestStatusFilterItem = "scheduled"
 	RunsListRequestStatusFilterItemQueued    RunsListRequestStatusFilterItem = "queued"
 	RunsListRequestStatusFilterItemRunning   RunsListRequestStatusFilterItem = "running"
 	RunsListRequestStatusFilterItemCompleted RunsListRequestStatusFilterItem = "completed"
@@ -2826,6 +2869,8 @@ const (
 
 func NewRunsListRequestStatusFilterItemFromString(s string) (RunsListRequestStatusFilterItem, error) {
 	switch s {
+	case "scheduled":
+		return RunsListRequestStatusFilterItemScheduled, nil
 	case "queued":
 		return RunsListRequestStatusFilterItemQueued, nil
 	case "running":

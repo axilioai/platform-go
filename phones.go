@@ -77,20 +77,23 @@ func (p *PhonesActiveSessionsRequest) SetSource(source *string) {
 }
 
 var (
-	phoneAllocateRequestFieldCapture    = big.NewInt(1 << 0)
-	phoneAllocateRequestFieldLiveView   = big.NewInt(1 << 1)
-	phoneAllocateRequestFieldName       = big.NewInt(1 << 2)
-	phoneAllocateRequestFieldPhoneID    = big.NewInt(1 << 3)
-	phoneAllocateRequestFieldPhoneType  = big.NewInt(1 << 4)
-	phoneAllocateRequestFieldPool       = big.NewInt(1 << 5)
-	phoneAllocateRequestFieldRecording  = big.NewInt(1 << 6)
-	phoneAllocateRequestFieldTags       = big.NewInt(1 << 7)
-	phoneAllocateRequestFieldTelemetry  = big.NewInt(1 << 8)
-	phoneAllocateRequestFieldTTL        = big.NewInt(1 << 9)
-	phoneAllocateRequestFieldWorkflowID = big.NewInt(1 << 10)
+	phoneAllocateRequestFieldAccessibility = big.NewInt(1 << 0)
+	phoneAllocateRequestFieldCapture       = big.NewInt(1 << 1)
+	phoneAllocateRequestFieldLiveView      = big.NewInt(1 << 2)
+	phoneAllocateRequestFieldName          = big.NewInt(1 << 3)
+	phoneAllocateRequestFieldPhoneID       = big.NewInt(1 << 4)
+	phoneAllocateRequestFieldPhoneType     = big.NewInt(1 << 5)
+	phoneAllocateRequestFieldPool          = big.NewInt(1 << 6)
+	phoneAllocateRequestFieldRecording     = big.NewInt(1 << 7)
+	phoneAllocateRequestFieldTags          = big.NewInt(1 << 8)
+	phoneAllocateRequestFieldTelemetry     = big.NewInt(1 << 9)
+	phoneAllocateRequestFieldTTL           = big.NewInt(1 << 10)
+	phoneAllocateRequestFieldWorkflowID    = big.NewInt(1 << 11)
 )
 
 type PhoneAllocateRequest struct {
+	// Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Omit to get it whenever the claimed phone supports it (never fails the allocation). true requires it: only phones that support it are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. false turns it off. While on, the accessibility service is visible to apps on the phone. The effective value is returned as accessibility.
+	Accessibility *bool `json:"accessibility,omitempty" url:"-"`
 	// Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
 	Capture *bool `json:"capture,omitempty" url:"-"`
 	// Hosted live-view options for this session; omit for the defaults (token auth, interactive, enabled).
@@ -123,6 +126,13 @@ func (p *PhoneAllocateRequest) require(field *big.Int) {
 		p.explicitFields = big.NewInt(0)
 	}
 	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneAllocateRequest) SetAccessibility(accessibility *bool) {
+	p.Accessibility = accessibility
+	p.require(phoneAllocateRequestFieldAccessibility)
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;
@@ -465,7 +475,7 @@ type PhonesListRequest struct {
 	Offset         *int64 `json:"-" url:"offset,omitempty"`
 	// free-text search across nickname, name, model, location
 	Search *string `json:"-" url:"search,omitempty"`
-	// filter by phone status (active/inactive/maintenance/suspended); case-insensitive
+	// filter by phone status (active/inactive/maintenance/suspended/recovering/out_of_service); case-insensitive
 	Status []string `json:"-" url:"status,omitempty"`
 	// filter by phone type (iphone/android); case-insensitive
 	Type []string `json:"-" url:"type,omitempty"`
@@ -1553,7 +1563,7 @@ type PhoneActiveSession struct {
 	PhoneID string `json:"phone_id" url:"phone_id"`
 	// Phone's name, if set.
 	PhoneName *string `json:"phone_name,omitempty" url:"phone_name,omitempty"`
-	// Phone's lifecycle status (ACTIVE/INACTIVE/...).
+	// Fleet status of the phone. Only active is allocatable; see PhoneSummary.status for each value.
 	PhoneStatus PhoneActiveSessionPhoneStatus `json:"phone_status" url:"phone_status"`
 	// IPHONE or ANDROID.
 	PhoneType *PhoneActiveSessionPhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
@@ -1876,14 +1886,16 @@ func (p PhoneActiveSessionAllocatedBy) Ptr() *PhoneActiveSessionAllocatedBy {
 	return &p
 }
 
-// Phone's lifecycle status (ACTIVE/INACTIVE/...).
+// Fleet status of the phone. Only active is allocatable; see PhoneSummary.status for each value.
 type PhoneActiveSessionPhoneStatus string
 
 const (
-	PhoneActiveSessionPhoneStatusActive      PhoneActiveSessionPhoneStatus = "active"
-	PhoneActiveSessionPhoneStatusInactive    PhoneActiveSessionPhoneStatus = "inactive"
-	PhoneActiveSessionPhoneStatusMaintenance PhoneActiveSessionPhoneStatus = "maintenance"
-	PhoneActiveSessionPhoneStatusSuspended   PhoneActiveSessionPhoneStatus = "suspended"
+	PhoneActiveSessionPhoneStatusActive       PhoneActiveSessionPhoneStatus = "active"
+	PhoneActiveSessionPhoneStatusInactive     PhoneActiveSessionPhoneStatus = "inactive"
+	PhoneActiveSessionPhoneStatusMaintenance  PhoneActiveSessionPhoneStatus = "maintenance"
+	PhoneActiveSessionPhoneStatusSuspended    PhoneActiveSessionPhoneStatus = "suspended"
+	PhoneActiveSessionPhoneStatusRecovering   PhoneActiveSessionPhoneStatus = "recovering"
+	PhoneActiveSessionPhoneStatusOutOfService PhoneActiveSessionPhoneStatus = "out_of_service"
 )
 
 func NewPhoneActiveSessionPhoneStatusFromString(s string) (PhoneActiveSessionPhoneStatus, error) {
@@ -1896,6 +1908,10 @@ func NewPhoneActiveSessionPhoneStatusFromString(s string) (PhoneActiveSessionPho
 		return PhoneActiveSessionPhoneStatusMaintenance, nil
 	case "suspended":
 		return PhoneActiveSessionPhoneStatusSuspended, nil
+	case "recovering":
+		return PhoneActiveSessionPhoneStatusRecovering, nil
+	case "out_of_service":
+		return PhoneActiveSessionPhoneStatusOutOfService, nil
 	}
 	var t PhoneActiveSessionPhoneStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -2054,18 +2070,21 @@ func (p *PhoneActiveSessionsResponse) String() string {
 // Returned when a device has been successfully allocated.
 var (
 	phoneAllocateResponseFieldSchema            = big.NewInt(1 << 0)
-	phoneAllocateResponseFieldControlURL        = big.NewInt(1 << 1)
-	phoneAllocateResponseFieldLiveViewURL       = big.NewInt(1 << 2)
-	phoneAllocateResponseFieldPhoneID           = big.NewInt(1 << 3)
-	phoneAllocateResponseFieldRegion            = big.NewInt(1 << 4)
-	phoneAllocateResponseFieldSessionID         = big.NewInt(1 << 5)
-	phoneAllocateResponseFieldTelemetryURL      = big.NewInt(1 << 6)
-	phoneAllocateResponseFieldWorkflowStartedAt = big.NewInt(1 << 7)
+	phoneAllocateResponseFieldAccessibility     = big.NewInt(1 << 1)
+	phoneAllocateResponseFieldControlURL        = big.NewInt(1 << 2)
+	phoneAllocateResponseFieldLiveViewURL       = big.NewInt(1 << 3)
+	phoneAllocateResponseFieldPhoneID           = big.NewInt(1 << 4)
+	phoneAllocateResponseFieldRegion            = big.NewInt(1 << 5)
+	phoneAllocateResponseFieldSessionID         = big.NewInt(1 << 6)
+	phoneAllocateResponseFieldTelemetryURL      = big.NewInt(1 << 7)
+	phoneAllocateResponseFieldWorkflowStartedAt = big.NewInt(1 << 8)
 )
 
 type PhoneAllocateResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Whether accessibility mode is on for this session: the requested value, or, when the request omitted it, whether the claimed phone supports it. The phone confirms the state before the session goes live; if it cannot, the session ends with reason accessibility_unavailable.
+	Accessibility bool `json:"accessibility" url:"accessibility"`
 	// WebSocket URL for driving the phone over the device control protocol.
 	ControlURL *string `json:"control_url,omitempty" url:"control_url,omitempty"`
 	// Hosted live-view page URL (live screen + interaction, iframe-embeddable). Contains a session-scoped capability token; treat as a secret. Dies with the session.
@@ -2093,6 +2112,13 @@ func (p *PhoneAllocateResponse) GetSchema() *string {
 		return nil
 	}
 	return p.Schema
+}
+
+func (p *PhoneAllocateResponse) GetAccessibility() bool {
+	if p == nil {
+		return false
+	}
+	return p.Accessibility
 }
 
 func (p *PhoneAllocateResponse) GetControlURL() *string {
@@ -2163,6 +2189,13 @@ func (p *PhoneAllocateResponse) require(field *big.Int) {
 func (p *PhoneAllocateResponse) SetSchema(schema *string) {
 	p.Schema = schema
 	p.require(phoneAllocateResponseFieldSchema)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneAllocateResponse) SetAccessibility(accessibility bool) {
+	p.Accessibility = accessibility
+	p.require(phoneAllocateResponseFieldAccessibility)
 }
 
 // SetControlURL sets the ControlURL field and marks it as non-optional;
@@ -3971,33 +4004,36 @@ func (p *PhonePrivateListResponse) String() string {
 // Detail for a single session: the session, phone display fields, and a recording URL when available.
 var (
 	phoneSessionDetailResponseFieldSchema            = big.NewInt(1 << 0)
-	phoneSessionDetailResponseFieldAllocatedAt       = big.NewInt(1 << 1)
-	phoneSessionDetailResponseFieldAllocatedBy       = big.NewInt(1 << 2)
-	phoneSessionDetailResponseFieldCaptureEnabled    = big.NewInt(1 << 3)
-	phoneSessionDetailResponseFieldDeallocatedAt     = big.NewInt(1 << 4)
-	phoneSessionDetailResponseFieldIsDedicatedPhone  = big.NewInt(1 << 5)
-	phoneSessionDetailResponseFieldLocation          = big.NewInt(1 << 6)
-	phoneSessionDetailResponseFieldModelName         = big.NewInt(1 << 7)
-	phoneSessionDetailResponseFieldName              = big.NewInt(1 << 8)
-	phoneSessionDetailResponseFieldNickname          = big.NewInt(1 << 9)
-	phoneSessionDetailResponseFieldPhoneID           = big.NewInt(1 << 10)
-	phoneSessionDetailResponseFieldPhoneName         = big.NewInt(1 << 11)
-	phoneSessionDetailResponseFieldPhoneStatus       = big.NewInt(1 << 12)
-	phoneSessionDetailResponseFieldPhoneType         = big.NewInt(1 << 13)
-	phoneSessionDetailResponseFieldRecordingStatus   = big.NewInt(1 << 14)
-	phoneSessionDetailResponseFieldRecordingURL      = big.NewInt(1 << 15)
-	phoneSessionDetailResponseFieldSessionID         = big.NewInt(1 << 16)
-	phoneSessionDetailResponseFieldSource            = big.NewInt(1 << 17)
-	phoneSessionDetailResponseFieldStatus            = big.NewInt(1 << 18)
-	phoneSessionDetailResponseFieldTags              = big.NewInt(1 << 19)
-	phoneSessionDetailResponseFieldTelemetryDisabled = big.NewInt(1 << 20)
-	phoneSessionDetailResponseFieldWorkflowID        = big.NewInt(1 << 21)
-	phoneSessionDetailResponseFieldWorkflowName      = big.NewInt(1 << 22)
+	phoneSessionDetailResponseFieldAccessibility     = big.NewInt(1 << 1)
+	phoneSessionDetailResponseFieldAllocatedAt       = big.NewInt(1 << 2)
+	phoneSessionDetailResponseFieldAllocatedBy       = big.NewInt(1 << 3)
+	phoneSessionDetailResponseFieldCaptureEnabled    = big.NewInt(1 << 4)
+	phoneSessionDetailResponseFieldDeallocatedAt     = big.NewInt(1 << 5)
+	phoneSessionDetailResponseFieldIsDedicatedPhone  = big.NewInt(1 << 6)
+	phoneSessionDetailResponseFieldLocation          = big.NewInt(1 << 7)
+	phoneSessionDetailResponseFieldModelName         = big.NewInt(1 << 8)
+	phoneSessionDetailResponseFieldName              = big.NewInt(1 << 9)
+	phoneSessionDetailResponseFieldNickname          = big.NewInt(1 << 10)
+	phoneSessionDetailResponseFieldPhoneID           = big.NewInt(1 << 11)
+	phoneSessionDetailResponseFieldPhoneName         = big.NewInt(1 << 12)
+	phoneSessionDetailResponseFieldPhoneStatus       = big.NewInt(1 << 13)
+	phoneSessionDetailResponseFieldPhoneType         = big.NewInt(1 << 14)
+	phoneSessionDetailResponseFieldRecordingStatus   = big.NewInt(1 << 15)
+	phoneSessionDetailResponseFieldRecordingURL      = big.NewInt(1 << 16)
+	phoneSessionDetailResponseFieldSessionID         = big.NewInt(1 << 17)
+	phoneSessionDetailResponseFieldSource            = big.NewInt(1 << 18)
+	phoneSessionDetailResponseFieldStatus            = big.NewInt(1 << 19)
+	phoneSessionDetailResponseFieldTags              = big.NewInt(1 << 20)
+	phoneSessionDetailResponseFieldTelemetryDisabled = big.NewInt(1 << 21)
+	phoneSessionDetailResponseFieldWorkflowID        = big.NewInt(1 << 22)
+	phoneSessionDetailResponseFieldWorkflowName      = big.NewInt(1 << 23)
 )
 
 type PhoneSessionDetailResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Whether accessibility mode was on for this session at allocation: the requested value, or, when the request omitted it, whether the phone supported it. A mid-session enable or disable is not reflected here.
+	Accessibility bool `json:"accessibility" url:"accessibility"`
 	// When the session claimed the phone.
 	AllocatedAt time.Time `json:"allocated_at" url:"allocated_at"`
 	// How the session was started.
@@ -4020,7 +4056,7 @@ type PhoneSessionDetailResponse struct {
 	PhoneID string `json:"phone_id" url:"phone_id"`
 	// Display name of the phone.
 	PhoneName *string `json:"phone_name,omitempty" url:"phone_name,omitempty"`
-	// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
+	// Fleet status of the phone. Only active is allocatable. inactive: unreachable, back on its next heartbeat. maintenance: planned work that releases itself. suspended: an administrative hold. recovering: being repaired automatically. out_of_service: needs a repair at the rack. Treat unknown values as unavailable.
 	PhoneStatus PhoneSessionDetailResponsePhoneStatus `json:"phone_status" url:"phone_status"`
 	// Platform of the phone.
 	PhoneType *PhoneSessionDetailResponsePhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
@@ -4055,6 +4091,13 @@ func (p *PhoneSessionDetailResponse) GetSchema() *string {
 		return nil
 	}
 	return p.Schema
+}
+
+func (p *PhoneSessionDetailResponse) GetAccessibility() bool {
+	if p == nil {
+		return false
+	}
+	return p.Accessibility
 }
 
 func (p *PhoneSessionDetailResponse) GetAllocatedAt() time.Time {
@@ -4230,6 +4273,13 @@ func (p *PhoneSessionDetailResponse) require(field *big.Int) {
 func (p *PhoneSessionDetailResponse) SetSchema(schema *string) {
 	p.Schema = schema
 	p.require(phoneSessionDetailResponseFieldSchema)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionDetailResponse) SetAccessibility(accessibility bool) {
+	p.Accessibility = accessibility
+	p.require(phoneSessionDetailResponseFieldAccessibility)
 }
 
 // SetAllocatedAt sets the AllocatedAt field and marks it as non-optional;
@@ -4469,14 +4519,16 @@ func (p PhoneSessionDetailResponseAllocatedBy) Ptr() *PhoneSessionDetailResponse
 	return &p
 }
 
-// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
+// Fleet status of the phone. Only active is allocatable. inactive: unreachable, back on its next heartbeat. maintenance: planned work that releases itself. suspended: an administrative hold. recovering: being repaired automatically. out_of_service: needs a repair at the rack. Treat unknown values as unavailable.
 type PhoneSessionDetailResponsePhoneStatus string
 
 const (
-	PhoneSessionDetailResponsePhoneStatusActive      PhoneSessionDetailResponsePhoneStatus = "active"
-	PhoneSessionDetailResponsePhoneStatusInactive    PhoneSessionDetailResponsePhoneStatus = "inactive"
-	PhoneSessionDetailResponsePhoneStatusMaintenance PhoneSessionDetailResponsePhoneStatus = "maintenance"
-	PhoneSessionDetailResponsePhoneStatusSuspended   PhoneSessionDetailResponsePhoneStatus = "suspended"
+	PhoneSessionDetailResponsePhoneStatusActive       PhoneSessionDetailResponsePhoneStatus = "active"
+	PhoneSessionDetailResponsePhoneStatusInactive     PhoneSessionDetailResponsePhoneStatus = "inactive"
+	PhoneSessionDetailResponsePhoneStatusMaintenance  PhoneSessionDetailResponsePhoneStatus = "maintenance"
+	PhoneSessionDetailResponsePhoneStatusSuspended    PhoneSessionDetailResponsePhoneStatus = "suspended"
+	PhoneSessionDetailResponsePhoneStatusRecovering   PhoneSessionDetailResponsePhoneStatus = "recovering"
+	PhoneSessionDetailResponsePhoneStatusOutOfService PhoneSessionDetailResponsePhoneStatus = "out_of_service"
 )
 
 func NewPhoneSessionDetailResponsePhoneStatusFromString(s string) (PhoneSessionDetailResponsePhoneStatus, error) {
@@ -4489,6 +4541,10 @@ func NewPhoneSessionDetailResponsePhoneStatusFromString(s string) (PhoneSessionD
 		return PhoneSessionDetailResponsePhoneStatusMaintenance, nil
 	case "suspended":
 		return PhoneSessionDetailResponsePhoneStatusSuspended, nil
+	case "recovering":
+		return PhoneSessionDetailResponsePhoneStatusRecovering, nil
+	case "out_of_service":
+		return PhoneSessionDetailResponsePhoneStatusOutOfService, nil
 	}
 	var t PhoneSessionDetailResponsePhoneStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -5934,7 +5990,7 @@ type PhoneSummary struct {
 	PhoneType *PhoneSummaryPhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
 	// When the current rental ends, for rented phones.
 	RentalExpiresAt *time.Time `json:"rental_expires_at,omitempty" url:"rental_expires_at,omitempty"`
-	// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
+	// Fleet status of the phone. Only active is allocatable. inactive: unreachable, back on its next heartbeat. maintenance: planned work that releases itself. suspended: an administrative hold. recovering: being repaired automatically. out_of_service: needs a repair at the rack. Treat unknown values as unavailable.
 	Status PhoneSummaryStatus `json:"status" url:"status"`
 	// When the phone record was last updated.
 	UpdatedAt time.Time `json:"updated_at" url:"updated_at"`
@@ -6313,14 +6369,16 @@ func (p PhoneSummaryPhoneType) Ptr() *PhoneSummaryPhoneType {
 	return &p
 }
 
-// Fleet status of the phone. active means allocatable: a phone whose rack position the platform cannot vouch for reads maintenance until the box proves it again.
+// Fleet status of the phone. Only active is allocatable. inactive: unreachable, back on its next heartbeat. maintenance: planned work that releases itself. suspended: an administrative hold. recovering: being repaired automatically. out_of_service: needs a repair at the rack. Treat unknown values as unavailable.
 type PhoneSummaryStatus string
 
 const (
-	PhoneSummaryStatusActive      PhoneSummaryStatus = "active"
-	PhoneSummaryStatusInactive    PhoneSummaryStatus = "inactive"
-	PhoneSummaryStatusMaintenance PhoneSummaryStatus = "maintenance"
-	PhoneSummaryStatusSuspended   PhoneSummaryStatus = "suspended"
+	PhoneSummaryStatusActive       PhoneSummaryStatus = "active"
+	PhoneSummaryStatusInactive     PhoneSummaryStatus = "inactive"
+	PhoneSummaryStatusMaintenance  PhoneSummaryStatus = "maintenance"
+	PhoneSummaryStatusSuspended    PhoneSummaryStatus = "suspended"
+	PhoneSummaryStatusRecovering   PhoneSummaryStatus = "recovering"
+	PhoneSummaryStatusOutOfService PhoneSummaryStatus = "out_of_service"
 )
 
 func NewPhoneSummaryStatusFromString(s string) (PhoneSummaryStatus, error) {
@@ -6333,6 +6391,10 @@ func NewPhoneSummaryStatusFromString(s string) (PhoneSummaryStatus, error) {
 		return PhoneSummaryStatusMaintenance, nil
 	case "suspended":
 		return PhoneSummaryStatusSuspended, nil
+	case "recovering":
+		return PhoneSummaryStatusRecovering, nil
+	case "out_of_service":
+		return PhoneSummaryStatusOutOfService, nil
 	}
 	var t PhoneSummaryStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)

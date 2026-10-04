@@ -42,6 +42,8 @@ rsync -a --delete \
   --exclude='CONTRIBUTING.md' \
   --exclude='README.md' \
   --exclude='frames_tolerantreader_test.go' \
+  --exclude='accessibility_errors.go' \
+  --exclude='accessibility_errors_test.go' \
   .gen/ ./
 
 rm -rf .gen
