@@ -15,6 +15,7 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/coder/websocket"
@@ -84,13 +85,18 @@ type Stream struct {
 	dial        dialFunc
 	redialDelay func(attempt int) time.Duration
 
-	conn    rawConn
+	// mu guards conn and closed, the only state Close shares with Next. Next
+	// never holds it across a blocking read, so Close can always interrupt one.
+	mu     sync.Mutex
+	conn   rawConn
+	closed bool
+
+	// The rest belongs to the goroutine calling Next.
 	cursor  string
 	pending []*Frame
 	ended   bool // terminal session end frame observed
 	eof     bool
 	gapped  bool
-	closed  bool
 	err     error // sticky terminal error
 }
 
@@ -140,12 +146,13 @@ func (s *Stream) Next(ctx context.Context) (*Frame, error) {
 			_ = s.closeConn()
 			return nil, io.EOF
 		}
-		if s.closed {
-			s.err = &Error{Code: CodeClosed, Message: "stream closed"}
+		conn, closed := s.state()
+		if closed || conn == nil {
+			s.err = errClosed()
 			return nil, s.err
 		}
 
-		data, err := s.conn.recv(ctx)
+		data, err := conn.recv(ctx)
 		if err != nil {
 			if fail := s.recvErr(ctx, err); fail != nil {
 				return nil, fail
@@ -169,18 +176,32 @@ func (s *Stream) Gapped() bool { return s.gapped }
 
 // Close tears the stream down. A blocked Next returns with CodeClosed.
 func (s *Stream) Close() error {
+	s.mu.Lock()
 	s.closed = true
+	s.mu.Unlock()
 	return s.closeConn()
 }
 
+// state reads the connection and the closed flag that Close may change from
+// another goroutine.
+func (s *Stream) state() (rawConn, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.conn, s.closed
+}
+
 func (s *Stream) closeConn() error {
-	if s.conn == nil {
+	s.mu.Lock()
+	conn := s.conn
+	s.conn = nil
+	s.mu.Unlock()
+	if conn == nil {
 		return nil
 	}
-	err := s.conn.closeConn()
-	s.conn = nil
-	return err
+	return conn.closeConn()
 }
+
+func errClosed() *Error { return &Error{Code: CodeClosed, Message: "stream closed"} }
 
 // recvErr handles one failed read: context errors and terminal conditions
 // come back as the error to surface (sticky), a transient drop runs the
@@ -189,8 +210,8 @@ func (s *Stream) recvErr(ctx context.Context, err error) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-	if s.closed {
-		s.err = &Error{Code: CodeClosed, Message: "stream closed"}
+	if _, closed := s.state(); closed {
+		s.err = errClosed()
 		return s.err
 	}
 	if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
@@ -214,7 +235,17 @@ func (s *Stream) recvErr(ctx context.Context, err error) error {
 		}
 		conn, dialErr := s.dial(ctx, s.attachURL())
 		if dialErr == nil {
+			s.mu.Lock()
+			if s.closed {
+				// Close ran while this redial was in flight: the new
+				// connection belongs to a closed stream.
+				s.mu.Unlock()
+				_ = conn.closeConn()
+				s.err = errClosed()
+				return s.err
+			}
 			s.conn = conn
+			s.mu.Unlock()
 			return nil
 		}
 		classified := classifyDialErr(dialErr)

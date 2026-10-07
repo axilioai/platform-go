@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -295,5 +296,96 @@ func TestTailClassifiesInitialDial(t *testing.T) {
 	}
 	if e := classifyDialErr(errors.New("connection refused")); !IsConnection(e) {
 		t.Fatalf("classifyDialErr(net) = %v, want retryable CodeConnection", e)
+	}
+}
+
+// blockingConn's recv blocks until closeConn, the way closing a real websocket
+// interrupts a pending read.
+type blockingConn struct {
+	closed chan struct{}
+	once   sync.Once
+}
+
+func newBlockingConn() *blockingConn { return &blockingConn{closed: make(chan struct{})} }
+
+func (c *blockingConn) recv(ctx context.Context) ([]byte, error) {
+	select {
+	case <-c.closed:
+		return nil, errors.New("use of closed network connection")
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
+func (c *blockingConn) closeConn() error {
+	c.once.Do(func() { close(c.closed) })
+	return nil
+}
+
+func waitNext(t *testing.T, done <-chan error) error {
+	t.Helper()
+	select {
+	case err := <-done:
+		return err
+	case <-time.After(5 * time.Second):
+		t.Fatal("Next did not return after Close")
+		return nil
+	}
+}
+
+// AXI-2228: Close from another goroutine while Next is blocked in a read.
+// Under -race the unsynchronized closed/conn fields were a data race, and Next
+// could dereference the conn Close had just set to nil.
+func TestStreamCloseFromAnotherGoroutineUnblocksNext(t *testing.T) {
+	conn := newBlockingConn()
+	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) { return conn, nil }}}
+	s := newTestStream(t, d)
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := s.Next(context.Background())
+		done <- err
+	}()
+	if err := s.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	if err := waitNext(t, done); !hasCode(err, CodeClosed) {
+		t.Fatalf("Next err = %v, want CodeClosed", err)
+	}
+}
+
+// A redial that completes after Close must not revive the stream: the new
+// connection is closed and Next reports CodeClosed.
+func TestStreamCloseDuringRedialClosesTheNewConnection(t *testing.T) {
+	dialing := make(chan struct{})
+	release := make(chan struct{})
+	fresh := newBlockingConn()
+	d := &scriptDialer{script: []func() (rawConn, error){
+		func() (rawConn, error) { return &scriptConn{err: errors.New("connection reset by peer")}, nil },
+		func() (rawConn, error) {
+			close(dialing)
+			<-release
+			return fresh, nil
+		},
+	}}
+	s := newTestStream(t, d)
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := s.Next(context.Background())
+		done <- err
+	}()
+	<-dialing
+	if err := s.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	close(release)
+	if err := waitNext(t, done); !hasCode(err, CodeClosed) {
+		t.Fatalf("Next err = %v, want CodeClosed", err)
+	}
+	select {
+	case <-fresh.closed:
+	default:
+		t.Fatal("the connection dialed after Close was left open")
 	}
 }
