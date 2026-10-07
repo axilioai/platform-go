@@ -34,6 +34,16 @@ go get github.com/axilioai/platform-go@latest
 export AXILIO_API_KEY=axl_your_key_here
 ```
 
+On Windows, in PowerShell:
+
+```powershell
+go get github.com/axilioai/platform-go@latest
+$env:AXILIO_API_KEY = "axl_your_key_here"
+```
+
+The module is pure Go with no cgo or OS-specific code. It supports Linux, macOS
+and Windows on amd64 and arm64, and CI runs its tests on Linux and Windows.
+
 ```go
 package main
 
@@ -211,7 +221,7 @@ with the `errors.Is` and `errors.As` APIs, so you can access the error like so:
 response, err := client.APIKeys.Create(...)
 if err != nil {
     var apiError *core.APIError
-    if errors.As(err, apiError) {
+    if errors.As(err, &apiError) {
         // Do something with the API error ...
     }
     return err
@@ -233,7 +243,7 @@ specified on the client so that they're applied on every request, or for an indi
 ```go
 // Specify default options applied on every request.
 client := client.NewClient(
-    option.WithToken("<YOUR_API_KEY>"),
+    option.WithAPIKey("<YOUR_API_KEY>"),
     option.WithHTTPClient(
         &http.Client{
             Timeout: 5 * time.Second,
@@ -244,7 +254,7 @@ client := client.NewClient(
 // Specify options for an individual request.
 response, err := client.APIKeys.Create(
     ...,
-    option.WithToken("<YOUR_API_KEY>"),
+    option.WithAPIKey("<YOUR_API_KEY>"),
 )
 ```
 

@@ -10,7 +10,17 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Windows is a supported customer platform; build, vet and test there too.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        # The test step's package filter is POSIX shell. Windows runners ship
+        # Git Bash, so one script serves both platforms.
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
