@@ -226,6 +226,12 @@ func (s *Stream) recvErr(ctx context.Context, err error) error {
 	// loop recovers.
 	_ = s.closeConn()
 	for attempt := 1; ; attempt++ {
+		// Close can land at any point in this loop. Once it has, stop
+		// redialing and report the close, not a later dial outcome.
+		if _, closed := s.state(); closed {
+			s.err = errClosed()
+			return s.err
+		}
 		if attempt > _maxRedials {
 			s.err = &Error{Code: CodeConnection, Message: "telemetry websocket lost and could not be re-established", Retryable: true}
 			return s.err
@@ -247,6 +253,10 @@ func (s *Stream) recvErr(ctx context.Context, err error) error {
 			s.conn = conn
 			s.mu.Unlock()
 			return nil
+		}
+		if _, closed := s.state(); closed {
+			s.err = errClosed()
+			return s.err
 		}
 		classified := classifyDialErr(dialErr)
 		var e *Error

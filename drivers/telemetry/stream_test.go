@@ -300,15 +300,20 @@ func TestTailClassifiesInitialDial(t *testing.T) {
 }
 
 // blockingConn's recv blocks until closeConn, the way closing a real websocket
-// interrupts a pending read.
+// interrupts a pending read. reading is closed once a recv is underway.
 type blockingConn struct {
-	closed chan struct{}
-	once   sync.Once
+	closed      chan struct{}
+	reading     chan struct{}
+	once        sync.Once
+	readingOnce sync.Once
 }
 
-func newBlockingConn() *blockingConn { return &blockingConn{closed: make(chan struct{})} }
+func newBlockingConn() *blockingConn {
+	return &blockingConn{closed: make(chan struct{}), reading: make(chan struct{})}
+}
 
 func (c *blockingConn) recv(ctx context.Context) ([]byte, error) {
+	c.readingOnce.Do(func() { close(c.reading) })
 	select {
 	case <-c.closed:
 		return nil, errors.New("use of closed network connection")
@@ -346,11 +351,51 @@ func TestStreamCloseFromAnotherGoroutineUnblocksNext(t *testing.T) {
 		_, err := s.Next(context.Background())
 		done <- err
 	}()
+	// Close only once Next is blocked in the read, the case under test.
+	<-conn.reading
 	if err := s.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
 	if err := waitNext(t, done); !hasCode(err, CodeClosed) {
 		t.Fatalf("Next err = %v, want CodeClosed", err)
+	}
+}
+
+// Close during a redial whose dials keep failing: the stream reports the
+// close and stops dialing, not CodeConnection after the whole budget.
+func TestStreamCloseDuringFailingRedialsStopsRedialing(t *testing.T) {
+	dialing := make(chan struct{})
+	release := make(chan struct{})
+	script := []func() (rawConn, error){
+		func() (rawConn, error) { return &scriptConn{err: errors.New("connection reset by peer")}, nil },
+		func() (rawConn, error) {
+			close(dialing)
+			<-release
+			return nil, errors.New("dial refused")
+		},
+	}
+	for i := 1; i < _maxRedials; i++ {
+		script = append(script, func() (rawConn, error) { return nil, errors.New("dial refused") })
+	}
+	d := &scriptDialer{script: script}
+	s := newTestStream(t, d)
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := s.Next(context.Background())
+		done <- err
+	}()
+	<-dialing
+	if err := s.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	close(release)
+	if err := waitNext(t, done); !hasCode(err, CodeClosed) {
+		t.Fatalf("Next err = %v, want CodeClosed", err)
+	}
+	// The initial dial and the one redial in flight at Close: nothing after.
+	if len(d.urls) != 2 {
+		t.Fatalf("dials = %d, want 2 (no redials after Close)", len(d.urls))
 	}
 }
 
