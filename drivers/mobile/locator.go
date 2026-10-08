@@ -13,9 +13,9 @@ import (
 // round trip. Nth, First, Within, Has and Filter each return a new Locator
 // rather than mutating the receiver.
 //
-// How a locator resolves depends on the session. With accessibility mode on (the
-// allocation default; see PhoneAllocateRequest.Accessibility and
-// MobileDriver.Accessibility),
+// How a locator resolves depends on the session. With accessibility mode on
+// (off by default: set PhoneAllocateRequest.Accessibility to true at
+// allocation; see also MobileDriver.Accessibility),
 // the device matches the literal selectors (Role, Name, Text, ID, Value,
 // States, ...) against the phone's accessibility tree, and a Query is
 // ranked by a model over the tree's nodes. With it off, vision is the only

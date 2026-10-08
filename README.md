@@ -153,29 +153,31 @@ a vision-model call only resolves a single target per prompt.
 
 ### Accessibility mode
 
-Sessions run with the phone's accessibility tree on by default.
-`PhoneAllocateRequest.Accessibility` defaults to true when left nil, and true
-requires a phone that supports it: only such phones are claimed, and a
-`PhoneID` that does not support it is refused with a conflict
-(`IsAccessibilityUnavailable`). Set it to `platformgo.Bool(false)` to allocate
-any phone with the tree off. The response's `Accessibility` field reports the
-value. While the tree is on, the accessibility service is visible to apps on
-the phone.
+Accessibility mode is off unless you ask for it. Leaving
+`PhoneAllocateRequest.Accessibility` nil (or setting it to false) allocates
+any phone with the tree off. Set it to `platformgo.Bool(true)` to run the
+session with the phone's accessibility tree on. True requires a phone that
+supports it: only such phones are claimed, and a `PhoneID` that does not
+support it is refused with a conflict (`IsAccessibilityUnavailable`). The
+response's `Accessibility` field reports the value. While the tree is on, the
+accessibility service is visible to apps on the phone.
 
 ```go
 session, err := c.Phones.Allocate(ctx, &platformgo.PhoneAllocateRequest{
-    PhoneType: platformgo.PhoneAllocateRequestPhoneTypeAndroid,
-    PhoneID:   platformgo.String("your-dedicated-phone-id"),
-    // Accessibility is on by default; platformgo.Bool(false) allows any phone.
+    PhoneType:     platformgo.PhoneAllocateRequestPhoneTypeAndroid,
+    PhoneID:       platformgo.String("your-dedicated-phone-id"),
+    Accessibility: platformgo.Bool(true), // off when left nil
 })
 if platformgo.IsAccessibilityUnavailable(err) {
-    // The named phone does not support accessibility mode. Allocate it with
-    // Accessibility: platformgo.Bool(false), or drop PhoneID.
+    // The named phone does not support accessibility mode. Drop PhoneID to
+    // claim any phone that does, or leave Accessibility nil to use this
+    // phone with the tree off.
 }
 ```
 
 Workflows take the same setting: `WorkflowCreateRequest.Accessibility`
-defaults to true, and `WorkflowUpdateRequest.Accessibility` leaves the
+defaults to false (set `platformgo.Bool(true)` to turn it on for the
+workflow's runs), and `WorkflowUpdateRequest.Accessibility` leaves the
 current value unchanged when nil.
 
 With the tree on, literal selectors resolve against it on the device:

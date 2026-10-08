@@ -92,7 +92,7 @@ var (
 )
 
 type PhoneAllocateRequest struct {
-	// Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Defaults to true. true requires a phone that supports it: only such phones are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. false turns it off on any phone. While on, the accessibility service is visible to apps on the phone.
+	// Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Defaults to false. true requires a phone that supports it: only such phones are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. While on, the accessibility service is visible to apps on the phone.
 	Accessibility *bool `json:"accessibility,omitempty" url:"-"`
 	// Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
 	Capture *bool `json:"capture,omitempty" url:"-"`

@@ -22,7 +22,7 @@ var (
 )
 
 type WorkflowCreateRequest struct {
-	// Accessibility mode for this workflow's runs (default true). true requires a phone that supports it for every run dispatched through the scheduler; false turns it off.
+	// Accessibility mode for this workflow's runs (default false). true requires a phone that supports it for every run dispatched through the scheduler.
 	Accessibility *bool `json:"accessibility,omitempty" url:"-"`
 	// Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
 	Capture *bool `json:"capture,omitempty" url:"-"`
@@ -1978,7 +1978,7 @@ var (
 )
 
 type WorkflowSummary struct {
-	// Whether this workflow's runs use accessibility mode (default true), which requires a phone that supports it.
+	// Whether this workflow's runs use accessibility mode (default false), which requires a phone that supports it.
 	Accessibility bool `json:"accessibility" url:"accessibility"`
 	// Whether this workflow's runs capture media into the org's file library (default true).
 	Capture bool `json:"capture" url:"capture"`
