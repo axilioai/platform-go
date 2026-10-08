@@ -471,7 +471,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\",\n  \"phones_pending_removal\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/DeleteFileOutputBody.json\",\n  \"message\": \"message\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -876,7 +876,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionDetailResponse.json\",\n  \"allocated_at\": \"2024-01-15T09:30:00Z\",\n  \"allocated_by\": \"workflow_editor\",\n  \"capture_enabled\": true,\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"is_dedicated_phone\": true,\n  \"location\": \"location\",\n  \"model_name\": \"model_name\",\n  \"name\": \"name\",\n  \"nickname\": \"nickname\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_status\": \"active\",\n  \"phone_type\": \"android\",\n  \"recording_status\": \"ready\",\n  \"recording_url\": \"recording_url\",\n  \"session_id\": \"session_id\",\n  \"source\": \"workflow\",\n  \"status\": \"active\",\n  \"tags\": {\n    \"key\": \"value\"\n  },\n  \"telemetry_disabled\": true,\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionDetailResponse.json\",\n  \"accessibility\": true,\n  \"allocated_at\": \"2024-01-15T09:30:00Z\",\n  \"allocated_by\": \"workflow_editor\",\n  \"capture_enabled\": true,\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"is_dedicated_phone\": true,\n  \"location\": \"location\",\n  \"model_name\": \"model_name\",\n  \"name\": \"name\",\n  \"nickname\": \"nickname\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_status\": \"active\",\n  \"phone_type\": \"android\",\n  \"recording_status\": \"ready\",\n  \"recording_url\": \"recording_url\",\n  \"session_id\": \"session_id\",\n  \"source\": \"workflow\",\n  \"status\": \"active\",\n  \"tags\": {\n    \"key\": \"value\"\n  },\n  \"telemetry_disabled\": true,\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1342,7 +1342,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneAllocateResponse.json\",\n  \"control_url\": \"control_url\",\n  \"live_view_url\": \"live_view_url\",\n  \"phone_id\": \"phone_id\",\n  \"region\": \"region\",\n  \"session_id\": \"session_id\",\n  \"telemetry_url\": \"telemetry_url\",\n  \"workflow_started_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneAllocateResponse.json\",\n  \"accessibility\": true,\n  \"control_url\": \"control_url\",\n  \"live_view_url\": \"live_view_url\",\n  \"phone_id\": \"phone_id\",\n  \"region\": \"region\",\n  \"session_id\": \"session_id\",\n  \"telemetry_url\": \"telemetry_url\",\n  \"workflow_started_at\": \"2024-01-15T09:30:00Z\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1409,7 +1409,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"$schema\": \"/api/v1/RunResponse.json\",\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"start_timeout_seconds\": 1000000,\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"success\": true,\n      \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n      \"trigger\": \"manual\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"user_id\": \"user_id\",\n      \"variables\": {\n        \"key\": \"value\"\n      },\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"$schema\": \"/api/v1/RunResponse.json\",\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"start_at\": \"2024-01-15T09:30:00Z\",\n      \"start_timeout_seconds\": 1000000,\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"scheduled\",\n      \"success\": true,\n      \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n      \"trigger\": \"manual\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"user_id\": \"user_id\",\n      \"variables\": {\n        \"key\": \"value\"\n      },\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1449,7 +1449,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunHistoryResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"org_id\": \"org_id\",\n      \"phone_id\": \"phone_id\",\n      \"run_id\": \"run_id\",\n      \"run_metadata\": \"run_metadata\",\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"success\": true,\n      \"trigger\": \"manual\",\n      \"user_id\": \"user_id\",\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunHistoryResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"org_id\": \"org_id\",\n      \"phone_id\": \"phone_id\",\n      \"run_id\": \"run_id\",\n      \"run_metadata\": \"run_metadata\",\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"scheduled\",\n      \"success\": true,\n      \"trigger\": \"manual\",\n      \"user_id\": \"user_id\",\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1522,7 +1522,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_at\": \"2024-01-15T09:30:00Z\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"scheduled\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1558,7 +1558,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_at\": \"2024-01-15T09:30:00Z\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"scheduled\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1759,6 +1759,448 @@
       "postServeActions": []
     },
     {
+      "id": "da22645e-62be-4c4c-a705-c92af18573b7",
+      "name": "List the delivery log - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/deliveries",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookDeliveryListResponse.json\",\n  \"deliveries\": [\n    {\n      \"endpoint_ids\": [\n        \"endpoint_ids\"\n      ],\n      \"event_id\": \"event_id\",\n      \"event_type\": \"event_type\",\n      \"published_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"next_cursor\": \"next_cursor\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "da22645e-62be-4c4c-a705-c92af18573b7",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "5d085ca9-6953-42b6-911b-bfe1bec3e2b9",
+      "name": "Get a delivery-log event - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/deliveries/{event_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "event_id": {
+            "equalTo": "event_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookDeliveryDetail.json\",\n  \"endpoint_ids\": [\n    \"endpoint_ids\"\n  ],\n  \"event_id\": \"event_id\",\n  \"event_type\": \"event_type\",\n  \"payload\": {\n    \"key\": \"value\"\n  },\n  \"published_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "5d085ca9-6953-42b6-911b-bfe1bec3e2b9",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "28b809f3-c177-4148-90f3-7b9a2de7d298",
+      "name": "List delivery attempts for an event - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/deliveries/{event_id}/attempts",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "event_id": {
+            "equalTo": "event_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookAttemptListResponse.json\",\n  \"attempts\": [\n    {\n      \"attempt_number\": 1000000,\n      \"delivered_at\": \"2024-01-15T09:30:00Z\",\n      \"endpoint_id\": \"endpoint_id\",\n      \"id\": \"id\",\n      \"manual\": true,\n      \"response_status\": 1000000,\n      \"status\": \"success\"\n    }\n  ],\n  \"next_cursor\": \"next_cursor\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "28b809f3-c177-4148-90f3-7b9a2de7d298",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "ee09ad73-0ffb-4ed2-957d-5d121a469bea",
+      "name": "Replay a delivery - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/deliveries/{event_id}:replay",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "event_id": {
+            "equalTo": "event_id"
+          }
+        }
+      },
+      "response": {
+        "status": 202,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookReplayResponse.json\",\n  \"endpoint_id\": \"endpoint_id\",\n  \"event_id\": \"event_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "ee09ad73-0ffb-4ed2-957d-5d121a469bea",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "e747fe13-bee2-4183-94af-5f49c81ec14e",
+      "name": "Send a test event - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/deliveries:sendTest",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 202,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookTestEventResponse.json\",\n  \"endpoint_id\": \"endpoint_id\",\n  \"event_id\": \"event_id\",\n  \"event_type\": \"event_type\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "e747fe13-bee2-4183-94af-5f49c81ec14e",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "a0a1a485-33bb-41ca-8961-7c695f62609c",
+      "name": "List webhook endpoints - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/endpoints",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookEndpointListResponse.json\",\n  \"endpoints\": [\n    {\n      \"$schema\": \"/api/v1/WebhookEndpoint.json\",\n      \"config\": {\n        \"key\": \"value\"\n      },\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"disabled\": true,\n      \"event_types\": [\n        \"event_types\"\n      ],\n      \"id\": \"id\",\n      \"type\": \"webhook\",\n      \"url\": \"url\"\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "a0a1a485-33bb-41ca-8961-7c695f62609c",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "830185a8-ff10-42a0-b231-5b04ff644fc7",
+      "name": "Register a webhook endpoint - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/endpoints",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookEndpointCreateResponse.json\",\n  \"config\": {\n    \"key\": \"value\"\n  },\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"event_types\": [\n    \"event_types\"\n  ],\n  \"id\": \"id\",\n  \"secret\": \"secret\",\n  \"type\": \"webhook\",\n  \"url\": \"url\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "830185a8-ff10-42a0-b231-5b04ff644fc7",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "112f0024-b283-47b5-a444-4e85e32c03dc",
+      "name": "Get a webhook endpoint - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/endpoints/{endpoint_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "endpoint_id": {
+            "equalTo": "endpoint_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookEndpoint.json\",\n  \"config\": {\n    \"key\": \"value\"\n  },\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"disabled\": true,\n  \"event_types\": [\n    \"event_types\"\n  ],\n  \"id\": \"id\",\n  \"type\": \"webhook\",\n  \"url\": \"url\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "112f0024-b283-47b5-a444-4e85e32c03dc",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "76618bb0-de76-4d94-a885-eca2b1d04626",
+      "name": "Delete a webhook endpoint - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/endpoints/{endpoint_id}",
+        "method": "DELETE",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "endpoint_id": {
+            "equalTo": "endpoint_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "\"\"",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "76618bb0-de76-4d94-a885-eca2b1d04626",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "017436ef-cf02-4336-b742-4f6044294466",
+      "name": "List delivery attempts to an endpoint - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/endpoints/{endpoint_id}/attempts",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "endpoint_id": {
+            "equalTo": "endpoint_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookEndpointAttemptListResponse.json\",\n  \"attempts\": [\n    {\n      \"attempt_number\": 1000000,\n      \"delivered_at\": \"2024-01-15T09:30:00Z\",\n      \"event_id\": \"event_id\",\n      \"event_published_at\": \"2024-01-15T09:30:00Z\",\n      \"event_type\": \"event_type\",\n      \"id\": \"id\",\n      \"manual\": true,\n      \"response_status\": 1000000,\n      \"status\": \"success\"\n    }\n  ],\n  \"next_cursor\": \"next_cursor\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "017436ef-cf02-4336-b742-4f6044294466",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "6e307d94-feb6-421e-8415-5d660e788871",
+      "name": "Rotate a webhook endpoint's signing secret - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/endpoints/{endpoint_id}:rotateSecret",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "endpoint_id": {
+            "equalTo": "endpoint_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookRotateSecretResponse.json\",\n  \"id\": \"id\",\n  \"previous_secret_invalid_at\": \"2024-01-15T09:30:00Z\",\n  \"secret\": \"secret\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "6e307d94-feb6-421e-8415-5d660e788871",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "f616107d-3b0e-43ba-aaa3-15d2e2b1db54",
+      "name": "List subscribable event types - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/event-types",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookEventTypeCatalogResponse.json\",\n  \"event_types\": [\n    {\n      \"description\": \"description\",\n      \"domain\": \"platform\",\n      \"sample\": {\n        \"key\": \"value\"\n      },\n      \"type\": \"type\"\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "f616107d-3b0e-43ba-aaa3-15d2e2b1db54",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "c6a6f8d0-2b85-46e4-b6e2-d9eaa4ea70c1",
+      "name": "Get delivery metrics - default",
+      "request": {
+        "urlPathTemplate": "/webhooks/metrics",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookDeliveryMetricsResponse.json\",\n  \"points\": [\n    {\n      \"avg_latency_ms\": 1.1,\n      \"endpoint_id\": \"endpoint_id\",\n      \"error_rate\": 1.1,\n      \"failed\": 1000000,\n      \"p50_latency_ms\": 1.1,\n      \"p95_latency_ms\": 1.1,\n      \"p99_latency_ms\": 1.1,\n      \"time_bucket\": \"2024-01-15T09:30:00Z\",\n      \"total\": 1000000\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "c6a6f8d0-2b85-46e4-b6e2-d9eaa4ea70c1",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
       "id": "9cba0546-1960-443c-b6b0-7b501e094658",
       "name": "List workflows - default",
       "request": {
@@ -1772,7 +2214,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000,\n  \"workflows\": [\n    {\n      \"$schema\": \"/api/v1/WorkflowResponse.json\",\n      \"stats\": {\n        \"success_rate\": 1.1,\n        \"total_runs\": 1000000\n      },\n      \"workflow\": {\n        \"capture\": true,\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"id\": \"id\",\n        \"last_run_at\": null,\n        \"name\": \"name\",\n        \"ocr_engine\": \"free\",\n        \"organization_id\": null,\n        \"platform\": \"android\",\n        \"recording\": true,\n        \"status\": \"ready\",\n        \"telemetry\": true,\n        \"updated_at\": \"2024-01-15T09:30:00Z\",\n        \"user_id\": \"user_id\"\n      }\n    }\n  ]\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000,\n  \"workflows\": [\n    {\n      \"$schema\": \"/api/v1/WorkflowResponse.json\",\n      \"stats\": {\n        \"success_rate\": 1.1,\n        \"total_runs\": 1000000\n      },\n      \"workflow\": {\n        \"accessibility\": true,\n        \"capture\": true,\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"id\": \"id\",\n        \"last_run_at\": null,\n        \"name\": \"name\",\n        \"ocr_engine\": \"free\",\n        \"organization_id\": null,\n        \"platform\": \"android\",\n        \"recording\": true,\n        \"status\": \"ready\",\n        \"telemetry\": true,\n        \"updated_at\": \"2024-01-15T09:30:00Z\",\n        \"user_id\": \"user_id\"\n      }\n    }\n  ]\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1840,7 +2282,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"accessibility\": true,\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1912,7 +2354,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"accessibility\": true,\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -2114,6 +2556,6 @@
     }
   ],
   "meta": {
-    "total": 61
+    "total": 74
   }
 }

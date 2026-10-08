@@ -1518,7 +1518,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**status:** `[]string` — filter by phone status (active/inactive/maintenance/suspended); case-insensitive
+**status:** `[]string` — filter by phone status (active/inactive/maintenance/suspended/recovering/out_of_service); case-insensitive
     
 </dd>
 </dl>
@@ -2859,6 +2859,14 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
+**accessibility:** `*bool` — Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Defaults to false. true requires a phone that supports it: only such phones are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. While on, the accessibility service is visible to apps on the phone.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **capture:** `*bool` — Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
     
 </dd>
@@ -3384,7 +3392,7 @@ client.Runs.Get(
 <dl>
 <dd>
 
-Cancels a run that is still queued or running, scoped to the caller's org. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
+Cancels a run that is scheduled, queued or running, scoped to the caller's org. A scheduled run is cancelled before it starts and never runs. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
 </dd>
 </dl>
 </dd>
@@ -3501,7 +3509,15 @@ client.Runs.Create(
 <dl>
 <dd>
 
-**startTimeoutSeconds:** `*int64` — How long a queued run may wait for a phone before it is auto-cancelled (60-86400). Defaults to 300.
+**startAt:** `*time.Time` — Start the runs at this time (RFC 3339) instead of now. Must be at least 60 seconds and at most 30 days ahead. The runs are listed as scheduled until then, can be cancelled, and start within about 15 seconds of this time plus the usual wait for a phone. Omit to start now.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**startTimeoutSeconds:** `*int64` — How long a queued run may wait for a phone before it is auto-cancelled (60-86400). Defaults to 300. For a scheduled run the wait counts from when it is released at start_at, not from booking.
     
 </dd>
 </dl>
@@ -3915,6 +3931,907 @@ client.Usage.ListSessions(
 </dl>
 </details>
 
+## Webhooks
+<details><summary><code>client.Webhooks.ListDeliveries() -> *platformgo.WebhookDeliveryListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists events published for the caller's organization, newest first, one page at a time. Pass the response's next_cursor as cursor to fetch the following page.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhooksListDeliveriesRequest{}
+client.Webhooks.ListDeliveries(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Page size.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**cursor:** `*string` — Opaque cursor from a previous page's next_cursor. Omit for the first page.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**eventType:** `*string` — Restrict the log to one event type. Omit for all types.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**endpointID:** `*string` — Restrict the log to deliveries to one destination (endpoint id). Omit for all destinations.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.GetDelivery(EventID) -> *platformgo.WebhookDeliveryDetail</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Fetches one event from the delivery log with the payload that was delivered and the endpoints it was routed to. A missing or wrong-organization id returns 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhooksGetDeliveryRequest{
+        EventID: "event_id",
+    }
+client.Webhooks.GetDelivery(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**eventID:** `string` — Event identifier.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.ListAttempts(EventID) -> *platformgo.WebhookAttemptListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists the delivery attempts for one event across the organization's endpoints, newest first, including automatic retries and manual replays. Pages the same way as the delivery log.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhooksListAttemptsRequest{
+        EventID: "event_id",
+    }
+client.Webhooks.ListAttempts(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**eventID:** `string` — Event identifier.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Page size.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**cursor:** `*string` — Opaque cursor from a previous page's next_cursor. Omit for the first page.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.ReplayDelivery(EventID, request) -> *platformgo.WebhookReplayResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Re-drives one event to one endpoint. Used to recover a dead-lettered delivery once the endpoint is healthy again. The replay is queued, not delivered synchronously; the response identifies it, and its attempt appears under the event's attempts with manual set.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhookReplayRequest{
+        EventID: "event_id",
+        EndpointID: "endpoint_id",
+    }
+client.Webhooks.ReplayDelivery(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**eventID:** `string` — Event identifier to replay.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**endpointID:** `string` — Endpoint to replay the event to.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.SendTestEvent(request) -> *platformgo.WebhookTestEventResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Publishes a simulated event to the caller's organization so an endpoint can be verified end to end. Name an event_type from the catalog to simulate it with that type's sample payload (default webhook.test), and an endpoint_id to deliver to that endpoint only (a missing or wrong-organization id returns 404; an endpoint not subscribed to the type is a validation error rather than a silent no-op). Omit the body to deliver webhook.test to every endpoint subscribed to it. The event is queued, not delivered synchronously; the response carries the event id to look up in the delivery log.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhookTestEventRequest{}
+client.Webhooks.SendTestEvent(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**endpointID:** `*string` — Deliver the test event to this endpoint only. It must be subscribed to the event type. Omit to deliver to every endpoint subscribed to the type.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**eventType:** `*string` — The event type to simulate, from the event-type catalog; the event carries that type's sample payload. Omit for webhook.test.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.ListEndpoints() -> *platformgo.WebhookEndpointListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists every webhook endpoint registered for the caller's organization. The collection is bounded, so it is returned whole rather than paged. Signing secrets are never included.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+client.Webhooks.ListEndpoints(
+        context.TODO(),
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.CreateEndpoint(request) -> *platformgo.WebhookEndpointCreateResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Registers an HTTPS endpoint to receive signed events for the caller's organization, subscribed to a set of event types (or all). The signing secret is returned exactly once.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhookEndpointCreateRequest{}
+client.Webhooks.CreateEndpoint(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**config:** `map[string]string` — Non-secret configuration for a BYOS destination (e.g. queue_url + region for aws_sqs).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**credentials:** `map[string]string` — Customer secrets for a BYOS destination (e.g. AWS key/secret). Never stored or logged by Axilio; passed to the delivery gateway, which encrypts them.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**eventTypes:** `[]string` — Event types to subscribe to. Empty means all event types.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**type_:** `*platformgo.WebhookEndpointCreateRequestType` — Destination type: webhook (default when omitted), aws_sqs, aws_s3, or aws_kinesis.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**url:** `*string` — HTTPS endpoint that signed events are delivered to (webhook destinations).
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.GetEndpoint(EndpointID) -> *platformgo.WebhookEndpoint</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Fetches one webhook endpoint by id. A missing or wrong-organization id returns 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhooksGetEndpointRequest{
+        EndpointID: "endpoint_id",
+    }
+client.Webhooks.GetEndpoint(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**endpointID:** `string` — Endpoint identifier.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.DeleteEndpoint(EndpointID) -> error</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Removes a webhook endpoint. Subsequent events are no longer delivered to it. A missing or wrong-organization id returns 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhooksDeleteEndpointRequest{
+        EndpointID: "endpoint_id",
+    }
+client.Webhooks.DeleteEndpoint(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**endpointID:** `string` — Endpoint identifier.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.ListEndpointAttempts(EndpointID) -> *platformgo.WebhookEndpointAttemptListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists every delivery attempt made to one endpoint across the organization's events, newest first, each with its outcome, the HTTP status the endpoint returned, its try number and the event it delivered. Filter by outcome (status) or event type. Pages the same way as the delivery log. A missing or wrong-organization endpoint id returns 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhooksListEndpointAttemptsRequest{
+        EndpointID: "endpoint_id",
+    }
+client.Webhooks.ListEndpointAttempts(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**endpointID:** `string` — Endpoint identifier.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Page size.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**cursor:** `*string` — Opaque cursor from a previous page's next_cursor. Omit for the first page.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**status:** `*platformgo.WebhooksListEndpointAttemptsRequestStatus` — Keep only attempts with this outcome. Omit for both.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**eventType:** `*string` — Keep only attempts of events of this type. Omit for all types.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**deliveredAfter:** `*time.Time` — Only attempts that completed at or after this time (RFC 3339).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**deliveredBefore:** `*time.Time` — Only attempts that completed at or before this time (RFC 3339).
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.RotateEndpointSecret(EndpointID, request) -> *platformgo.WebhookRotateSecretResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Issues a new signing secret for the endpoint, returned exactly once. With mode graceful (the default) the previous secret keeps verifying for 24 hours (previous_secret_invalid_at in the response) so the new secret can be rolled out across a deploy without dropping deliveries in flight. With mode immediate the previous secret stops verifying at once, for a secret that may be compromised. A missing or wrong-organization id returns 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhookRotateSecretRequest{
+        EndpointID: "endpoint_id",
+    }
+client.Webhooks.RotateEndpointSecret(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**endpointID:** `string` — Endpoint identifier.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**mode:** `*platformgo.WebhookRotateSecretRequestMode` — graceful: the previous secret keeps verifying for 24 hours so the new one can be rolled out across a deploy. immediate: the previous secret stops verifying at once, for a secret that may be compromised. Omit for graceful.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.ListEventTypes() -> *platformgo.WebhookEventTypeCatalogResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists the event types an endpoint can subscribe to, with a description of each, so a caller knows what to subscribe to before registering an endpoint.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+client.Webhooks.ListEventTypes(
+        context.TODO(),
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Webhooks.GetMetrics() -> *platformgo.WebhookDeliveryMetricsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns delivery volume and error rate over a window, either for one destination (endpoint_id) or grouped across all of them, time-bucketed for charting. Response time is not included: the gateway records no per-attempt latency.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WebhooksGetMetricsRequest{}
+client.Webhooks.GetMetrics(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**range_:** `*platformgo.WebhooksGetMetricsRequestRange` — Window and bucket size: 24h (hourly buckets), 7d or 30d (daily buckets).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**endpointID:** `*string` — One destination's series. Omit to get every destination grouped, for the list-view sparklines.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 ## Workflows
 <details><summary><code>client.Workflows.List() -> *platformgo.WorkflowListResponse</code></summary>
 <dl>
@@ -4084,6 +5001,14 @@ client.Workflows.Create(
 
 <dl>
 <dd>
+
+<dl>
+<dd>
+
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs (default false). true requires a phone that supports it for every run dispatched through the scheduler.
+    
+</dd>
+</dl>
 
 <dl>
 <dd>
@@ -4320,6 +5245,14 @@ client.Workflows.Update(
 <dd>
 
 **workflowID:** `string` — workflow identifier
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs. true requires a phone that supports it for every run dispatched through the scheduler; false turns it off. Omit to leave it unchanged.
     
 </dd>
 </dl>

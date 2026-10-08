@@ -10,6 +10,8 @@ its device control channel.
 ## Table of Contents
 
 - [Quickstart](#quickstart)
+  - [Accessibility mode](#accessibility-mode)
+  - [Vision client (argus 2.0)](#vision-client-argus-20)
 - [Reference](#reference)
 - [Usage](#usage)
 - [Environments](#environments)
@@ -129,42 +131,118 @@ current screen right now, zero included, and never waits, so use `WaitFor`
 and `Observe` still returns a `Screen` of OCR/icon data you can filter
 locally with `Screen.FindText`/`FindAllText`.
 
-Today's phones have no accessibility tree, so vision (OCR/VLM) is the only
-resolver: role/id selectors (`GetByRole`, `GetByID`, and the `Role`/`Name`/
-`ID`/`States`/`AndroidClassName` locator options) and a choice of resolution
-strategy aren't part of the public API yet. They arrive with accessibility
-support in a later release; acting on them today would only ever answer
-`StrategyUnavailable`.
-
 Resolution options (which model, which OCR engine) belong to the locator, not
 the action: pass `mobile.Model("...")` or `mobile.OCREngine("premium")`
-alongside the selector options (`mobile.Text`, `mobile.Exact`, `mobile.Query`)
-to `driver.GetByText` or `driver.Locator`. An action or query on the locator
+alongside the selector options (`mobile.Text`, `mobile.Exact`, `mobile.Query`,
+`mobile.Role`, ...) to `driver.GetByText` or `driver.Locator`. An action or query on the locator
 (`Tap`/`Fill`/`Press`/`WaitFor`/`BoundingBox`/`Text`/`Count`) takes a
 `mobile.ActionOption`, not a `mobile.CallOption`: the only one is
 `mobile.WithTimeout`, and it's a compile error to pass `mobile.WithOCREngine`
 (a `CallOption`, for `Observe`) to a locator action instead of setting
 `mobile.OCREngine` on the locator. The resolution follows the locator that
-resolves, else the driver's `WithDefaultModel`/`WithDefaultOCREngine`, else
+resolves, else the driver's `WithDefaultModel`/`WithDefaultOCREngine`/`WithDefaultStrategy`, else
 it's left off the wire so the server's own default applies. Refining a
 locator (`Nth`, `First`, `Within`, `Has`, `Filter`) keeps the receiver's own
 resolution options; the locator passed into `Within`/`Has` only ever
 contributes its selector fields, since one call resolves the whole locator
 and the outer locator's options govern it. If that inner locator carries its
-own `Model`/`OCREngine` (set on itself, not inherited from a driver default),
+own `Model`/`OCREngine`/`Strategy` (set on itself, not inherited from a driver default),
 `Within`/`Has` record a build error on the result instead of silently
 dropping them: every action or query on it (and on anything further refined
 from it) fails locally with a `CodeInvalidArgs` `*Error` naming what to do,
 and nothing is sent. `driver.Press(key, ...)` (no locator) takes no
 resolution options at all.
 
-A plain `mobile.Text` locator is matched by OCR; a locator that also carries
+Without the accessibility tree, a plain `mobile.Text` locator is matched by OCR; a locator that also carries
 `mobile.Query`, `Within`, `Has` or `Nth` is instead resolved by one
 vision-model call, with a prompt composed from the whole locator, so `Nth` on
 a query-based locator works. `Count` is the exception: it needs a plain text
 locator, and answers a `CodeInvalidArgs` error for one that also carries
 `Query`, `Within` or `Has`, since counting needs every independent match and
 a vision-model call only resolves a single target per prompt.
+
+### Accessibility mode
+
+Accessibility mode is off unless you ask for it. Leaving
+`PhoneAllocateRequest.Accessibility` nil (or setting it to false) allocates
+any phone with the tree off. Set it to `platformgo.Bool(true)` to run the
+session with the phone's accessibility tree on. True requires a phone that
+supports it: only such phones are claimed, and a `PhoneID` that does not
+support it is refused with a conflict (`IsAccessibilityUnavailable`). The
+response's `Accessibility` field reports the value. While the tree is on, the
+accessibility service is visible to apps on the phone.
+
+```go
+session, err := c.Phones.Allocate(ctx, &platformgo.PhoneAllocateRequest{
+    PhoneType:     platformgo.PhoneAllocateRequestPhoneTypeAndroid,
+    PhoneID:       platformgo.String("your-dedicated-phone-id"),
+    Accessibility: platformgo.Bool(true), // off when left nil
+})
+if platformgo.IsAccessibilityUnavailable(err) {
+    // The named phone does not support accessibility mode. Drop PhoneID to
+    // claim any phone that does, or leave Accessibility nil to use this
+    // phone with the tree off.
+}
+```
+
+Workflows take the same setting: `WorkflowCreateRequest.Accessibility`
+defaults to false (set `platformgo.Bool(true)` to turn it on for the
+workflow's runs), and `WorkflowUpdateRequest.Accessibility` leaves the
+current value unchanged when nil.
+
+With the tree on, literal selectors resolve against it on the device:
+
+```go
+driver.GetByRole("button", mobile.Name("Log in")).Tap()
+driver.GetByID("com.example.app:id/login").Tap()
+driver.GetByRole("textbox", mobile.Name("Email")).Fill("me@example.com")
+driver.Locator(mobile.Query("the log in button"), mobile.Strategy(mobile.StrategyVision)).Tap()
+```
+
+The tree-only options are `Role`, `Name`, `ID`, `States`, `Value`,
+`WindowID`, `NodeID`, `AndroidClassName` and `AndroidPackageName` (`Exact`
+applies to `Text`, `Name` and `Value`). On a session whose tree is off they
+answer `IsStrategyUnavailable`; they are never turned into a model prompt.
+`mobile.Strategy` (or the driver-wide `mobile.WithDefaultStrategy`) picks the
+resolver: `StrategyAuto` (the default: the tree when it is on, vision
+otherwise), `StrategyVision` or `StrategyAccessibility`. `WaitFor` also
+accepts `StateEnabled`, which needs the tree.
+
+`driver.Accessibility()` reads the tree itself:
+
+```go
+tree, err := driver.Accessibility().Snapshot()            // every window, layout nodes dropped
+tree, err = driver.Accessibility().Snapshot(mobile.WithWindow(id), mobile.WithInterestingOnly(false))
+nodes, err := driver.Accessibility().Query(mobile.AXQuery{Role: "button"})
+state, err := driver.Accessibility().State()              // Enabled, Toggleable
+err = driver.Accessibility().Disable()                    // returns once the phone confirms
+err = driver.Accessibility().Enable()
+```
+
+`Partial(nodeID, fetchRelatives)` and `Children(nodeID)` read around one
+node; a node id also works as a locator (`mobile.NodeID(id)`). Errors to
+expect: `IsStrategyUnavailable` (the tree is off), `IsTreeUnavailable` (a
+system dialog such as a permission prompt covers the app; vision still sees
+it) and `IsStaleNode` (the node from an earlier snapshot is gone).
+`Enable` and `Disable` work only where `State().Toggleable` is true.
+
+### Vision client (argus 2.0)
+
+`github.com/axilioai/platform-go/argus` is the typed client for the vision
+inference service. Argus 2.0 is a breaking change, so 0.14.0 replaces the old
+`argus/vision` package (`Vision.Detect`, `Vision.Locate`, `Vision.ListModels`
+on `/api/v1/vision/*`) with one package per resource:
+
+| 2.0 call | Endpoint |
+| --- | --- |
+| `Models.ListModels` | `GET /api/v1/models` |
+| `Screenshots.Detect` | `POST /api/v1/screenshots:detect` |
+| `Screenshots.Locate` | `POST /api/v1/screenshots:locate` (image only) |
+| `AccessibilityTrees.AccessibilityTreesLocate` | `POST /api/v1/accessibility-trees:locate` (new: pick a node from an accessibility tree by query) |
+
+The old paths have no alias. Errors are RFC 9457 problem+json and decode into
+typed errors (`BadRequestError`, `BadGatewayError`, ...) carrying a `Problem`
+body.
 
 ## Reference
 

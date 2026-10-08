@@ -7,14 +7,134 @@ import (
 	core "github.com/axilioai/platform-go/argus/core"
 )
 
-// Validation Error
+// The model provider failed
+type BadGatewayError struct {
+	*core.APIError
+	Body *Problem
+}
+
+func (b *BadGatewayError) UnmarshalJSON(data []byte) error {
+	var body *Problem
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	b.StatusCode = 502
+	b.Body = body
+	return nil
+}
+
+func (b *BadGatewayError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b.Body)
+}
+
+func (b *BadGatewayError) Unwrap() error {
+	return b.APIError
+}
+
+// Invalid input (bad image, unsupported model)
+type BadRequestError struct {
+	*core.APIError
+	Body *Problem
+}
+
+func (b *BadRequestError) UnmarshalJSON(data []byte) error {
+	var body *Problem
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	b.StatusCode = 400
+	b.Body = body
+	return nil
+}
+
+func (b *BadRequestError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b.Body)
+}
+
+func (b *BadRequestError) Unwrap() error {
+	return b.APIError
+}
+
+// Internal error (masked)
+type InternalServerError struct {
+	*core.APIError
+	Body *Problem
+}
+
+func (i *InternalServerError) UnmarshalJSON(data []byte) error {
+	var body *Problem
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	i.StatusCode = 500
+	i.Body = body
+	return nil
+}
+
+func (i *InternalServerError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.Body)
+}
+
+func (i *InternalServerError) Unwrap() error {
+	return i.APIError
+}
+
+// Insufficient balance
+type PaymentRequiredError struct {
+	*core.APIError
+	Body *Problem
+}
+
+func (p *PaymentRequiredError) UnmarshalJSON(data []byte) error {
+	var body *Problem
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	p.StatusCode = 402
+	p.Body = body
+	return nil
+}
+
+func (p *PaymentRequiredError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.Body)
+}
+
+func (p *PaymentRequiredError) Unwrap() error {
+	return p.APIError
+}
+
+// Missing or invalid credential
+type UnauthorizedError struct {
+	*core.APIError
+	Body *Problem
+}
+
+func (u *UnauthorizedError) UnmarshalJSON(data []byte) error {
+	var body *Problem
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	u.StatusCode = 401
+	u.Body = body
+	return nil
+}
+
+func (u *UnauthorizedError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.Body)
+}
+
+func (u *UnauthorizedError) Unwrap() error {
+	return u.APIError
+}
+
+// Request validation failed
 type UnprocessableEntityError struct {
 	*core.APIError
-	Body *HTTPValidationError
+	Body *Problem
 }
 
 func (u *UnprocessableEntityError) UnmarshalJSON(data []byte) error {
-	var body *HTTPValidationError
+	var body *Problem
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}

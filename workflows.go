@@ -11,16 +11,19 @@ import (
 )
 
 var (
-	workflowCreateRequestFieldCapture   = big.NewInt(1 << 0)
-	workflowCreateRequestFieldCode      = big.NewInt(1 << 1)
-	workflowCreateRequestFieldName      = big.NewInt(1 << 2)
-	workflowCreateRequestFieldOcrEngine = big.NewInt(1 << 3)
-	workflowCreateRequestFieldPlatform  = big.NewInt(1 << 4)
-	workflowCreateRequestFieldRecording = big.NewInt(1 << 5)
-	workflowCreateRequestFieldTelemetry = big.NewInt(1 << 6)
+	workflowCreateRequestFieldAccessibility = big.NewInt(1 << 0)
+	workflowCreateRequestFieldCapture       = big.NewInt(1 << 1)
+	workflowCreateRequestFieldCode          = big.NewInt(1 << 2)
+	workflowCreateRequestFieldName          = big.NewInt(1 << 3)
+	workflowCreateRequestFieldOcrEngine     = big.NewInt(1 << 4)
+	workflowCreateRequestFieldPlatform      = big.NewInt(1 << 5)
+	workflowCreateRequestFieldRecording     = big.NewInt(1 << 6)
+	workflowCreateRequestFieldTelemetry     = big.NewInt(1 << 7)
 )
 
 type WorkflowCreateRequest struct {
+	// Accessibility mode for this workflow's runs (default false). true requires a phone that supports it for every run dispatched through the scheduler.
+	Accessibility *bool `json:"accessibility,omitempty" url:"-"`
 	// Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
 	Capture *bool `json:"capture,omitempty" url:"-"`
 	// Optional Python source for the workflow's first revision, saved atomically with the workflow when provided.
@@ -45,6 +48,13 @@ func (w *WorkflowCreateRequest) require(field *big.Int) {
 		w.explicitFields = big.NewInt(0)
 	}
 	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRequest) SetAccessibility(accessibility *bool) {
+	w.Accessibility = accessibility
+	w.require(workflowCreateRequestFieldAccessibility)
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;
@@ -1951,22 +1961,25 @@ func (w *WorkflowStats) String() string {
 
 // A workflow: a saved automation that runs against a phone.
 var (
-	workflowSummaryFieldCapture        = big.NewInt(1 << 0)
-	workflowSummaryFieldCreatedAt      = big.NewInt(1 << 1)
-	workflowSummaryFieldID             = big.NewInt(1 << 2)
-	workflowSummaryFieldLastRunAt      = big.NewInt(1 << 3)
-	workflowSummaryFieldName           = big.NewInt(1 << 4)
-	workflowSummaryFieldOcrEngine      = big.NewInt(1 << 5)
-	workflowSummaryFieldOrganizationID = big.NewInt(1 << 6)
-	workflowSummaryFieldPlatform       = big.NewInt(1 << 7)
-	workflowSummaryFieldRecording      = big.NewInt(1 << 8)
-	workflowSummaryFieldStatus         = big.NewInt(1 << 9)
-	workflowSummaryFieldTelemetry      = big.NewInt(1 << 10)
-	workflowSummaryFieldUpdatedAt      = big.NewInt(1 << 11)
-	workflowSummaryFieldUserID         = big.NewInt(1 << 12)
+	workflowSummaryFieldAccessibility  = big.NewInt(1 << 0)
+	workflowSummaryFieldCapture        = big.NewInt(1 << 1)
+	workflowSummaryFieldCreatedAt      = big.NewInt(1 << 2)
+	workflowSummaryFieldID             = big.NewInt(1 << 3)
+	workflowSummaryFieldLastRunAt      = big.NewInt(1 << 4)
+	workflowSummaryFieldName           = big.NewInt(1 << 5)
+	workflowSummaryFieldOcrEngine      = big.NewInt(1 << 6)
+	workflowSummaryFieldOrganizationID = big.NewInt(1 << 7)
+	workflowSummaryFieldPlatform       = big.NewInt(1 << 8)
+	workflowSummaryFieldRecording      = big.NewInt(1 << 9)
+	workflowSummaryFieldStatus         = big.NewInt(1 << 10)
+	workflowSummaryFieldTelemetry      = big.NewInt(1 << 11)
+	workflowSummaryFieldUpdatedAt      = big.NewInt(1 << 12)
+	workflowSummaryFieldUserID         = big.NewInt(1 << 13)
 )
 
 type WorkflowSummary struct {
+	// Whether this workflow's runs use accessibility mode (default false), which requires a phone that supports it.
+	Accessibility bool `json:"accessibility" url:"accessibility"`
 	// Whether this workflow's runs capture media into the org's file library (default true).
 	Capture bool `json:"capture" url:"capture"`
 	// When the workflow was created.
@@ -1999,6 +2012,13 @@ type WorkflowSummary struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (w *WorkflowSummary) GetAccessibility() bool {
+	if w == nil {
+		return false
+	}
+	return w.Accessibility
 }
 
 func (w *WorkflowSummary) GetCapture() bool {
@@ -2104,6 +2124,13 @@ func (w *WorkflowSummary) require(field *big.Int) {
 		w.explicitFields = big.NewInt(0)
 	}
 	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowSummary) SetAccessibility(accessibility bool) {
+	w.Accessibility = accessibility
+	w.require(workflowSummaryFieldAccessibility)
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;
@@ -2455,19 +2482,22 @@ func (w WorkflowUpdateRequestStatus) Ptr() *WorkflowUpdateRequestStatus {
 }
 
 var (
-	workflowUpdateRequestFieldWorkflowID = big.NewInt(1 << 0)
-	workflowUpdateRequestFieldCapture    = big.NewInt(1 << 1)
-	workflowUpdateRequestFieldName       = big.NewInt(1 << 2)
-	workflowUpdateRequestFieldOcrEngine  = big.NewInt(1 << 3)
-	workflowUpdateRequestFieldPlatform   = big.NewInt(1 << 4)
-	workflowUpdateRequestFieldRecording  = big.NewInt(1 << 5)
-	workflowUpdateRequestFieldStatus     = big.NewInt(1 << 6)
-	workflowUpdateRequestFieldTelemetry  = big.NewInt(1 << 7)
+	workflowUpdateRequestFieldWorkflowID    = big.NewInt(1 << 0)
+	workflowUpdateRequestFieldAccessibility = big.NewInt(1 << 1)
+	workflowUpdateRequestFieldCapture       = big.NewInt(1 << 2)
+	workflowUpdateRequestFieldName          = big.NewInt(1 << 3)
+	workflowUpdateRequestFieldOcrEngine     = big.NewInt(1 << 4)
+	workflowUpdateRequestFieldPlatform      = big.NewInt(1 << 5)
+	workflowUpdateRequestFieldRecording     = big.NewInt(1 << 6)
+	workflowUpdateRequestFieldStatus        = big.NewInt(1 << 7)
+	workflowUpdateRequestFieldTelemetry     = big.NewInt(1 << 8)
 )
 
 type WorkflowUpdateRequest struct {
 	// workflow identifier
 	WorkflowID string `json:"-" url:"-"`
+	// Accessibility mode for this workflow's runs. true requires a phone that supports it for every run dispatched through the scheduler; false turns it off. Omit to leave it unchanged.
+	Accessibility *bool `json:"accessibility,omitempty" url:"-"`
 	// Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
 	Capture *bool `json:"capture,omitempty" url:"-"`
 	// Updated workflow name.
@@ -2499,6 +2529,13 @@ func (w *WorkflowUpdateRequest) require(field *big.Int) {
 func (w *WorkflowUpdateRequest) SetWorkflowID(workflowID string) {
 	w.WorkflowID = workflowID
 	w.require(workflowUpdateRequestFieldWorkflowID)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowUpdateRequest) SetAccessibility(accessibility *bool) {
+	w.Accessibility = accessibility
+	w.require(workflowUpdateRequestFieldAccessibility)
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;

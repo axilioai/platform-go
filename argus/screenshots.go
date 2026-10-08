@@ -106,7 +106,7 @@ var (
 type LocateRequest struct {
 	// Base64 encoded image (PNG or JPEG)
 	Image string `json:"image" url:"-"`
-	// VLM model to use; must be one of the models from GET /vision/models. Omit to use the server's configured default. The system prompt is fixed to the element-locator task.
+	// VLM model to use; must be one of the models from GET /models. Omit to use the server's configured default. The system prompt is fixed to the element-locator task.
 	Model *string `json:"model,omitempty" url:"-"`
 	// Natural-language target description
 	Query string `json:"query" url:"-"`
@@ -710,7 +710,7 @@ var (
 type InferenceData struct {
 	// Image hash of content area
 	HashResult *HashResult `json:"hash_result,omitempty" url:"hash_result,omitempty"`
-	// Icon detections (YOLO)
+	// Icon detections
 	IconDetections []*Detection `json:"icon_detections,omitempty" url:"icon_detections,omitempty"`
 	// Inference metadata
 	Metadata *InferenceMetadata `json:"metadata" url:"metadata"`
@@ -837,17 +837,19 @@ func (i *InferenceData) String() string {
 }
 
 var (
-	inferenceMetadataFieldIconDetectionsAfterNms  = big.NewInt(1 << 0)
-	inferenceMetadataFieldIconDetectionsBeforeNms = big.NewInt(1 << 1)
-	inferenceMetadataFieldImageHeight             = big.NewInt(1 << 2)
-	inferenceMetadataFieldImageWidth              = big.NewInt(1 << 3)
-	inferenceMetadataFieldInferenceTimeMs         = big.NewInt(1 << 4)
-	inferenceMetadataFieldOcrNs                   = big.NewInt(1 << 5)
-	inferenceMetadataFieldQueueWaitNs             = big.NewInt(1 << 6)
-	inferenceMetadataFieldYoloNs                  = big.NewInt(1 << 7)
+	inferenceMetadataFieldDetectNs                = big.NewInt(1 << 0)
+	inferenceMetadataFieldIconDetectionsAfterNms  = big.NewInt(1 << 1)
+	inferenceMetadataFieldIconDetectionsBeforeNms = big.NewInt(1 << 2)
+	inferenceMetadataFieldImageHeight             = big.NewInt(1 << 3)
+	inferenceMetadataFieldImageWidth              = big.NewInt(1 << 4)
+	inferenceMetadataFieldInferenceTimeMs         = big.NewInt(1 << 5)
+	inferenceMetadataFieldOcrNs                   = big.NewInt(1 << 6)
+	inferenceMetadataFieldQueueWaitNs             = big.NewInt(1 << 7)
 )
 
 type InferenceMetadata struct {
+	// Nanoseconds spent in icon detection
+	DetectNs *int `json:"detect_ns,omitempty" url:"detect_ns,omitempty"`
 	// Number of icon detections after NMS filtering
 	IconDetectionsAfterNms int `json:"icon_detections_after_nms" url:"icon_detections_after_nms"`
 	// Number of icon detections before NMS filtering
@@ -862,14 +864,19 @@ type InferenceMetadata struct {
 	OcrNs *int `json:"ocr_ns,omitempty" url:"ocr_ns,omitempty"`
 	// Nanoseconds the job waited in the inference queue
 	QueueWaitNs *int `json:"queue_wait_ns,omitempty" url:"queue_wait_ns,omitempty"`
-	// Nanoseconds spent in YOLO detection
-	YoloNs *int `json:"yolo_ns,omitempty" url:"yolo_ns,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (i *InferenceMetadata) GetDetectNs() *int {
+	if i == nil {
+		return nil
+	}
+	return i.DetectNs
 }
 
 func (i *InferenceMetadata) GetIconDetectionsAfterNms() int {
@@ -921,13 +928,6 @@ func (i *InferenceMetadata) GetQueueWaitNs() *int {
 	return i.QueueWaitNs
 }
 
-func (i *InferenceMetadata) GetYoloNs() *int {
-	if i == nil {
-		return nil
-	}
-	return i.YoloNs
-}
-
 func (i *InferenceMetadata) GetExtraProperties() map[string]interface{} {
 	if i == nil {
 		return nil
@@ -940,6 +940,13 @@ func (i *InferenceMetadata) require(field *big.Int) {
 		i.explicitFields = big.NewInt(0)
 	}
 	i.explicitFields.Or(i.explicitFields, field)
+}
+
+// SetDetectNs sets the DetectNs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (i *InferenceMetadata) SetDetectNs(detectNs *int) {
+	i.DetectNs = detectNs
+	i.require(inferenceMetadataFieldDetectNs)
 }
 
 // SetIconDetectionsAfterNms sets the IconDetectionsAfterNms field and marks it as non-optional;
@@ -989,13 +996,6 @@ func (i *InferenceMetadata) SetOcrNs(ocrNs *int) {
 func (i *InferenceMetadata) SetQueueWaitNs(queueWaitNs *int) {
 	i.QueueWaitNs = queueWaitNs
 	i.require(inferenceMetadataFieldQueueWaitNs)
-}
-
-// SetYoloNs sets the YoloNs field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (i *InferenceMetadata) SetYoloNs(yoloNs *int) {
-	i.YoloNs = yoloNs
-	i.require(inferenceMetadataFieldYoloNs)
 }
 
 func (i *InferenceMetadata) UnmarshalJSON(data []byte) error {
@@ -1162,15 +1162,15 @@ func (i *InferenceResponse) String() string {
 type InferenceType string
 
 const (
-	InferenceTypeYolo     InferenceType = "yolo"
+	InferenceTypeDetect   InferenceType = "detect"
 	InferenceTypeOcr      InferenceType = "ocr"
 	InferenceTypeCombined InferenceType = "combined"
 )
 
 func NewInferenceTypeFromString(s string) (InferenceType, error) {
 	switch s {
-	case "yolo":
-		return InferenceTypeYolo, nil
+	case "detect":
+		return InferenceTypeDetect, nil
 	case "ocr":
 		return InferenceTypeOcr, nil
 	case "combined":
@@ -1321,7 +1321,7 @@ func (l *LocateBBox) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
-// Argus /vision/locate response.
+// Argus POST /screenshots:locate response.
 //
 // Exactly one of `matched_text_index` or `bbox` is populated when
 // `found` is True. `matched_text_index` indicates the VLM grounded its
@@ -1548,335 +1548,6 @@ func (l *LocateResponse) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
-// One supported model and its pricing, as a standard /v1/models catalog row.
-var (
-	modelInfoFieldContextWindow = big.NewInt(1 << 0)
-	modelInfoFieldID            = big.NewInt(1 << 1)
-	modelInfoFieldName          = big.NewInt(1 << 2)
-	modelInfoFieldObject        = big.NewInt(1 << 3)
-	modelInfoFieldOwnedBy       = big.NewInt(1 << 4)
-	modelInfoFieldPricing       = big.NewInt(1 << 5)
-	modelInfoFieldType          = big.NewInt(1 << 6)
-)
-
-type ModelInfo struct {
-	// Maximum context window, in tokens.
-	ContextWindow int `json:"context_window" url:"context_window"`
-	// Model identifier, e.g. 'anthropic/claude-sonnet-4.5' or 'axilio/argus-ocr-pro-1'. VLM ids are passed as `model` to /vision/locate; Axilio ids identify the engine behind /vision/detect calls (selected via `ocr_engine` / `inference_type`) and are what usage rows are labeled with.
-	ID string `json:"id" url:"id"`
-	// Human-readable model name.
-	Name   string           `json:"name" url:"name"`
-	Object *ModelInfoObject `json:"object,omitempty" url:"object,omitempty"`
-	// Model provider, e.g. 'anthropic' or 'axilio'.
-	OwnedBy string        `json:"owned_by" url:"owned_by"`
-	Pricing *ModelPricing `json:"pricing" url:"pricing"`
-	// Model type: 'vlm' for the vision-language models served by /vision/locate; 'detect', 'ocr', and 'vision' for the Axilio model line behind /vision/detect.
-	Type string `json:"type" url:"type"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (m *ModelInfo) GetContextWindow() int {
-	if m == nil {
-		return 0
-	}
-	return m.ContextWindow
-}
-
-func (m *ModelInfo) GetID() string {
-	if m == nil {
-		return ""
-	}
-	return m.ID
-}
-
-func (m *ModelInfo) GetName() string {
-	if m == nil {
-		return ""
-	}
-	return m.Name
-}
-
-func (m *ModelInfo) GetObject() *ModelInfoObject {
-	if m == nil {
-		return nil
-	}
-	return m.Object
-}
-
-func (m *ModelInfo) GetOwnedBy() string {
-	if m == nil {
-		return ""
-	}
-	return m.OwnedBy
-}
-
-func (m *ModelInfo) GetPricing() *ModelPricing {
-	if m == nil {
-		return nil
-	}
-	return m.Pricing
-}
-
-func (m *ModelInfo) GetType() string {
-	if m == nil {
-		return ""
-	}
-	return m.Type
-}
-
-func (m *ModelInfo) GetExtraProperties() map[string]interface{} {
-	if m == nil {
-		return nil
-	}
-	return m.extraProperties
-}
-
-func (m *ModelInfo) require(field *big.Int) {
-	if m.explicitFields == nil {
-		m.explicitFields = big.NewInt(0)
-	}
-	m.explicitFields.Or(m.explicitFields, field)
-}
-
-// SetContextWindow sets the ContextWindow field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelInfo) SetContextWindow(contextWindow int) {
-	m.ContextWindow = contextWindow
-	m.require(modelInfoFieldContextWindow)
-}
-
-// SetID sets the ID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelInfo) SetID(id string) {
-	m.ID = id
-	m.require(modelInfoFieldID)
-}
-
-// SetName sets the Name field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelInfo) SetName(name string) {
-	m.Name = name
-	m.require(modelInfoFieldName)
-}
-
-// SetObject sets the Object field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelInfo) SetObject(object *ModelInfoObject) {
-	m.Object = object
-	m.require(modelInfoFieldObject)
-}
-
-// SetOwnedBy sets the OwnedBy field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelInfo) SetOwnedBy(ownedBy string) {
-	m.OwnedBy = ownedBy
-	m.require(modelInfoFieldOwnedBy)
-}
-
-// SetPricing sets the Pricing field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelInfo) SetPricing(pricing *ModelPricing) {
-	m.Pricing = pricing
-	m.require(modelInfoFieldPricing)
-}
-
-// SetType sets the Type field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelInfo) SetType(type_ string) {
-	m.Type = type_
-	m.require(modelInfoFieldType)
-}
-
-func (m *ModelInfo) UnmarshalJSON(data []byte) error {
-	type unmarshaler ModelInfo
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*m = ModelInfo(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *m)
-	if err != nil {
-		return err
-	}
-	m.extraProperties = extraProperties
-	m.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (m *ModelInfo) MarshalJSON() ([]byte, error) {
-	type embed ModelInfo
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*m),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, m.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (m *ModelInfo) String() string {
-	if m == nil {
-		return "<nil>"
-	}
-	if len(m.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(m.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(m); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", m)
-}
-
-type ModelInfoObject string
-
-const (
-	ModelInfoObjectModel ModelInfoObject = "model"
-)
-
-func NewModelInfoObjectFromString(s string) (ModelInfoObject, error) {
-	switch s {
-	case "model":
-		return ModelInfoObjectModel, nil
-	}
-	var t ModelInfoObject
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (m ModelInfoObject) Ptr() *ModelInfoObject {
-	return &m
-}
-
-// The customer's billed rates in USD.
-//
-// VLMs price per token (input/output); the Axilio model line prices per
-// page, where one screenshot is one page — so per_page reads as the price
-// of one call. A rate is "0" when that unit is free for the model.
-var (
-	modelPricingFieldInput   = big.NewInt(1 << 0)
-	modelPricingFieldOutput  = big.NewInt(1 << 1)
-	modelPricingFieldPerPage = big.NewInt(1 << 2)
-)
-
-type ModelPricing struct {
-	// USD per input token.
-	Input string `json:"input" url:"input"`
-	// USD per output token.
-	Output string `json:"output" url:"output"`
-	// USD per page (one screenshot = one page) for the per-page-billed Axilio models. Absent for per-token models.
-	PerPage *string `json:"per_page,omitempty" url:"per_page,omitempty"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (m *ModelPricing) GetInput() string {
-	if m == nil {
-		return ""
-	}
-	return m.Input
-}
-
-func (m *ModelPricing) GetOutput() string {
-	if m == nil {
-		return ""
-	}
-	return m.Output
-}
-
-func (m *ModelPricing) GetPerPage() *string {
-	if m == nil {
-		return nil
-	}
-	return m.PerPage
-}
-
-func (m *ModelPricing) GetExtraProperties() map[string]interface{} {
-	if m == nil {
-		return nil
-	}
-	return m.extraProperties
-}
-
-func (m *ModelPricing) require(field *big.Int) {
-	if m.explicitFields == nil {
-		m.explicitFields = big.NewInt(0)
-	}
-	m.explicitFields.Or(m.explicitFields, field)
-}
-
-// SetInput sets the Input field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelPricing) SetInput(input string) {
-	m.Input = input
-	m.require(modelPricingFieldInput)
-}
-
-// SetOutput sets the Output field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelPricing) SetOutput(output string) {
-	m.Output = output
-	m.require(modelPricingFieldOutput)
-}
-
-// SetPerPage sets the PerPage field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (m *ModelPricing) SetPerPage(perPage *string) {
-	m.PerPage = perPage
-	m.require(modelPricingFieldPerPage)
-}
-
-func (m *ModelPricing) UnmarshalJSON(data []byte) error {
-	type unmarshaler ModelPricing
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*m = ModelPricing(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *m)
-	if err != nil {
-		return err
-	}
-	m.extraProperties = extraProperties
-	m.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (m *ModelPricing) MarshalJSON() ([]byte, error) {
-	type embed ModelPricing
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*m),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, m.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (m *ModelPricing) String() string {
-	if m == nil {
-		return "<nil>"
-	}
-	if len(m.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(m.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(m); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", m)
-}
-
 var (
 	ocrResultFieldBbox       = big.NewInt(1 << 0)
 	ocrResultFieldConfidence = big.NewInt(1 << 1)
@@ -1994,142 +1665,6 @@ func (o *OcrResult) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", o)
-}
-
-// Response for GET /vision/models.
-//
-// Lists every model Argus supports, each with its final post-markup
-// pricing: the curated VLMs for the element-locator task (per-token
-// pricing; pass their id as `model` to /vision/locate) and the Axilio
-// model line behind /vision/detect (per-page pricing; selected via the
-// `ocr_engine` and `inference_type` request fields — lite = the free
-// engine, pro = premium). Lets a client compare cost and validate
-// `find(model=...)` up front instead of round-tripping to /locate and
-// getting a 400.
-//
-// The VLM set is curated: `/locate` enforces it — an unsupported model is
-// rejected, so this is the authoritative allowlist, not just advisory.
-// The Axilio ids are not /locate targets.
-//
-// Shaped like a standard /v1/models response ({object: "list", data: [...]}).
-var (
-	supportedModelsResponseFieldData   = big.NewInt(1 << 0)
-	supportedModelsResponseFieldObject = big.NewInt(1 << 1)
-)
-
-type SupportedModelsResponse struct {
-	// Supported models, sorted by id.
-	Data   []*ModelInfo                   `json:"data" url:"data"`
-	Object *SupportedModelsResponseObject `json:"object,omitempty" url:"object,omitempty"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (s *SupportedModelsResponse) GetData() []*ModelInfo {
-	if s == nil {
-		return nil
-	}
-	return s.Data
-}
-
-func (s *SupportedModelsResponse) GetObject() *SupportedModelsResponseObject {
-	if s == nil {
-		return nil
-	}
-	return s.Object
-}
-
-func (s *SupportedModelsResponse) GetExtraProperties() map[string]interface{} {
-	if s == nil {
-		return nil
-	}
-	return s.extraProperties
-}
-
-func (s *SupportedModelsResponse) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
-	}
-	s.explicitFields.Or(s.explicitFields, field)
-}
-
-// SetData sets the Data field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SupportedModelsResponse) SetData(data []*ModelInfo) {
-	s.Data = data
-	s.require(supportedModelsResponseFieldData)
-}
-
-// SetObject sets the Object field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SupportedModelsResponse) SetObject(object *SupportedModelsResponseObject) {
-	s.Object = object
-	s.require(supportedModelsResponseFieldObject)
-}
-
-func (s *SupportedModelsResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler SupportedModelsResponse
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*s = SupportedModelsResponse(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *s)
-	if err != nil {
-		return err
-	}
-	s.extraProperties = extraProperties
-	s.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (s *SupportedModelsResponse) MarshalJSON() ([]byte, error) {
-	type embed SupportedModelsResponse
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*s),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (s *SupportedModelsResponse) String() string {
-	if s == nil {
-		return "<nil>"
-	}
-	if len(s.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(s); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", s)
-}
-
-type SupportedModelsResponseObject string
-
-const (
-	SupportedModelsResponseObjectList SupportedModelsResponseObject = "list"
-)
-
-func NewSupportedModelsResponseObjectFromString(s string) (SupportedModelsResponseObject, error) {
-	switch s {
-	case "list":
-		return SupportedModelsResponseObjectList, nil
-	}
-	var t SupportedModelsResponseObject
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (s SupportedModelsResponseObject) Ptr() *SupportedModelsResponseObject {
-	return &s
 }
 
 // OCR-detected text element to seed the VLM's grounding context.
