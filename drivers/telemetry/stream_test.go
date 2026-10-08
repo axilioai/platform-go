@@ -327,6 +327,15 @@ func (c *blockingConn) closeConn() error {
 	return nil
 }
 
+// testCtx is cancelled when the test ends, so nothing a test starts outlives
+// it. This module still targets go 1.23, which has no t.Context.
+func testCtx(t *testing.T) context.Context {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	return ctx
+}
+
 func waitNext(t *testing.T, done <-chan error) error {
 	t.Helper()
 	select {
@@ -346,9 +355,10 @@ func TestStreamCloseFromAnotherGoroutineUnblocksNext(t *testing.T) {
 	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) { return conn, nil }}}
 	s := newTestStream(t, d)
 
+	ctx := testCtx(t)
 	done := make(chan error, 1)
 	go func() {
-		_, err := s.Next(context.Background())
+		_, err := s.Next(ctx)
 		done <- err
 	}()
 	// Close only once Next is blocked in the read, the case under test.
@@ -380,9 +390,10 @@ func TestStreamCloseDuringFailingRedialsStopsRedialing(t *testing.T) {
 	d := &scriptDialer{script: script}
 	s := newTestStream(t, d)
 
+	ctx := testCtx(t)
 	done := make(chan error, 1)
 	go func() {
-		_, err := s.Next(context.Background())
+		_, err := s.Next(ctx)
 		done <- err
 	}()
 	<-dialing
@@ -396,6 +407,27 @@ func TestStreamCloseDuringFailingRedialsStopsRedialing(t *testing.T) {
 	// The initial dial and the one redial in flight at Close: nothing after.
 	if len(d.urls) != 2 {
 		t.Fatalf("dials = %d, want 2 (no redials after Close)", len(d.urls))
+	}
+}
+
+// Close and Next with no ordering between them: the unsynchronized closed and
+// conn fields were a data race that -race reports here (CI runs it on Linux).
+func TestStreamCloseRacingNextIsRaceFree(t *testing.T) {
+	conn := newBlockingConn()
+	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) { return conn, nil }}}
+	s := newTestStream(t, d)
+
+	ctx := testCtx(t)
+	done := make(chan error, 1)
+	go func() {
+		_, err := s.Next(ctx)
+		done <- err
+	}()
+	if err := s.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	if err := waitNext(t, done); !hasCode(err, CodeClosed) {
+		t.Fatalf("Next err = %v, want CodeClosed", err)
 	}
 }
 
@@ -415,9 +447,10 @@ func TestStreamCloseDuringRedialClosesTheNewConnection(t *testing.T) {
 	}}
 	s := newTestStream(t, d)
 
+	ctx := testCtx(t)
 	done := make(chan error, 1)
 	go func() {
-		_, err := s.Next(context.Background())
+		_, err := s.Next(ctx)
 		done <- err
 	}()
 	<-dialing

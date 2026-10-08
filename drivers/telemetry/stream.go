@@ -146,8 +146,8 @@ func (s *Stream) Next(ctx context.Context) (*Frame, error) {
 			_ = s.closeConn()
 			return nil, io.EOF
 		}
-		conn, closed := s.state()
-		if closed || conn == nil {
+		conn, live := s.liveConn()
+		if !live {
 			s.err = errClosed()
 			return nil, s.err
 		}
@@ -176,29 +176,62 @@ func (s *Stream) Gapped() bool { return s.gapped }
 
 // Close tears the stream down. A blocked Next returns with CodeClosed.
 func (s *Stream) Close() error {
-	s.mu.Lock()
-	s.closed = true
-	s.mu.Unlock()
+	s.markClosed()
 	return s.closeConn()
 }
 
-// state reads the connection and the closed flag that Close may change from
-// another goroutine.
-func (s *Stream) state() (rawConn, bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.conn, s.closed
-}
-
+// closeConn detaches the connection, then closes it with no lock held: the
+// close is network I/O.
 func (s *Stream) closeConn() error {
-	s.mu.Lock()
-	conn := s.conn
-	s.conn = nil
-	s.mu.Unlock()
+	conn := s.takeConn()
 	if conn == nil {
 		return nil
 	}
 	return conn.closeConn()
+}
+
+// The state helpers below are the only code that touches mu. Each locks with
+// defer and does one state read or write, so no path can leave mu held and no
+// network I/O runs under it.
+
+func (s *Stream) markClosed() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.closed = true
+}
+
+func (s *Stream) isClosed() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.closed
+}
+
+// liveConn returns the connection to read from, and false once Close has run.
+func (s *Stream) liveConn() (rawConn, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.conn, !s.closed
+}
+
+func (s *Stream) takeConn() rawConn {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	conn := s.conn
+	s.conn = nil
+	return conn
+}
+
+// attach installs a redialed connection and reports false, leaving the
+// connection to the caller, if Close has already run. The check and the
+// install share one lock so a Close can't land between them.
+func (s *Stream) attach(conn rawConn) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed {
+		return false
+	}
+	s.conn = conn
+	return true
 }
 
 func errClosed() *Error { return &Error{Code: CodeClosed, Message: "stream closed"} }
@@ -210,7 +243,7 @@ func (s *Stream) recvErr(ctx context.Context, err error) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-	if _, closed := s.state(); closed {
+	if s.isClosed() {
 		s.err = errClosed()
 		return s.err
 	}
@@ -228,7 +261,7 @@ func (s *Stream) recvErr(ctx context.Context, err error) error {
 	for attempt := 1; ; attempt++ {
 		// Close can land at any point in this loop. Once it has, stop
 		// redialing and report the close, not a later dial outcome.
-		if _, closed := s.state(); closed {
+		if s.isClosed() {
 			s.err = errClosed()
 			return s.err
 		}
@@ -241,20 +274,16 @@ func (s *Stream) recvErr(ctx context.Context, err error) error {
 		}
 		conn, dialErr := s.dial(ctx, s.attachURL())
 		if dialErr == nil {
-			s.mu.Lock()
-			if s.closed {
+			if !s.attach(conn) {
 				// Close ran while this redial was in flight: the new
 				// connection belongs to a closed stream.
-				s.mu.Unlock()
 				_ = conn.closeConn()
 				s.err = errClosed()
 				return s.err
 			}
-			s.conn = conn
-			s.mu.Unlock()
 			return nil
 		}
-		if _, closed := s.state(); closed {
+		if s.isClosed() {
 			s.err = errClosed()
 			return s.err
 		}
