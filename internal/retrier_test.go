@@ -211,8 +211,9 @@ var expectedRetryDurations = []time.Duration{
 }
 
 func TestRetryWithRequestBody(t *testing.T) {
-	// This test verifies that POST requests with a body are properly retried.
-	// The request body should be re-sent on each retry attempt.
+	// This test verifies that requests with a body are properly retried.
+	// The request body should be re-sent on each retry attempt. A PUT, since a
+	// POST answered 5xx is not resent (see TestShouldRetry).
 	expectedBody := `{"id":"test-id"}`
 	var requestBodies []string
 	var requestCount int
@@ -245,7 +246,7 @@ func TestRetryWithRequestBody(t *testing.T) {
 		context.Background(),
 		&CallParams{
 			URL:                server.URL,
-			Method:             http.MethodPost,
+			Method:             http.MethodPut,
 			Request:            &InternalTestRequest{Id: "test-id"},
 			Response:           &response,
 			MaxAttempts:        2,
@@ -348,5 +349,29 @@ func TestRetryDelayTiming(t *testing.T) {
 			assert.LessOrEqual(t, actualDelayMs, tt.expectedMaxMs,
 				"Actual delay %dms should be <= expected max %dms", actualDelayMs, tt.expectedMaxMs)
 		})
+	}
+}
+
+func TestShouldRetry(t *testing.T) {
+	tests := []struct {
+		method string
+		status int
+		want   bool
+	}{
+		{http.MethodGet, http.StatusInternalServerError, true},
+		{http.MethodPut, http.StatusServiceUnavailable, true},
+		{http.MethodDelete, http.StatusBadGateway, true},
+		{http.MethodPost, http.StatusInternalServerError, false},
+		{http.MethodPatch, http.StatusServiceUnavailable, false},
+		{http.MethodPost, http.StatusTooManyRequests, true},
+		{http.MethodPost, http.StatusRequestTimeout, true},
+		{http.MethodGet, http.StatusBadRequest, false},
+		{http.MethodGet, http.StatusOK, false},
+	}
+	retrier := NewRetrier()
+	for _, tt := range tests {
+		request := httptest.NewRequest(tt.method, "/", nil)
+		response := &http.Response{StatusCode: tt.status}
+		assert.Equal(t, tt.want, retrier.shouldRetry(request, response), "%s answered %d", tt.method, tt.status)
 	}
 }

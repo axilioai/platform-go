@@ -26,6 +26,16 @@ fern generate --local --group go-sdk --api backend --force --log-level warn
 # README.md is repo-owned as well (AXI-1924): it carries the quickstart and the
 # hand-written driver's usage, which the generator would otherwise overwrite on
 # every regen. The generated API reference still lands in reference.md.
+#
+# Three files of Fern's runtime are repo-owned too, each with a defect the
+# generator still ships (generated_runtime_test.go pins the fixes):
+#   internal/explicit_fields.go  — a setter on any model with a date field
+#                                  dropped every other field from the JSON.
+#   internal/retrier.go          — POSTs were resent after a 5xx; the API takes
+#                                  no idempotency keys, so a create could run twice.
+#   internal/stringer.go         — String() printed one-time secrets.
+# Their tests stay with them. After a generator upgrade, diff Fern's new copies
+# against these by hand: compile errors or a failing test mean they drifted.
 rsync -a --delete \
   --exclude='.git' \
   --exclude='.gen' \
@@ -42,6 +52,13 @@ rsync -a --delete \
   --exclude='CONTRIBUTING.md' \
   --exclude='README.md' \
   --exclude='frames_tolerantreader_test.go' \
+  --exclude='/internal/explicit_fields.go' \
+  --exclude='/internal/explicit_fields_test.go' \
+  --exclude='/internal/retrier.go' \
+  --exclude='/internal/retrier_test.go' \
+  --exclude='/internal/stringer.go' \
+  --exclude='/internal/stringer_test.go' \
+  --exclude='/generated_runtime_test.go' \
   .gen/ ./
 
 rm -rf .gen

@@ -1,5 +1,11 @@
 package internal
 
+// Repo-owned: regen.sh keeps this file out of every regen. Fern's version
+// retried every request on a 5xx, POSTs included, and the API takes no
+// idempotency keys: a create that succeeded but answered 500 ran twice (a
+// second webhook endpoint, whose one-time secret replaced the first's). See
+// shouldRetry and generated_runtime_test.go.
+
 import (
 	"crypto/rand"
 	"math/big"
@@ -135,7 +141,7 @@ func (r *Retrier) run(
 		return nil, err
 	}
 
-	if r.shouldRetry(response) {
+	if r.shouldRetry(request, response) {
 		defer func() { _ = response.Body.Close() }()
 
 		delay, err := r.retryDelay(response, retryAttempt)
@@ -158,12 +164,25 @@ func (r *Retrier) run(
 	return response, nil
 }
 
-// shouldRetry returns true if the request should be retried based on the given
-// response status code.
-func (r *Retrier) shouldRetry(response *http.Response) bool {
-	return response.StatusCode == http.StatusTooManyRequests ||
-		response.StatusCode == http.StatusRequestTimeout ||
-		response.StatusCode >= http.StatusInternalServerError
+// shouldRetry reports whether to send the request again. A 429 or 408 means
+// the server turned the request away before acting on it, so any request is
+// resent. A 5xx can come after the request took effect, so only a method that
+// is safe to repeat (RFC 9110 §9.2.2) is resent; a POST or PATCH returns the
+// error to the caller, who knows whether a second attempt is safe.
+func (r *Retrier) shouldRetry(request *http.Request, response *http.Response) bool {
+	if response.StatusCode == http.StatusTooManyRequests ||
+		response.StatusCode == http.StatusRequestTimeout {
+		return true
+	}
+	return response.StatusCode >= http.StatusInternalServerError && isIdempotent(request.Method)
+}
+
+func isIdempotent(method string) bool {
+	switch method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodPut, http.MethodDelete:
+		return true
+	}
+	return false
 }
 
 // retryDelay calculates the delay time based on response headers,

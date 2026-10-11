@@ -280,6 +280,28 @@ func TestHandleExplicitFieldsEmbeddedStruct(t *testing.T) {
 		assert.JSONEq(t, `{"name":null,"code":"test-code"}`, string(bytes))
 	})
 
+	t.Run("embedded struct with shadow fields beside it", func(t *testing.T) {
+		// What MarshalJSON creates for a model with a date field: the shadow
+		// re-encodes Code, and every other field still comes from the model.
+		s := &testExplicitFieldsStruct{Name: stringPtr("kept"), Tags: []string{"a"}}
+		s.SetCode(nil)
+
+		type embed testExplicitFieldsStruct
+		var marshaler = struct {
+			embed
+			Code  *string `json:"code,omitempty"`
+			Extra *string `json:"extra,omitempty"`
+		}{
+			embed: embed(*s),
+			Code:  nil,
+			Extra: stringPtr("shadow-only"),
+		}
+
+		bytes, err := json.Marshal(HandleExplicitFields(marshaler, s.explicitFields))
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"name":"kept","code":null,"tags":["a"],"extra":"shadow-only"}`, string(bytes))
+	})
+
 	t.Run("embedded struct with no explicit fields", func(t *testing.T) {
 		s := &testExplicitFieldsStruct{
 			Name: stringPtr("implicit"),
