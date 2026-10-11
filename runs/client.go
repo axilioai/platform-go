@@ -119,7 +119,7 @@ func (c *Client) Get(
 	return response.Body, nil
 }
 
-// Cancels a run that is still queued or running, scoped to the caller's org. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
+// Cancels a run that is scheduled, queued or running, scoped to the caller's org. A scheduled run is cancelled before it starts and never runs. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
 func (c *Client) Cancel(
 	ctx context.Context,
 	request *platformgo.RunsCancelRequest,

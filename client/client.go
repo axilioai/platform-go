@@ -14,6 +14,7 @@ import (
 	runs "github.com/axilioai/platform-go/runs"
 	skill "github.com/axilioai/platform-go/skill"
 	usage "github.com/axilioai/platform-go/usage"
+	webhooks "github.com/axilioai/platform-go/webhooks"
 	workflows "github.com/axilioai/platform-go/workflows"
 )
 
@@ -26,6 +27,7 @@ type Client struct {
 	Runs         *runs.Client
 	Skill        *skill.Client
 	Usage        *usage.Client
+	Webhooks     *webhooks.Client
 	Workflows    *workflows.Client
 
 	options *core.RequestOptions
@@ -44,6 +46,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 		Runs:         runs.NewClient(options),
 		Skill:        skill.NewClient(options),
 		Usage:        usage.NewClient(options),
+		Webhooks:     webhooks.NewClient(options),
 		Workflows:    workflows.NewClient(options),
 		options:      options,
 		baseURL:      options.BaseURL,

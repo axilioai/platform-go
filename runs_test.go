@@ -72,6 +72,14 @@ func TestSettersRunCreateRequest(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetStartAt", func(t *testing.T) {
+		obj := &RunCreateRequest{}
+		var fernTestValueStartAt *time.Time
+		obj.SetStartAt(fernTestValueStartAt)
+		assert.Equal(t, fernTestValueStartAt, obj.StartAt)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetStartTimeoutSeconds", func(t *testing.T) {
 		obj := &RunCreateRequest{}
 		var fernTestValueStartTimeoutSeconds *int64
@@ -122,6 +130,37 @@ func TestSettersMarkExplicitRunCreateRequest(t *testing.T) {
 
 		// Act
 		obj.SetRuns(fernTestValueRuns)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetStartAt_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &RunCreateRequest{}
+		var fernTestValueStartAt *time.Time
+
+		// Act
+		obj.SetStartAt(fernTestValueStartAt)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -3641,6 +3680,14 @@ func TestSettersRunResponse(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetStartAt", func(t *testing.T) {
+		obj := &RunResponse{}
+		var fernTestValueStartAt *time.Time
+		obj.SetStartAt(fernTestValueStartAt)
+		assert.Equal(t, fernTestValueStartAt, obj.StartAt)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetStartTimeoutSeconds", func(t *testing.T) {
 		obj := &RunResponse{}
 		var fernTestValueStartTimeoutSeconds *int64
@@ -4015,6 +4062,39 @@ func TestGettersRunResponse(t *testing.T) {
 			}
 		}()
 		_ = obj.GetSessionID() // Should return zero value
+	})
+
+	t.Run("GetStartAt", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &RunResponse{}
+		var expected *time.Time
+		obj.StartAt = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetStartAt(), "getter should return the property value")
+	})
+
+	t.Run("GetStartAt_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &RunResponse{}
+		obj.StartAt = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetStartAt(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetStartAt_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *RunResponse
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetStartAt() // Should return zero value
 	})
 
 	t.Run("GetStartTimeoutSeconds", func(t *testing.T) {
@@ -4622,6 +4702,37 @@ func TestSettersMarkExplicitRunResponse(t *testing.T) {
 
 		// Act
 		obj.SetSessionID(fernTestValueSessionID)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetStartAt_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &RunResponse{}
+		var fernTestValueStartAt *time.Time
+
+		// Act
+		obj.SetStartAt(fernTestValueStartAt)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -7070,6 +7181,13 @@ func TestStringRunStatsResponse(t *testing.T) {
 }
 
 func TestEnumRunHistoryItemStatus(t *testing.T) {
+	t.Run("NewFromString_scheduled", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewRunHistoryItemStatusFromString("scheduled")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, RunHistoryItemStatus("scheduled"), val, "enum value should match expected wire value")
+	})
+
 	t.Run("NewFromString_queued", func(t *testing.T) {
 		t.Parallel()
 		val, err := NewRunHistoryItemStatusFromString("queued")
@@ -7111,7 +7229,7 @@ func TestEnumRunHistoryItemStatus(t *testing.T) {
 	})
 
 	t.Run("Ptr", func(t *testing.T) {
-		val, err := NewRunHistoryItemStatusFromString("queued")
+		val, err := NewRunHistoryItemStatusFromString("scheduled")
 		assert.NoError(t, err)
 		ptr := val.Ptr()
 		assert.NotNil(t, ptr)
@@ -7156,6 +7274,13 @@ func TestEnumRunHistoryItemTrigger(t *testing.T) {
 }
 
 func TestEnumRunResponseStatus(t *testing.T) {
+	t.Run("NewFromString_scheduled", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewRunResponseStatusFromString("scheduled")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, RunResponseStatus("scheduled"), val, "enum value should match expected wire value")
+	})
+
 	t.Run("NewFromString_queued", func(t *testing.T) {
 		t.Parallel()
 		val, err := NewRunResponseStatusFromString("queued")
@@ -7197,7 +7322,7 @@ func TestEnumRunResponseStatus(t *testing.T) {
 	})
 
 	t.Run("Ptr", func(t *testing.T) {
-		val, err := NewRunResponseStatusFromString("queued")
+		val, err := NewRunResponseStatusFromString("scheduled")
 		assert.NoError(t, err)
 		ptr := val.Ptr()
 		assert.NotNil(t, ptr)
@@ -7242,6 +7367,13 @@ func TestEnumRunResponseTrigger(t *testing.T) {
 }
 
 func TestEnumRunsListHistoricRequestStatusFilterItem(t *testing.T) {
+	t.Run("NewFromString_scheduled", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewRunsListHistoricRequestStatusFilterItemFromString("scheduled")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, RunsListHistoricRequestStatusFilterItem("scheduled"), val, "enum value should match expected wire value")
+	})
+
 	t.Run("NewFromString_queued", func(t *testing.T) {
 		t.Parallel()
 		val, err := NewRunsListHistoricRequestStatusFilterItemFromString("queued")
@@ -7283,7 +7415,7 @@ func TestEnumRunsListHistoricRequestStatusFilterItem(t *testing.T) {
 	})
 
 	t.Run("Ptr", func(t *testing.T) {
-		val, err := NewRunsListHistoricRequestStatusFilterItemFromString("queued")
+		val, err := NewRunsListHistoricRequestStatusFilterItemFromString("scheduled")
 		assert.NoError(t, err)
 		ptr := val.Ptr()
 		assert.NotNil(t, ptr)
@@ -7292,6 +7424,13 @@ func TestEnumRunsListHistoricRequestStatusFilterItem(t *testing.T) {
 }
 
 func TestEnumRunsListRequestStatusFilterItem(t *testing.T) {
+	t.Run("NewFromString_scheduled", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewRunsListRequestStatusFilterItemFromString("scheduled")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, RunsListRequestStatusFilterItem("scheduled"), val, "enum value should match expected wire value")
+	})
+
 	t.Run("NewFromString_queued", func(t *testing.T) {
 		t.Parallel()
 		val, err := NewRunsListRequestStatusFilterItemFromString("queued")
@@ -7333,7 +7472,7 @@ func TestEnumRunsListRequestStatusFilterItem(t *testing.T) {
 	})
 
 	t.Run("Ptr", func(t *testing.T) {
-		val, err := NewRunsListRequestStatusFilterItemFromString("queued")
+		val, err := NewRunsListRequestStatusFilterItemFromString("scheduled")
 		assert.NoError(t, err)
 		ptr := val.Ptr()
 		assert.NotNil(t, ptr)

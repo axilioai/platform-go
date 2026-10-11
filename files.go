@@ -542,17 +542,14 @@ func (c *CompleteFileOutputBody) String() string {
 
 // Confirmation that the file was deleted.
 var (
-	deleteFileOutputBodyFieldSchema               = big.NewInt(1 << 0)
-	deleteFileOutputBodyFieldMessage              = big.NewInt(1 << 1)
-	deleteFileOutputBodyFieldPhonesPendingRemoval = big.NewInt(1 << 2)
+	deleteFileOutputBodyFieldSchema  = big.NewInt(1 << 0)
+	deleteFileOutputBodyFieldMessage = big.NewInt(1 << 1)
 )
 
 type DeleteFileOutputBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema  *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	Message string  `json:"message" url:"message"`
-	// Deprecated: a library delete no longer removes copies from phones, so this is always 0. Kept for SDK compatibility and removed in a later version.
-	PhonesPendingRemoval int64 `json:"phones_pending_removal" url:"phones_pending_removal"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -573,13 +570,6 @@ func (d *DeleteFileOutputBody) GetMessage() string {
 		return ""
 	}
 	return d.Message
-}
-
-func (d *DeleteFileOutputBody) GetPhonesPendingRemoval() int64 {
-	if d == nil {
-		return 0
-	}
-	return d.PhonesPendingRemoval
 }
 
 func (d *DeleteFileOutputBody) GetExtraProperties() map[string]interface{} {
@@ -608,13 +598,6 @@ func (d *DeleteFileOutputBody) SetSchema(schema *string) {
 func (d *DeleteFileOutputBody) SetMessage(message string) {
 	d.Message = message
 	d.require(deleteFileOutputBodyFieldMessage)
-}
-
-// SetPhonesPendingRemoval sets the PhonesPendingRemoval field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (d *DeleteFileOutputBody) SetPhonesPendingRemoval(phonesPendingRemoval int64) {
-	d.PhonesPendingRemoval = phonesPendingRemoval
-	d.require(deleteFileOutputBodyFieldPhonesPendingRemoval)
 }
 
 func (d *DeleteFileOutputBody) UnmarshalJSON(data []byte) error {
