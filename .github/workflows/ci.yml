@@ -10,7 +10,17 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Windows is a supported customer platform; build, vet and test there too.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        # The test step's package filter is POSIX shell. Windows runners ship
+        # Git Bash, so one script serves both platforms.
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -26,4 +36,6 @@ jobs:
         # need a live WireMock server on :8080 that Fern's own test harness
         # provisions; they are not runnable under plain `go test`. Run the real
         # unit tests (pointer/types/client) and skip those integration packages.
-        run: go test $(go list ./... | grep -v '_test$')
+        # -race on Linux (it needs cgo, which the Windows runner lacks): the
+        # drivers are documented safe for cross-goroutine Close (AXI-2228).
+        run: go test ${{ matrix.os == 'ubuntu-latest' && '-race' || '' }} $(go list ./... | grep -v '_test$')
