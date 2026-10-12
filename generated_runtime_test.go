@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -108,15 +107,22 @@ func TestStringRedactsSecrets(t *testing.T) {
 		name   string
 		value  interface{ String() string }
 		secret string
+		kept   string
 	}{
-		{"webhook endpoint create", &api.WebhookEndpointCreateResponse{}, "whsec_create"},
-		{"webhook secret rotation", &api.WebhookRotateSecretResponse{}, "whsec_rotate"},
-		{"API key create", &api.APIKeyCreateResponse{}, "ax_live_key"},
+		{"webhook endpoint create", &api.WebhookEndpointCreateResponse{}, "whsec_create", `"we_1"`},
+		{"webhook secret rotation", &api.WebhookRotateSecretResponse{}, "whsec_rotate", `"we_1"`},
+		{"API key create", &api.APIKeyCreateResponse{}, "ax_live_key", `"key_1"`},
+		{"phone allocation live view", &api.PhoneAllocateResponse{}, "tok_live_view", `"ph_1"`},
+		{"phone allocation control", &api.PhoneAllocateResponse{}, "tok_control", `"ph_1"`},
+		{"phone allocation telemetry", &api.PhoneAllocateResponse{}, "tok_telemetry", `"ph_1"`},
 	}
 	payloads := map[string]string{
-		"webhook endpoint create": `{"id":"we_1","type":"webhook","created_at":"2026-10-12T09:00:00Z","secret":"whsec_create"}`,
-		"webhook secret rotation": `{"id":"we_1","secret":"whsec_rotate"}`,
-		"API key create":          `{"id":"key_1","name":"ci","created_at":"2026-10-12T09:00:00Z","key_value":"ax_live_key"}`,
+		"webhook endpoint create":    `{"id":"we_1","type":"webhook","created_at":"2026-10-12T09:00:00Z","secret":"whsec_create"}`,
+		"webhook secret rotation":    `{"id":"we_1","secret":"whsec_rotate"}`,
+		"API key create":             `{"id":"key_1","name":"ci","created_at":"2026-10-12T09:00:00Z","key_value":"ax_live_key"}`,
+		"phone allocation live view": `{"phone_id":"ph_1","session_id":"ss_1","workflow_started_at":"2026-10-12T09:00:00Z","live_view_url":"https://live.test/s?token=tok_live_view"}`,
+		"phone allocation control":   `{"phone_id":"ph_1","session_id":"ss_1","workflow_started_at":"2026-10-12T09:00:00Z","control_url":"wss://connect.test/ws/control?token=tok_control"}`,
+		"phone allocation telemetry": `{"phone_id":"ph_1","session_id":"ss_1","workflow_started_at":"2026-10-12T09:00:00Z","telemetry_url":"wss://connect.test/ws/telemetry?token=tok_telemetry"}`,
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -124,7 +130,7 @@ func TestStringRedactsSecrets(t *testing.T) {
 			printed := tc.value.String()
 			assert.NotContains(t, printed, tc.secret)
 			assert.Contains(t, printed, `"[redacted]"`)
-			assert.True(t, strings.Contains(printed, `"id"`), "the rest of the value still prints")
+			assert.Contains(t, printed, tc.kept, "the rest of the value still prints")
 		})
 	}
 }
