@@ -2859,6 +2859,14 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
+**accessibility:** `*bool` — Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Defaults to false. true requires a phone that supports it: only such phones are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. While on, the accessibility service is visible to apps on the phone.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **capture:** `*bool` — Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
     
 </dd>
@@ -3577,7 +3585,7 @@ client.Skill.GetSkill(
 <dl>
 <dd>
 
-Paginated, filterable list of inference calls (detect + locate) the caller's user was billed for over a required time window (start_date/end_date). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
+Paginated, filterable list of inference calls (detect, locate and element_locate) the caller's user was billed for over a required time window (start_date/end_date). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
 </dd>
 </dl>
 </dd>
@@ -3651,7 +3659,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**endpointFilter:** `[]string` — Restrict results to the given vision endpoints ('detect'/'locate').
+**endpointFilter:** `[]string` — Restrict results to the given argus operations ('detect', 'locate', 'element_locate').
     
 </dd>
 </dl>
@@ -4997,6 +5005,14 @@ client.Workflows.Create(
 <dl>
 <dd>
 
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs (default false). true requires a phone that supports it for every run dispatched through the scheduler.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **capture:** `*bool` — Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
     
 </dd>
@@ -5229,6 +5245,14 @@ client.Workflows.Update(
 <dd>
 
 **workflowID:** `string` — workflow identifier
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs. true requires a phone that supports it for every run dispatched through the scheduler; false turns it off. Omit to leave it unchanged.
     
 </dd>
 </dl>

@@ -87,7 +87,7 @@ type UsageListInferencesRequest struct {
 	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// Pagination offset.
 	Offset *int64 `json:"-" url:"offset,omitempty"`
-	// Restrict results to the given vision endpoints ('detect'/'locate').
+	// Restrict results to the given argus operations ('detect', 'locate', 'element_locate').
 	EndpointFilter []string `json:"-" url:"endpoint_filter,omitempty"`
 	// Restrict results to a single model name.
 	Model *string `json:"-" url:"model,omitempty"`
@@ -695,7 +695,7 @@ type UsageInference struct {
 	CostMicrodollars int64 `json:"cost_microdollars" url:"cost_microdollars"`
 	// Time the call completed, in UTC.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
-	// Vision endpoint hit ('detect' or 'locate').
+	// Argus operation billed: 'detect' (screenshots:detect), 'locate' (screenshots:locate) or 'element_locate' (elements:locate).
 	Endpoint UsageInferenceEndpoint `json:"endpoint" url:"endpoint"`
 	// Unique inference-call identifier (inference_id).
 	InferenceID string `json:"inference_id" url:"inference_id"`
@@ -937,12 +937,13 @@ func (u *UsageInference) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Vision endpoint hit ('detect' or 'locate').
+// Argus operation billed: 'detect' (screenshots:detect), 'locate' (screenshots:locate) or 'element_locate' (elements:locate).
 type UsageInferenceEndpoint string
 
 const (
-	UsageInferenceEndpointDetect UsageInferenceEndpoint = "detect"
-	UsageInferenceEndpointLocate UsageInferenceEndpoint = "locate"
+	UsageInferenceEndpointDetect        UsageInferenceEndpoint = "detect"
+	UsageInferenceEndpointLocate        UsageInferenceEndpoint = "locate"
+	UsageInferenceEndpointElementLocate UsageInferenceEndpoint = "element_locate"
 )
 
 func NewUsageInferenceEndpointFromString(s string) (UsageInferenceEndpoint, error) {
@@ -951,6 +952,8 @@ func NewUsageInferenceEndpointFromString(s string) (UsageInferenceEndpoint, erro
 		return UsageInferenceEndpointDetect, nil
 	case "locate":
 		return UsageInferenceEndpointLocate, nil
+	case "element_locate":
+		return UsageInferenceEndpointElementLocate, nil
 	}
 	var t UsageInferenceEndpoint
 	return "", fmt.Errorf("%s is not a valid %T", s, t)

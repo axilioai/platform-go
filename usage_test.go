@@ -5389,6 +5389,13 @@ func TestEnumUsageInferenceEndpoint(t *testing.T) {
 		assert.Equal(t, UsageInferenceEndpoint("locate"), val, "enum value should match expected wire value")
 	})
 
+	t.Run("NewFromString_element_locate", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewUsageInferenceEndpointFromString("element_locate")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, UsageInferenceEndpoint("element_locate"), val, "enum value should match expected wire value")
+	})
+
 	t.Run("NewFromString_Invalid", func(t *testing.T) {
 		_, err := NewUsageInferenceEndpointFromString("invalid_value_that_does_not_exist")
 		assert.Error(t, err)
