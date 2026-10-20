@@ -11,6 +11,27 @@ set -euo pipefail
 
 command -v fern >/dev/null || { echo "fern CLI not found: npm i -g fern-api" >&2; exit 1; }
 
+# The synced spec's only server is the relative "/api/v1", and the generated
+# raw clients bake the first server URL in as the base-URL fallback. A relative
+# fallback reaches nothing, so a client built without WithBaseURL failed every
+# call, the README quickstart included (AXI-2377). Generate against the
+# production host instead, the default platform-python's Client uses, and put
+# the pristine artifact back however generation exits so it stays
+# byte-identical to the sync. baseurl_test.go pins the result.
+API_BASE_URL="https://api.axilio.ai/api/v1"
+SPEC="specs/production/openapi.json"
+cp "$SPEC" "$SPEC.orig"
+trap 'mv "$SPEC.orig" "$SPEC"' EXIT
+python3 - "$SPEC" "$API_BASE_URL" <<'EOF'
+import json, sys
+path, url = sys.argv[1], sys.argv[2]
+spec = json.load(open(path))
+if spec.get("servers") != [{"url": "/api/v1"}]:
+    sys.exit(f"{path} servers are now {spec.get('servers')!r}; revisit the injection in regen.sh")
+spec["servers"] = [{"url": url}]
+json.dump(spec, open(path, "w"), indent=2)
+EOF
+
 rm -rf .gen
 fern generate --local --group go-sdk --api backend --force --log-level warn
 
@@ -49,6 +70,7 @@ rsync -a --delete \
   --exclude='.github' \
   --exclude='VERSION' \
   --exclude='.gitignore' \
+  --exclude='.gitattributes' \
   --exclude='CONTRIBUTING.md' \
   --exclude='README.md' \
   --exclude='frames_tolerantreader_test.go' \
@@ -59,6 +81,7 @@ rsync -a --delete \
   --exclude='/internal/stringer.go' \
   --exclude='/internal/stringer_test.go' \
   --exclude='/generated_runtime_test.go' \
+  --exclude='/baseurl_test.go' \
   .gen/ ./
 
 rm -rf .gen

@@ -40,7 +40,7 @@ func (r *RawClient) Get(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/organization"
 	headers := internal.MergeHeaders(
@@ -80,7 +80,7 @@ func (r *RawClient) ListInvitations(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/organization/invitations"
 	headers := internal.MergeHeaders(
@@ -120,7 +120,7 @@ func (r *RawClient) ListMembers(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/organization/members"
 	headers := internal.MergeHeaders(

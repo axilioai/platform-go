@@ -40,7 +40,7 @@ func (r *RawClient) GetAutoRecharge(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/billing/auto-recharge"
 	headers := internal.MergeHeaders(
@@ -81,7 +81,7 @@ func (r *RawClient) UpdateAutoRecharge(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/billing/auto-recharge"
 	headers := internal.MergeHeaders(
@@ -123,7 +123,7 @@ func (r *RawClient) GetBalance(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/billing/balance"
 	headers := internal.MergeHeaders(
@@ -164,7 +164,7 @@ func (r *RawClient) GetHistory(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/billing/history"
 	queryParams, err := internal.QueryValues(request)
@@ -212,7 +212,7 @@ func (r *RawClient) DownloadInvoice(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/billing/history/%v/pdf",
@@ -255,7 +255,7 @@ func (r *RawClient) GetRentalSubscriptions(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/billing/phone-rental-subscriptions"
 	headers := internal.MergeHeaders(
@@ -295,7 +295,7 @@ func (r *RawClient) GetSubscription(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/billing/subscription"
 	headers := internal.MergeHeaders(
@@ -335,7 +335,7 @@ func (r *RawClient) GetUsageAlerts(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/billing/usage-alerts"
 	headers := internal.MergeHeaders(
@@ -376,7 +376,7 @@ func (r *RawClient) UpdateUsageAlerts(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/billing/usage-alerts"
 	headers := internal.MergeHeaders(

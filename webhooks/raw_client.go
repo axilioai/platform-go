@@ -41,7 +41,7 @@ func (r *RawClient) ListDeliveries(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/webhooks/deliveries"
 	queryParams, err := internal.QueryValues(request)
@@ -89,7 +89,7 @@ func (r *RawClient) GetDelivery(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/webhooks/deliveries/%v",
@@ -134,7 +134,7 @@ func (r *RawClient) ListAttempts(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/webhooks/deliveries/%v/attempts",
@@ -186,7 +186,7 @@ func (r *RawClient) ReplayDelivery(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/webhooks/deliveries/%v:replay",
@@ -233,7 +233,7 @@ func (r *RawClient) SendTestEvent(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/webhooks/deliveries:sendTest"
 	headers := internal.MergeHeaders(
@@ -276,7 +276,7 @@ func (r *RawClient) ListEndpoints(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/webhooks/endpoints"
 	headers := internal.MergeHeaders(
@@ -317,7 +317,7 @@ func (r *RawClient) CreateEndpoint(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/webhooks/endpoints"
 	headers := internal.MergeHeaders(
@@ -360,7 +360,7 @@ func (r *RawClient) GetEndpoint(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/webhooks/endpoints/%v",
@@ -405,7 +405,7 @@ func (r *RawClient) DeleteEndpoint(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/webhooks/endpoints/%v",
@@ -448,7 +448,7 @@ func (r *RawClient) ListEndpointAttempts(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/webhooks/endpoints/%v/attempts",
@@ -500,7 +500,7 @@ func (r *RawClient) RotateEndpointSecret(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/webhooks/endpoints/%v:rotateSecret",
@@ -546,7 +546,7 @@ func (r *RawClient) ListEventTypes(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/webhooks/event-types"
 	headers := internal.MergeHeaders(
@@ -587,7 +587,7 @@ func (r *RawClient) GetMetrics(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/webhooks/metrics"
 	queryParams, err := internal.QueryValues(request)
