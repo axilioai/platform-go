@@ -35,6 +35,14 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // Lists the API keys for the caller's organization, with optional paging (limit + offset). Ordered newest-first.
+//
+// Example:
+//
+//	request := &platformgo.APIKeysListRequest{}
+//	client.APIKeys.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.APIKeysListRequest,
@@ -52,6 +60,16 @@ func (c *Client) List(
 }
 
 // Mints a fresh API key for the caller's organization. The plaintext key value is returned exactly once and never stored or returned again.
+//
+// Example:
+//
+//	request := &platformgo.APIKeyCreateRequest{
+//	    Name: "name",
+//	}
+//	client.APIKeys.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *platformgo.APIKeyCreateRequest,
@@ -69,6 +87,16 @@ func (c *Client) Create(
 }
 
 // Revokes an API key. Subsequent requests using its value are rejected as unauthorized.
+//
+// Example:
+//
+//	request := &platformgo.APIKeysDeleteRequest{
+//	    KeyID: "key_id",
+//	}
+//	client.APIKeys.Delete(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	request *platformgo.APIKeysDeleteRequest,

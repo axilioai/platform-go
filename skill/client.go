@@ -34,6 +34,12 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // The canonical Axilio agent skill: markdown instructions that teach a coding agent to drive a phone through the axilio CLI, then hand back the equivalent SDK script. Single source of truth — the dashboard's "Get agent prompt" action and `axilio init` both fetch this instead of carrying their own copy, so a change here reaches both without a separate deploy.
+//
+// Example:
+//
+//	client.Skill.GetSkill(
+//	    context.TODO(),
+//	)
 func (c *Client) GetSkill(
 	ctx context.Context,
 	opts ...option.RequestOption,

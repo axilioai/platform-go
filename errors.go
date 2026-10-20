@@ -31,6 +31,13 @@ func (i *InternalServerError) Unwrap() error {
 	return i.APIError
 }
 
+func (i *InternalServerError) GetBody() *V2ErrorModel {
+	if i == nil {
+		return nil
+	}
+	return i.Body
+}
+
 // Not Found
 type NotFoundError struct {
 	*core.APIError
@@ -53,6 +60,13 @@ func (n *NotFoundError) MarshalJSON() ([]byte, error) {
 
 func (n *NotFoundError) Unwrap() error {
 	return n.APIError
+}
+
+func (n *NotFoundError) GetBody() *V2ErrorModel {
+	if n == nil {
+		return nil
+	}
+	return n.Body
 }
 
 // Payment Required
@@ -79,6 +93,13 @@ func (p *PaymentRequiredError) Unwrap() error {
 	return p.APIError
 }
 
+func (p *PaymentRequiredError) GetBody() *V2ErrorModel {
+	if p == nil {
+		return nil
+	}
+	return p.Body
+}
+
 // Unprocessable Entity
 type UnprocessableEntityError struct {
 	*core.APIError
@@ -101,4 +122,11 @@ func (u *UnprocessableEntityError) MarshalJSON() ([]byte, error) {
 
 func (u *UnprocessableEntityError) Unwrap() error {
 	return u.APIError
+}
+
+func (u *UnprocessableEntityError) GetBody() *V2ErrorModel {
+	if u == nil {
+		return nil
+	}
+	return u.Body
 }

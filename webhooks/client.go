@@ -35,6 +35,14 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // Lists events published for the caller's organization, newest first, one page at a time. Pass the response's next_cursor as cursor to fetch the following page.
+//
+// Example:
+//
+//	request := &platformgo.WebhooksListDeliveriesRequest{}
+//	client.Webhooks.ListDeliveries(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ListDeliveries(
 	ctx context.Context,
 	request *platformgo.WebhooksListDeliveriesRequest,
@@ -52,6 +60,16 @@ func (c *Client) ListDeliveries(
 }
 
 // Fetches one event from the delivery log with the payload that was delivered and the endpoints it was routed to. A missing or wrong-organization id returns 404.
+//
+// Example:
+//
+//	request := &platformgo.WebhooksGetDeliveryRequest{
+//	    EventID: "event_id",
+//	}
+//	client.Webhooks.GetDelivery(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) GetDelivery(
 	ctx context.Context,
 	request *platformgo.WebhooksGetDeliveryRequest,
@@ -69,6 +87,16 @@ func (c *Client) GetDelivery(
 }
 
 // Lists the delivery attempts for one event across the organization's endpoints, newest first, including automatic retries and manual replays. Pages the same way as the delivery log.
+//
+// Example:
+//
+//	request := &platformgo.WebhooksListAttemptsRequest{
+//	    EventID: "event_id",
+//	}
+//	client.Webhooks.ListAttempts(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ListAttempts(
 	ctx context.Context,
 	request *platformgo.WebhooksListAttemptsRequest,
@@ -86,6 +114,17 @@ func (c *Client) ListAttempts(
 }
 
 // Re-drives one event to one endpoint. Used to recover a dead-lettered delivery once the endpoint is healthy again. The replay is queued, not delivered synchronously; the response identifies it, and its attempt appears under the event's attempts with manual set.
+//
+// Example:
+//
+//	request := &platformgo.WebhookReplayRequest{
+//	    EventID: "event_id",
+//	    EndpointID: "endpoint_id",
+//	}
+//	client.Webhooks.ReplayDelivery(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ReplayDelivery(
 	ctx context.Context,
 	request *platformgo.WebhookReplayRequest,
@@ -103,6 +142,14 @@ func (c *Client) ReplayDelivery(
 }
 
 // Publishes a simulated event to the caller's organization so an endpoint can be verified end to end. Name an event_type from the catalog to simulate it with that type's sample payload (default webhook.test), and an endpoint_id to deliver to that endpoint only (a missing or wrong-organization id returns 404; an endpoint not subscribed to the type is a validation error rather than a silent no-op). Omit the body to deliver webhook.test to every endpoint subscribed to it. The event is queued, not delivered synchronously; the response carries the event id to look up in the delivery log.
+//
+// Example:
+//
+//	request := &platformgo.WebhookTestEventRequest{}
+//	client.Webhooks.SendTestEvent(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) SendTestEvent(
 	ctx context.Context,
 	request *platformgo.WebhookTestEventRequest,
@@ -120,6 +167,12 @@ func (c *Client) SendTestEvent(
 }
 
 // Lists every webhook endpoint registered for the caller's organization. The collection is bounded, so it is returned whole rather than paged. Signing secrets are never included.
+//
+// Example:
+//
+//	client.Webhooks.ListEndpoints(
+//	    context.TODO(),
+//	)
 func (c *Client) ListEndpoints(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -135,6 +188,14 @@ func (c *Client) ListEndpoints(
 }
 
 // Registers an HTTPS endpoint to receive signed events for the caller's organization, subscribed to a set of event types (or all). The signing secret is returned exactly once.
+//
+// Example:
+//
+//	request := &platformgo.WebhookEndpointCreateRequest{}
+//	client.Webhooks.CreateEndpoint(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) CreateEndpoint(
 	ctx context.Context,
 	request *platformgo.WebhookEndpointCreateRequest,
@@ -152,6 +213,16 @@ func (c *Client) CreateEndpoint(
 }
 
 // Fetches one webhook endpoint by id. A missing or wrong-organization id returns 404.
+//
+// Example:
+//
+//	request := &platformgo.WebhooksGetEndpointRequest{
+//	    EndpointID: "endpoint_id",
+//	}
+//	client.Webhooks.GetEndpoint(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) GetEndpoint(
 	ctx context.Context,
 	request *platformgo.WebhooksGetEndpointRequest,
@@ -169,6 +240,16 @@ func (c *Client) GetEndpoint(
 }
 
 // Removes a webhook endpoint. Subsequent events are no longer delivered to it. A missing or wrong-organization id returns 404.
+//
+// Example:
+//
+//	request := &platformgo.WebhooksDeleteEndpointRequest{
+//	    EndpointID: "endpoint_id",
+//	}
+//	client.Webhooks.DeleteEndpoint(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) DeleteEndpoint(
 	ctx context.Context,
 	request *platformgo.WebhooksDeleteEndpointRequest,
@@ -186,6 +267,16 @@ func (c *Client) DeleteEndpoint(
 }
 
 // Lists every delivery attempt made to one endpoint across the organization's events, newest first, each with its outcome, the HTTP status the endpoint returned, its try number and the event it delivered. Filter by outcome (status) or event type. Pages the same way as the delivery log. A missing or wrong-organization endpoint id returns 404.
+//
+// Example:
+//
+//	request := &platformgo.WebhooksListEndpointAttemptsRequest{
+//	    EndpointID: "endpoint_id",
+//	}
+//	client.Webhooks.ListEndpointAttempts(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ListEndpointAttempts(
 	ctx context.Context,
 	request *platformgo.WebhooksListEndpointAttemptsRequest,
@@ -203,6 +294,16 @@ func (c *Client) ListEndpointAttempts(
 }
 
 // Issues a new signing secret for the endpoint, returned exactly once. With mode graceful (the default) the previous secret keeps verifying for 24 hours (previous_secret_invalid_at in the response) so the new secret can be rolled out across a deploy without dropping deliveries in flight. With mode immediate the previous secret stops verifying at once, for a secret that may be compromised. A missing or wrong-organization id returns 404.
+//
+// Example:
+//
+//	request := &platformgo.WebhookRotateSecretRequest{
+//	    EndpointID: "endpoint_id",
+//	}
+//	client.Webhooks.RotateEndpointSecret(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) RotateEndpointSecret(
 	ctx context.Context,
 	request *platformgo.WebhookRotateSecretRequest,
@@ -220,6 +321,12 @@ func (c *Client) RotateEndpointSecret(
 }
 
 // Lists the event types an endpoint can subscribe to, with a description of each, so a caller knows what to subscribe to before registering an endpoint.
+//
+// Example:
+//
+//	client.Webhooks.ListEventTypes(
+//	    context.TODO(),
+//	)
 func (c *Client) ListEventTypes(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -235,6 +342,14 @@ func (c *Client) ListEventTypes(
 }
 
 // Returns delivery volume and error rate over a window, either for one destination (endpoint_id) or grouped across all of them, time-bucketed for charting. Response time is not included: the gateway records no per-attempt latency.
+//
+// Example:
+//
+//	request := &platformgo.WebhooksGetMetricsRequest{}
+//	client.Webhooks.GetMetrics(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) GetMetrics(
 	ctx context.Context,
 	request *platformgo.WebhooksGetMetricsRequest,

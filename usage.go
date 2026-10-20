@@ -32,10 +32,12 @@ type UsageGetMetricsRequest struct {
 }
 
 func (u *UsageGetMetricsRequest) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetStartDate sets the StartDate field and marks it as non-optional;
@@ -103,10 +105,12 @@ type UsageListInferencesRequest struct {
 }
 
 func (u *UsageListInferencesRequest) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetStartDate sets the StartDate field and marks it as non-optional;
@@ -212,10 +216,12 @@ type UsageListSessionsRequest struct {
 }
 
 func (u *UsageListSessionsRequest) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetStartDate sets the StartDate field and marks it as non-optional;
@@ -288,7 +294,6 @@ func (u *UsageListSessionsRequest) SetOrderBy(orderBy *string) {
 	u.require(usageListSessionsRequestFieldOrderBy)
 }
 
-// Single time-series value for usage charts.
 var (
 	usageChartDataPointFieldIsCurrent = big.NewInt(1 << 0)
 	usageChartDataPointFieldPeriod    = big.NewInt(1 << 1)
@@ -296,6 +301,7 @@ var (
 	usageChartDataPointFieldValue     = big.NewInt(1 << 3)
 )
 
+// Single time-series value for usage charts.
 type UsageChartDataPoint struct {
 	// Whether this is the current (in-progress) period.
 	IsCurrent bool `json:"is_current" url:"is_current"`
@@ -349,10 +355,12 @@ func (u *UsageChartDataPoint) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UsageChartDataPoint) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetIsCurrent sets the IsCurrent field and marks it as non-optional;
@@ -433,13 +441,18 @@ func (u *UsageChartDataPoint) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// ComputeMinutes summarizes compute time metrics for a reporting period.
 var (
 	usageComputeMinutesFieldChange       = big.NewInt(1 << 0)
 	usageComputeMinutesFieldChartData    = big.NewInt(1 << 1)
 	usageComputeMinutesFieldTotalMinutes = big.NewInt(1 << 2)
 )
 
+// usageComputeMinutesNullableFields maps the wire names of UsageComputeMinutes's nullable fields (required or optional) to their field bits.
+var usageComputeMinutesNullableFields = map[string]*big.Int{
+	"chart_data": usageComputeMinutesFieldChartData,
+}
+
+// ComputeMinutes summarizes compute time metrics for a reporting period.
 type UsageComputeMinutes struct {
 	// Percentage change from the previous period.
 	Change float64 `json:"change" url:"change"`
@@ -484,10 +497,12 @@ func (u *UsageComputeMinutes) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UsageComputeMinutes) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetChange sets the Change field and marks it as non-optional;
@@ -523,6 +538,13 @@ func (u *UsageComputeMinutes) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	u.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, usageComputeMinutesNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		u.require(presentFields)
+	}
 	u.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -553,13 +575,13 @@ func (u *UsageComputeMinutes) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// CostByProduct splits the period's usage spend by what was billed (dollars).
 var (
 	usageCostByProductFieldInference = big.NewInt(1 << 0)
 	usageCostByProductFieldOther     = big.NewInt(1 << 1)
 	usageCostByProductFieldSessions  = big.NewInt(1 << 2)
 )
 
+// CostByProduct splits the period's usage spend by what was billed (dollars).
 type UsageCostByProduct struct {
 	// Inference spend for the period.
 	Inference float64 `json:"inference" url:"inference"`
@@ -604,10 +626,12 @@ func (u *UsageCostByProduct) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UsageCostByProduct) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetInference sets the Inference field and marks it as non-optional;
@@ -673,7 +697,6 @@ func (u *UsageCostByProduct) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// A single billed inference call.
 var (
 	usageInferenceFieldAPIKeyID         = big.NewInt(1 << 0)
 	usageInferenceFieldCostMicrodollars = big.NewInt(1 << 1)
@@ -688,6 +711,7 @@ var (
 	usageInferenceFieldVlmModel         = big.NewInt(1 << 10)
 )
 
+// A single billed inference call.
 type UsageInference struct {
 	// API key that made the call.
 	APIKeyID *string `json:"api_key_id,omitempty" url:"api_key_id,omitempty"`
@@ -804,10 +828,12 @@ func (u *UsageInference) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UsageInference) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetAPIKeyID sets the APIKeyID field and marks it as non-optional;
@@ -983,7 +1009,6 @@ func (u UsageInferenceOcrEngine) Ptr() *UsageInferenceOcrEngine {
 	return &u
 }
 
-// Paginated list of inference calls.
 var (
 	usageInferencesResponseFieldSchema     = big.NewInt(1 << 0)
 	usageInferencesResponseFieldInferences = big.NewInt(1 << 1)
@@ -992,6 +1017,12 @@ var (
 	usageInferencesResponseFieldTotal      = big.NewInt(1 << 4)
 )
 
+// usageInferencesResponseNullableFields maps the wire names of UsageInferencesResponse's nullable fields (required or optional) to their field bits.
+var usageInferencesResponseNullableFields = map[string]*big.Int{
+	"inferences": usageInferencesResponseFieldInferences,
+}
+
+// Paginated list of inference calls.
 type UsageInferencesResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1054,10 +1085,12 @@ func (u *UsageInferencesResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UsageInferencesResponse) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1107,6 +1140,13 @@ func (u *UsageInferencesResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	u.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, usageInferencesResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		u.require(presentFields)
+	}
 	u.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1137,7 +1177,6 @@ func (u *UsageInferencesResponse) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// InfrastructureCosts summarizes infrastructure cost metrics for a reporting period.
 var (
 	usageInfrastructureCostsFieldChange     = big.NewInt(1 << 0)
 	usageInfrastructureCostsFieldChartData  = big.NewInt(1 << 1)
@@ -1145,6 +1184,12 @@ var (
 	usageInfrastructureCostsFieldTotal      = big.NewInt(1 << 3)
 )
 
+// usageInfrastructureCostsNullableFields maps the wire names of UsageInfrastructureCosts's nullable fields (required or optional) to their field bits.
+var usageInfrastructureCostsNullableFields = map[string]*big.Int{
+	"chart_data": usageInfrastructureCostsFieldChartData,
+}
+
+// InfrastructureCosts summarizes infrastructure cost metrics for a reporting period.
 type UsageInfrastructureCosts struct {
 	// Percentage change from the previous period.
 	Change float64 `json:"change" url:"change"`
@@ -1198,10 +1243,12 @@ func (u *UsageInfrastructureCosts) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UsageInfrastructureCosts) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetChange sets the Change field and marks it as non-optional;
@@ -1244,6 +1291,13 @@ func (u *UsageInfrastructureCosts) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	u.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, usageInfrastructureCostsNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		u.require(presentFields)
+	}
 	u.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1274,7 +1328,6 @@ func (u *UsageInfrastructureCosts) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Usage metrics summary returned by the metrics endpoint.
 var (
 	usageMetricsResponseFieldSchema             = big.NewInt(1 << 0)
 	usageMetricsResponseFieldComputeMinutes     = big.NewInt(1 << 1)
@@ -1287,6 +1340,13 @@ var (
 	usageMetricsResponseFieldSessionChartData   = big.NewInt(1 << 8)
 )
 
+// usageMetricsResponseNullableFields maps the wire names of UsageMetricsResponse's nullable fields (required or optional) to their field bits.
+var usageMetricsResponseNullableFields = map[string]*big.Int{
+	"inference_chart_data": usageMetricsResponseFieldInferenceChartData,
+	"session_chart_data":   usageMetricsResponseFieldSessionChartData,
+}
+
+// Usage metrics summary returned by the metrics endpoint.
 type UsageMetricsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1385,10 +1445,12 @@ func (u *UsageMetricsResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UsageMetricsResponse) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1474,6 +1536,13 @@ func (u *UsageMetricsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	u.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, usageMetricsResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		u.require(presentFields)
+	}
 	u.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1531,7 +1600,6 @@ func (u UsageMetricsResponseGranularity) Ptr() *UsageMetricsResponseGranularity 
 	return &u
 }
 
-// Single phone-session record from the usage sessions endpoint.
 var (
 	usageSessionFieldAllocatedAt               = big.NewInt(1 << 0)
 	usageSessionFieldAllocatedBy               = big.NewInt(1 << 1)
@@ -1550,6 +1618,7 @@ var (
 	usageSessionFieldWorkflowID                = big.NewInt(1 << 14)
 )
 
+// Single phone-session record from the usage sessions endpoint.
 type UsageSession struct {
 	// ISO 8601 timestamp when the phone was allocated.
 	AllocatedAt *string `json:"allocated_at,omitempty" url:"allocated_at,omitempty"`
@@ -1702,10 +1771,12 @@ func (u *UsageSession) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UsageSession) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetAllocatedAt sets the AllocatedAt field and marks it as non-optional;
@@ -1855,7 +1926,6 @@ func (u *UsageSession) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Paginated list of phone sessions.
 var (
 	usageSessionsResponseFieldSchema   = big.NewInt(1 << 0)
 	usageSessionsResponseFieldLimit    = big.NewInt(1 << 1)
@@ -1864,6 +1934,12 @@ var (
 	usageSessionsResponseFieldTotal    = big.NewInt(1 << 4)
 )
 
+// usageSessionsResponseNullableFields maps the wire names of UsageSessionsResponse's nullable fields (required or optional) to their field bits.
+var usageSessionsResponseNullableFields = map[string]*big.Int{
+	"sessions": usageSessionsResponseFieldSessions,
+}
+
+// Paginated list of phone sessions.
 type UsageSessionsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1926,10 +2002,12 @@ func (u *UsageSessionsResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UsageSessionsResponse) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1979,6 +2057,13 @@ func (u *UsageSessionsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	u.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, usageSessionsResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		u.require(presentFields)
+	}
 	u.rawJSON = json.RawMessage(data)
 	return nil
 }

@@ -29,10 +29,9 @@ Lists the API keys for the caller's organization, with optional paging (limit + 
 ```go
 request := &platformgo.APIKeysListRequest{}
 client.APIKeys.List(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -95,13 +94,12 @@ Mints a fresh API key for the caller's organization. The plaintext key value is 
 
 ```go
 request := &platformgo.APIKeyCreateRequest{
-        Name: "name",
-    }
-client.APIKeys.Create(
-        context.TODO(),
-        request,
-    )
+    Name: "name",
 }
+client.APIKeys.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -156,13 +154,12 @@ Revokes an API key. Subsequent requests using its value are rejected as unauthor
 
 ```go
 request := &platformgo.APIKeysDeleteRequest{
-        KeyID: "key_id",
-    }
-client.APIKeys.Delete(
-        context.TODO(),
-        request,
-    )
+    KeyID: "key_id",
 }
+client.APIKeys.Delete(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -218,9 +215,8 @@ Returns the organization's automatic balance top-up configuration and status.
 
 ```go
 client.Billing.GetAutoRecharge(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -260,15 +256,14 @@ Configures automatic balance top-up: when the balance drops below the threshold,
 
 ```go
 request := &platformgo.SubscriptionAutoRechargeSettings{
-        Enabled: true,
-        TargetCents: int64(1000000),
-        ThresholdCents: int64(1000000),
-    }
-client.Billing.UpdateAutoRecharge(
-        context.TODO(),
-        request,
-    )
+    Enabled: true,
+    TargetCents: int64(1000000),
+    ThresholdCents: int64(1000000),
 }
+client.Billing.UpdateAutoRecharge(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -339,9 +334,8 @@ Returns the organization's current credit balance in microdollars plus a display
 
 ```go
 client.Billing.GetBalance(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -382,10 +376,9 @@ Paginated invoice history for the caller's organization with optional filters an
 ```go
 request := &platformgo.BillingGetHistoryRequest{}
 client.Billing.GetHistory(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -520,13 +513,12 @@ Returns a temporary PDF download URL for an invoice the caller's org owns. The U
 
 ```go
 request := &platformgo.BillingDownloadInvoiceRequest{
-        InvoiceID: "invoice_id",
-    }
-client.Billing.DownloadInvoice(
-        context.TODO(),
-        request,
-    )
+    InvoiceID: "invoice_id",
 }
+client.Billing.DownloadInvoice(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -581,9 +573,8 @@ Returns every phone rental subscription owned by the caller's organization, in a
 
 ```go
 client.Billing.GetRentalSubscriptions(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -623,9 +614,8 @@ Returns the caller organization's active subscription plan. Only an active subsc
 
 ```go
 client.Billing.GetSubscription(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -665,9 +655,8 @@ Returns the organization's balance-alert configuration and any currently open al
 
 ```go
 client.Billing.GetUsageAlerts(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -707,14 +696,13 @@ Configures the low-balance alert: while enabled and the balance sits below the t
 
 ```go
 request := &platformgo.SubscriptionUsageAlertSettings{
-        Enabled: true,
-        ThresholdCents: int64(1000000),
-    }
-client.Billing.UpdateUsageAlerts(
-        context.TODO(),
-        request,
-    )
+    Enabled: true,
+    ThresholdCents: int64(1000000),
 }
+client.Billing.UpdateUsageAlerts(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -779,10 +767,9 @@ Returns one page of the org's file library, newest first, with the org's standin
 ```go
 request := &platformgo.FilesListRequest{}
 client.Files.List(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -933,15 +920,14 @@ Registers an image or video in the org's file library and returns a presigned S3
 
 ```go
 request := &platformgo.FileCreateRequest{
-        Filename: "filename",
-        MimeType: "mime_type",
-        SizeBytes: int64(1000000),
-    }
-client.Files.Create(
-        context.TODO(),
-        request,
-    )
+    Filename: "filename",
+    MimeType: "mime_type",
+    SizeBytes: int64(1000000),
 }
+client.Files.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1012,13 +998,12 @@ Removes a file from the org's library: the stored object and the library entry g
 
 ```go
 request := &platformgo.FilesDeleteRequest{
-        FileID: "file_id",
-    }
-client.Files.Delete(
-        context.TODO(),
-        request,
-    )
+    FileID: "file_id",
 }
+client.Files.Delete(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1073,14 +1058,13 @@ Updates the file's display name. Metadata only: storage is keyed by id, so the o
 
 ```go
 request := &platformgo.FileRenameRequest{
-        FileID: "file_id",
-        Filename: "filename",
-    }
-client.Files.Rename(
-        context.TODO(),
-        request,
-    )
+    FileID: "file_id",
+    Filename: "filename",
 }
+client.Files.Rename(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1143,13 +1127,12 @@ Call after PUTting the bytes to the upload URL. Verifies the object landed at th
 
 ```go
 request := &platformgo.FilesCompleteRequest{
-        FileID: "file_id",
-    }
-client.Files.Complete(
-        context.TODO(),
-        request,
-    )
+    FileID: "file_id",
 }
+client.Files.Complete(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1204,13 +1187,12 @@ Returns the files this session captured off its phone, newest first — the dire
 
 ```go
 request := &platformgo.PhonesSessionFilesRequest{
-        SessionID: "session_id",
-    }
-client.Files.PhonesSessionFiles(
-        context.TODO(),
-        request,
-    )
+    SessionID: "session_id",
 }
+client.Files.PhonesSessionFiles(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1330,9 +1312,8 @@ Returns a descriptor of the organization the API key belongs to: name, slug, id,
 
 ```go
 client.Organization.Get(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -1372,9 +1353,8 @@ Returns every outstanding invitation for the caller's organization. Requires the
 
 ```go
 client.Organization.ListInvitations(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -1414,9 +1394,8 @@ Returns every member of the caller's organization with email, role, and join dat
 
 ```go
 client.Organization.ListMembers(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -1457,13 +1436,12 @@ Returns the caller org's full dedicated (private/rented) phone inventory - every
 
 ```go
 request := &platformgo.PhonesListRequest{
-        Ownership: platformgo.PhonesListRequestOwnershipDedicated,
-    }
-client.Phones.List(
-        context.TODO(),
-        request,
-    )
+    Ownership: platformgo.PhonesListRequestOwnershipDedicated,
 }
+client.Phones.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1478,7 +1456,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**ownership:** `*platformgo.PhonesListRequestOwnership` — Which phones to return. 'dedicated' = the org's dedicated/rented inventory in every state (busy, offline, and maintenance phones included).
+**ownership:** `platformgo.PhonesListRequestOwnership` — Which phones to return. 'dedicated' = the org's dedicated/rented inventory in every state (busy, offline, and maintenance phones included).
     
 </dd>
 </dl>
@@ -1615,10 +1593,9 @@ Returns the apps the platform supports orchestration for, optionally filtered by
 ```go
 request := &platformgo.PhonesSupportedAppsRequest{}
 client.Phones.SupportedApps(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1682,10 +1659,9 @@ Returns a capacity snapshot to check before POST /phones:allocate: shared-pool a
 ```go
 request := &platformgo.PhonesAvailabilityRequest{}
 client.Phones.Availability(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1749,10 +1725,9 @@ Returns one page of the org's phone sessions for the Session Inspector table: ac
 ```go
 request := &platformgo.PhonesListSessionsRequest{}
 client.Phones.ListSessions(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1904,10 +1879,9 @@ Returns one page of the organization's currently-active phone sessions joined wi
 ```go
 request := &platformgo.PhonesActiveSessionsRequest{}
 client.Phones.ActiveSessions(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1994,13 +1968,12 @@ Returns one session for the Session Inspector: session lifecycle + phone display
 
 ```go
 request := &platformgo.PhonesGetSessionRequest{
-        SessionID: "session_id",
-    }
-client.Phones.GetSession(
-        context.TODO(),
-        request,
-    )
+    SessionID: "session_id",
 }
+client.Phones.GetSession(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2055,13 +2028,12 @@ Mints a fresh live-view token (and hosted viewer URL) for an active session, per
 
 ```go
 request := &platformgo.PhonesSessionLiveViewTokenRequest{
-        SessionID: "session_id",
-    }
-client.Phones.SessionLiveViewToken(
-        context.TODO(),
-        request,
-    )
+    SessionID: "session_id",
 }
+client.Phones.SessionLiveViewToken(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2116,13 +2088,12 @@ Returns a short-lived URL for the session's screen recording, keyed on session_i
 
 ```go
 request := &platformgo.PhonesSessionRecordingRequest{
-        SessionID: "session_id",
-    }
-client.Phones.SessionRecording(
-        context.TODO(),
-        request,
-    )
+    SessionID: "session_id",
 }
+client.Phones.SessionRecording(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2177,13 +2148,12 @@ Mints a fresh telemetry_url for an active session — the same read-only WebSock
 
 ```go
 request := &platformgo.PhonesSessionTelemetryTokenRequest{
-        SessionID: "session_id",
-    }
-client.Phones.SessionTelemetryToken(
-        context.TODO(),
-        request,
-    )
+    SessionID: "session_id",
 }
+client.Phones.SessionTelemetryToken(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2238,13 +2208,12 @@ Returns a short-lived URL for the session's current screen thumbnail — a rolli
 
 ```go
 request := &platformgo.PhonesSessionThumbnailRequest{
-        SessionID: "session_id",
-    }
-client.Phones.SessionThumbnail(
-        context.TODO(),
-        request,
-    )
+    SessionID: "session_id",
 }
+client.Phones.SessionThumbnail(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2299,13 +2268,12 @@ Returns a single phone by its identifier.
 
 ```go
 request := &platformgo.PhonesGetRequest{
-        PhoneID: "phone_id",
-    }
-client.Phones.Get(
-        context.TODO(),
-        request,
-    )
+    PhoneID: "phone_id",
 }
+client.Phones.Get(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2360,13 +2328,12 @@ Returns the phone's file delivery records, newest first: which library files wer
 
 ```go
 request := &platformgo.PhonesListDeliveriesRequest{
-        PhoneID: "phone_id",
-    }
-client.Phones.ListDeliveries(
-        context.TODO(),
-        request,
-    )
+    PhoneID: "phone_id",
 }
+client.Phones.ListDeliveries(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2437,14 +2404,13 @@ Sends a library file to a phone the caller's org holds: the phone downloads it o
 
 ```go
 request := &platformgo.FileDeliveryCreateRequest{
-        PhoneID: "phone_id",
-        FileID: "file_id",
-    }
-client.Phones.CreateDelivery(
-        context.TODO(),
-        request,
-    )
+    PhoneID: "phone_id",
+    FileID: "file_id",
 }
+client.Phones.CreateDelivery(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2515,14 +2481,13 @@ Returns a single delivery by id and its current status. Poll this to wait on a s
 
 ```go
 request := &platformgo.PhonesGetDeliveryRequest{
-        PhoneID: "phone_id",
-        DeliveryID: "delivery_id",
-    }
-client.Phones.GetDelivery(
-        context.TODO(),
-        request,
-    )
+    PhoneID: "phone_id",
+    DeliveryID: "delivery_id",
 }
+client.Phones.GetDelivery(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2585,14 +2550,13 @@ Sets the human-readable display name on a private phone the caller's org owns. R
 
 ```go
 request := &platformgo.PhoneUpdateNicknameRequest{
-        PhoneID: "phone_id",
-        Nickname: "nickname",
-    }
-client.Phones.Nickname(
-        context.TODO(),
-        request,
-    )
+    PhoneID: "phone_id",
+    Nickname: "nickname",
 }
+client.Phones.Nickname(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2655,13 +2619,12 @@ Returns a short-lived URL for the phone's current screen preview — a rolling J
 
 ```go
 request := &platformgo.PhonesPreviewRequest{
-        PhoneID: "phone_id",
-    }
-client.Phones.Preview(
-        context.TODO(),
-        request,
-    )
+    PhoneID: "phone_id",
 }
+client.Phones.Preview(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2716,13 +2679,12 @@ Deallocates a phone the caller's org currently holds. The session is billed and 
 
 ```go
 request := &platformgo.PhonesDeallocateRequest{
-        PhoneID: "phone_id",
-    }
-client.Phones.Deallocate(
-        context.TODO(),
-        request,
-    )
+    PhoneID: "phone_id",
 }
+client.Phones.Deallocate(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2777,13 +2739,12 @@ Requests an on-demand factory reset of a private phone the caller's org owns. Re
 
 ```go
 request := &platformgo.PhonesWipeRequest{
-        PhoneID: "phone_id",
-    }
-client.Phones.Wipe(
-        context.TODO(),
-        request,
-    )
+    PhoneID: "phone_id",
 }
+client.Phones.Wipe(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2838,13 +2799,12 @@ Allocates an Android phone and opens a session. Omit workflow_id for an interact
 
 ```go
 request := &platformgo.PhoneAllocateRequest{
-        PhoneType: platformgo.PhoneAllocateRequestPhoneTypeAndroid,
-    }
-client.Phones.Allocate(
-        context.TODO(),
-        request,
-    )
+    PhoneType: platformgo.PhoneAllocateRequestPhoneTypeAndroid,
 }
+client.Phones.Allocate(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2891,7 +2851,7 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
-**phoneType:** `*platformgo.PhoneAllocateRequestPhoneType` — Category of device to allocate.
+**phoneType:** `platformgo.PhoneAllocateRequestPhoneType` — Category of device to allocate.
     
 </dd>
 </dl>
@@ -2980,13 +2940,12 @@ Returns the paginated telemetry frames for a session in the canonical frame enve
 
 ```go
 request := &platformgo.SessionsListFramesRequest{
-        SessionID: "session_id",
-    }
-client.Runs.SessionsListFrames(
-        context.TODO(),
-        request,
-    )
+    SessionID: "session_id",
 }
+client.Runs.SessionsListFrames(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3058,10 +3017,9 @@ Returns paginated recent (non-archived) runs the caller started - scoped to thei
 ```go
 request := &platformgo.RunsListRequest{}
 client.Runs.List(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3108,7 +3066,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**statusFilter:** `[]*platformgo.RunsListRequestStatusFilterItem` — Restrict results to the given run statuses.
+**statusFilter:** `[]platformgo.RunsListRequestStatusFilterItem` — Restrict results to the given run statuses.
     
 </dd>
 </dl>
@@ -3116,7 +3074,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**triggerFilter:** `[]*platformgo.RunsListRequestTriggerFilterItem` — Restrict results to the given triggers.
+**triggerFilter:** `[]platformgo.RunsListRequestTriggerFilterItem` — Restrict results to the given triggers.
     
 </dd>
 </dl>
@@ -3164,18 +3122,17 @@ Returns paginated historic runs for the caller's user over a required time windo
 
 ```go
 request := &platformgo.RunsListHistoricRequest{
-        StartDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-        EndDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-    }
-client.Runs.ListHistoric(
-        context.TODO(),
-        request,
-    )
+    StartDate: platformgo.MustParseDateTime(
+        "2024-01-15T09:30:00Z",
+    ),
+    EndDate: platformgo.MustParseDateTime(
+        "2024-01-15T09:30:00Z",
+    ),
 }
+client.Runs.ListHistoric(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3230,7 +3187,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**statusFilter:** `[]*platformgo.RunsListHistoricRequestStatusFilterItem` — Restrict results to the given run statuses (case-insensitive).
+**statusFilter:** `[]platformgo.RunsListHistoricRequestStatusFilterItem` — Restrict results to the given run statuses (case-insensitive).
     
 </dd>
 </dl>
@@ -3278,13 +3235,12 @@ Returns total run count + success rate for the given workflow, scoped to the cal
 
 ```go
 request := &platformgo.RunsStatsRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Runs.Stats(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
 }
+client.Runs.Stats(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3339,13 +3295,12 @@ Returns one run by ID, scoped to the caller's organization.
 
 ```go
 request := &platformgo.RunsGetRequest{
-        RunID: "run_id",
-    }
-client.Runs.Get(
-        context.TODO(),
-        request,
-    )
+    RunID: "run_id",
 }
+client.Runs.Get(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3400,13 +3355,12 @@ Cancels a run that is scheduled, queued or running, scoped to the caller's org. 
 
 ```go
 request := &platformgo.RunsCancelRequest{
-        RunID: "run_id",
-    }
-client.Runs.Cancel(
-        context.TODO(),
-        request,
-    )
+    RunID: "run_id",
 }
+client.Runs.Cancel(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3461,16 +3415,15 @@ Creates one or more runs against the given workflow and queues them for executio
 
 ```go
 request := &platformgo.RunCreateRequest{
-        WorkflowID: "workflow_id",
-        Runs: []*platformgo.RunConfig{
-            &platformgo.RunConfig{},
-        },
-    }
-client.Runs.Create(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
+    Runs: []*platformgo.RunConfig{
+        &platformgo.RunConfig{},
+    },
 }
+client.Runs.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3550,9 +3503,8 @@ The canonical Axilio agent skill: markdown instructions that teach a coding agen
 
 ```go
 client.Skill.GetSkill(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -3593,18 +3545,17 @@ Paginated, filterable list of inference calls (detect + locate) the caller's use
 
 ```go
 request := &platformgo.UsageListInferencesRequest{
-        StartDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-        EndDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-    }
-client.Usage.ListInferences(
-        context.TODO(),
-        request,
-    )
+    StartDate: platformgo.MustParseDateTime(
+        "2024-01-15T09:30:00Z",
+    ),
+    EndDate: platformgo.MustParseDateTime(
+        "2024-01-15T09:30:00Z",
+    ),
 }
+client.Usage.ListInferences(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3723,18 +3674,17 @@ Returns infrastructure cost and compute-minute summaries for the caller's user o
 
 ```go
 request := &platformgo.UsageGetMetricsRequest{
-        StartDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-        EndDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-    }
-client.Usage.GetMetrics(
-        context.TODO(),
-        request,
-    )
+    StartDate: platformgo.MustParseDateTime(
+        "2024-01-15T09:30:00Z",
+    ),
+    EndDate: platformgo.MustParseDateTime(
+        "2024-01-15T09:30:00Z",
+    ),
 }
+client.Usage.GetMetrics(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3813,18 +3763,17 @@ Paginated, filterable list of the caller's phone sessions over a required time w
 
 ```go
 request := &platformgo.UsageListSessionsRequest{
-        StartDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-        EndDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-    }
-client.Usage.ListSessions(
-        context.TODO(),
-        request,
-    )
+    StartDate: platformgo.MustParseDateTime(
+        "2024-01-15T09:30:00Z",
+    ),
+    EndDate: platformgo.MustParseDateTime(
+        "2024-01-15T09:30:00Z",
+    ),
 }
+client.Usage.ListSessions(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3953,10 +3902,9 @@ Lists events published for the caller's organization, newest first, one page at 
 ```go
 request := &platformgo.WebhooksListDeliveriesRequest{}
 client.Webhooks.ListDeliveries(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4035,13 +3983,12 @@ Fetches one event from the delivery log with the payload that was delivered and 
 
 ```go
 request := &platformgo.WebhooksGetDeliveryRequest{
-        EventID: "event_id",
-    }
-client.Webhooks.GetDelivery(
-        context.TODO(),
-        request,
-    )
+    EventID: "event_id",
 }
+client.Webhooks.GetDelivery(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4096,13 +4043,12 @@ Lists the delivery attempts for one event across the organization's endpoints, n
 
 ```go
 request := &platformgo.WebhooksListAttemptsRequest{
-        EventID: "event_id",
-    }
-client.Webhooks.ListAttempts(
-        context.TODO(),
-        request,
-    )
+    EventID: "event_id",
 }
+client.Webhooks.ListAttempts(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4173,14 +4119,13 @@ Re-drives one event to one endpoint. Used to recover a dead-lettered delivery on
 
 ```go
 request := &platformgo.WebhookReplayRequest{
-        EventID: "event_id",
-        EndpointID: "endpoint_id",
-    }
-client.Webhooks.ReplayDelivery(
-        context.TODO(),
-        request,
-    )
+    EventID: "event_id",
+    EndpointID: "endpoint_id",
 }
+client.Webhooks.ReplayDelivery(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4244,10 +4189,9 @@ Publishes a simulated event to the caller's organization so an endpoint can be v
 ```go
 request := &platformgo.WebhookTestEventRequest{}
 client.Webhooks.SendTestEvent(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4310,9 +4254,8 @@ Lists every webhook endpoint registered for the caller's organization. The colle
 
 ```go
 client.Webhooks.ListEndpoints(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -4353,10 +4296,9 @@ Registers an HTTPS endpoint to receive signed events for the caller's organizati
 ```go
 request := &platformgo.WebhookEndpointCreateRequest{}
 client.Webhooks.CreateEndpoint(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4443,13 +4385,12 @@ Fetches one webhook endpoint by id. A missing or wrong-organization id returns 4
 
 ```go
 request := &platformgo.WebhooksGetEndpointRequest{
-        EndpointID: "endpoint_id",
-    }
-client.Webhooks.GetEndpoint(
-        context.TODO(),
-        request,
-    )
+    EndpointID: "endpoint_id",
 }
+client.Webhooks.GetEndpoint(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4504,13 +4445,12 @@ Removes a webhook endpoint. Subsequent events are no longer delivered to it. A m
 
 ```go
 request := &platformgo.WebhooksDeleteEndpointRequest{
-        EndpointID: "endpoint_id",
-    }
-client.Webhooks.DeleteEndpoint(
-        context.TODO(),
-        request,
-    )
+    EndpointID: "endpoint_id",
 }
+client.Webhooks.DeleteEndpoint(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4565,13 +4505,12 @@ Lists every delivery attempt made to one endpoint across the organization's even
 
 ```go
 request := &platformgo.WebhooksListEndpointAttemptsRequest{
-        EndpointID: "endpoint_id",
-    }
-client.Webhooks.ListEndpointAttempts(
-        context.TODO(),
-        request,
-    )
+    EndpointID: "endpoint_id",
 }
+client.Webhooks.ListEndpointAttempts(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4674,13 +4613,12 @@ Issues a new signing secret for the endpoint, returned exactly once. With mode g
 
 ```go
 request := &platformgo.WebhookRotateSecretRequest{
-        EndpointID: "endpoint_id",
-    }
-client.Webhooks.RotateEndpointSecret(
-        context.TODO(),
-        request,
-    )
+    EndpointID: "endpoint_id",
 }
+client.Webhooks.RotateEndpointSecret(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4743,9 +4681,8 @@ Lists the event types an endpoint can subscribe to, with a description of each, 
 
 ```go
 client.Webhooks.ListEventTypes(
-        context.TODO(),
-    )
-}
+    context.TODO(),
+)
 ```
 </dd>
 </dl>
@@ -4786,10 +4723,9 @@ Returns delivery volume and error rate over a window, either for one destination
 ```go
 request := &platformgo.WebhooksGetMetricsRequest{}
 client.Webhooks.GetMetrics(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4854,10 +4790,9 @@ Paginated list of workflows in the caller's org, with optional search, status, p
 ```go
 request := &platformgo.WorkflowsListRequest{}
 client.Workflows.List(
-        context.TODO(),
-        request,
-    )
-}
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4976,13 +4911,12 @@ Creates a workflow in the caller's org. Name must match ^[A-Za-z0-9_-]+$ and be 
 
 ```go
 request := &platformgo.WorkflowCreateRequest{
-        Name: "name",
-    }
-client.Workflows.Create(
-        context.TODO(),
-        request,
-    )
+    Name: "name",
 }
+client.Workflows.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5085,13 +5019,12 @@ Returns a single workflow, scoped to the caller's org (workflows in other orgs r
 
 ```go
 request := &platformgo.WorkflowsGetRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.Get(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
 }
+client.Workflows.Get(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5146,13 +5079,12 @@ Deletes a workflow. Org-scoped — workflows in other orgs return 404.
 
 ```go
 request := &platformgo.WorkflowsDeleteRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.Delete(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
 }
+client.Workflows.Delete(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5207,13 +5139,12 @@ Applies a partial update (name, platform, status, ocr_engine). Org-scoped — wo
 
 ```go
 request := &platformgo.WorkflowUpdateRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.Update(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
 }
+client.Workflows.Update(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5324,13 +5255,12 @@ Returns the source code of the workflow's current revision, scoped to the caller
 
 ```go
 request := &platformgo.WorkflowsGetCodeRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.GetCode(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
 }
+client.Workflows.GetCode(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5385,14 +5315,13 @@ Persists a new revision of the workflow's code. Hash-deduplicates against the cu
 
 ```go
 request := &platformgo.WorkflowSaveCodeRequest{
-        WorkflowID: "workflow_id",
-        Source: "source",
-    }
-client.Workflows.SaveCode(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
+    Source: "source",
 }
+client.Workflows.SaveCode(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5463,14 +5392,13 @@ Creates a new revision with the source of the named revision. Does NOT dedup aga
 
 ```go
 request := &platformgo.WorkflowRestoreRevisionRequest{
-        WorkflowID: "workflow_id",
-        RevisionID: "revision_id",
-    }
-client.Workflows.RestoreRevision(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
+    RevisionID: "revision_id",
 }
+client.Workflows.RestoreRevision(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5533,13 +5461,12 @@ Returns revision metadata (id, number, author, message, bytes, sha256, created_a
 
 ```go
 request := &platformgo.WorkflowsListRevisionsRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.ListRevisions(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
 }
+client.Workflows.ListRevisions(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5610,14 +5537,13 @@ Returns a single revision including its full source. Defense-in-depth: the revis
 
 ```go
 request := &platformgo.WorkflowsGetRevisionRequest{
-        WorkflowID: "workflow_id",
-        RevisionID: "revision_id",
-    }
-client.Workflows.GetRevision(
-        context.TODO(),
-        request,
-    )
+    WorkflowID: "workflow_id",
+    RevisionID: "revision_id",
 }
+client.Workflows.GetRevision(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>

@@ -35,6 +35,16 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // Returns the paginated telemetry frames for a session in the canonical frame envelope: one completed span frame per durable span (operations that never completed appear via their synthesized failed closures) plus log frames, ordered by span start / log time, with response-level billed-cost maps. This is the same envelope the live telemetry WebSocket streams; live and archive differ only in cardinality (start+end frames live, one completed frame here). Org-scoped: another org's session reads as not found. A trace past the organization's telemetry retention window returns an empty list with retention_expired=true; when the retention policy itself cannot be resolved the request fails with a 500 rather than serving frames whose retention state is unknown. Tolerant reader (unified frame contract): consumers MUST ignore frames with an unknown kind, unknown fields within known kinds, and unknown span_type/log_type values (render generically, never error). Generated SDK types surface an unrecognized frame as an explicit UnknownFrame variant carrying the raw JSON, never a silent drop. A live-stream message MAY carry a JSON array of frame objects; consumers MUST accept a single object or an array.
+//
+// Example:
+//
+//	request := &platformgo.SessionsListFramesRequest{
+//	    SessionID: "session_id",
+//	}
+//	client.Runs.SessionsListFrames(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) SessionsListFrames(
 	ctx context.Context,
 	request *platformgo.SessionsListFramesRequest,
@@ -52,6 +62,14 @@ func (c *Client) SessionsListFrames(
 }
 
 // Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status_filter, trigger_filter. Order with order_by ('<field> <asc|desc>'), field one of status, started_at, completed_at, created_at.
+//
+// Example:
+//
+//	request := &platformgo.RunsListRequest{}
+//	client.Runs.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.RunsListRequest,
@@ -69,6 +87,21 @@ func (c *Client) List(
 }
 
 // Returns paginated historic runs for the caller's user over a required time window (start_date/end_date). Use GET /runs for recent (non-archived) runs.
+//
+// Example:
+//
+//	request := &platformgo.RunsListHistoricRequest{
+//	    StartDate: platformgo.MustParseDateTime(
+//	        "2024-01-15T09:30:00Z",
+//	    ),
+//	    EndDate: platformgo.MustParseDateTime(
+//	        "2024-01-15T09:30:00Z",
+//	    ),
+//	}
+//	client.Runs.ListHistoric(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ListHistoric(
 	ctx context.Context,
 	request *platformgo.RunsListHistoricRequest,
@@ -86,6 +119,16 @@ func (c *Client) ListHistoric(
 }
 
 // Returns total run count + success rate for the given workflow, scoped to the caller's user.
+//
+// Example:
+//
+//	request := &platformgo.RunsStatsRequest{
+//	    WorkflowID: "workflow_id",
+//	}
+//	client.Runs.Stats(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Stats(
 	ctx context.Context,
 	request *platformgo.RunsStatsRequest,
@@ -103,6 +146,16 @@ func (c *Client) Stats(
 }
 
 // Returns one run by ID, scoped to the caller's organization.
+//
+// Example:
+//
+//	request := &platformgo.RunsGetRequest{
+//	    RunID: "run_id",
+//	}
+//	client.Runs.Get(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Get(
 	ctx context.Context,
 	request *platformgo.RunsGetRequest,
@@ -120,6 +173,16 @@ func (c *Client) Get(
 }
 
 // Cancels a run that is scheduled, queued or running, scoped to the caller's org. A scheduled run is cancelled before it starts and never runs. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
+//
+// Example:
+//
+//	request := &platformgo.RunsCancelRequest{
+//	    RunID: "run_id",
+//	}
+//	client.Runs.Cancel(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Cancel(
 	ctx context.Context,
 	request *platformgo.RunsCancelRequest,
@@ -137,6 +200,19 @@ func (c *Client) Cancel(
 }
 
 // Creates one or more runs against the given workflow and queues them for execution. Pre-flight checks: balance sufficient, concurrency limit, workflow exists. Runs that fail to queue are marked FAILED immediately so they stop counting toward the concurrency limit.
+//
+// Example:
+//
+//	request := &platformgo.RunCreateRequest{
+//	    WorkflowID: "workflow_id",
+//	    Runs: []*platformgo.RunConfig{
+//	        &platformgo.RunConfig{},
+//	    },
+//	}
+//	client.Runs.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *platformgo.RunCreateRequest,

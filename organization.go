@@ -85,10 +85,12 @@ func (o *OrganizationDescriptorResponse) GetExtraProperties() map[string]interfa
 }
 
 func (o *OrganizationDescriptorResponse) require(field *big.Int) {
-	if o.explicitFields == nil {
-		o.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if o.explicitFields != nil {
+		next.Set(o.explicitFields)
 	}
-	o.explicitFields.Or(o.explicitFields, field)
+	next.Or(next, field)
+	o.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -188,6 +190,11 @@ var (
 	organizationInvitationSummaryListResponseFieldInvitations = big.NewInt(1 << 1)
 )
 
+// organizationInvitationSummaryListResponseNullableFields maps the wire names of OrganizationInvitationSummaryListResponse's nullable fields (required or optional) to their field bits.
+var organizationInvitationSummaryListResponseNullableFields = map[string]*big.Int{
+	"invitations": organizationInvitationSummaryListResponseFieldInvitations,
+}
+
 type OrganizationInvitationSummaryListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema      *string                                  `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -222,10 +229,12 @@ func (o *OrganizationInvitationSummaryListResponse) GetExtraProperties() map[str
 }
 
 func (o *OrganizationInvitationSummaryListResponse) require(field *big.Int) {
-	if o.explicitFields == nil {
-		o.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if o.explicitFields != nil {
+		next.Set(o.explicitFields)
 	}
-	o.explicitFields.Or(o.explicitFields, field)
+	next.Or(next, field)
+	o.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -254,6 +263,13 @@ func (o *OrganizationInvitationSummaryListResponse) UnmarshalJSON(data []byte) e
 		return err
 	}
 	o.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, organizationInvitationSummaryListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		o.require(presentFields)
+	}
 	o.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -340,10 +356,12 @@ func (o *OrganizationInvitationSummaryResponse) GetExtraProperties() map[string]
 }
 
 func (o *OrganizationInvitationSummaryResponse) require(field *big.Int) {
-	if o.explicitFields == nil {
-		o.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if o.explicitFields != nil {
+		next.Set(o.explicitFields)
 	}
-	o.explicitFields.Or(o.explicitFields, field)
+	next.Or(next, field)
+	o.explicitFields = next
 }
 
 // SetEmail sets the Email field and marks it as non-optional;
@@ -429,6 +447,11 @@ var (
 	organizationMemberSummaryListResponseFieldMembers = big.NewInt(1 << 1)
 )
 
+// organizationMemberSummaryListResponseNullableFields maps the wire names of OrganizationMemberSummaryListResponse's nullable fields (required or optional) to their field bits.
+var organizationMemberSummaryListResponseNullableFields = map[string]*big.Int{
+	"members": organizationMemberSummaryListResponseFieldMembers,
+}
+
 type OrganizationMemberSummaryListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema  *string                              `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -463,10 +486,12 @@ func (o *OrganizationMemberSummaryListResponse) GetExtraProperties() map[string]
 }
 
 func (o *OrganizationMemberSummaryListResponse) require(field *big.Int) {
-	if o.explicitFields == nil {
-		o.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if o.explicitFields != nil {
+		next.Set(o.explicitFields)
 	}
-	o.explicitFields.Or(o.explicitFields, field)
+	next.Or(next, field)
+	o.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -495,6 +520,13 @@ func (o *OrganizationMemberSummaryListResponse) UnmarshalJSON(data []byte) error
 		return err
 	}
 	o.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, organizationMemberSummaryListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		o.require(presentFields)
+	}
 	o.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -572,10 +604,12 @@ func (o *OrganizationMemberSummaryResponse) GetExtraProperties() map[string]inte
 }
 
 func (o *OrganizationMemberSummaryResponse) require(field *big.Int) {
-	if o.explicitFields == nil {
-		o.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if o.explicitFields != nil {
+		next.Set(o.explicitFields)
 	}
-	o.explicitFields.Or(o.explicitFields, field)
+	next.Or(next, field)
+	o.explicitFields = next
 }
 
 // SetEmail sets the Email field and marks it as non-optional;

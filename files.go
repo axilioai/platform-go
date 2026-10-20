@@ -23,10 +23,12 @@ type FilesCompleteRequest struct {
 }
 
 func (f *FilesCompleteRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetFileID sets the FileID field and marks it as non-optional;
@@ -55,10 +57,12 @@ type FileCreateRequest struct {
 }
 
 func (f *FileCreateRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetFilename sets the Filename field and marks it as non-optional;
@@ -116,10 +120,12 @@ type FilesDeleteRequest struct {
 }
 
 func (f *FilesDeleteRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetFileID sets the FileID field and marks it as non-optional;
@@ -178,10 +184,12 @@ type FilesListRequest struct {
 }
 
 func (f *FilesListRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -312,10 +320,12 @@ type PhonesSessionFilesRequest struct {
 }
 
 func (p *PhonesSessionFilesRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSessionID sets the SessionID field and marks it as non-optional;
@@ -397,10 +407,12 @@ type FileRenameRequest struct {
 }
 
 func (f *FileRenameRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetFileID sets the FileID field and marks it as non-optional;
@@ -478,10 +490,12 @@ func (c *CompleteFileOutputBody) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *CompleteFileOutputBody) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -540,12 +554,12 @@ func (c *CompleteFileOutputBody) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Confirmation that the file was deleted.
 var (
 	deleteFileOutputBodyFieldSchema  = big.NewInt(1 << 0)
 	deleteFileOutputBodyFieldMessage = big.NewInt(1 << 1)
 )
 
+// Confirmation that the file was deleted.
 type DeleteFileOutputBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema  *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -580,10 +594,12 @@ func (d *DeleteFileOutputBody) GetExtraProperties() map[string]interface{} {
 }
 
 func (d *DeleteFileOutputBody) require(field *big.Int) {
-	if d.explicitFields == nil {
-		d.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if d.explicitFields != nil {
+		next.Set(d.explicitFields)
 	}
-	d.explicitFields.Or(d.explicitFields, field)
+	next.Or(next, field)
+	d.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -642,7 +658,6 @@ func (d *DeleteFileOutputBody) String() string {
 	return fmt.Sprintf("%#v", d)
 }
 
-// One page of the org's file library.
 var (
 	fileListResponseFieldSchema = big.NewInt(1 << 0)
 	fileListResponseFieldFiles  = big.NewInt(1 << 1)
@@ -650,6 +665,12 @@ var (
 	fileListResponseFieldUsage  = big.NewInt(1 << 3)
 )
 
+// fileListResponseNullableFields maps the wire names of FileListResponse's nullable fields (required or optional) to their field bits.
+var fileListResponseNullableFields = map[string]*big.Int{
+	"files": fileListResponseFieldFiles,
+}
+
+// One page of the org's file library.
 type FileListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -703,10 +724,12 @@ func (f *FileListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileListResponse) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -749,6 +772,13 @@ func (f *FileListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	f.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, fileListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		f.require(presentFields)
+	}
 	f.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -779,7 +809,6 @@ func (f *FileListResponse) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// One file in the org's library.
 var (
 	fileSummaryFieldAttachmentURL    = big.NewInt(1 << 0)
 	fileSummaryFieldBytesTransferred = big.NewInt(1 << 1)
@@ -805,6 +834,7 @@ var (
 	fileSummaryFieldWidth            = big.NewInt(1 << 21)
 )
 
+// One file in the org's library.
 type FileSummary struct {
 	// Short-lived signed URL that downloads the file as an attachment under its name. Present only for ready files.
 	AttachmentURL *string `json:"attachment_url,omitempty" url:"attachment_url,omitempty"`
@@ -1020,10 +1050,12 @@ func (f *FileSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileSummary) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetAttachmentURL sets the AttachmentURL field and marks it as non-optional;
@@ -1363,7 +1395,6 @@ func (f FileSummarySurface) Ptr() *FileSummarySurface {
 	return &f
 }
 
-// The registered file and its presigned upload URL.
 var (
 	fileUploadResponseFieldSchema                 = big.NewInt(1 << 0)
 	fileUploadResponseFieldFile                   = big.NewInt(1 << 1)
@@ -1371,6 +1402,7 @@ var (
 	fileUploadResponseFieldUploadURL              = big.NewInt(1 << 3)
 )
 
+// The registered file and its presigned upload URL.
 type FileUploadResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1424,10 +1456,12 @@ func (f *FileUploadResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileUploadResponse) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1500,7 +1534,6 @@ func (f *FileUploadResponse) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// The org's standing library usage against its quota.
 var (
 	fileUsageFieldByteLimit  = big.NewInt(1 << 0)
 	fileUsageFieldFileCount  = big.NewInt(1 << 1)
@@ -1508,6 +1541,7 @@ var (
 	fileUsageFieldTotalBytes = big.NewInt(1 << 3)
 )
 
+// The org's standing library usage against its quota.
 type FileUsage struct {
 	// Storage quota in bytes.
 	ByteLimit int64 `json:"byte_limit" url:"byte_limit"`
@@ -1561,10 +1595,12 @@ func (f *FileUsage) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileUsage) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetByteLimit sets the ByteLimit field and marks it as non-optional;
@@ -1676,10 +1712,12 @@ func (r *RenameFileOutputBody) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RenameFileOutputBody) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;

@@ -35,10 +35,12 @@ type PhonesActiveSessionsRequest struct {
 }
 
 func (p *PhonesActiveSessionsRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -119,10 +121,12 @@ type PhoneAllocateRequest struct {
 }
 
 func (p *PhoneAllocateRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;
@@ -239,10 +243,12 @@ type PhonesAvailabilityRequest struct {
 }
 
 func (p *PhonesAvailabilityRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPhoneType sets the PhoneType field and marks it as non-optional;
@@ -278,10 +284,12 @@ type FileDeliveryCreateRequest struct {
 }
 
 func (f *FileDeliveryCreateRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -339,10 +347,12 @@ type PhonesDeallocateRequest struct {
 }
 
 func (p *PhonesDeallocateRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -365,10 +375,12 @@ type PhonesGetRequest struct {
 }
 
 func (p *PhonesGetRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -394,10 +406,12 @@ type PhonesGetDeliveryRequest struct {
 }
 
 func (p *PhonesGetDeliveryRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -427,10 +441,12 @@ type PhonesGetSessionRequest struct {
 }
 
 func (p *PhonesGetSessionRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSessionID sets the SessionID field and marks it as non-optional;
@@ -487,10 +503,12 @@ type PhonesListRequest struct {
 }
 
 func (p *PhonesListRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetOwnership sets the Ownership field and marks it as non-optional;
@@ -603,10 +621,12 @@ type PhonesListDeliveriesRequest struct {
 }
 
 func (p *PhonesListDeliveriesRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -679,10 +699,12 @@ type PhonesListSessionsRequest struct {
 }
 
 func (p *PhonesListSessionsRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -792,10 +814,12 @@ type PhoneUpdateNicknameRequest struct {
 }
 
 func (p *PhoneUpdateNicknameRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -846,10 +870,12 @@ type PhonesPreviewRequest struct {
 }
 
 func (p *PhonesPreviewRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -872,10 +898,12 @@ type PhonesSessionLiveViewTokenRequest struct {
 }
 
 func (p *PhonesSessionLiveViewTokenRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSessionID sets the SessionID field and marks it as non-optional;
@@ -898,10 +926,12 @@ type PhonesSessionRecordingRequest struct {
 }
 
 func (p *PhonesSessionRecordingRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSessionID sets the SessionID field and marks it as non-optional;
@@ -924,10 +954,12 @@ type PhonesSessionTelemetryTokenRequest struct {
 }
 
 func (p *PhonesSessionTelemetryTokenRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSessionID sets the SessionID field and marks it as non-optional;
@@ -950,10 +982,12 @@ type PhonesSessionThumbnailRequest struct {
 }
 
 func (p *PhonesSessionThumbnailRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSessionID sets the SessionID field and marks it as non-optional;
@@ -979,10 +1013,12 @@ type PhonesSupportedAppsRequest struct {
 }
 
 func (p *PhonesSupportedAppsRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPlatform sets the Platform field and marks it as non-optional;
@@ -999,13 +1035,18 @@ func (p *PhonesSupportedAppsRequest) SetCategory(category *string) {
 	p.require(phonesSupportedAppsRequestFieldCategory)
 }
 
-// One page of a phone's file delivery records.
 var (
 	fileDeliveryListResponseFieldSchema     = big.NewInt(1 << 0)
 	fileDeliveryListResponseFieldDeliveries = big.NewInt(1 << 1)
 	fileDeliveryListResponseFieldTotal      = big.NewInt(1 << 2)
 )
 
+// fileDeliveryListResponseNullableFields maps the wire names of FileDeliveryListResponse's nullable fields (required or optional) to their field bits.
+var fileDeliveryListResponseNullableFields = map[string]*big.Int{
+	"deliveries": fileDeliveryListResponseFieldDeliveries,
+}
+
+// One page of a phone's file delivery records.
 type FileDeliveryListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1050,10 +1091,12 @@ func (f *FileDeliveryListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileDeliveryListResponse) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1089,6 +1132,13 @@ func (f *FileDeliveryListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	f.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, fileDeliveryListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		f.require(presentFields)
+	}
 	f.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1119,7 +1169,6 @@ func (f *FileDeliveryListResponse) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// One push of a library file to a phone.
 var (
 	fileDeliverySummaryFieldSchema           = big.NewInt(1 << 0)
 	fileDeliverySummaryFieldBytesTransferred = big.NewInt(1 << 1)
@@ -1134,6 +1183,7 @@ var (
 	fileDeliverySummaryFieldStatus           = big.NewInt(1 << 10)
 )
 
+// One push of a library file to a phone.
 type FileDeliverySummary struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1250,10 +1300,12 @@ func (f *FileDeliverySummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileDeliverySummary) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1412,12 +1464,12 @@ func (f FileDeliverySummaryStatus) Ptr() *FileDeliverySummaryStatus {
 	return &f
 }
 
-// Acknowledges a dispatched push.
 var (
 	filePushResponseFieldSchema   = big.NewInt(1 << 0)
 	filePushResponseFieldDelivery = big.NewInt(1 << 1)
 )
 
+// Acknowledges a dispatched push.
 type FilePushResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1453,10 +1505,12 @@ func (f *FilePushResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FilePushResponse) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1515,7 +1569,6 @@ func (f *FilePushResponse) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// One active phone allocation for the dashboard overview: a phone currently claimed by a run, a workflow-less interactive lease, or a dedicated phone in use.
 var (
 	phoneActiveSessionFieldAllocatedAt      = big.NewInt(1 << 0)
 	phoneActiveSessionFieldAllocatedBy      = big.NewInt(1 << 1)
@@ -1534,6 +1587,7 @@ var (
 	phoneActiveSessionFieldWorkflowName     = big.NewInt(1 << 14)
 )
 
+// One active phone allocation for the dashboard overview: a phone currently claimed by a run, a workflow-less interactive lease, or a dedicated phone in use.
 type PhoneActiveSession struct {
 	// When the session claimed the phone.
 	AllocatedAt time.Time `json:"allocated_at" url:"allocated_at"`
@@ -1686,10 +1740,12 @@ func (p *PhoneActiveSession) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneActiveSession) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetAllocatedAt sets the AllocatedAt field and marks it as non-optional;
@@ -1937,13 +1993,18 @@ func (p PhoneActiveSessionPhoneType) Ptr() *PhoneActiveSessionPhoneType {
 	return &p
 }
 
-// Org's currently-active phone allocations.
 var (
 	phoneActiveSessionsResponseFieldSchema   = big.NewInt(1 << 0)
 	phoneActiveSessionsResponseFieldSessions = big.NewInt(1 << 1)
 	phoneActiveSessionsResponseFieldTotal    = big.NewInt(1 << 2)
 )
 
+// phoneActiveSessionsResponseNullableFields maps the wire names of PhoneActiveSessionsResponse's nullable fields (required or optional) to their field bits.
+var phoneActiveSessionsResponseNullableFields = map[string]*big.Int{
+	"sessions": phoneActiveSessionsResponseFieldSessions,
+}
+
+// Org's currently-active phone allocations.
 type PhoneActiveSessionsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1988,10 +2049,12 @@ func (p *PhoneActiveSessionsResponse) GetExtraProperties() map[string]interface{
 }
 
 func (p *PhoneActiveSessionsResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2027,6 +2090,13 @@ func (p *PhoneActiveSessionsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phoneActiveSessionsResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2057,7 +2127,6 @@ func (p *PhoneActiveSessionsResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Returned when a device has been successfully allocated.
 var (
 	phoneAllocateResponseFieldSchema            = big.NewInt(1 << 0)
 	phoneAllocateResponseFieldControlURL        = big.NewInt(1 << 1)
@@ -2069,6 +2138,7 @@ var (
 	phoneAllocateResponseFieldWorkflowStartedAt = big.NewInt(1 << 7)
 )
 
+// Returned when a device has been successfully allocated.
 type PhoneAllocateResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2158,10 +2228,12 @@ func (p *PhoneAllocateResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneAllocateResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2270,7 +2342,6 @@ func (p *PhoneAllocateResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// An app available on fleet phones, with its vision-model support status.
 var (
 	phoneAppSummaryFieldAndroidPackageName = big.NewInt(1 << 0)
 	phoneAppSummaryFieldAppMetadata        = big.NewInt(1 << 1)
@@ -2291,6 +2362,17 @@ var (
 	phoneAppSummaryFieldVersion            = big.NewInt(1 << 16)
 )
 
+// phoneAppSummaryNullableFields maps the wire names of PhoneAppSummary's nullable fields (required or optional) to their field bits.
+var phoneAppSummaryNullableFields = map[string]*big.Int{
+	"description":      phoneAppSummaryFieldDescription,
+	"icon_url":         phoneAppSummaryFieldIconURL,
+	"ios_app_store_id": phoneAppSummaryFieldIosAppStoreID,
+	"model_datasets":   phoneAppSummaryFieldModelDatasets,
+	"model_trained_at": phoneAppSummaryFieldModelTrainedAt,
+	"version":          phoneAppSummaryFieldVersion,
+}
+
+// An app available on fleet phones, with its vision-model support status.
 type PhoneAppSummary struct {
 	// Android package name.
 	AndroidPackageName string `json:"android_package_name" url:"android_package_name"`
@@ -2461,10 +2543,12 @@ func (p *PhoneAppSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneAppSummary) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetAndroidPackageName sets the AndroidPackageName field and marks it as non-optional;
@@ -2608,6 +2692,13 @@ func (p *PhoneAppSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phoneAppSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2670,13 +2761,13 @@ func (p PhoneAppSummaryPlatform) Ptr() *PhoneAppSummaryPlatform {
 	return &p
 }
 
-// Phone availability summary: shared-pool capacity plus the caller org's dedicated idle counts. An advisory snapshot - allocation is the authority and can still refuse.
 var (
 	phoneAvailabilityResponseFieldSchema    = big.NewInt(1 << 0)
 	phoneAvailabilityResponseFieldDedicated = big.NewInt(1 << 1)
 	phoneAvailabilityResponseFieldShared    = big.NewInt(1 << 2)
 )
 
+// Phone availability summary: shared-pool capacity plus the caller org's dedicated idle counts. An advisory snapshot - allocation is the authority and can still refuse.
 type PhoneAvailabilityResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2721,10 +2812,12 @@ func (p *PhoneAvailabilityResponse) GetExtraProperties() map[string]interface{} 
 }
 
 func (p *PhoneAvailabilityResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2790,7 +2883,6 @@ func (p *PhoneAvailabilityResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Returned after a device has been successfully deallocated.
 var (
 	phoneDeallocateResponseFieldSchema        = big.NewInt(1 << 0)
 	phoneDeallocateResponseFieldDeallocatedAt = big.NewInt(1 << 1)
@@ -2799,6 +2891,7 @@ var (
 	phoneDeallocateResponseFieldWorkflowID    = big.NewInt(1 << 4)
 )
 
+// Returned after a device has been successfully deallocated.
 type PhoneDeallocateResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2861,10 +2954,12 @@ func (p *PhoneDeallocateResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneDeallocateResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2952,13 +3047,18 @@ func (p *PhoneDeallocateResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// The caller org's dedicated-phone availability summary.
 var (
 	phoneDedicatedAvailabilityFieldByType = big.NewInt(1 << 0)
 	phoneDedicatedAvailabilityFieldIdle   = big.NewInt(1 << 1)
 	phoneDedicatedAvailabilityFieldTotal  = big.NewInt(1 << 2)
 )
 
+// phoneDedicatedAvailabilityNullableFields maps the wire names of PhoneDedicatedAvailability's nullable fields (required or optional) to their field bits.
+var phoneDedicatedAvailabilityNullableFields = map[string]*big.Int{
+	"by_type": phoneDedicatedAvailabilityFieldByType,
+}
+
+// The caller org's dedicated-phone availability summary.
 type PhoneDedicatedAvailability struct {
 	// Counts per phone type.
 	ByType []*PhoneDedicatedTypeAvailabilityEntry `json:"by_type,omitempty" url:"by_type,omitempty"`
@@ -3003,10 +3103,12 @@ func (p *PhoneDedicatedAvailability) GetExtraProperties() map[string]interface{}
 }
 
 func (p *PhoneDedicatedAvailability) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetByType sets the ByType field and marks it as non-optional;
@@ -3042,6 +3144,13 @@ func (p *PhoneDedicatedAvailability) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phoneDedicatedAvailabilityNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -3072,13 +3181,13 @@ func (p *PhoneDedicatedAvailability) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// The caller org's dedicated phones for one phone type.
 var (
 	phoneDedicatedTypeAvailabilityEntryFieldIdle      = big.NewInt(1 << 0)
 	phoneDedicatedTypeAvailabilityEntryFieldPhoneType = big.NewInt(1 << 1)
 	phoneDedicatedTypeAvailabilityEntryFieldTotal     = big.NewInt(1 << 2)
 )
 
+// The caller org's dedicated phones for one phone type.
 type PhoneDedicatedTypeAvailabilityEntry struct {
 	// Phones claimable right now: active, unallocated, rental still usable.
 	Idle int64 `json:"idle" url:"idle"`
@@ -3123,10 +3232,12 @@ func (p *PhoneDedicatedTypeAvailabilityEntry) GetExtraProperties() map[string]in
 }
 
 func (p *PhoneDedicatedTypeAvailabilityEntry) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetIdle sets the Idle field and marks it as non-optional;
@@ -3192,13 +3303,13 @@ func (p *PhoneDedicatedTypeAvailabilityEntry) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Per-session options for the hosted live view.
 var (
 	phoneLiveViewOptionsFieldAuth     = big.NewInt(1 << 0)
 	phoneLiveViewOptionsFieldDisabled = big.NewInt(1 << 1)
 	phoneLiveViewOptionsFieldViewOnly = big.NewInt(1 << 2)
 )
 
+// Per-session options for the hosted live view.
 type PhoneLiveViewOptions struct {
 	// Live-view auth mode: "token" (default) — capability URL, no sign-in; "org" — tokenless URL requiring sign-in + membership of the session's organization.
 	Auth *PhoneLiveViewOptionsAuth `json:"auth,omitempty" url:"auth,omitempty"`
@@ -3243,10 +3354,12 @@ func (p *PhoneLiveViewOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneLiveViewOptions) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetAuth sets the Auth field and marks it as non-optional;
@@ -3335,7 +3448,6 @@ func (p PhoneLiveViewOptionsAuth) Ptr() *PhoneLiveViewOptionsAuth {
 	return &p
 }
 
-// Live-view token mint response.
 var (
 	phoneLiveViewTokenResponseFieldSchema      = big.NewInt(1 << 0)
 	phoneLiveViewTokenResponseFieldLiveViewURL = big.NewInt(1 << 1)
@@ -3345,6 +3457,7 @@ var (
 	phoneLiveViewTokenResponseFieldViewOnly    = big.NewInt(1 << 5)
 )
 
+// Live-view token mint response.
 type PhoneLiveViewTokenResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -3416,10 +3529,12 @@ func (p *PhoneLiveViewTokenResponse) GetExtraProperties() map[string]interface{}
 }
 
 func (p *PhoneLiveViewTokenResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -3506,7 +3621,6 @@ func (p *PhoneLiveViewTokenResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Shared-pool availability at a single location.
 var (
 	phoneLocationAvailabilityEntryFieldAvailable = big.NewInt(1 << 0)
 	phoneLocationAvailabilityEntryFieldCity      = big.NewInt(1 << 1)
@@ -3516,6 +3630,7 @@ var (
 	phoneLocationAvailabilityEntryFieldTotal     = big.NewInt(1 << 5)
 )
 
+// Shared-pool availability at a single location.
 type PhoneLocationAvailabilityEntry struct {
 	// Phones free to allocate at this location right now.
 	Available int64 `json:"available" url:"available"`
@@ -3587,10 +3702,12 @@ func (p *PhoneLocationAvailabilityEntry) GetExtraProperties() map[string]interfa
 }
 
 func (p *PhoneLocationAvailabilityEntry) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetAvailable sets the Available field and marks it as non-optional;
@@ -3677,13 +3794,13 @@ func (p *PhoneLocationAvailabilityEntry) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Phone preview lookup result.
 var (
 	phonePreviewResponseFieldSchema = big.NewInt(1 << 0)
 	phonePreviewResponseFieldStatus = big.NewInt(1 << 1)
 	phonePreviewResponseFieldURL    = big.NewInt(1 << 2)
 )
 
+// Phone preview lookup result.
 type PhonePreviewResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -3728,10 +3845,12 @@ func (p *PhonePreviewResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhonePreviewResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -3820,7 +3939,6 @@ func (p PhonePreviewResponseStatus) Ptr() *PhonePreviewResponseStatus {
 	return &p
 }
 
-// Privately owned devices for an organization.
 var (
 	phonePrivateListResponseFieldSchema = big.NewInt(1 << 0)
 	phonePrivateListResponseFieldLimit  = big.NewInt(1 << 1)
@@ -3829,6 +3947,12 @@ var (
 	phonePrivateListResponseFieldTotal  = big.NewInt(1 << 4)
 )
 
+// phonePrivateListResponseNullableFields maps the wire names of PhonePrivateListResponse's nullable fields (required or optional) to their field bits.
+var phonePrivateListResponseNullableFields = map[string]*big.Int{
+	"phones": phonePrivateListResponseFieldPhones,
+}
+
+// Privately owned devices for an organization.
 type PhonePrivateListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -3891,10 +4015,12 @@ func (p *PhonePrivateListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhonePrivateListResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -3944,6 +4070,13 @@ func (p *PhonePrivateListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phonePrivateListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -3974,7 +4107,6 @@ func (p *PhonePrivateListResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Detail for a single session: the session, phone display fields, and a recording URL when available.
 var (
 	phoneSessionDetailResponseFieldSchema            = big.NewInt(1 << 0)
 	phoneSessionDetailResponseFieldAllocatedAt       = big.NewInt(1 << 1)
@@ -4001,6 +4133,7 @@ var (
 	phoneSessionDetailResponseFieldWorkflowName      = big.NewInt(1 << 22)
 )
 
+// Detail for a single session: the session, phone display fields, and a recording URL when available.
 type PhoneSessionDetailResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -4225,10 +4358,12 @@ func (p *PhoneSessionDetailResponse) GetExtraProperties() map[string]interface{}
 }
 
 func (p *PhoneSessionDetailResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -4614,7 +4749,6 @@ func (p PhoneSessionDetailResponseStatus) Ptr() *PhoneSessionDetailResponseStatu
 	return &p
 }
 
-// One session summary row in the sessions list.
 var (
 	phoneSessionListItemFieldAllocatedAt      = big.NewInt(1 << 0)
 	phoneSessionListItemFieldAllocatedBy      = big.NewInt(1 << 1)
@@ -4637,6 +4771,7 @@ var (
 	phoneSessionListItemFieldWorkflowName     = big.NewInt(1 << 18)
 )
 
+// One session summary row in the sessions list.
 type PhoneSessionListItem struct {
 	// When the session claimed the phone.
 	AllocatedAt time.Time `json:"allocated_at" url:"allocated_at"`
@@ -4825,10 +4960,12 @@ func (p *PhoneSessionListItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneSessionListItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetAllocatedAt sets the AllocatedAt field and marks it as non-optional;
@@ -5125,7 +5262,6 @@ func (p PhoneSessionListItemStatus) Ptr() *PhoneSessionListItemStatus {
 	return &p
 }
 
-// One page of the sessions list: active and queued sessions pinned on top, completed history paginated beneath.
 var (
 	phoneSessionListResponseFieldSchema   = big.NewInt(1 << 0)
 	phoneSessionListResponseFieldLimit    = big.NewInt(1 << 1)
@@ -5134,6 +5270,12 @@ var (
 	phoneSessionListResponseFieldTotal    = big.NewInt(1 << 4)
 )
 
+// phoneSessionListResponseNullableFields maps the wire names of PhoneSessionListResponse's nullable fields (required or optional) to their field bits.
+var phoneSessionListResponseNullableFields = map[string]*big.Int{
+	"sessions": phoneSessionListResponseFieldSessions,
+}
+
+// One page of the sessions list: active and queued sessions pinned on top, completed history paginated beneath.
 type PhoneSessionListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -5196,10 +5338,12 @@ func (p *PhoneSessionListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneSessionListResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -5249,6 +5393,13 @@ func (p *PhoneSessionListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phoneSessionListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -5279,13 +5430,13 @@ func (p *PhoneSessionListResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Session recording lookup result.
 var (
 	phoneSessionRecordingResponseFieldSchema = big.NewInt(1 << 0)
 	phoneSessionRecordingResponseFieldStatus = big.NewInt(1 << 1)
 	phoneSessionRecordingResponseFieldURL    = big.NewInt(1 << 2)
 )
 
+// Session recording lookup result.
 type PhoneSessionRecordingResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -5330,10 +5481,12 @@ func (p *PhoneSessionRecordingResponse) GetExtraProperties() map[string]interfac
 }
 
 func (p *PhoneSessionRecordingResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -5425,13 +5578,13 @@ func (p PhoneSessionRecordingResponseStatus) Ptr() *PhoneSessionRecordingRespons
 	return &p
 }
 
-// Session thumbnail lookup result.
 var (
 	phoneSessionThumbnailResponseFieldSchema = big.NewInt(1 << 0)
 	phoneSessionThumbnailResponseFieldStatus = big.NewInt(1 << 1)
 	phoneSessionThumbnailResponseFieldURL    = big.NewInt(1 << 2)
 )
 
+// Session thumbnail lookup result.
 type PhoneSessionThumbnailResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -5476,10 +5629,12 @@ func (p *PhoneSessionThumbnailResponse) GetExtraProperties() map[string]interfac
 }
 
 func (p *PhoneSessionThumbnailResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -5568,11 +5723,11 @@ func (p PhoneSessionThumbnailResponseStatus) Ptr() *PhoneSessionThumbnailRespons
 	return &p
 }
 
-// Per-session idle timeout.
 var (
 	phoneSessionTTLOptionsFieldIdleTimeoutSeconds = big.NewInt(1 << 0)
 )
 
+// Per-session idle timeout.
 type PhoneSessionTTLOptions struct {
 	// Seconds with no user connection before the session is closed and its phone released. Omitted or non-positive means no idle timeout: the session runs until the 1-hour max-session cap. Explicit values are clamped to 1..3600 seconds.
 	IdleTimeoutSeconds *int64 `json:"idle_timeout_seconds,omitempty" url:"idle_timeout_seconds,omitempty"`
@@ -5599,10 +5754,12 @@ func (p *PhoneSessionTTLOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneSessionTTLOptions) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetIdleTimeoutSeconds sets the IdleTimeoutSeconds field and marks it as non-optional;
@@ -5654,7 +5811,6 @@ func (p *PhoneSessionTTLOptions) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Shared-pool availability summary.
 var (
 	phoneSharedAvailabilityFieldAvailable  = big.NewInt(1 << 0)
 	phoneSharedAvailabilityFieldByLocation = big.NewInt(1 << 1)
@@ -5662,6 +5818,13 @@ var (
 	phoneSharedAvailabilityFieldTotal      = big.NewInt(1 << 3)
 )
 
+// phoneSharedAvailabilityNullableFields maps the wire names of PhoneSharedAvailability's nullable fields (required or optional) to their field bits.
+var phoneSharedAvailabilityNullableFields = map[string]*big.Int{
+	"by_location": phoneSharedAvailabilityFieldByLocation,
+	"by_type":     phoneSharedAvailabilityFieldByType,
+}
+
+// Shared-pool availability summary.
 type PhoneSharedAvailability struct {
 	// Shared phones free to allocate right now, across every type and location in the response.
 	Available int64 `json:"available" url:"available"`
@@ -5715,10 +5878,12 @@ func (p *PhoneSharedAvailability) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneSharedAvailability) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetAvailable sets the Available field and marks it as non-optional;
@@ -5761,6 +5926,13 @@ func (p *PhoneSharedAvailability) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phoneSharedAvailabilityNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -5791,12 +5963,12 @@ func (p *PhoneSharedAvailability) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Generic success message response.
 var (
 	phoneSuccessResponseFieldSchema  = big.NewInt(1 << 0)
 	phoneSuccessResponseFieldMessage = big.NewInt(1 << 1)
 )
 
+// Generic success message response.
 type PhoneSuccessResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -5832,10 +6004,12 @@ func (p *PhoneSuccessResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneSuccessResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -5894,7 +6068,6 @@ func (p *PhoneSuccessResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// A phone in the fleet: display identity, status, and current allocation.
 var (
 	phoneSummaryFieldSchema                   = big.NewInt(1 << 0)
 	phoneSummaryFieldCreatedAt                = big.NewInt(1 << 1)
@@ -5915,6 +6088,22 @@ var (
 	phoneSummaryFieldUpdatedAt                = big.NewInt(1 << 16)
 )
 
+// phoneSummaryNullableFields maps the wire names of PhoneSummary's nullable fields (required or optional) to their field bits.
+var phoneSummaryNullableFields = map[string]*big.Int{
+	"current_session_id":         phoneSummaryFieldCurrentSessionID,
+	"last_heartbeat":             phoneSummaryFieldLastHeartbeat,
+	"last_interaction_timestamp": phoneSummaryFieldLastInteractionTimestamp,
+	"location":                   phoneSummaryFieldLocation,
+	"model_id":                   phoneSummaryFieldModelID,
+	"model_name":                 phoneSummaryFieldModelName,
+	"nickname":                   phoneSummaryFieldNickname,
+	"owner_organization_id":      phoneSummaryFieldOwnerOrganizationID,
+	"phone_name":                 phoneSummaryFieldPhoneName,
+	"phone_type":                 phoneSummaryFieldPhoneType,
+	"rental_expires_at":          phoneSummaryFieldRentalExpiresAt,
+}
+
+// A phone in the fleet: display identity, status, and current allocation.
 type PhoneSummary struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -6085,10 +6274,12 @@ func (p *PhoneSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneSummary) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -6236,6 +6427,13 @@ func (p *PhoneSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phoneSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -6360,13 +6558,18 @@ func (p PhoneSummaryStatus) Ptr() *PhoneSummaryStatus {
 	return &p
 }
 
-// Supported device applications.
 var (
 	phoneSupportedAppsResponseFieldSchema    = big.NewInt(1 << 0)
 	phoneSupportedAppsResponseFieldPhoneApps = big.NewInt(1 << 1)
 	phoneSupportedAppsResponseFieldTotal     = big.NewInt(1 << 2)
 )
 
+// phoneSupportedAppsResponseNullableFields maps the wire names of PhoneSupportedAppsResponse's nullable fields (required or optional) to their field bits.
+var phoneSupportedAppsResponseNullableFields = map[string]*big.Int{
+	"phone_apps": phoneSupportedAppsResponseFieldPhoneApps,
+}
+
+// Supported device applications.
 type PhoneSupportedAppsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -6411,10 +6614,12 @@ func (p *PhoneSupportedAppsResponse) GetExtraProperties() map[string]interface{}
 }
 
 func (p *PhoneSupportedAppsResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -6450,6 +6655,13 @@ func (p *PhoneSupportedAppsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phoneSupportedAppsResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -6480,13 +6692,13 @@ func (p *PhoneSupportedAppsResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Telemetry-token mint response.
 var (
 	phoneTelemetryTokenResponseFieldSchema       = big.NewInt(1 << 0)
 	phoneTelemetryTokenResponseFieldSessionID    = big.NewInt(1 << 1)
 	phoneTelemetryTokenResponseFieldTelemetryURL = big.NewInt(1 << 2)
 )
 
+// Telemetry-token mint response.
 type PhoneTelemetryTokenResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -6531,10 +6743,12 @@ func (p *PhoneTelemetryTokenResponse) GetExtraProperties() map[string]interface{
 }
 
 func (p *PhoneTelemetryTokenResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -6600,13 +6814,13 @@ func (p *PhoneTelemetryTokenResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Shared-pool availability for one phone type.
 var (
 	phoneTypeAvailabilityEntryFieldAvailable = big.NewInt(1 << 0)
 	phoneTypeAvailabilityEntryFieldPhoneType = big.NewInt(1 << 1)
 	phoneTypeAvailabilityEntryFieldTotal     = big.NewInt(1 << 2)
 )
 
+// Shared-pool availability for one phone type.
 type PhoneTypeAvailabilityEntry struct {
 	// Phones free to allocate right now.
 	Available int64 `json:"available" url:"available"`
@@ -6651,10 +6865,12 @@ func (p *PhoneTypeAvailabilityEntry) GetExtraProperties() map[string]interface{}
 }
 
 func (p *PhoneTypeAvailabilityEntry) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetAvailable sets the Available field and marks it as non-optional;
@@ -6845,10 +7061,12 @@ type PhonesWipeRequest struct {
 }
 
 func (p *PhonesWipeRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;

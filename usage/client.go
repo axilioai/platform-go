@@ -35,6 +35,21 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // Paginated, filterable list of inference calls (detect + locate) the caller's user was billed for over a required time window (start_date/end_date). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
+//
+// Example:
+//
+//	request := &platformgo.UsageListInferencesRequest{
+//	    StartDate: platformgo.MustParseDateTime(
+//	        "2024-01-15T09:30:00Z",
+//	    ),
+//	    EndDate: platformgo.MustParseDateTime(
+//	        "2024-01-15T09:30:00Z",
+//	    ),
+//	}
+//	client.Usage.ListInferences(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ListInferences(
 	ctx context.Context,
 	request *platformgo.UsageListInferencesRequest,
@@ -52,6 +67,21 @@ func (c *Client) ListInferences(
 }
 
 // Returns infrastructure cost and compute-minute summaries for the caller's user over a date range, plus per-bucket chart data. Granularity is hourly (≤24h window) or daily. Pass the window and granularity as query params.
+//
+// Example:
+//
+//	request := &platformgo.UsageGetMetricsRequest{
+//	    StartDate: platformgo.MustParseDateTime(
+//	        "2024-01-15T09:30:00Z",
+//	    ),
+//	    EndDate: platformgo.MustParseDateTime(
+//	        "2024-01-15T09:30:00Z",
+//	    ),
+//	}
+//	client.Usage.GetMetrics(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) GetMetrics(
 	ctx context.Context,
 	request *platformgo.UsageGetMetricsRequest,
@@ -69,6 +99,21 @@ func (c *Client) GetMetrics(
 }
 
 // Paginated, filterable list of the caller's phone sessions over a required time window (start_date/end_date), each row carrying billing detail: phone-time cost, inference cost, and combined total in microdollars, billing processing status, and allocation source. Filters: session status, billing processing status, workflow, allocation source, free-text search. Order with order_by ('<field> <asc|desc>').
+//
+// Example:
+//
+//	request := &platformgo.UsageListSessionsRequest{
+//	    StartDate: platformgo.MustParseDateTime(
+//	        "2024-01-15T09:30:00Z",
+//	    ),
+//	    EndDate: platformgo.MustParseDateTime(
+//	        "2024-01-15T09:30:00Z",
+//	    ),
+//	}
+//	client.Usage.ListSessions(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ListSessions(
 	ctx context.Context,
 	request *platformgo.UsageListSessionsRequest,

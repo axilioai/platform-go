@@ -6,10 +6,52 @@ package internal
 // shadowed dates. See generated_runtime_test.go.
 
 import (
+	"encoding/json"
 	"math/big"
 	"reflect"
 	"strings"
 )
+
+// ExplicitFieldsFromJSON returns the explicit-field bits of the nullable
+// fields present in data, so a decoded model re-marshals what it received: a
+// required collection that arrived as [] or {} (or null) is kept rather than
+// dropped by its omitempty tag (AXI-1602). Generated UnmarshalJSON methods
+// call it with their model's nullable fields. Fern's own copy, carried here
+// because this file is repo-owned.
+func ExplicitFieldsFromJSON(data []byte, fields map[string]*big.Int) (*big.Int, error) {
+	if len(fields) == 0 {
+		return nil, nil
+	}
+	var keys map[string]json.RawMessage
+	if err := json.Unmarshal(data, &keys); err != nil {
+		return nil, err
+	}
+	var result *big.Int
+	for key, field := range fields {
+		if !hasJSONKey(keys, key) {
+			continue
+		}
+		if result == nil {
+			result = new(big.Int)
+		}
+		result.Or(result, field)
+	}
+	return result, nil
+}
+
+// hasJSONKey matches key the way encoding/json matches object keys to struct
+// fields: exactly, else case-insensitively.
+func hasJSONKey(keys map[string]json.RawMessage, key string) bool {
+	if _, ok := keys[key]; ok {
+		return true
+	}
+	for candidate := range keys {
+		if strings.EqualFold(candidate, key) {
+			return true
+		}
+	}
+	return false
+}
 
 // HandleExplicitFields processes a struct to remove `omitempty` from
 // fields that have been explicitly set (as indicated by their corresponding bit in explicitFields).

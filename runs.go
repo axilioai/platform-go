@@ -23,10 +23,12 @@ type RunsCancelRequest struct {
 }
 
 func (r *RunsCancelRequest) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetRunID sets the RunID field and marks it as non-optional;
@@ -58,10 +60,12 @@ type RunCreateRequest struct {
 }
 
 func (r *RunCreateRequest) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -93,12 +97,18 @@ func (r *RunCreateRequest) SetStartTimeoutSeconds(startTimeoutSeconds *int64) {
 }
 
 func (r *RunCreateRequest) UnmarshalJSON(data []byte) error {
-	type unmarshaler RunCreateRequest
-	var body unmarshaler
+	type embed RunCreateRequest
+	var body = struct {
+		embed
+		StartAt *internal.DateTime `json:"start_at,omitempty"`
+	}{
+		embed: embed(*r),
+	}
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
-	*r = RunCreateRequest(body)
+	*r = RunCreateRequest(body.embed)
+	r.StartAt = body.StartAt.TimePtr()
 	return nil
 }
 
@@ -128,10 +138,12 @@ type RunsGetRequest struct {
 }
 
 func (r *RunsGetRequest) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetRunID sets the RunID field and marks it as non-optional;
@@ -172,10 +184,12 @@ type RunsListRequest struct {
 }
 
 func (r *RunsListRequest) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -258,10 +272,12 @@ type RunsListHistoricRequest struct {
 }
 
 func (r *RunsListHistoricRequest) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetStartDate sets the StartDate field and marks it as non-optional;
@@ -332,10 +348,12 @@ type SessionsListFramesRequest struct {
 }
 
 func (s *SessionsListFramesRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSessionID sets the SessionID field and marks it as non-optional;
@@ -372,10 +390,12 @@ type RunsStatsRequest struct {
 }
 
 func (r *RunsStatsRequest) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -385,12 +405,17 @@ func (r *RunsStatsRequest) SetWorkflowID(workflowID string) {
 	r.require(runsStatsRequestFieldWorkflowID)
 }
 
-// Per-run variable assignments and optional phone pin.
 var (
 	runConfigFieldPhoneID   = big.NewInt(1 << 0)
 	runConfigFieldVariables = big.NewInt(1 << 1)
 )
 
+// runConfigNullableFields maps the wire names of RunConfig's nullable fields (required or optional) to their field bits.
+var runConfigNullableFields = map[string]*big.Int{
+	"variables": runConfigFieldVariables,
+}
+
+// Per-run variable assignments and optional phone pin.
 type RunConfig struct {
 	// PhoneID pins this run to a specific phone (for dedicated phones).
 	PhoneID *string `json:"phone_id,omitempty" url:"phone_id,omitempty"`
@@ -426,10 +451,12 @@ func (r *RunConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunConfig) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -458,6 +485,13 @@ func (r *RunConfig) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, runConfigNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		r.require(presentFields)
+	}
 	r.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -488,12 +522,17 @@ func (r *RunConfig) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// Returned after successfully creating one or more runs.
 var (
 	runCreateResponseFieldSchema = big.NewInt(1 << 0)
 	runCreateResponseFieldRunIDs = big.NewInt(1 << 1)
 )
 
+// runCreateResponseNullableFields maps the wire names of RunCreateResponse's nullable fields (required or optional) to their field bits.
+var runCreateResponseNullableFields = map[string]*big.Int{
+	"run_ids": runCreateResponseFieldRunIDs,
+}
+
+// Returned after successfully creating one or more runs.
 type RunCreateResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -529,10 +568,12 @@ func (r *RunCreateResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunCreateResponse) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -561,6 +602,13 @@ func (r *RunCreateResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, runCreateResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		r.require(presentFields)
+	}
 	r.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -591,12 +639,12 @@ func (r *RunCreateResponse) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// Span outcome.
 var (
 	runFrameStatusFieldCode    = big.NewInt(1 << 0)
 	runFrameStatusFieldMessage = big.NewInt(1 << 1)
 )
 
+// Span outcome.
 type RunFrameStatus struct {
 	// "ok" or "error".
 	Code string `json:"code" url:"code"`
@@ -632,10 +680,12 @@ func (r *RunFrameStatus) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunFrameStatus) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetCode sets the Code field and marks it as non-optional;
@@ -694,7 +744,6 @@ func (r *RunFrameStatus) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// A single historic run record.
 var (
 	runHistoryItemFieldCanceledAt   = big.NewInt(1 << 0)
 	runHistoryItemFieldCompletedAt  = big.NewInt(1 << 1)
@@ -713,6 +762,7 @@ var (
 	runHistoryItemFieldWorkflowID   = big.NewInt(1 << 14)
 )
 
+// A single historic run record.
 type RunHistoryItem struct {
 	// Run cancellation time in UTC.
 	CanceledAt *time.Time `json:"canceled_at,omitempty" url:"canceled_at,omitempty"`
@@ -865,10 +915,12 @@ func (r *RunHistoryItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunHistoryItem) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetCanceledAt sets the CanceledAt field and marks it as non-optional;
@@ -1099,7 +1151,6 @@ func (r RunHistoryItemTrigger) Ptr() *RunHistoryItemTrigger {
 	return &r
 }
 
-// Paginated list of historic runs.
 var (
 	runHistoryResponseFieldSchema = big.NewInt(1 << 0)
 	runHistoryResponseFieldLimit  = big.NewInt(1 << 1)
@@ -1108,6 +1159,12 @@ var (
 	runHistoryResponseFieldTotal  = big.NewInt(1 << 4)
 )
 
+// runHistoryResponseNullableFields maps the wire names of RunHistoryResponse's nullable fields (required or optional) to their field bits.
+var runHistoryResponseNullableFields = map[string]*big.Int{
+	"runs": runHistoryResponseFieldRuns,
+}
+
+// Paginated list of historic runs.
 type RunHistoryResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1170,10 +1227,12 @@ func (r *RunHistoryResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunHistoryResponse) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1223,6 +1282,13 @@ func (r *RunHistoryResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, runHistoryResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		r.require(presentFields)
+	}
 	r.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1253,7 +1319,6 @@ func (r *RunHistoryResponse) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// Paginated list of runs.
 var (
 	runListResponseFieldSchema = big.NewInt(1 << 0)
 	runListResponseFieldLimit  = big.NewInt(1 << 1)
@@ -1262,6 +1327,12 @@ var (
 	runListResponseFieldTotal  = big.NewInt(1 << 4)
 )
 
+// runListResponseNullableFields maps the wire names of RunListResponse's nullable fields (required or optional) to their field bits.
+var runListResponseNullableFields = map[string]*big.Int{
+	"runs": runListResponseFieldRuns,
+}
+
+// Paginated list of runs.
 type RunListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1324,10 +1395,12 @@ func (r *RunListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunListResponse) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1377,6 +1450,13 @@ func (r *RunListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, runListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		r.require(presentFields)
+	}
 	r.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1407,7 +1487,6 @@ func (r *RunListResponse) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// One point-in-time telemetry log event in the canonical frame envelope.
 var (
 	runLogFrameFieldAttributes   = big.NewInt(1 << 0)
 	runLogFrameFieldBody         = big.NewInt(1 << 1)
@@ -1418,6 +1497,7 @@ var (
 	runLogFrameFieldTraceID      = big.NewInt(1 << 6)
 )
 
+// One point-in-time telemetry log event in the canonical frame envelope.
 type RunLogFrame struct {
 	// Every attribute the producer stamped (axilio.* vocabulary), verbatim.
 	Attributes map[string]any `json:"attributes,omitempty" url:"attributes,omitempty"`
@@ -1498,10 +1578,12 @@ func (r *RunLogFrame) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunLogFrame) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetAttributes sets the Attributes field and marks it as non-optional;
@@ -1595,7 +1677,6 @@ func (r *RunLogFrame) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// Full run record returned by run endpoints.
 var (
 	runResponseFieldSchema              = big.NewInt(1 << 0)
 	runResponseFieldCanceledAt          = big.NewInt(1 << 1)
@@ -1621,6 +1702,7 @@ var (
 	runResponseFieldWorkflowName        = big.NewInt(1 << 21)
 )
 
+// Full run record returned by run endpoints.
 type RunResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1836,10 +1918,12 @@ func (r *RunResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunResponse) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2131,7 +2215,6 @@ func (r RunResponseTrigger) Ptr() *RunResponseTrigger {
 	return &r
 }
 
-// Paginated list of telemetry frames for a session.
 var (
 	runSessionFramesResponseFieldSchema           = big.NewInt(1 << 0)
 	runSessionFramesResponseFieldFrames           = big.NewInt(1 << 1)
@@ -2143,6 +2226,12 @@ var (
 	runSessionFramesResponseFieldTotal            = big.NewInt(1 << 7)
 )
 
+// runSessionFramesResponseNullableFields maps the wire names of RunSessionFramesResponse's nullable fields (required or optional) to their field bits.
+var runSessionFramesResponseNullableFields = map[string]*big.Int{
+	"frames": runSessionFramesResponseFieldFrames,
+}
+
+// Paginated list of telemetry frames for a session.
 type RunSessionFramesResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2232,10 +2321,12 @@ func (r *RunSessionFramesResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunSessionFramesResponse) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2306,6 +2397,13 @@ func (r *RunSessionFramesResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, runSessionFramesResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		r.require(presentFields)
+	}
 	r.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2463,7 +2561,6 @@ func (r *RunSessionFramesResponseFramesItem) validate() error {
 	return nil
 }
 
-// One completed telemetry span in the canonical frame envelope.
 var (
 	runSpanFrameFieldAttributes        = big.NewInt(1 << 0)
 	runSpanFrameFieldEndTimeUnixNano   = big.NewInt(1 << 1)
@@ -2477,6 +2574,7 @@ var (
 	runSpanFrameFieldTraceID           = big.NewInt(1 << 9)
 )
 
+// One completed telemetry span in the canonical frame envelope.
 type RunSpanFrame struct {
 	// Every attribute the producer stamped (axilio.* vocabulary), verbatim. Attributes are the contract's extension seam: new keys appear here without a version bump.
 	Attributes map[string]any `json:"attributes,omitempty" url:"attributes,omitempty"`
@@ -2584,10 +2682,12 @@ func (r *RunSpanFrame) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunSpanFrame) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetAttributes sets the Attributes field and marks it as non-optional;
@@ -2702,13 +2802,13 @@ func (r *RunSpanFrame) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// RunStatsResponse summarizes run statistics for a workflow or organization.
 var (
 	runStatsResponseFieldSchema      = big.NewInt(1 << 0)
 	runStatsResponseFieldSuccessRate = big.NewInt(1 << 1)
 	runStatsResponseFieldTotalRuns   = big.NewInt(1 << 2)
 )
 
+// RunStatsResponse summarizes run statistics for a workflow or organization.
 type RunStatsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2753,10 +2853,12 @@ func (r *RunStatsResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunStatsResponse) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;

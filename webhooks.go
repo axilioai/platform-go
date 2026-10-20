@@ -35,10 +35,12 @@ type WebhookEndpointCreateRequest struct {
 }
 
 func (w *WebhookEndpointCreateRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetConfig sets the Config field and marks it as non-optional;
@@ -110,10 +112,12 @@ type WebhooksDeleteEndpointRequest struct {
 }
 
 func (w *WebhooksDeleteEndpointRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEndpointID sets the EndpointID field and marks it as non-optional;
@@ -136,10 +140,12 @@ type WebhooksGetDeliveryRequest struct {
 }
 
 func (w *WebhooksGetDeliveryRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -162,10 +168,12 @@ type WebhooksGetEndpointRequest struct {
 }
 
 func (w *WebhooksGetEndpointRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEndpointID sets the EndpointID field and marks it as non-optional;
@@ -191,10 +199,12 @@ type WebhooksGetMetricsRequest struct {
 }
 
 func (w *WebhooksGetMetricsRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetRange sets the Range field and marks it as non-optional;
@@ -230,10 +240,12 @@ type WebhooksListAttemptsRequest struct {
 }
 
 func (w *WebhooksListAttemptsRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -279,10 +291,12 @@ type WebhooksListDeliveriesRequest struct {
 }
 
 func (w *WebhooksListDeliveriesRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -344,10 +358,12 @@ type WebhooksListEndpointAttemptsRequest struct {
 }
 
 func (w *WebhooksListEndpointAttemptsRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEndpointID sets the EndpointID field and marks it as non-optional;
@@ -415,10 +431,12 @@ type WebhookReplayRequest struct {
 }
 
 func (w *WebhookReplayRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -472,10 +490,12 @@ type WebhookRotateSecretRequest struct {
 }
 
 func (w *WebhookRotateSecretRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEndpointID sets the EndpointID field and marks it as non-optional;
@@ -529,10 +549,12 @@ type WebhookTestEventRequest struct {
 }
 
 func (w *WebhookTestEventRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEndpointID sets the EndpointID field and marks it as non-optional;
@@ -570,7 +592,6 @@ func (w *WebhookTestEventRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(explicitMarshaler)
 }
 
-// One delivery attempt of an event to an endpoint.
 var (
 	webhookAttemptFieldAttemptNumber  = big.NewInt(1 << 0)
 	webhookAttemptFieldDeliveredAt    = big.NewInt(1 << 1)
@@ -581,6 +602,7 @@ var (
 	webhookAttemptFieldStatus         = big.NewInt(1 << 6)
 )
 
+// One delivery attempt of an event to an endpoint.
 type WebhookAttempt struct {
 	// 1-based position of this try among the event's tries to the endpoint: 1 is the first delivery, 2 and up are retries or replays.
 	AttemptNumber int64 `json:"attempt_number" url:"attempt_number"`
@@ -661,10 +683,12 @@ func (w *WebhookAttempt) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookAttempt) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetAttemptNumber sets the AttemptNumber field and marks it as non-optional;
@@ -766,13 +790,19 @@ func (w *WebhookAttempt) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// One page of the delivery attempts for one event.
 var (
 	webhookAttemptListResponseFieldSchema     = big.NewInt(1 << 0)
 	webhookAttemptListResponseFieldAttempts   = big.NewInt(1 << 1)
 	webhookAttemptListResponseFieldNextCursor = big.NewInt(1 << 2)
 )
 
+// webhookAttemptListResponseNullableFields maps the wire names of WebhookAttemptListResponse's nullable fields (required or optional) to their field bits.
+var webhookAttemptListResponseNullableFields = map[string]*big.Int{
+	"attempts":    webhookAttemptListResponseFieldAttempts,
+	"next_cursor": webhookAttemptListResponseFieldNextCursor,
+}
+
+// One page of the delivery attempts for one event.
 type WebhookAttemptListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -817,10 +847,12 @@ func (w *WebhookAttemptListResponse) GetExtraProperties() map[string]interface{}
 }
 
 func (w *WebhookAttemptListResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -856,6 +888,13 @@ func (w *WebhookAttemptListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookAttemptListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -909,7 +948,6 @@ func (w WebhookAttemptStatus) Ptr() *WebhookAttemptStatus {
 	return &w
 }
 
-// One event in the delivery log.
 var (
 	webhookDeliveryFieldEndpointIDs = big.NewInt(1 << 0)
 	webhookDeliveryFieldEventID     = big.NewInt(1 << 1)
@@ -917,6 +955,12 @@ var (
 	webhookDeliveryFieldPublishedAt = big.NewInt(1 << 3)
 )
 
+// webhookDeliveryNullableFields maps the wire names of WebhookDelivery's nullable fields (required or optional) to their field bits.
+var webhookDeliveryNullableFields = map[string]*big.Int{
+	"endpoint_ids": webhookDeliveryFieldEndpointIDs,
+}
+
+// One event in the delivery log.
 type WebhookDelivery struct {
 	// Endpoints the event was routed to: the subscribers of its type at publish time, or the one endpoint a targeted test named. Empty when none was subscribed.
 	EndpointIDs []string `json:"endpoint_ids,omitempty" url:"endpoint_ids,omitempty"`
@@ -970,10 +1014,12 @@ func (w *WebhookDelivery) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookDelivery) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEndpointIDs sets the EndpointIDs field and marks it as non-optional;
@@ -1022,6 +1068,13 @@ func (w *WebhookDelivery) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookDeliveryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1054,7 +1107,6 @@ func (w *WebhookDelivery) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// One delivery-log event with its delivered payload.
 var (
 	webhookDeliveryDetailFieldSchema      = big.NewInt(1 << 0)
 	webhookDeliveryDetailFieldEndpointIDs = big.NewInt(1 << 1)
@@ -1064,6 +1116,12 @@ var (
 	webhookDeliveryDetailFieldPublishedAt = big.NewInt(1 << 5)
 )
 
+// webhookDeliveryDetailNullableFields maps the wire names of WebhookDeliveryDetail's nullable fields (required or optional) to their field bits.
+var webhookDeliveryDetailNullableFields = map[string]*big.Int{
+	"endpoint_ids": webhookDeliveryDetailFieldEndpointIDs,
+}
+
+// One delivery-log event with its delivered payload.
 type WebhookDeliveryDetail struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1134,10 +1192,12 @@ func (w *WebhookDeliveryDetail) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookDeliveryDetail) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1200,6 +1260,13 @@ func (w *WebhookDeliveryDetail) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookDeliveryDetailNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1232,13 +1299,19 @@ func (w *WebhookDeliveryDetail) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// One page of the organization's delivery log.
 var (
 	webhookDeliveryListResponseFieldSchema     = big.NewInt(1 << 0)
 	webhookDeliveryListResponseFieldDeliveries = big.NewInt(1 << 1)
 	webhookDeliveryListResponseFieldNextCursor = big.NewInt(1 << 2)
 )
 
+// webhookDeliveryListResponseNullableFields maps the wire names of WebhookDeliveryListResponse's nullable fields (required or optional) to their field bits.
+var webhookDeliveryListResponseNullableFields = map[string]*big.Int{
+	"deliveries":  webhookDeliveryListResponseFieldDeliveries,
+	"next_cursor": webhookDeliveryListResponseFieldNextCursor,
+}
+
+// One page of the organization's delivery log.
 type WebhookDeliveryListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1283,10 +1356,12 @@ func (w *WebhookDeliveryListResponse) GetExtraProperties() map[string]interface{
 }
 
 func (w *WebhookDeliveryListResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1322,6 +1397,13 @@ func (w *WebhookDeliveryListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookDeliveryListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1352,7 +1434,6 @@ func (w *WebhookDeliveryListResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// One aggregated bucket of delivery-attempt metrics.
 var (
 	webhookDeliveryMetricPointFieldAvgLatencyMs = big.NewInt(1 << 0)
 	webhookDeliveryMetricPointFieldEndpointID   = big.NewInt(1 << 1)
@@ -1365,6 +1446,15 @@ var (
 	webhookDeliveryMetricPointFieldTotal        = big.NewInt(1 << 8)
 )
 
+// webhookDeliveryMetricPointNullableFields maps the wire names of WebhookDeliveryMetricPoint's nullable fields (required or optional) to their field bits.
+var webhookDeliveryMetricPointNullableFields = map[string]*big.Int{
+	"avg_latency_ms": webhookDeliveryMetricPointFieldAvgLatencyMs,
+	"p50_latency_ms": webhookDeliveryMetricPointFieldP50LatencyMs,
+	"p95_latency_ms": webhookDeliveryMetricPointFieldP95LatencyMs,
+	"p99_latency_ms": webhookDeliveryMetricPointFieldP99LatencyMs,
+}
+
+// One aggregated bucket of delivery-attempt metrics.
 type WebhookDeliveryMetricPoint struct {
 	// Mean destination response time in the bucket, in milliseconds. Null when no attempt in the bucket recorded a latency.
 	AvgLatencyMs *float64 `json:"avg_latency_ms,omitempty" url:"avg_latency_ms,omitempty"`
@@ -1463,10 +1553,12 @@ func (w *WebhookDeliveryMetricPoint) GetExtraProperties() map[string]interface{}
 }
 
 func (w *WebhookDeliveryMetricPoint) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetAvgLatencyMs sets the AvgLatencyMs field and marks it as non-optional;
@@ -1550,6 +1642,13 @@ func (w *WebhookDeliveryMetricPoint) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookDeliveryMetricPointNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1582,12 +1681,17 @@ func (w *WebhookDeliveryMetricPoint) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// Delivery-attempt metrics: volume, error rate and response time over the requested window.
 var (
 	webhookDeliveryMetricsResponseFieldSchema = big.NewInt(1 << 0)
 	webhookDeliveryMetricsResponseFieldPoints = big.NewInt(1 << 1)
 )
 
+// webhookDeliveryMetricsResponseNullableFields maps the wire names of WebhookDeliveryMetricsResponse's nullable fields (required or optional) to their field bits.
+var webhookDeliveryMetricsResponseNullableFields = map[string]*big.Int{
+	"points": webhookDeliveryMetricsResponseFieldPoints,
+}
+
+// Delivery-attempt metrics: volume, error rate and response time over the requested window.
 type WebhookDeliveryMetricsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1623,10 +1727,12 @@ func (w *WebhookDeliveryMetricsResponse) GetExtraProperties() map[string]interfa
 }
 
 func (w *WebhookDeliveryMetricsResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1655,6 +1761,13 @@ func (w *WebhookDeliveryMetricsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookDeliveryMetricsResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1685,7 +1798,6 @@ func (w *WebhookDeliveryMetricsResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// A registered webhook or BYOS endpoint.
 var (
 	webhookEndpointFieldSchema     = big.NewInt(1 << 0)
 	webhookEndpointFieldConfig     = big.NewInt(1 << 1)
@@ -1697,6 +1809,12 @@ var (
 	webhookEndpointFieldURL        = big.NewInt(1 << 7)
 )
 
+// webhookEndpointNullableFields maps the wire names of WebhookEndpoint's nullable fields (required or optional) to their field bits.
+var webhookEndpointNullableFields = map[string]*big.Int{
+	"event_types": webhookEndpointFieldEventTypes,
+}
+
+// A registered webhook or BYOS endpoint.
 type WebhookEndpoint struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1786,10 +1904,12 @@ func (w *WebhookEndpoint) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookEndpoint) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1866,6 +1986,13 @@ func (w *WebhookEndpoint) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookEndpointNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1898,7 +2025,6 @@ func (w *WebhookEndpoint) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// One delivery attempt to an endpoint, with the event it delivered.
 var (
 	webhookEndpointAttemptFieldAttemptNumber    = big.NewInt(1 << 0)
 	webhookEndpointAttemptFieldDeliveredAt      = big.NewInt(1 << 1)
@@ -1911,6 +2037,7 @@ var (
 	webhookEndpointAttemptFieldStatus           = big.NewInt(1 << 8)
 )
 
+// One delivery attempt to an endpoint, with the event it delivered.
 type WebhookEndpointAttempt struct {
 	// 1-based position of this try among the event's tries to the endpoint: 1 is the first delivery, 2 and up are retries or replays.
 	AttemptNumber int64 `json:"attempt_number" url:"attempt_number"`
@@ -2009,10 +2136,12 @@ func (w *WebhookEndpointAttempt) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookEndpointAttempt) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetAttemptNumber sets the AttemptNumber field and marks it as non-optional;
@@ -2132,13 +2261,19 @@ func (w *WebhookEndpointAttempt) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// One page of the delivery attempts made to one endpoint.
 var (
 	webhookEndpointAttemptListResponseFieldSchema     = big.NewInt(1 << 0)
 	webhookEndpointAttemptListResponseFieldAttempts   = big.NewInt(1 << 1)
 	webhookEndpointAttemptListResponseFieldNextCursor = big.NewInt(1 << 2)
 )
 
+// webhookEndpointAttemptListResponseNullableFields maps the wire names of WebhookEndpointAttemptListResponse's nullable fields (required or optional) to their field bits.
+var webhookEndpointAttemptListResponseNullableFields = map[string]*big.Int{
+	"attempts":    webhookEndpointAttemptListResponseFieldAttempts,
+	"next_cursor": webhookEndpointAttemptListResponseFieldNextCursor,
+}
+
+// One page of the delivery attempts made to one endpoint.
 type WebhookEndpointAttemptListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2183,10 +2318,12 @@ func (w *WebhookEndpointAttemptListResponse) GetExtraProperties() map[string]int
 }
 
 func (w *WebhookEndpointAttemptListResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2222,6 +2359,13 @@ func (w *WebhookEndpointAttemptListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookEndpointAttemptListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2275,7 +2419,6 @@ func (w WebhookEndpointAttemptStatus) Ptr() *WebhookEndpointAttemptStatus {
 	return &w
 }
 
-// A newly registered webhook endpoint, including its signing secret (shown once).
 var (
 	webhookEndpointCreateResponseFieldSchema     = big.NewInt(1 << 0)
 	webhookEndpointCreateResponseFieldConfig     = big.NewInt(1 << 1)
@@ -2287,6 +2430,12 @@ var (
 	webhookEndpointCreateResponseFieldURL        = big.NewInt(1 << 7)
 )
 
+// webhookEndpointCreateResponseNullableFields maps the wire names of WebhookEndpointCreateResponse's nullable fields (required or optional) to their field bits.
+var webhookEndpointCreateResponseNullableFields = map[string]*big.Int{
+	"event_types": webhookEndpointCreateResponseFieldEventTypes,
+}
+
+// A newly registered webhook endpoint, including its signing secret (shown once).
 type WebhookEndpointCreateResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2376,10 +2525,12 @@ func (w *WebhookEndpointCreateResponse) GetExtraProperties() map[string]interfac
 }
 
 func (w *WebhookEndpointCreateResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2456,6 +2607,13 @@ func (w *WebhookEndpointCreateResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookEndpointCreateResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2517,12 +2675,17 @@ func (w WebhookEndpointCreateResponseType) Ptr() *WebhookEndpointCreateResponseT
 	return &w
 }
 
-// The organization's registered webhook endpoints (the complete set, not a page).
 var (
 	webhookEndpointListResponseFieldSchema    = big.NewInt(1 << 0)
 	webhookEndpointListResponseFieldEndpoints = big.NewInt(1 << 1)
 )
 
+// webhookEndpointListResponseNullableFields maps the wire names of WebhookEndpointListResponse's nullable fields (required or optional) to their field bits.
+var webhookEndpointListResponseNullableFields = map[string]*big.Int{
+	"endpoints": webhookEndpointListResponseFieldEndpoints,
+}
+
+// The organization's registered webhook endpoints (the complete set, not a page).
 type WebhookEndpointListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2558,10 +2721,12 @@ func (w *WebhookEndpointListResponse) GetExtraProperties() map[string]interface{
 }
 
 func (w *WebhookEndpointListResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2590,6 +2755,13 @@ func (w *WebhookEndpointListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookEndpointListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2649,12 +2821,17 @@ func (w WebhookEndpointType) Ptr() *WebhookEndpointType {
 	return &w
 }
 
-// The catalog of event types an endpoint can subscribe to.
 var (
 	webhookEventTypeCatalogResponseFieldSchema     = big.NewInt(1 << 0)
 	webhookEventTypeCatalogResponseFieldEventTypes = big.NewInt(1 << 1)
 )
 
+// webhookEventTypeCatalogResponseNullableFields maps the wire names of WebhookEventTypeCatalogResponse's nullable fields (required or optional) to their field bits.
+var webhookEventTypeCatalogResponseNullableFields = map[string]*big.Int{
+	"event_types": webhookEventTypeCatalogResponseFieldEventTypes,
+}
+
+// The catalog of event types an endpoint can subscribe to.
 type WebhookEventTypeCatalogResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2690,10 +2867,12 @@ func (w *WebhookEventTypeCatalogResponse) GetExtraProperties() map[string]interf
 }
 
 func (w *WebhookEventTypeCatalogResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2722,6 +2901,13 @@ func (w *WebhookEventTypeCatalogResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookEventTypeCatalogResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2752,7 +2938,6 @@ func (w *WebhookEventTypeCatalogResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// A subscribable webhook event type.
 var (
 	webhookEventTypeDescriptorFieldDescription = big.NewInt(1 << 0)
 	webhookEventTypeDescriptorFieldDomain      = big.NewInt(1 << 1)
@@ -2760,6 +2945,7 @@ var (
 	webhookEventTypeDescriptorFieldType        = big.NewInt(1 << 3)
 )
 
+// A subscribable webhook event type.
 type WebhookEventTypeDescriptor struct {
 	// What the event means and when it fires.
 	Description string `json:"description" url:"description"`
@@ -2813,10 +2999,12 @@ func (w *WebhookEventTypeDescriptor) GetExtraProperties() map[string]interface{}
 }
 
 func (w *WebhookEventTypeDescriptor) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetDescription sets the Description field and marks it as non-optional;
@@ -2924,13 +3112,13 @@ func (w WebhookEventTypeDescriptorDomain) Ptr() *WebhookEventTypeDescriptorDomai
 	return &w
 }
 
-// Identifies the replay that was queued.
 var (
 	webhookReplayResponseFieldSchema     = big.NewInt(1 << 0)
 	webhookReplayResponseFieldEndpointID = big.NewInt(1 << 1)
 	webhookReplayResponseFieldEventID    = big.NewInt(1 << 2)
 )
 
+// Identifies the replay that was queued.
 type WebhookReplayResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2975,10 +3163,12 @@ func (w *WebhookReplayResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookReplayResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -3044,7 +3234,6 @@ func (w *WebhookReplayResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// A rotated signing secret, shown once, with the grace window during which the old secret still verifies.
 var (
 	webhookRotateSecretResponseFieldSchema                  = big.NewInt(1 << 0)
 	webhookRotateSecretResponseFieldID                      = big.NewInt(1 << 1)
@@ -3052,6 +3241,7 @@ var (
 	webhookRotateSecretResponseFieldSecret                  = big.NewInt(1 << 3)
 )
 
+// A rotated signing secret, shown once, with the grace window during which the old secret still verifies.
 type WebhookRotateSecretResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -3105,10 +3295,12 @@ func (w *WebhookRotateSecretResponse) GetExtraProperties() map[string]interface{
 }
 
 func (w *WebhookRotateSecretResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -3189,7 +3381,6 @@ func (w *WebhookRotateSecretResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// Identifies the test event that was published.
 var (
 	webhookTestEventResponseFieldSchema     = big.NewInt(1 << 0)
 	webhookTestEventResponseFieldEndpointID = big.NewInt(1 << 1)
@@ -3197,6 +3388,7 @@ var (
 	webhookTestEventResponseFieldEventType  = big.NewInt(1 << 3)
 )
 
+// Identifies the test event that was published.
 type WebhookTestEventResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -3250,10 +3442,12 @@ func (w *WebhookTestEventResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookTestEventResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;

@@ -9,13 +9,13 @@ import (
 	big "math/big"
 )
 
-// Returned after a successful sign-in or sign-up.
 var (
 	userAuthResponseFieldOrgSlug = big.NewInt(1 << 0)
 	userAuthResponseFieldToken   = big.NewInt(1 << 1)
 	userAuthResponseFieldUserID  = big.NewInt(1 << 2)
 )
 
+// Returned after a successful sign-in or sign-up.
 type UserAuthResponse struct {
 	// Default organization slug used for post-login redirect.
 	OrgSlug *string `json:"org_slug,omitempty" url:"org_slug,omitempty"`
@@ -60,10 +60,12 @@ func (u *UserAuthResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UserAuthResponse) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetOrgSlug sets the OrgSlug field and marks it as non-optional;
@@ -129,12 +131,12 @@ func (u *UserAuthResponse) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Whether a provided invite code is valid.
 var (
 	userInviteCodeValidationResponseFieldMessage = big.NewInt(1 << 0)
 	userInviteCodeValidationResponseFieldValid   = big.NewInt(1 << 1)
 )
 
+// Whether a provided invite code is valid.
 type UserInviteCodeValidationResponse struct {
 	// Error description when the code is invalid.
 	Message *string `json:"message,omitempty" url:"message,omitempty"`
@@ -170,10 +172,12 @@ func (u *UserInviteCodeValidationResponse) GetExtraProperties() map[string]inter
 }
 
 func (u *UserInviteCodeValidationResponse) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetMessage sets the Message field and marks it as non-optional;
@@ -232,12 +236,12 @@ func (u *UserInviteCodeValidationResponse) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Request body for authenticating an existing user.
 var (
 	userSignInRequestFieldEmail    = big.NewInt(1 << 0)
 	userSignInRequestFieldPassword = big.NewInt(1 << 1)
 )
 
+// Request body for authenticating an existing user.
 type UserSignInRequest struct {
 	// User's email address.
 	Email string `json:"email" url:"email"`
@@ -273,10 +277,12 @@ func (u *UserSignInRequest) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UserSignInRequest) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetEmail sets the Email field and marks it as non-optional;
@@ -335,7 +341,6 @@ func (u *UserSignInRequest) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Request body for creating a new user account.
 var (
 	userSignUpRequestFieldEmail      = big.NewInt(1 << 0)
 	userSignUpRequestFieldFirstName  = big.NewInt(1 << 1)
@@ -344,6 +349,7 @@ var (
 	userSignUpRequestFieldPassword   = big.NewInt(1 << 4)
 )
 
+// Request body for creating a new user account.
 type UserSignUpRequest struct {
 	// New user's email address.
 	Email string `json:"email" url:"email"`
@@ -406,10 +412,12 @@ func (u *UserSignUpRequest) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UserSignUpRequest) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetEmail sets the Email field and marks it as non-optional;
@@ -489,7 +497,6 @@ func (u *UserSignUpRequest) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Request body for joining the Axilio waitlist.
 var (
 	userWaitlistRequestFieldCompany = big.NewInt(1 << 0)
 	userWaitlistRequestFieldEmail   = big.NewInt(1 << 1)
@@ -497,6 +504,7 @@ var (
 	userWaitlistRequestFieldUseCase = big.NewInt(1 << 3)
 )
 
+// Request body for joining the Axilio waitlist.
 type UserWaitlistRequest struct {
 	// Applicant's company name.
 	Company *string `json:"company,omitempty" url:"company,omitempty"`
@@ -550,10 +558,12 @@ func (u *UserWaitlistRequest) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UserWaitlistRequest) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetCompany sets the Company field and marks it as non-optional;
@@ -626,12 +636,12 @@ func (u *UserWaitlistRequest) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// WaitlistResponse confirms a successful waitlist submission.
 var (
 	userWaitlistResponseFieldMessage = big.NewInt(1 << 0)
 	userWaitlistResponseFieldSuccess = big.NewInt(1 << 1)
 )
 
+// WaitlistResponse confirms a successful waitlist submission.
 type UserWaitlistResponse struct {
 	// Human-readable confirmation or error.
 	Message string `json:"message" url:"message"`
@@ -667,10 +677,12 @@ func (u *UserWaitlistResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (u *UserWaitlistResponse) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if u.explicitFields != nil {
+		next.Set(u.explicitFields)
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	next.Or(next, field)
+	u.explicitFields = next
 }
 
 // SetMessage sets the Message field and marks it as non-optional;
@@ -729,13 +741,13 @@ func (u *UserWaitlistResponse) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// One specific problem within an error response, locating the offending part of the request.
 var (
 	v2ErrorDetailFieldLocation = big.NewInt(1 << 0)
 	v2ErrorDetailFieldMessage  = big.NewInt(1 << 1)
 	v2ErrorDetailFieldValue    = big.NewInt(1 << 2)
 )
 
+// One specific problem within an error response, locating the offending part of the request.
 type V2ErrorDetail struct {
 	// Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id'
 	Location *string `json:"location,omitempty" url:"location,omitempty"`
@@ -780,10 +792,12 @@ func (v *V2ErrorDetail) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *V2ErrorDetail) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetLocation sets the Location field and marks it as non-optional;
@@ -849,7 +863,6 @@ func (v *V2ErrorDetail) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// Error response, following RFC 9457 (Problem Details for HTTP APIs). Returned with a application/problem+json content type.
 var (
 	v2ErrorModelFieldSchema   = big.NewInt(1 << 0)
 	v2ErrorModelFieldDetail   = big.NewInt(1 << 1)
@@ -860,6 +873,12 @@ var (
 	v2ErrorModelFieldType     = big.NewInt(1 << 6)
 )
 
+// v2ErrorModelNullableFields maps the wire names of V2ErrorModel's nullable fields (required or optional) to their field bits.
+var v2ErrorModelNullableFields = map[string]*big.Int{
+	"errors": v2ErrorModelFieldErrors,
+}
+
+// Error response, following RFC 9457 (Problem Details for HTTP APIs). Returned with a application/problem+json content type.
 type V2ErrorModel struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -940,10 +959,12 @@ func (v *V2ErrorModel) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *V2ErrorModel) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1007,6 +1028,13 @@ func (v *V2ErrorModel) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	v.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, v2ErrorModelNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		v.require(presentFields)
+	}
 	v.rawJSON = json.RawMessage(data)
 	return nil
 }

@@ -21,7 +21,7 @@ groups:
   go-sdk:
     generators:
       - name: fern-go-sdk
-        version: 1.47.2
+        version: 1.70.7
         output:
           location: local-file-system
           path: ../../../.gen

@@ -41,10 +41,12 @@ type WorkflowCreateRequest struct {
 }
 
 func (w *WorkflowCreateRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;
@@ -130,10 +132,12 @@ type WorkflowsDeleteRequest struct {
 }
 
 func (w *WorkflowsDeleteRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -156,10 +160,12 @@ type WorkflowsGetRequest struct {
 }
 
 func (w *WorkflowsGetRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -182,10 +188,12 @@ type WorkflowsGetCodeRequest struct {
 }
 
 func (w *WorkflowsGetCodeRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -211,10 +219,12 @@ type WorkflowsGetRevisionRequest struct {
 }
 
 func (w *WorkflowsGetRevisionRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -266,10 +276,12 @@ type WorkflowsListRequest struct {
 }
 
 func (w *WorkflowsListRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -353,10 +365,12 @@ type WorkflowsListRevisionsRequest struct {
 }
 
 func (w *WorkflowsListRevisionsRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -396,10 +410,12 @@ type WorkflowRestoreRevisionRequest struct {
 }
 
 func (w *WorkflowRestoreRevisionRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -456,10 +472,12 @@ type WorkflowSaveCodeRequest struct {
 }
 
 func (w *WorkflowSaveCodeRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -504,12 +522,12 @@ func (w *WorkflowSaveCodeRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(explicitMarshaler)
 }
 
-// Simple confirmation message.
 var (
 	messageOutputBodyFieldSchema  = big.NewInt(1 << 0)
 	messageOutputBodyFieldMessage = big.NewInt(1 << 1)
 )
 
+// Simple confirmation message.
 type MessageOutputBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -545,10 +563,12 @@ func (m *MessageOutputBody) GetExtraProperties() map[string]interface{} {
 }
 
 func (m *MessageOutputBody) require(field *big.Int) {
-	if m.explicitFields == nil {
-		m.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if m.explicitFields != nil {
+		next.Set(m.explicitFields)
 	}
-	m.explicitFields.Or(m.explicitFields, field)
+	next.Or(next, field)
+	m.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -607,7 +627,6 @@ func (m *MessageOutputBody) String() string {
 	return fmt.Sprintf("%#v", m)
 }
 
-// Returned after successfully creating a workflow.
 var (
 	workflowCreateResponseFieldSchema     = big.NewInt(1 << 0)
 	workflowCreateResponseFieldRevision   = big.NewInt(1 << 1)
@@ -615,6 +634,7 @@ var (
 	workflowCreateResponseFieldWorkflowID = big.NewInt(1 << 3)
 )
 
+// Returned after successfully creating a workflow.
 type WorkflowCreateResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -668,10 +688,12 @@ func (w *WorkflowCreateResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowCreateResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -744,7 +766,6 @@ func (w *WorkflowCreateResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// Returned from GET /workflows/:id/code.
 var (
 	workflowGetCodeResponseFieldSchema     = big.NewInt(1 << 0)
 	workflowGetCodeResponseFieldRevision   = big.NewInt(1 << 1)
@@ -753,6 +774,12 @@ var (
 	workflowGetCodeResponseFieldUpdatedAt  = big.NewInt(1 << 4)
 )
 
+// workflowGetCodeResponseNullableFields maps the wire names of WorkflowGetCodeResponse's nullable fields (required or optional) to their field bits.
+var workflowGetCodeResponseNullableFields = map[string]*big.Int{
+	"revision_id": workflowGetCodeResponseFieldRevisionID,
+}
+
+// Returned from GET /workflows/:id/code.
 type WorkflowGetCodeResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -815,10 +842,12 @@ func (w *WorkflowGetCodeResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowGetCodeResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -874,6 +903,13 @@ func (w *WorkflowGetCodeResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowGetCodeResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -906,7 +942,6 @@ func (w *WorkflowGetCodeResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// Paginated list of workflows.
 var (
 	workflowListResponseFieldSchema    = big.NewInt(1 << 0)
 	workflowListResponseFieldLimit     = big.NewInt(1 << 1)
@@ -915,6 +950,12 @@ var (
 	workflowListResponseFieldWorkflows = big.NewInt(1 << 4)
 )
 
+// workflowListResponseNullableFields maps the wire names of WorkflowListResponse's nullable fields (required or optional) to their field bits.
+var workflowListResponseNullableFields = map[string]*big.Int{
+	"workflows": workflowListResponseFieldWorkflows,
+}
+
+// Paginated list of workflows.
 type WorkflowListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -977,10 +1018,12 @@ func (w *WorkflowListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowListResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1030,6 +1073,13 @@ func (w *WorkflowListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1060,12 +1110,17 @@ func (w *WorkflowListResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// Returned from GET /workflows/:id/revisions.
 var (
 	workflowListRevisionsResponseFieldSchema    = big.NewInt(1 << 0)
 	workflowListRevisionsResponseFieldRevisions = big.NewInt(1 << 1)
 )
 
+// workflowListRevisionsResponseNullableFields maps the wire names of WorkflowListRevisionsResponse's nullable fields (required or optional) to their field bits.
+var workflowListRevisionsResponseNullableFields = map[string]*big.Int{
+	"revisions": workflowListRevisionsResponseFieldRevisions,
+}
+
+// Returned from GET /workflows/:id/revisions.
 type WorkflowListRevisionsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1101,10 +1156,12 @@ func (w *WorkflowListRevisionsResponse) GetExtraProperties() map[string]interfac
 }
 
 func (w *WorkflowListRevisionsResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1133,6 +1190,13 @@ func (w *WorkflowListRevisionsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowListRevisionsResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1163,13 +1227,13 @@ func (w *WorkflowListRevisionsResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// Full workflow record with embedded stats.
 var (
 	workflowResponseFieldSchema   = big.NewInt(1 << 0)
 	workflowResponseFieldStats    = big.NewInt(1 << 1)
 	workflowResponseFieldWorkflow = big.NewInt(1 << 2)
 )
 
+// Full workflow record with embedded stats.
 type WorkflowResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1214,10 +1278,12 @@ func (w *WorkflowResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1283,7 +1349,6 @@ func (w *WorkflowResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// One saved code revision, including the full code source.
 var (
 	workflowRevisionDetailFieldSchema       = big.NewInt(1 << 0)
 	workflowRevisionDetailFieldAuthorUserID = big.NewInt(1 << 1)
@@ -1296,6 +1361,12 @@ var (
 	workflowRevisionDetailFieldSha256       = big.NewInt(1 << 8)
 )
 
+// workflowRevisionDetailNullableFields maps the wire names of WorkflowRevisionDetail's nullable fields (required or optional) to their field bits.
+var workflowRevisionDetailNullableFields = map[string]*big.Int{
+	"message": workflowRevisionDetailFieldMessage,
+}
+
+// One saved code revision, including the full code source.
 type WorkflowRevisionDetail struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1394,10 +1465,12 @@ func (w *WorkflowRevisionDetail) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowRevisionDetail) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1481,6 +1554,13 @@ func (w *WorkflowRevisionDetail) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowRevisionDetailNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1513,7 +1593,6 @@ func (w *WorkflowRevisionDetail) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// One saved code revision, without the source body.
 var (
 	workflowRevisionSummaryFieldAuthorUserID = big.NewInt(1 << 0)
 	workflowRevisionSummaryFieldBytes        = big.NewInt(1 << 1)
@@ -1524,6 +1603,12 @@ var (
 	workflowRevisionSummaryFieldSha256       = big.NewInt(1 << 6)
 )
 
+// workflowRevisionSummaryNullableFields maps the wire names of WorkflowRevisionSummary's nullable fields (required or optional) to their field bits.
+var workflowRevisionSummaryNullableFields = map[string]*big.Int{
+	"message": workflowRevisionSummaryFieldMessage,
+}
+
+// One saved code revision, without the source body.
 type WorkflowRevisionSummary struct {
 	// User who saved the revision.
 	AuthorUserID string `json:"author_user_id" url:"author_user_id"`
@@ -1604,10 +1689,12 @@ func (w *WorkflowRevisionSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowRevisionSummary) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetAuthorUserID sets the AuthorUserID field and marks it as non-optional;
@@ -1677,6 +1764,13 @@ func (w *WorkflowRevisionSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowRevisionSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1709,7 +1803,6 @@ func (w *WorkflowRevisionSummary) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// Returned from POST /workflows/:id/code.
 var (
 	workflowSaveCodeResponseFieldSchema     = big.NewInt(1 << 0)
 	workflowSaveCodeResponseFieldNoOp       = big.NewInt(1 << 1)
@@ -1717,6 +1810,7 @@ var (
 	workflowSaveCodeResponseFieldRevisionID = big.NewInt(1 << 3)
 )
 
+// Returned from POST /workflows/:id/code.
 type WorkflowSaveCodeResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1770,10 +1864,12 @@ func (w *WorkflowSaveCodeResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowSaveCodeResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1846,12 +1942,12 @@ func (w *WorkflowSaveCodeResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// WorkflowStats summarizes run statistics for a workflow.
 var (
 	workflowStatsFieldSuccessRate = big.NewInt(1 << 0)
 	workflowStatsFieldTotalRuns   = big.NewInt(1 << 1)
 )
 
+// WorkflowStats summarizes run statistics for a workflow.
 type WorkflowStats struct {
 	// Fraction of runs that completed successfully, from 0.0 to 1.0 (multiply by 100 for a percentage).
 	SuccessRate float64 `json:"success_rate" url:"success_rate"`
@@ -1887,10 +1983,12 @@ func (w *WorkflowStats) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowStats) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetSuccessRate sets the SuccessRate field and marks it as non-optional;
@@ -1949,7 +2047,6 @@ func (w *WorkflowStats) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// A workflow: a saved automation that runs against a phone.
 var (
 	workflowSummaryFieldCapture        = big.NewInt(1 << 0)
 	workflowSummaryFieldCreatedAt      = big.NewInt(1 << 1)
@@ -1966,6 +2063,13 @@ var (
 	workflowSummaryFieldUserID         = big.NewInt(1 << 12)
 )
 
+// workflowSummaryNullableFields maps the wire names of WorkflowSummary's nullable fields (required or optional) to their field bits.
+var workflowSummaryNullableFields = map[string]*big.Int{
+	"last_run_at":     workflowSummaryFieldLastRunAt,
+	"organization_id": workflowSummaryFieldOrganizationID,
+}
+
+// A workflow: a saved automation that runs against a phone.
 type WorkflowSummary struct {
 	// Whether this workflow's runs capture media into the org's file library (default true).
 	Capture bool `json:"capture" url:"capture"`
@@ -2100,10 +2204,12 @@ func (w *WorkflowSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowSummary) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;
@@ -2219,6 +2325,13 @@ func (w *WorkflowSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2488,10 +2601,12 @@ type WorkflowUpdateRequest struct {
 }
 
 func (w *WorkflowUpdateRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;

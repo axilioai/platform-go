@@ -35,6 +35,16 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // Returns the caller org's full dedicated (private/rented) phone inventory - every state, not just the free ones: busy phones in an active session, offline/inactive phones, and phones in maintenance are all included, so this is the endpoint to discover a phone_id you can pin via POST /phones:allocate. Each phone's current_session_id and status reflect its live state. include_expired=true also keeps rentals past their rental_expires_at so users can see what they used to own. Filter by status/phone_type and paginate; the response total is the full match count. Pass ownership=dedicated.
+//
+// Example:
+//
+//	request := &platformgo.PhonesListRequest{
+//	    Ownership: platformgo.PhonesListRequestOwnershipDedicated,
+//	}
+//	client.Phones.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.PhonesListRequest,
@@ -52,6 +62,14 @@ func (c *Client) List(
 }
 
 // Returns the apps the platform supports orchestration for, optionally filtered by platform and category.
+//
+// Example:
+//
+//	request := &platformgo.PhonesSupportedAppsRequest{}
+//	client.Phones.SupportedApps(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) SupportedApps(
 	ctx context.Context,
 	request *platformgo.PhonesSupportedAppsRequest,
@@ -69,6 +87,14 @@ func (c *Client) SupportedApps(
 }
 
 // Returns a capacity snapshot to check before POST /phones:allocate: shared-pool availability broken down by phone type and by location, plus the caller org's dedicated phones with how many are idle (claimable right now). Optional phone_type and location filters narrow every count. Advisory only - availability can change between this read and an allocate, so allocation remains the authority and can still refuse.
+//
+// Example:
+//
+//	request := &platformgo.PhonesAvailabilityRequest{}
+//	client.Phones.Availability(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Availability(
 	ctx context.Context,
 	request *platformgo.PhonesAvailabilityRequest,
@@ -86,6 +112,14 @@ func (c *Client) Availability(
 }
 
 // Returns one page of the org's phone sessions for the Session Inspector table: active/unbilled sessions pinned on top, terminal history paginated beneath. Covers workflow runs and workflow-less interactive leases; each row links to a session. Filters: search, workflow_id, status.
+//
+// Example:
+//
+//	request := &platformgo.PhonesListSessionsRequest{}
+//	client.Phones.ListSessions(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ListSessions(
 	ctx context.Context,
 	request *platformgo.PhonesListSessionsRequest,
@@ -103,6 +137,14 @@ func (c *Client) ListSessions(
 }
 
 // Returns one page of the organization's currently-active phone sessions joined with phone + workflow display fields: in-flight runs, workflow-less interactive leases, and dedicated phones in use. Paginated via limit (default 25, max 100) + offset; the response total is the full active count.
+//
+// Example:
+//
+//	request := &platformgo.PhonesActiveSessionsRequest{}
+//	client.Phones.ActiveSessions(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ActiveSessions(
 	ctx context.Context,
 	request *platformgo.PhonesActiveSessionsRequest,
@@ -120,6 +162,16 @@ func (c *Client) ActiveSessions(
 }
 
 // Returns one session for the Session Inspector: session lifecycle + phone display fields + workflow name (when tied to one) + an inlined presigned recording URL. Works for active and terminal sessions, and for workflow runs and workflow-less interactive leases. Org-scoped: another org's session reads as not found.
+//
+// Example:
+//
+//	request := &platformgo.PhonesGetSessionRequest{
+//	    SessionID: "session_id",
+//	}
+//	client.Phones.GetSession(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) GetSession(
 	ctx context.Context,
 	request *platformgo.PhonesGetSessionRequest,
@@ -137,6 +189,16 @@ func (c *Client) GetSession(
 }
 
 // Mints a fresh live-view token (and hosted viewer URL) for an active session, per the session's allocate-time live_view settings: token-mode sessions re-issue the bearer link allocate returned once, org-mode sessions exchange the caller's identity. Refused for sessions allocated with live_view.disabled, for inactive sessions, and for sessions outside the caller's organization (reads as not found). Sharp edge: the returned URL embeds the token and is a bearer capability — whoever holds it can watch (and, unless the session was allocated view-only, drive) the phone until the session ends, at which point both stop working.
+//
+// Example:
+//
+//	request := &platformgo.PhonesSessionLiveViewTokenRequest{
+//	    SessionID: "session_id",
+//	}
+//	client.Phones.SessionLiveViewToken(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) SessionLiveViewToken(
 	ctx context.Context,
 	request *platformgo.PhonesSessionLiveViewTokenRequest,
@@ -154,6 +216,16 @@ func (c *Client) SessionLiveViewToken(
 }
 
 // Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for workflow runs and workflow-less interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet. Org-scoped: another org's session reads as not found.
+//
+// Example:
+//
+//	request := &platformgo.PhonesSessionRecordingRequest{
+//	    SessionID: "session_id",
+//	}
+//	client.Phones.SessionRecording(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) SessionRecording(
 	ctx context.Context,
 	request *platformgo.PhonesSessionRecordingRequest,
@@ -171,6 +243,16 @@ func (c *Client) SessionRecording(
 }
 
 // Mints a fresh telemetry_url for an active session — the same read-only WebSocket URL POST /phones:allocate returns once (live trace spans + output logs for exactly this session, 3h token). This is the telemetry/frames leg, distinct from the live-view (video) token: it can only watch the trace, never the screen, and never drive the phone. The stream's end frame is the session-end signal. Refused for inactive sessions — an ended session's telemetry is served by GET /phones/sessions/{session_id}/frames — and for sessions outside the caller's organization (reads as not found).
+//
+// Example:
+//
+//	request := &platformgo.PhonesSessionTelemetryTokenRequest{
+//	    SessionID: "session_id",
+//	}
+//	client.Phones.SessionTelemetryToken(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) SessionTelemetryToken(
 	ctx context.Context,
 	request *platformgo.PhonesSessionTelemetryTokenRequest,
@@ -188,6 +270,16 @@ func (c *Client) SessionTelemetryToken(
 }
 
 // Returns a short-lived URL for the session's current screen thumbnail — a rolling JPEG refreshed every few seconds while the session is active. Poll this endpoint and swap the image; every call mints a fresh URL. Status is "pending" (no URL) before the first frame lands or after the session ends. Org-scoped: another org's session reads as not found.
+//
+// Example:
+//
+//	request := &platformgo.PhonesSessionThumbnailRequest{
+//	    SessionID: "session_id",
+//	}
+//	client.Phones.SessionThumbnail(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) SessionThumbnail(
 	ctx context.Context,
 	request *platformgo.PhonesSessionThumbnailRequest,
@@ -205,6 +297,16 @@ func (c *Client) SessionThumbnail(
 }
 
 // Returns a single phone by its identifier.
+//
+// Example:
+//
+//	request := &platformgo.PhonesGetRequest{
+//	    PhoneID: "phone_id",
+//	}
+//	client.Phones.Get(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Get(
 	ctx context.Context,
 	request *platformgo.PhonesGetRequest,
@@ -222,6 +324,16 @@ func (c *Client) Get(
 }
 
 // Returns the phone's file delivery records, newest first: which library files were sent to it and where each stands (dispatching / dispatched / delivered / failed). Org-scoped: another org's phone reads as not found.
+//
+// Example:
+//
+//	request := &platformgo.PhonesListDeliveriesRequest{
+//	    PhoneID: "phone_id",
+//	}
+//	client.Phones.ListDeliveries(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ListDeliveries(
 	ctx context.Context,
 	request *platformgo.PhonesListDeliveriesRequest,
@@ -239,6 +351,17 @@ func (c *Client) ListDeliveries(
 }
 
 // Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts any file by id regardless of source (uploaded or captured), and the file must already be ready - finish an uploaded file with POST /files/{file_id}/complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
+//
+// Example:
+//
+//	request := &platformgo.FileDeliveryCreateRequest{
+//	    PhoneID: "phone_id",
+//	    FileID: "file_id",
+//	}
+//	client.Phones.CreateDelivery(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) CreateDelivery(
 	ctx context.Context,
 	request *platformgo.FileDeliveryCreateRequest,
@@ -256,6 +379,17 @@ func (c *Client) CreateDelivery(
 }
 
 // Returns a single delivery by id and its current status. Poll this to wait on a specific push: the list endpoint pages the newest records and can drop a delivery that ages past the page on a busy phone.
+//
+// Example:
+//
+//	request := &platformgo.PhonesGetDeliveryRequest{
+//	    PhoneID: "phone_id",
+//	    DeliveryID: "delivery_id",
+//	}
+//	client.Phones.GetDelivery(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) GetDelivery(
 	ctx context.Context,
 	request *platformgo.PhonesGetDeliveryRequest,
@@ -273,6 +407,17 @@ func (c *Client) GetDelivery(
 }
 
 // Sets the human-readable display name on a private phone the caller's org owns. Returns the updated phone summary.
+//
+// Example:
+//
+//	request := &platformgo.PhoneUpdateNicknameRequest{
+//	    PhoneID: "phone_id",
+//	    Nickname: "nickname",
+//	}
+//	client.Phones.Nickname(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Nickname(
 	ctx context.Context,
 	request *platformgo.PhoneUpdateNicknameRequest,
@@ -290,6 +435,16 @@ func (c *Client) Nickname(
 }
 
 // Returns a short-lived URL for the phone's current screen preview — a rolling JPEG refreshed every few seconds while the phone is paired, available with or without an active session. Poll this endpoint and swap the image; every call mints a fresh URL. Status is "pending" when no preview exists yet. Authorized to the org that owns the phone or currently holds its active session; any other org reads as not found.
+//
+// Example:
+//
+//	request := &platformgo.PhonesPreviewRequest{
+//	    PhoneID: "phone_id",
+//	}
+//	client.Phones.Preview(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Preview(
 	ctx context.Context,
 	request *platformgo.PhonesPreviewRequest,
@@ -307,6 +462,16 @@ func (c *Client) Preview(
 }
 
 // Deallocates a phone the caller's org currently holds. The session is billed and the phone is torn down asynchronously.
+//
+// Example:
+//
+//	request := &platformgo.PhonesDeallocateRequest{
+//	    PhoneID: "phone_id",
+//	}
+//	client.Phones.Deallocate(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Deallocate(
 	ctx context.Context,
 	request *platformgo.PhonesDeallocateRequest,
@@ -324,6 +489,16 @@ func (c *Client) Deallocate(
 }
 
 // Requests an on-demand factory reset of a private phone the caller's org owns. Requires the phone to be ACTIVE and not currently allocated. Sets the phone to MAINTENANCE while the wipe is carried out.
+//
+// Example:
+//
+//	request := &platformgo.PhonesWipeRequest{
+//	    PhoneID: "phone_id",
+//	}
+//	client.Phones.Wipe(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Wipe(
 	ctx context.Context,
 	request *platformgo.PhonesWipeRequest,
@@ -341,6 +516,16 @@ func (c *Client) Wipe(
 }
 
 // Allocates an Android phone and opens a session. Omit workflow_id for an interactive lease (drive the phone directly); set it to allocate for a workflow. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
+//
+// Example:
+//
+//	request := &platformgo.PhoneAllocateRequest{
+//	    PhoneType: platformgo.PhoneAllocateRequestPhoneTypeAndroid,
+//	}
+//	client.Phones.Allocate(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Allocate(
 	ctx context.Context,
 	request *platformgo.PhoneAllocateRequest,

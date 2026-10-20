@@ -23,10 +23,12 @@ type BillingDownloadInvoiceRequest struct {
 }
 
 func (b *BillingDownloadInvoiceRequest) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetInvoiceID sets the InvoiceID field and marks it as non-optional;
@@ -79,10 +81,12 @@ type BillingGetHistoryRequest struct {
 }
 
 func (b *BillingGetHistoryRequest) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -162,13 +166,13 @@ func (b *BillingGetHistoryRequest) SetPhoneID(phoneID *string) {
 	b.require(billingGetHistoryRequestFieldPhoneID)
 }
 
-// Response containing a temporary invoice download URL.
 var (
 	billingHistoryInvoiceDownloadResponseFieldSchema      = big.NewInt(1 << 0)
 	billingHistoryInvoiceDownloadResponseFieldDownloadURL = big.NewInt(1 << 1)
 	billingHistoryInvoiceDownloadResponseFieldExpiresAt   = big.NewInt(1 << 2)
 )
 
+// Response containing a temporary invoice download URL.
 type BillingHistoryInvoiceDownloadResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -213,10 +217,12 @@ func (b *BillingHistoryInvoiceDownloadResponse) GetExtraProperties() map[string]
 }
 
 func (b *BillingHistoryInvoiceDownloadResponse) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -290,7 +296,6 @@ func (b *BillingHistoryInvoiceDownloadResponse) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
-// Single invoice record in the billing history.
 var (
 	billingHistoryItemFieldAmountCents      = big.NewInt(1 << 0)
 	billingHistoryItemFieldAmountDollars    = big.NewInt(1 << 1)
@@ -309,6 +314,7 @@ var (
 	billingHistoryItemFieldStatus           = big.NewInt(1 << 14)
 )
 
+// Single invoice record in the billing history.
 type BillingHistoryItem struct {
 	// Invoice amount in cents.
 	AmountCents int64 `json:"amount_cents" url:"amount_cents"`
@@ -461,10 +467,12 @@ func (b *BillingHistoryItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BillingHistoryItem) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetAmountCents sets the AmountCents field and marks it as non-optional;
@@ -659,7 +667,6 @@ func (b BillingHistoryItemStatus) Ptr() *BillingHistoryItemStatus {
 	return &b
 }
 
-// One page of billing history items, using the API's standard list envelope (items, total, limit, offset).
 var (
 	billingHistoryResponseFieldSchema = big.NewInt(1 << 0)
 	billingHistoryResponseFieldItems  = big.NewInt(1 << 1)
@@ -668,6 +675,12 @@ var (
 	billingHistoryResponseFieldTotal  = big.NewInt(1 << 4)
 )
 
+// billingHistoryResponseNullableFields maps the wire names of BillingHistoryResponse's nullable fields (required or optional) to their field bits.
+var billingHistoryResponseNullableFields = map[string]*big.Int{
+	"items": billingHistoryResponseFieldItems,
+}
+
+// One page of billing history items, using the API's standard list envelope (items, total, limit, offset).
 type BillingHistoryResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -730,10 +743,12 @@ func (b *BillingHistoryResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BillingHistoryResponse) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -783,6 +798,13 @@ func (b *BillingHistoryResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	b.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, billingHistoryResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		b.require(presentFields)
+	}
 	b.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -813,13 +835,13 @@ func (b *BillingHistoryResponse) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
-// Per-interval slice of the rollup.
 var (
 	phoneRentalIntervalSummaryFieldCount        = big.NewInt(1 << 0)
 	phoneRentalIntervalSummaryFieldInterval     = big.NewInt(1 << 1)
 	phoneRentalIntervalSummaryFieldMonthlyCents = big.NewInt(1 << 2)
 )
 
+// Per-interval slice of the rollup.
 type PhoneRentalIntervalSummary struct {
 	// Number of active rentals on this interval.
 	Count int64 `json:"count" url:"count"`
@@ -864,10 +886,12 @@ func (p *PhoneRentalIntervalSummary) GetExtraProperties() map[string]interface{}
 }
 
 func (p *PhoneRentalIntervalSummary) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetCount sets the Count field and marks it as non-optional;
@@ -933,7 +957,6 @@ func (p *PhoneRentalIntervalSummary) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// An org's device rental subscriptions, plus an org-wide summary. The summary counts only active rentals regardless of which statuses the subscriptions list contains.
 var (
 	phoneRentalSubscriptionListResponseFieldSchema        = big.NewInt(1 << 0)
 	phoneRentalSubscriptionListResponseFieldSubscriptions = big.NewInt(1 << 1)
@@ -941,6 +964,12 @@ var (
 	phoneRentalSubscriptionListResponseFieldTotal         = big.NewInt(1 << 3)
 )
 
+// phoneRentalSubscriptionListResponseNullableFields maps the wire names of PhoneRentalSubscriptionListResponse's nullable fields (required or optional) to their field bits.
+var phoneRentalSubscriptionListResponseNullableFields = map[string]*big.Int{
+	"subscriptions": phoneRentalSubscriptionListResponseFieldSubscriptions,
+}
+
+// An org's device rental subscriptions, plus an org-wide summary. The summary counts only active rentals regardless of which statuses the subscriptions list contains.
 type PhoneRentalSubscriptionListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -994,10 +1023,12 @@ func (p *PhoneRentalSubscriptionListResponse) GetExtraProperties() map[string]in
 }
 
 func (p *PhoneRentalSubscriptionListResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -1040,6 +1071,13 @@ func (p *PhoneRentalSubscriptionListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phoneRentalSubscriptionListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1070,7 +1108,6 @@ func (p *PhoneRentalSubscriptionListResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Single device rental subscription record.
 var (
 	phoneRentalSubscriptionResponseFieldCancelAtPeriodEnd  = big.NewInt(1 << 0)
 	phoneRentalSubscriptionResponseFieldCanceledAt         = big.NewInt(1 << 1)
@@ -1089,6 +1126,7 @@ var (
 	phoneRentalSubscriptionResponseFieldStatus             = big.NewInt(1 << 14)
 )
 
+// Single device rental subscription record.
 type PhoneRentalSubscriptionResponse struct {
 	// Whether the subscription cancels at period end.
 	CancelAtPeriodEnd bool `json:"cancel_at_period_end" url:"cancel_at_period_end"`
@@ -1241,10 +1279,12 @@ func (p *PhoneRentalSubscriptionResponse) GetExtraProperties() map[string]interf
 }
 
 func (p *PhoneRentalSubscriptionResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetCancelAtPeriodEnd sets the CancelAtPeriodEnd field and marks it as non-optional;
@@ -1456,7 +1496,6 @@ func (p PhoneRentalSubscriptionResponseStatus) Ptr() *PhoneRentalSubscriptionRes
 	return &p
 }
 
-// Org-wide rollup shown above the rentals table.
 var (
 	phoneRentalSummaryFieldActiveCount          = big.NewInt(1 << 0)
 	phoneRentalSummaryFieldCombinedMonthlyCents = big.NewInt(1 << 1)
@@ -1464,6 +1503,13 @@ var (
 	phoneRentalSummaryFieldUpcomingCharges      = big.NewInt(1 << 3)
 )
 
+// phoneRentalSummaryNullableFields maps the wire names of PhoneRentalSummary's nullable fields (required or optional) to their field bits.
+var phoneRentalSummaryNullableFields = map[string]*big.Int{
+	"per_interval":     phoneRentalSummaryFieldPerInterval,
+	"upcoming_charges": phoneRentalSummaryFieldUpcomingCharges,
+}
+
+// Org-wide rollup shown above the rentals table.
 type PhoneRentalSummary struct {
 	// Number of active rentals for the org.
 	ActiveCount int64 `json:"active_count" url:"active_count"`
@@ -1517,10 +1563,12 @@ func (p *PhoneRentalSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PhoneRentalSummary) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetActiveCount sets the ActiveCount field and marks it as non-optional;
@@ -1563,6 +1611,13 @@ func (p *PhoneRentalSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, phoneRentalSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1593,13 +1648,13 @@ func (p *PhoneRentalSummary) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// One day's bucket of upcoming rental renewals.
 var (
 	phoneRentalUpcomingChargeFieldAmountCents = big.NewInt(1 << 0)
 	phoneRentalUpcomingChargeFieldCount       = big.NewInt(1 << 1)
 	phoneRentalUpcomingChargeFieldDate        = big.NewInt(1 << 2)
 )
 
+// One day's bucket of upcoming rental renewals.
 type PhoneRentalUpcomingCharge struct {
 	// Summed unit price of the renewals on this day.
 	AmountCents int64 `json:"amount_cents" url:"amount_cents"`
@@ -1644,10 +1699,12 @@ func (p *PhoneRentalUpcomingCharge) GetExtraProperties() map[string]interface{} 
 }
 
 func (p *PhoneRentalUpcomingCharge) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetAmountCents sets the AmountCents field and marks it as non-optional;
@@ -1721,7 +1778,6 @@ func (p *PhoneRentalUpcomingCharge) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// An open balance alert.
 var (
 	subscriptionActiveUsageAlertFieldBalanceCents   = big.NewInt(1 << 0)
 	subscriptionActiveUsageAlertFieldKind           = big.NewInt(1 << 1)
@@ -1729,6 +1785,7 @@ var (
 	subscriptionActiveUsageAlertFieldTriggeredAt    = big.NewInt(1 << 3)
 )
 
+// An open balance alert.
 type SubscriptionActiveUsageAlert struct {
 	// The balance when the alert opened, in cents. May be negative.
 	BalanceCents int64 `json:"balance_cents" url:"balance_cents"`
@@ -1782,10 +1839,12 @@ func (s *SubscriptionActiveUsageAlert) GetExtraProperties() map[string]interface
 }
 
 func (s *SubscriptionActiveUsageAlert) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetBalanceCents sets the BalanceCents field and marks it as non-optional;
@@ -1889,7 +1948,6 @@ func (s SubscriptionActiveUsageAlertKind) Ptr() *SubscriptionActiveUsageAlertKin
 	return &s
 }
 
-// The org's auto-recharge configuration and status.
 var (
 	subscriptionAutoRechargeSettingsResponseFieldSchema         = big.NewInt(1 << 0)
 	subscriptionAutoRechargeSettingsResponseFieldDisabledReason = big.NewInt(1 << 1)
@@ -1898,6 +1956,7 @@ var (
 	subscriptionAutoRechargeSettingsResponseFieldThresholdCents = big.NewInt(1 << 4)
 )
 
+// The org's auto-recharge configuration and status.
 type SubscriptionAutoRechargeSettingsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -1960,10 +2019,12 @@ func (s *SubscriptionAutoRechargeSettingsResponse) GetExtraProperties() map[stri
 }
 
 func (s *SubscriptionAutoRechargeSettingsResponse) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2063,7 +2124,6 @@ func (s SubscriptionAutoRechargeSettingsResponseDisabledReason) Ptr() *Subscript
 	return &s
 }
 
-// The current account balance and its source breakdown.
 var (
 	subscriptionBalanceResponseFieldSchema                = big.NewInt(1 << 0)
 	subscriptionBalanceResponseFieldBalanceDisplay        = big.NewInt(1 << 1)
@@ -2073,6 +2133,7 @@ var (
 	subscriptionBalanceResponseFieldPurchasedNextExpiry   = big.NewInt(1 << 5)
 )
 
+// The current account balance and its source breakdown.
 type SubscriptionBalanceResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2144,10 +2205,12 @@ func (s *SubscriptionBalanceResponse) GetExtraProperties() map[string]interface{
 }
 
 func (s *SubscriptionBalanceResponse) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2242,7 +2305,6 @@ func (s *SubscriptionBalanceResponse) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
-// Full subscription record returned by subscription endpoints.
 var (
 	subscriptionResponseFieldSchema                        = big.NewInt(1 << 0)
 	subscriptionResponseFieldBalanceDisplay                = big.NewInt(1 << 1)
@@ -2267,6 +2329,7 @@ var (
 	subscriptionResponseFieldYearlyPrice                   = big.NewInt(1 << 20)
 )
 
+// Full subscription record returned by subscription endpoints.
 type SubscriptionResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2473,10 +2536,12 @@ func (s *SubscriptionResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SubscriptionResponse) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2753,7 +2818,6 @@ func (s SubscriptionResponseStatus) Ptr() *SubscriptionResponseStatus {
 	return &s
 }
 
-// The org's usage-alert configuration and any open alerts.
 var (
 	subscriptionUsageAlertSettingsResponseFieldSchema         = big.NewInt(1 << 0)
 	subscriptionUsageAlertSettingsResponseFieldActiveAlerts   = big.NewInt(1 << 1)
@@ -2761,6 +2825,12 @@ var (
 	subscriptionUsageAlertSettingsResponseFieldThresholdCents = big.NewInt(1 << 3)
 )
 
+// subscriptionUsageAlertSettingsResponseNullableFields maps the wire names of SubscriptionUsageAlertSettingsResponse's nullable fields (required or optional) to their field bits.
+var subscriptionUsageAlertSettingsResponseNullableFields = map[string]*big.Int{
+	"active_alerts": subscriptionUsageAlertSettingsResponseFieldActiveAlerts,
+}
+
+// The org's usage-alert configuration and any open alerts.
 type SubscriptionUsageAlertSettingsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -2814,10 +2884,12 @@ func (s *SubscriptionUsageAlertSettingsResponse) GetExtraProperties() map[string
 }
 
 func (s *SubscriptionUsageAlertSettingsResponse) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -2860,6 +2932,13 @@ func (s *SubscriptionUsageAlertSettingsResponse) UnmarshalJSON(data []byte) erro
 		return err
 	}
 	s.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, subscriptionUsageAlertSettingsResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		s.require(presentFields)
+	}
 	s.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2909,10 +2988,12 @@ type SubscriptionAutoRechargeSettings struct {
 }
 
 func (s *SubscriptionAutoRechargeSettings) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
@@ -2973,10 +3054,12 @@ type SubscriptionUsageAlertSettings struct {
 }
 
 func (s *SubscriptionUsageAlertSettings) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetEnabled sets the Enabled field and marks it as non-optional;

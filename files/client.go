@@ -35,6 +35,14 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // Returns one page of the org's file library, newest first, with the org's standing usage against its storage quota. Every file carries its source (upload or capture) and, for a capture, its surface and capture state. Filter with source, surface and session_id. Files persist until deleted and any ready file can be delivered to a phone the org holds.
+//
+// Example:
+//
+//	request := &platformgo.FilesListRequest{}
+//	client.Files.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.FilesListRequest,
@@ -52,6 +60,18 @@ func (c *Client) List(
 }
 
 // Registers an image or video in the org's file library and returns a presigned S3 URL to upload the bytes to. PUT the raw file to upload_url with the declared Content-Type and Content-Length headers before the URL expires, then call the complete endpoint to make it ready. The registered file has source=upload. Uploads are capped per file and per org by total size.
+//
+// Example:
+//
+//	request := &platformgo.FileCreateRequest{
+//	    Filename: "filename",
+//	    MimeType: "mime_type",
+//	    SizeBytes: int64(1000000),
+//	}
+//	client.Files.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *platformgo.FileCreateRequest,
@@ -69,6 +89,16 @@ func (c *Client) Create(
 }
 
 // Removes a file from the org's library: the stored object and the library entry go immediately. Copies already on phones are not removed, whether the file was pushed to them or captured from one; removing a file from a phone is a separate operation. This runs the same for an uploaded or a captured file.
+//
+// Example:
+//
+//	request := &platformgo.FilesDeleteRequest{
+//	    FileID: "file_id",
+//	}
+//	client.Files.Delete(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	request *platformgo.FilesDeleteRequest,
@@ -86,6 +116,17 @@ func (c *Client) Delete(
 }
 
 // Updates the file's display name. Metadata only: storage is keyed by id, so the object never moves and existing URLs keep working, and past deliveries keep the name they were sent under. Only an uploaded file can be renamed; a captured file's name is part of its provenance, so renaming one is rejected.
+//
+// Example:
+//
+//	request := &platformgo.FileRenameRequest{
+//	    FileID: "file_id",
+//	    Filename: "filename",
+//	}
+//	client.Files.Rename(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Rename(
 	ctx context.Context,
 	request *platformgo.FileRenameRequest,
@@ -103,6 +144,16 @@ func (c *Client) Rename(
 }
 
 // Call after PUTting the bytes to the upload URL. Verifies the object landed at the declared size and type, checks the content really is the media it claims to be, and moves the file to ready so it can be delivered. Idempotent: completing an already-ready file just returns it. Applies to source=upload files; a captured file finalizes on its own from the phone's report.
+//
+// Example:
+//
+//	request := &platformgo.FilesCompleteRequest{
+//	    FileID: "file_id",
+//	}
+//	client.Files.Complete(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Complete(
 	ctx context.Context,
 	request *platformgo.FilesCompleteRequest,
@@ -120,6 +171,16 @@ func (c *Client) Complete(
 }
 
 // Returns the files this session captured off its phone, newest first — the direct answer to "what did this session capture". Every row is source=capture. Rows appear at detection, before the bytes finish moving, so a caller waiting on a file watches its capture state progress rather than an empty list.
+//
+// Example:
+//
+//	request := &platformgo.PhonesSessionFilesRequest{
+//	    SessionID: "session_id",
+//	}
+//	client.Files.PhonesSessionFiles(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) PhonesSessionFiles(
 	ctx context.Context,
 	request *platformgo.PhonesSessionFilesRequest,

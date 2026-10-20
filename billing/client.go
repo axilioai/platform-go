@@ -35,6 +35,12 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // Returns the organization's automatic balance top-up configuration and status.
+//
+// Example:
+//
+//	client.Billing.GetAutoRecharge(
+//	    context.TODO(),
+//	)
 func (c *Client) GetAutoRecharge(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -50,6 +56,18 @@ func (c *Client) GetAutoRecharge(
 }
 
 // Configures automatic balance top-up: when the balance drops below the threshold, a one-off invoice charges the saved payment method to restore it to the target. Requires an admin-role caller: an API key carries its creator's organization role, so the key must belong to an org admin. This only tunes when the saved payment method is charged — adding funds or payment methods stays in the dashboard.
+//
+// Example:
+//
+//	request := &platformgo.SubscriptionAutoRechargeSettings{
+//	    Enabled: true,
+//	    TargetCents: int64(1000000),
+//	    ThresholdCents: int64(1000000),
+//	}
+//	client.Billing.UpdateAutoRecharge(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) UpdateAutoRecharge(
 	ctx context.Context,
 	request *platformgo.SubscriptionAutoRechargeSettings,
@@ -67,6 +85,12 @@ func (c *Client) UpdateAutoRecharge(
 }
 
 // Returns the organization's current credit balance in microdollars plus a display string.
+//
+// Example:
+//
+//	client.Billing.GetBalance(
+//	    context.TODO(),
+//	)
 func (c *Client) GetBalance(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -82,6 +106,14 @@ func (c *Client) GetBalance(
 }
 
 // Paginated invoice history for the caller's organization with optional filters and sort.
+//
+// Example:
+//
+//	request := &platformgo.BillingGetHistoryRequest{}
+//	client.Billing.GetHistory(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) GetHistory(
 	ctx context.Context,
 	request *platformgo.BillingGetHistoryRequest,
@@ -99,6 +131,16 @@ func (c *Client) GetHistory(
 }
 
 // Returns a temporary PDF download URL for an invoice the caller's org owns. The URL expires; re-request it rather than storing it.
+//
+// Example:
+//
+//	request := &platformgo.BillingDownloadInvoiceRequest{
+//	    InvoiceID: "invoice_id",
+//	}
+//	client.Billing.DownloadInvoice(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) DownloadInvoice(
 	ctx context.Context,
 	request *platformgo.BillingDownloadInvoiceRequest,
@@ -116,6 +158,12 @@ func (c *Client) DownloadInvoice(
 }
 
 // Returns every phone rental subscription owned by the caller's organization, in any lifecycle state (active or canceled) - canceled rentals are included so past rentals stay visible. Each item's status field tells them apart. The summary block (active_count, combined monthly cost) counts only active rentals.
+//
+// Example:
+//
+//	client.Billing.GetRentalSubscriptions(
+//	    context.TODO(),
+//	)
 func (c *Client) GetRentalSubscriptions(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -131,6 +179,12 @@ func (c *Client) GetRentalSubscriptions(
 }
 
 // Returns the caller organization's active subscription plan. Only an active subscription is returned; if the org has none, this responds 404. (The status field is therefore always 'active' here.)
+//
+// Example:
+//
+//	client.Billing.GetSubscription(
+//	    context.TODO(),
+//	)
 func (c *Client) GetSubscription(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -146,6 +200,12 @@ func (c *Client) GetSubscription(
 }
 
 // Returns the organization's balance-alert configuration and any currently open alerts (low balance, negative balance).
+//
+// Example:
+//
+//	client.Billing.GetUsageAlerts(
+//	    context.TODO(),
+//	)
 func (c *Client) GetUsageAlerts(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -161,6 +221,17 @@ func (c *Client) GetUsageAlerts(
 }
 
 // Configures the low-balance alert: while enabled and the balance sits below the threshold, an alert stays open and surfaces in the dashboard. Negative-balance alerts are always on. Requires an admin-role caller: an API key carries its creator's organization role, so the key must belong to an org admin.
+//
+// Example:
+//
+//	request := &platformgo.SubscriptionUsageAlertSettings{
+//	    Enabled: true,
+//	    ThresholdCents: int64(1000000),
+//	}
+//	client.Billing.UpdateUsageAlerts(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) UpdateUsageAlerts(
 	ctx context.Context,
 	request *platformgo.SubscriptionUsageAlertSettings,

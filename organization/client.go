@@ -35,6 +35,12 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // Returns a descriptor of the organization the API key belongs to: name, slug, id, active plan name. Organization management (rename, members, invitations) is deliberately not part of the public API: it is dashboard-only so an API key can never modify the organization that issued it.
+//
+// Example:
+//
+//	client.Organization.Get(
+//	    context.TODO(),
+//	)
 func (c *Client) Get(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -50,6 +56,12 @@ func (c *Client) Get(
 }
 
 // Returns every outstanding invitation for the caller's organization. Requires the admin role, matching the dashboard. Organization management (rename, members, invitations) is deliberately not part of the public API: it is dashboard-only so an API key can never modify the organization that issued it.
+//
+// Example:
+//
+//	client.Organization.ListInvitations(
+//	    context.TODO(),
+//	)
 func (c *Client) ListInvitations(
 	ctx context.Context,
 	opts ...option.RequestOption,
@@ -65,6 +77,12 @@ func (c *Client) ListInvitations(
 }
 
 // Returns every member of the caller's organization with email, role, and join date. Organization management (rename, members, invitations) is deliberately not part of the public API: it is dashboard-only so an API key can never modify the organization that issued it.
+//
+// Example:
+//
+//	client.Organization.ListMembers(
+//	    context.TODO(),
+//	)
 func (c *Client) ListMembers(
 	ctx context.Context,
 	opts ...option.RequestOption,

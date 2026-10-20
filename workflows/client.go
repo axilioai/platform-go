@@ -35,6 +35,14 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // Paginated list of workflows in the caller's org, with optional search, status, platform, and created/last-run date filters via query params.
+//
+// Example:
+//
+//	request := &platformgo.WorkflowsListRequest{}
+//	client.Workflows.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.WorkflowsListRequest,
@@ -52,6 +60,16 @@ func (c *Client) List(
 }
 
 // Creates a workflow in the caller's org. Name must match ^[A-Za-z0-9_-]+$ and be unique within the org. Pass code to save the workflow's first code revision atomically with it; omit it to create an empty workflow and add code later. Returns the workflow_id (plus revision_id and revision when code was provided).
+//
+// Example:
+//
+//	request := &platformgo.WorkflowCreateRequest{
+//	    Name: "name",
+//	}
+//	client.Workflows.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *platformgo.WorkflowCreateRequest,
@@ -69,6 +87,16 @@ func (c *Client) Create(
 }
 
 // Returns a single workflow, scoped to the caller's org (workflows in other orgs return 404).
+//
+// Example:
+//
+//	request := &platformgo.WorkflowsGetRequest{
+//	    WorkflowID: "workflow_id",
+//	}
+//	client.Workflows.Get(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Get(
 	ctx context.Context,
 	request *platformgo.WorkflowsGetRequest,
@@ -86,6 +114,16 @@ func (c *Client) Get(
 }
 
 // Deletes a workflow. Org-scoped — workflows in other orgs return 404.
+//
+// Example:
+//
+//	request := &platformgo.WorkflowsDeleteRequest{
+//	    WorkflowID: "workflow_id",
+//	}
+//	client.Workflows.Delete(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	request *platformgo.WorkflowsDeleteRequest,
@@ -103,6 +141,16 @@ func (c *Client) Delete(
 }
 
 // Applies a partial update (name, platform, status, ocr_engine). Org-scoped — workflows in other orgs return 404.
+//
+// Example:
+//
+//	request := &platformgo.WorkflowUpdateRequest{
+//	    WorkflowID: "workflow_id",
+//	}
+//	client.Workflows.Update(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	request *platformgo.WorkflowUpdateRequest,
@@ -120,6 +168,16 @@ func (c *Client) Update(
 }
 
 // Returns the source code of the workflow's current revision, scoped to the caller's org.
+//
+// Example:
+//
+//	request := &platformgo.WorkflowsGetCodeRequest{
+//	    WorkflowID: "workflow_id",
+//	}
+//	client.Workflows.GetCode(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) GetCode(
 	ctx context.Context,
 	request *platformgo.WorkflowsGetCodeRequest,
@@ -137,6 +195,17 @@ func (c *Client) GetCode(
 }
 
 // Persists a new revision of the workflow's code. Hash-deduplicates against the current revision (no-op if unchanged). Source is capped at 256KB.
+//
+// Example:
+//
+//	request := &platformgo.WorkflowSaveCodeRequest{
+//	    WorkflowID: "workflow_id",
+//	    Source: "source",
+//	}
+//	client.Workflows.SaveCode(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) SaveCode(
 	ctx context.Context,
 	request *platformgo.WorkflowSaveCodeRequest,
@@ -154,6 +223,17 @@ func (c *Client) SaveCode(
 }
 
 // Creates a new revision with the source of the named revision. Does NOT dedup against the current revision so the action is auditable in the revision history.
+//
+// Example:
+//
+//	request := &platformgo.WorkflowRestoreRevisionRequest{
+//	    WorkflowID: "workflow_id",
+//	    RevisionID: "revision_id",
+//	}
+//	client.Workflows.RestoreRevision(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) RestoreRevision(
 	ctx context.Context,
 	request *platformgo.WorkflowRestoreRevisionRequest,
@@ -171,6 +251,16 @@ func (c *Client) RestoreRevision(
 }
 
 // Returns revision metadata (id, number, author, message, bytes, sha256, created_at) for the workflow, in reverse-chronological order. Use the `before` cursor to paginate older revisions.
+//
+// Example:
+//
+//	request := &platformgo.WorkflowsListRevisionsRequest{
+//	    WorkflowID: "workflow_id",
+//	}
+//	client.Workflows.ListRevisions(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) ListRevisions(
 	ctx context.Context,
 	request *platformgo.WorkflowsListRevisionsRequest,
@@ -188,6 +278,17 @@ func (c *Client) ListRevisions(
 }
 
 // Returns a single revision including its full source. Defense-in-depth: the revision must belong to the named workflow or it's treated as missing.
+//
+// Example:
+//
+//	request := &platformgo.WorkflowsGetRevisionRequest{
+//	    WorkflowID: "workflow_id",
+//	    RevisionID: "revision_id",
+//	}
+//	client.Workflows.GetRevision(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) GetRevision(
 	ctx context.Context,
 	request *platformgo.WorkflowsGetRevisionRequest,

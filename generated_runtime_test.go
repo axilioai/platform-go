@@ -134,3 +134,43 @@ func TestStringRedactsSecrets(t *testing.T) {
 		})
 	}
 }
+
+// A decoded model re-marshals the nullable fields it received (AXI-1602). The
+// API sends a Go slice as a required, nullable array, which Fern tags
+// omitempty, so an empty page used to come back without its required "phones"
+// key. Callers that proxy or re-serialize a response saw the field vanish.
+func TestDecodedRequiredCollectionSurvivesRemarshal(t *testing.T) {
+	for name, wire := range map[string]string{
+		"empty":     `{"limit":0,"offset":0,"phones":[],"total":0}`,
+		"populated": `{"limit":1,"offset":0,"phones":[{"phone_id":"ph_1","status":"available","ownership_type":"private","created_at":"2026-10-20T09:00:00Z","updated_at":"2026-10-20T09:00:00Z"}],"total":1}`,
+		"null":      `{"limit":0,"offset":0,"phones":null,"total":0}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			var page api.PhonePrivateListResponse
+			require.NoError(t, json.Unmarshal([]byte(wire), &page))
+
+			body, err := json.Marshal(&page)
+			require.NoError(t, err)
+			assert.JSONEq(t, wire, string(body))
+		})
+	}
+}
+
+// Presence tracking only marks what arrived: an optional collection the
+// response left out stays out, and zero-valued required scalars still go out.
+func TestDecodedOmittedOptionalCollectionStaysOmitted(t *testing.T) {
+	var problem api.V2ErrorModel
+	require.NoError(t, json.Unmarshal([]byte(`{"status":0,"title":"Bad Request"}`), &problem))
+
+	body, err := json.Marshal(&problem)
+	require.NoError(t, err)
+	assert.NotContains(t, string(body), `"errors"`)
+
+	var page api.PhonePrivateListResponse
+	require.NoError(t, json.Unmarshal([]byte(`{"limit":0,"offset":0,"phones":[],"total":0}`), &page))
+	body, err = json.Marshal(&page)
+	require.NoError(t, err)
+	for _, key := range []string{`"limit":0`, `"offset":0`, `"total":0`} {
+		assert.Contains(t, string(body), key)
+	}
+}

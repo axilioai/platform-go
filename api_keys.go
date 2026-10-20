@@ -23,10 +23,12 @@ type APIKeyCreateRequest struct {
 }
 
 func (a *APIKeyCreateRequest) require(field *big.Int) {
-	if a.explicitFields == nil {
-		a.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if a.explicitFields != nil {
+		next.Set(a.explicitFields)
 	}
-	a.explicitFields.Or(a.explicitFields, field)
+	next.Or(next, field)
+	a.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -70,10 +72,12 @@ type APIKeysDeleteRequest struct {
 }
 
 func (a *APIKeysDeleteRequest) require(field *big.Int) {
-	if a.explicitFields == nil {
-		a.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if a.explicitFields != nil {
+		next.Set(a.explicitFields)
 	}
-	a.explicitFields.Or(a.explicitFields, field)
+	next.Or(next, field)
+	a.explicitFields = next
 }
 
 // SetKeyID sets the KeyID field and marks it as non-optional;
@@ -99,10 +103,12 @@ type APIKeysListRequest struct {
 }
 
 func (a *APIKeysListRequest) require(field *big.Int) {
-	if a.explicitFields == nil {
-		a.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if a.explicitFields != nil {
+		next.Set(a.explicitFields)
 	}
-	a.explicitFields.Or(a.explicitFields, field)
+	next.Or(next, field)
+	a.explicitFields = next
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -119,7 +125,6 @@ func (a *APIKeysListRequest) SetOffset(offset *int64) {
 	a.require(aPIKeysListRequestFieldOffset)
 }
 
-// Response returned when a new API key is created.
 var (
 	aPIKeyCreateResponseFieldSchema    = big.NewInt(1 << 0)
 	aPIKeyCreateResponseFieldCreatedAt = big.NewInt(1 << 1)
@@ -128,6 +133,7 @@ var (
 	aPIKeyCreateResponseFieldName      = big.NewInt(1 << 4)
 )
 
+// Response returned when a new API key is created.
 type APIKeyCreateResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -190,10 +196,12 @@ func (a *APIKeyCreateResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (a *APIKeyCreateResponse) require(field *big.Int) {
-	if a.explicitFields == nil {
-		a.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if a.explicitFields != nil {
+		next.Set(a.explicitFields)
 	}
-	a.explicitFields.Or(a.explicitFields, field)
+	next.Or(next, field)
+	a.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -281,7 +289,6 @@ func (a *APIKeyCreateResponse) String() string {
 	return fmt.Sprintf("%#v", a)
 }
 
-// Single API key row in a list response.
 var (
 	aPIKeyListItemFieldCreatedAt   = big.NewInt(1 << 0)
 	aPIKeyListItemFieldCreatedBy   = big.NewInt(1 << 1)
@@ -292,6 +299,7 @@ var (
 	aPIKeyListItemFieldName        = big.NewInt(1 << 6)
 )
 
+// Single API key row in a list response.
 type APIKeyListItem struct {
 	// Timestamp when the key was created.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
@@ -372,10 +380,12 @@ func (a *APIKeyListItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (a *APIKeyListItem) require(field *big.Int) {
-	if a.explicitFields == nil {
-		a.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if a.explicitFields != nil {
+		next.Set(a.explicitFields)
 	}
-	a.explicitFields.Or(a.explicitFields, field)
+	next.Or(next, field)
+	a.explicitFields = next
 }
 
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
@@ -481,7 +491,6 @@ func (a *APIKeyListItem) String() string {
 	return fmt.Sprintf("%#v", a)
 }
 
-// Paginated list of API keys.
 var (
 	aPIKeyListResponseFieldSchema  = big.NewInt(1 << 0)
 	aPIKeyListResponseFieldAPIKeys = big.NewInt(1 << 1)
@@ -490,6 +499,12 @@ var (
 	aPIKeyListResponseFieldTotal   = big.NewInt(1 << 4)
 )
 
+// aPIKeyListResponseNullableFields maps the wire names of APIKeyListResponse's nullable fields (required or optional) to their field bits.
+var aPIKeyListResponseNullableFields = map[string]*big.Int{
+	"api_keys": aPIKeyListResponseFieldAPIKeys,
+}
+
+// Paginated list of API keys.
 type APIKeyListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -552,10 +567,12 @@ func (a *APIKeyListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (a *APIKeyListResponse) require(field *big.Int) {
-	if a.explicitFields == nil {
-		a.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if a.explicitFields != nil {
+		next.Set(a.explicitFields)
 	}
-	a.explicitFields.Or(a.explicitFields, field)
+	next.Or(next, field)
+	a.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -605,6 +622,13 @@ func (a *APIKeyListResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	a.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, aPIKeyListResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		a.require(presentFields)
+	}
 	a.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -635,12 +659,12 @@ func (a *APIKeyListResponse) String() string {
 	return fmt.Sprintf("%#v", a)
 }
 
-// Confirmation that the API key was deleted.
 var (
 	deleteAPIKeyOutputBodyFieldSchema  = big.NewInt(1 << 0)
 	deleteAPIKeyOutputBodyFieldMessage = big.NewInt(1 << 1)
 )
 
+// Confirmation that the API key was deleted.
 type DeleteAPIKeyOutputBody struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
@@ -676,10 +700,12 @@ func (d *DeleteAPIKeyOutputBody) GetExtraProperties() map[string]interface{} {
 }
 
 func (d *DeleteAPIKeyOutputBody) require(field *big.Int) {
-	if d.explicitFields == nil {
-		d.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if d.explicitFields != nil {
+		next.Set(d.explicitFields)
 	}
-	d.explicitFields.Or(d.explicitFields, field)
+	next.Or(next, field)
+	d.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
