@@ -52,7 +52,7 @@ func (c *Client) GetAutoRecharge(
 // Configures automatic balance top-up: when the balance drops below the threshold, a one-off invoice charges the saved payment method to restore it to the target. Requires an admin-role caller: an API key carries its creator's organization role, so the key must belong to an org admin. This only tunes when the saved payment method is charged — adding funds or payment methods stays in the dashboard.
 func (c *Client) UpdateAutoRecharge(
 	ctx context.Context,
-	request *platformgo.SubscriptionAutoRechargeSettings,
+	request *platformgo.SubscriptionAutoRechargeSettingsUpdate,
 	opts ...option.RequestOption,
 ) (*platformgo.SubscriptionAutoRechargeSettingsResponse, error) {
 	response, err := c.WithRawResponse.UpdateAutoRecharge(
@@ -73,6 +73,40 @@ func (c *Client) GetBalance(
 ) (*platformgo.SubscriptionBalanceResponse, error) {
 	response, err := c.WithRawResponse.GetBalance(
 		ctx,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// The organization's balance over a period, like a bank statement: the starting balance, credit added, what each product used, credit taken back by refunds and chargebacks, credit that expired, and the ending balance.
+func (c *Client) GetBalanceStatement(
+	ctx context.Context,
+	request *platformgo.BillingGetBalanceStatementRequest,
+	opts ...option.RequestOption,
+) (*platformgo.SubscriptionBalanceStatement, error) {
+	response, err := c.WithRawResponse.GetBalanceStatement(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// The organization's balance history: every movement of its balance (usage, credit added or granted, expiry, refunds and disputes), newest first, with optional filters.
+func (c *Client) ListBalanceTransactions(
+	ctx context.Context,
+	request *platformgo.BillingListBalanceTransactionsRequest,
+	opts ...option.RequestOption,
+) (*platformgo.SubscriptionBalanceTransactionsResponse, error) {
+	response, err := c.WithRawResponse.ListBalanceTransactions(
+		ctx,
+		request,
 		opts...,
 	)
 	if err != nil {
@@ -115,13 +149,15 @@ func (c *Client) DownloadInvoice(
 	return response.Body, nil
 }
 
-// Returns every phone rental subscription owned by the caller's organization, in any lifecycle state (active or canceled) - canceled rentals are included so past rentals stay visible. Each item's status field tells them apart. The summary block (active_count, combined monthly cost) counts only active rentals.
+// Returns one page of the caller organization's phone rental subscriptions, in any lifecycle state unless status filters it (canceled rentals stay listed so past rentals remain visible). Filter by search, status, plan_interval, cancel_at_period_end, payment_status and a current_period_end_after/current_period_end_before window; order with order_by ('<field> <asc|desc>'). The summary block (active_count, combined monthly cost, per-interval breakdown, upcoming charges) covers every active rental and ignores the filters.
 func (c *Client) GetRentalSubscriptions(
 	ctx context.Context,
+	request *platformgo.BillingGetRentalSubscriptionsRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.PhoneRentalSubscriptionListResponse, error) {
 	response, err := c.WithRawResponse.GetRentalSubscriptions(
 		ctx,
+		request,
 		opts...,
 	)
 	if err != nil {
@@ -163,7 +199,7 @@ func (c *Client) GetUsageAlerts(
 // Configures the low-balance alert: while enabled and the balance sits below the threshold, an alert stays open and surfaces in the dashboard. Negative-balance alerts are always on. Requires an admin-role caller: an API key carries its creator's organization role, so the key must belong to an org admin.
 func (c *Client) UpdateUsageAlerts(
 	ctx context.Context,
-	request *platformgo.SubscriptionUsageAlertSettings,
+	request *platformgo.SubscriptionUsageAlertSettingsUpdate,
 	opts ...option.RequestOption,
 ) (*platformgo.SubscriptionUsageAlertSettingsResponse, error) {
 	response, err := c.WithRawResponse.UpdateUsageAlerts(

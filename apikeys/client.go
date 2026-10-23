@@ -34,7 +34,7 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Lists the API keys for the caller's organization, with optional paging (limit + offset). Ordered newest-first.
+// Lists the API keys for the caller's organization. Filter by search (name or key preview), created_by_id and a created_after/created_before window; order with order_by ('<field> <asc|desc>'), field one of name, created_by_id, created_at or last_used_at. Defaults to created_at desc.
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.APIKeysListRequest,

@@ -34,7 +34,7 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Returns one page of the org's file library, newest first, with the org's standing usage against its storage quota. Every file carries its source (upload or capture) and, for a capture, its surface and capture state. Filter with source, surface and session_id. Files persist until deleted and any ready file can be delivered to a phone the org holds.
+// Returns one page of the org's file library, newest first, with the org's standing usage against its storage quota. Every file carries its source (upload, capture or message) and, for a capture or message attachment, its surface and capture state. Filter with source, surface, session_id, phone_id and media_type, among others. Files persist until deleted and any ready file can be delivered to a phone the org holds.
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.FilesListRequest,
@@ -68,6 +68,23 @@ func (c *Client) Create(
 	return response.Body, nil
 }
 
+// Returns one file from the org's library, with a short-lived read URL once its bytes are ready. A message's media part names its file by id; this is where that id resolves. Another org's file id reads as not found.
+func (c *Client) Get(
+	ctx context.Context,
+	request *platformgo.FilesGetRequest,
+	opts ...option.RequestOption,
+) (*platformgo.FileSummary, error) {
+	response, err := c.WithRawResponse.Get(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Removes a file from the org's library: the stored object and the library entry go immediately. Copies already on phones are not removed, whether the file was pushed to them or captured from one; removing a file from a phone is a separate operation. This runs the same for an uploaded or a captured file.
 func (c *Client) Delete(
 	ctx context.Context,
@@ -86,12 +103,12 @@ func (c *Client) Delete(
 }
 
 // Updates the file's display name. Metadata only: storage is keyed by id, so the object never moves and existing URLs keep working, and past deliveries keep the name they were sent under. Only an uploaded file can be renamed; a captured file's name is part of its provenance, so renaming one is rejected.
-func (c *Client) Rename(
+func (c *Client) Update(
 	ctx context.Context,
 	request *platformgo.FileRenameRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.RenameFileOutputBody, error) {
-	response, err := c.WithRawResponse.Rename(
+	response, err := c.WithRawResponse.Update(
 		ctx,
 		request,
 		opts...,

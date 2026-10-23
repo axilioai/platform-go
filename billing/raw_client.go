@@ -74,7 +74,7 @@ func (r *RawClient) GetAutoRecharge(
 
 func (r *RawClient) UpdateAutoRecharge(
 	ctx context.Context,
-	request *platformgo.SubscriptionAutoRechargeSettings,
+	request *platformgo.SubscriptionAutoRechargeSettingsUpdate,
 	opts ...option.RequestOption,
 ) (*core.Response[*platformgo.SubscriptionAutoRechargeSettingsResponse], error) {
 	options := core.NewRequestOptions(opts...)
@@ -94,7 +94,7 @@ func (r *RawClient) UpdateAutoRecharge(
 		ctx,
 		&internal.CallParams{
 			URL:             endpointURL,
-			Method:          http.MethodPut,
+			Method:          http.MethodPatch,
 			Headers:         headers,
 			MaxAttempts:     options.MaxAttempts,
 			DisableRetries:  options.DisableRetries,
@@ -103,6 +103,7 @@ func (r *RawClient) UpdateAutoRecharge(
 			Client:          options.HTTPClient,
 			Request:         request,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -155,6 +156,104 @@ func (r *RawClient) GetBalance(
 	}, nil
 }
 
+func (r *RawClient) GetBalanceStatement(
+	ctx context.Context,
+	request *platformgo.BillingGetBalanceStatementRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.SubscriptionBalanceStatement], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := baseURL + "/billing/balance/statement"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.SubscriptionBalanceStatement
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.SubscriptionBalanceStatement]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) ListBalanceTransactions(
+	ctx context.Context,
+	request *platformgo.BillingListBalanceTransactionsRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.SubscriptionBalanceTransactionsResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := baseURL + "/billing/balance/transactions"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.SubscriptionBalanceTransactionsResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.SubscriptionBalanceTransactionsResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
 func (r *RawClient) GetHistory(
 	ctx context.Context,
 	request *platformgo.BillingGetHistoryRequest,
@@ -191,6 +290,7 @@ func (r *RawClient) GetHistory(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -235,6 +335,7 @@ func (r *RawClient) DownloadInvoice(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -249,6 +350,7 @@ func (r *RawClient) DownloadInvoice(
 
 func (r *RawClient) GetRentalSubscriptions(
 	ctx context.Context,
+	request *platformgo.BillingGetRentalSubscriptionsRequest,
 	opts ...option.RequestOption,
 ) (*core.Response[*platformgo.PhoneRentalSubscriptionListResponse], error) {
 	options := core.NewRequestOptions(opts...)
@@ -258,6 +360,13 @@ func (r *RawClient) GetRentalSubscriptions(
 		"/api/v1",
 	)
 	endpointURL := baseURL + "/billing/phone-rental-subscriptions"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
 	headers := internal.MergeHeaders(
 		r.options.ToHeader(),
 		options.ToHeader(),
@@ -275,6 +384,7 @@ func (r *RawClient) GetRentalSubscriptions(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -369,7 +479,7 @@ func (r *RawClient) GetUsageAlerts(
 
 func (r *RawClient) UpdateUsageAlerts(
 	ctx context.Context,
-	request *platformgo.SubscriptionUsageAlertSettings,
+	request *platformgo.SubscriptionUsageAlertSettingsUpdate,
 	opts ...option.RequestOption,
 ) (*core.Response[*platformgo.SubscriptionUsageAlertSettingsResponse], error) {
 	options := core.NewRequestOptions(opts...)
@@ -389,7 +499,7 @@ func (r *RawClient) UpdateUsageAlerts(
 		ctx,
 		&internal.CallParams{
 			URL:             endpointURL,
-			Method:          http.MethodPut,
+			Method:          http.MethodPatch,
 			Headers:         headers,
 			MaxAttempts:     options.MaxAttempts,
 			DisableRetries:  options.DisableRetries,
@@ -398,6 +508,7 @@ func (r *RawClient) UpdateUsageAlerts(
 			Client:          options.HTTPClient,
 			Request:         request,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {

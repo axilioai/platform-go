@@ -7,22 +7,89 @@ import (
 	fmt "fmt"
 	internal "github.com/axilioai/platform-go/internal"
 	big "math/big"
+	time "time"
 )
 
-// Returned after a successful sign-in or sign-up.
+// A text message on one of the organization's dedicated phones.
 var (
-	userAuthResponseFieldOrgSlug = big.NewInt(1 << 0)
-	userAuthResponseFieldToken   = big.NewInt(1 << 1)
-	userAuthResponseFieldUserID  = big.NewInt(1 << 2)
+	phoneMessageFieldSchema         = big.NewInt(1 << 0)
+	phoneMessageFieldAcceptedAt     = big.NewInt(1 << 1)
+	phoneMessageFieldAPIKeyID       = big.NewInt(1 << 2)
+	phoneMessageFieldBody           = big.NewInt(1 << 3)
+	phoneMessageFieldChannel        = big.NewInt(1 << 4)
+	phoneMessageFieldConversationID = big.NewInt(1 << 5)
+	phoneMessageFieldCreatedAt      = big.NewInt(1 << 6)
+	phoneMessageFieldDeletedAt      = big.NewInt(1 << 7)
+	phoneMessageFieldDeliveredAt    = big.NewInt(1 << 8)
+	phoneMessageFieldDirection      = big.NewInt(1 << 9)
+	phoneMessageFieldError          = big.NewInt(1 << 10)
+	phoneMessageFieldErrorCode      = big.NewInt(1 << 11)
+	phoneMessageFieldFailedAt       = big.NewInt(1 << 12)
+	phoneMessageFieldFrom           = big.NewInt(1 << 13)
+	phoneMessageFieldID             = big.NewInt(1 << 14)
+	phoneMessageFieldIsGroup        = big.NewInt(1 << 15)
+	phoneMessageFieldParts          = big.NewInt(1 << 16)
+	phoneMessageFieldPhoneDeletion  = big.NewInt(1 << 17)
+	phoneMessageFieldPhoneID        = big.NewInt(1 << 18)
+	phoneMessageFieldReceivedAt     = big.NewInt(1 << 19)
+	phoneMessageFieldSentAt         = big.NewInt(1 << 20)
+	phoneMessageFieldStatus         = big.NewInt(1 << 21)
+	phoneMessageFieldTo             = big.NewInt(1 << 22)
+	phoneMessageFieldTruncated      = big.NewInt(1 << 23)
+	phoneMessageFieldUserID         = big.NewInt(1 << 24)
 )
 
-type UserAuthResponse struct {
-	// Default organization slug used for post-login redirect.
-	OrgSlug *string `json:"org_slug,omitempty" url:"org_slug,omitempty"`
-	// Sign-in token for activating a session.
-	Token string `json:"token" url:"token"`
-	// Authenticated user's identifier.
-	UserID string `json:"user_id" url:"user_id"`
+type PhoneMessage struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// When the phone reported it had this outgoing message. Absent for a received message, and for one the phone never got.
+	AcceptedAt *time.Time `json:"accepted_at,omitempty" url:"accepted_at,omitempty"`
+	// The API key that sent this message. Absent for a message a signed-in user sent, a received message, and one sent before senders were recorded.
+	APIKeyID *string `json:"api_key_id,omitempty" url:"api_key_id,omitempty"`
+	// The message text: every text part, in order, joined with a newline. Empty for a message with no text.
+	Body string `json:"body" url:"body"`
+	// How the message travelled: sms (plain text), mms (multimedia, including group texts and some long texts), or rcs. More channels may be added; treat a value you don't know as a channel you don't handle.
+	Channel PhoneMessageChannel `json:"channel" url:"channel"`
+	// The conversation this message is in: GET /conversations/{conversation_id} reads it, and its messages are at GET /conversations/{conversation_id}/messages.
+	ConversationID string `json:"conversation_id" url:"conversation_id"`
+	// When the platform stored the message. Lists sort and filter on this time.
+	CreatedAt time.Time `json:"created_at" url:"created_at"`
+	// When the message was deleted. Present only on a deleted message, which GET /messages/{message_id} still returns with no body or parts; lists and conversations leave it out.
+	DeletedAt *time.Time `json:"deleted_at,omitempty" url:"deleted_at,omitempty"`
+	// When a message this phone sent was delivered. Absent until then, and for a received message.
+	DeliveredAt *time.Time `json:"delivered_at,omitempty" url:"delivered_at,omitempty"`
+	// inbound for a message the phone received, outbound for one it sent.
+	Direction PhoneMessageDirection `json:"direction" url:"direction"`
+	// Why an outbound message failed or is unconfirmed, in words. Empty otherwise.
+	Error *string `json:"error,omitempty" url:"error,omitempty"`
+	// Why an outbound message failed or is unconfirmed, as a code to branch on: phone_unreachable (the phone never got it before its deadline; it did not go out), no_result (unconfirmed: the phone had it but has not reported), policy_off (the phone's sending switch is off), expired (its deadline passed before the phone could send it), no_subscription (no SIM line), no_service (no mobile service or data), radio_off, carrier_rejected, phone_rate_limited (Android's outgoing-message limit on the phone), media_fetch_failed (the phone could not download the attachment), connection_lost (the phone lost its connection before sending; it did not go out), queue_full (the phone was too busy), or send_failed (any other failure; error has the detail). Empty when error is. Absent on a failure reported by older phone software.
+	ErrorCode *PhoneMessageErrorCode `json:"error_code,omitempty" url:"error_code,omitempty"`
+	// When a message this phone sent failed. Absent unless its status is failed.
+	FailedAt *time.Time `json:"failed_at,omitempty" url:"failed_at,omitempty"`
+	// Sender: an E.164 number, a short code, or an alphanumeric sender id. Null only when the sender is this phone's own SIM and the phone does not know its number.
+	From *string `json:"from,omitempty" url:"from,omitempty"`
+	// Message identifier.
+	ID string `json:"id" url:"id"`
+	// True for a group message (more than one recipient).
+	IsGroup bool `json:"is_group" url:"is_group"`
+	// The message content in order: text and media. A plain SMS has one text part.
+	Parts []*PhoneMessagePart `json:"parts,omitempty" url:"parts,omitempty"`
+	// What the delete did to the copy on the phone. Present only on a deleted message: pending until the phone answers, then its answer.
+	PhoneDeletion *PhoneMessagePhoneDeletion `json:"phone_deletion,omitempty" url:"phone_deletion,omitempty"`
+	// The phone that received or sent the message.
+	PhoneID string `json:"phone_id" url:"phone_id"`
+	// When this phone received the message, by the phone's clock, to the millisecond. Null for a message the phone sent.
+	ReceivedAt *time.Time `json:"received_at,omitempty" url:"received_at,omitempty"`
+	// When the message was sent. For a received message, the sending network's clock (SMS carries whole seconds); for a message this phone sent, when the platform learned the network accepted it. Null for a message not sent yet.
+	SentAt *time.Time `json:"sent_at,omitempty" url:"sent_at,omitempty"`
+	// The delivery state of a message this phone sent: queued (accepted and issued to the phone), sent (the network accepted it), delivered (the recipient acknowledged it), failed, or unconfirmed (the phone had it but has not reported whether it went out; do not resend automatically, it may still turn sent or failed). Empty for a received message. More statuses may be added; treat one you don't know as still in progress.
+	Status *PhoneMessageStatus `json:"status,omitempty" url:"status,omitempty"`
+	// Every recipient, as E.164 numbers. For a one-to-one inbound message this is the phone's own number; a group message lists every recipient. Empty when the only recipient is this phone's own SIM and the phone does not know its number.
+	To []string `json:"to,omitempty" url:"to,omitempty"`
+	// True when the text was longer than 5000 characters and was cut to that length.
+	Truncated bool `json:"truncated" url:"truncated"`
+	// The signed-in user who sent this message, from the dashboard or the CLI. Absent for a message sent with an API key, a received message, and one sent before senders were recorded.
+	UserID *string `json:"user_id,omitempty" url:"user_id,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -31,115 +98,563 @@ type UserAuthResponse struct {
 	rawJSON         json.RawMessage
 }
 
-func (u *UserAuthResponse) GetOrgSlug() *string {
-	if u == nil {
+func (p *PhoneMessage) GetSchema() *string {
+	if p == nil {
 		return nil
 	}
-	return u.OrgSlug
+	return p.Schema
 }
 
-func (u *UserAuthResponse) GetToken() string {
-	if u == nil {
-		return ""
-	}
-	return u.Token
-}
-
-func (u *UserAuthResponse) GetUserID() string {
-	if u == nil {
-		return ""
-	}
-	return u.UserID
-}
-
-func (u *UserAuthResponse) GetExtraProperties() map[string]interface{} {
-	if u == nil {
+func (p *PhoneMessage) GetAcceptedAt() *time.Time {
+	if p == nil {
 		return nil
 	}
-	return u.extraProperties
+	return p.AcceptedAt
 }
 
-func (u *UserAuthResponse) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+func (p *PhoneMessage) GetAPIKeyID() *string {
+	if p == nil {
+		return nil
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	return p.APIKeyID
 }
 
-// SetOrgSlug sets the OrgSlug field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserAuthResponse) SetOrgSlug(orgSlug *string) {
-	u.OrgSlug = orgSlug
-	u.require(userAuthResponseFieldOrgSlug)
+func (p *PhoneMessage) GetBody() string {
+	if p == nil {
+		return ""
+	}
+	return p.Body
 }
 
-// SetToken sets the Token field and marks it as non-optional;
+func (p *PhoneMessage) GetChannel() PhoneMessageChannel {
+	if p == nil {
+		return ""
+	}
+	return p.Channel
+}
+
+func (p *PhoneMessage) GetConversationID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ConversationID
+}
+
+func (p *PhoneMessage) GetCreatedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.CreatedAt
+}
+
+func (p *PhoneMessage) GetDeletedAt() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.DeletedAt
+}
+
+func (p *PhoneMessage) GetDeliveredAt() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.DeliveredAt
+}
+
+func (p *PhoneMessage) GetDirection() PhoneMessageDirection {
+	if p == nil {
+		return ""
+	}
+	return p.Direction
+}
+
+func (p *PhoneMessage) GetError() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Error
+}
+
+func (p *PhoneMessage) GetErrorCode() *PhoneMessageErrorCode {
+	if p == nil {
+		return nil
+	}
+	return p.ErrorCode
+}
+
+func (p *PhoneMessage) GetFailedAt() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.FailedAt
+}
+
+func (p *PhoneMessage) GetFrom() *string {
+	if p == nil {
+		return nil
+	}
+	return p.From
+}
+
+func (p *PhoneMessage) GetID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ID
+}
+
+func (p *PhoneMessage) GetIsGroup() bool {
+	if p == nil {
+		return false
+	}
+	return p.IsGroup
+}
+
+func (p *PhoneMessage) GetParts() []*PhoneMessagePart {
+	if p == nil {
+		return nil
+	}
+	return p.Parts
+}
+
+func (p *PhoneMessage) GetPhoneDeletion() *PhoneMessagePhoneDeletion {
+	if p == nil {
+		return nil
+	}
+	return p.PhoneDeletion
+}
+
+func (p *PhoneMessage) GetPhoneID() string {
+	if p == nil {
+		return ""
+	}
+	return p.PhoneID
+}
+
+func (p *PhoneMessage) GetReceivedAt() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.ReceivedAt
+}
+
+func (p *PhoneMessage) GetSentAt() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.SentAt
+}
+
+func (p *PhoneMessage) GetStatus() *PhoneMessageStatus {
+	if p == nil {
+		return nil
+	}
+	return p.Status
+}
+
+func (p *PhoneMessage) GetTo() []string {
+	if p == nil {
+		return nil
+	}
+	return p.To
+}
+
+func (p *PhoneMessage) GetTruncated() bool {
+	if p == nil {
+		return false
+	}
+	return p.Truncated
+}
+
+func (p *PhoneMessage) GetUserID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.UserID
+}
+
+func (p *PhoneMessage) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneMessage) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserAuthResponse) SetToken(token string) {
-	u.Token = token
-	u.require(userAuthResponseFieldToken)
+func (p *PhoneMessage) SetSchema(schema *string) {
+	p.Schema = schema
+	p.require(phoneMessageFieldSchema)
+}
+
+// SetAcceptedAt sets the AcceptedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetAcceptedAt(acceptedAt *time.Time) {
+	p.AcceptedAt = acceptedAt
+	p.require(phoneMessageFieldAcceptedAt)
+}
+
+// SetAPIKeyID sets the APIKeyID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetAPIKeyID(apiKeyID *string) {
+	p.APIKeyID = apiKeyID
+	p.require(phoneMessageFieldAPIKeyID)
+}
+
+// SetBody sets the Body field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetBody(body string) {
+	p.Body = body
+	p.require(phoneMessageFieldBody)
+}
+
+// SetChannel sets the Channel field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetChannel(channel PhoneMessageChannel) {
+	p.Channel = channel
+	p.require(phoneMessageFieldChannel)
+}
+
+// SetConversationID sets the ConversationID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetConversationID(conversationID string) {
+	p.ConversationID = conversationID
+	p.require(phoneMessageFieldConversationID)
+}
+
+// SetCreatedAt sets the CreatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetCreatedAt(createdAt time.Time) {
+	p.CreatedAt = createdAt
+	p.require(phoneMessageFieldCreatedAt)
+}
+
+// SetDeletedAt sets the DeletedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetDeletedAt(deletedAt *time.Time) {
+	p.DeletedAt = deletedAt
+	p.require(phoneMessageFieldDeletedAt)
+}
+
+// SetDeliveredAt sets the DeliveredAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetDeliveredAt(deliveredAt *time.Time) {
+	p.DeliveredAt = deliveredAt
+	p.require(phoneMessageFieldDeliveredAt)
+}
+
+// SetDirection sets the Direction field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetDirection(direction PhoneMessageDirection) {
+	p.Direction = direction
+	p.require(phoneMessageFieldDirection)
+}
+
+// SetError sets the Error field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetError(error_ *string) {
+	p.Error = error_
+	p.require(phoneMessageFieldError)
+}
+
+// SetErrorCode sets the ErrorCode field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetErrorCode(errorCode *PhoneMessageErrorCode) {
+	p.ErrorCode = errorCode
+	p.require(phoneMessageFieldErrorCode)
+}
+
+// SetFailedAt sets the FailedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetFailedAt(failedAt *time.Time) {
+	p.FailedAt = failedAt
+	p.require(phoneMessageFieldFailedAt)
+}
+
+// SetFrom sets the From field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetFrom(from *string) {
+	p.From = from
+	p.require(phoneMessageFieldFrom)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetID(id string) {
+	p.ID = id
+	p.require(phoneMessageFieldID)
+}
+
+// SetIsGroup sets the IsGroup field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetIsGroup(isGroup bool) {
+	p.IsGroup = isGroup
+	p.require(phoneMessageFieldIsGroup)
+}
+
+// SetParts sets the Parts field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetParts(parts []*PhoneMessagePart) {
+	p.Parts = parts
+	p.require(phoneMessageFieldParts)
+}
+
+// SetPhoneDeletion sets the PhoneDeletion field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetPhoneDeletion(phoneDeletion *PhoneMessagePhoneDeletion) {
+	p.PhoneDeletion = phoneDeletion
+	p.require(phoneMessageFieldPhoneDeletion)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetPhoneID(phoneID string) {
+	p.PhoneID = phoneID
+	p.require(phoneMessageFieldPhoneID)
+}
+
+// SetReceivedAt sets the ReceivedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetReceivedAt(receivedAt *time.Time) {
+	p.ReceivedAt = receivedAt
+	p.require(phoneMessageFieldReceivedAt)
+}
+
+// SetSentAt sets the SentAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetSentAt(sentAt *time.Time) {
+	p.SentAt = sentAt
+	p.require(phoneMessageFieldSentAt)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetStatus(status *PhoneMessageStatus) {
+	p.Status = status
+	p.require(phoneMessageFieldStatus)
+}
+
+// SetTo sets the To field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetTo(to []string) {
+	p.To = to
+	p.require(phoneMessageFieldTo)
+}
+
+// SetTruncated sets the Truncated field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessage) SetTruncated(truncated bool) {
+	p.Truncated = truncated
+	p.require(phoneMessageFieldTruncated)
 }
 
 // SetUserID sets the UserID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserAuthResponse) SetUserID(userID string) {
-	u.UserID = userID
-	u.require(userAuthResponseFieldUserID)
+func (p *PhoneMessage) SetUserID(userID *string) {
+	p.UserID = userID
+	p.require(phoneMessageFieldUserID)
 }
 
-func (u *UserAuthResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler UserAuthResponse
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
+func (p *PhoneMessage) UnmarshalJSON(data []byte) error {
+	type embed PhoneMessage
+	var unmarshaler = struct {
+		embed
+		AcceptedAt  *internal.DateTime `json:"accepted_at,omitempty"`
+		CreatedAt   *internal.DateTime `json:"created_at"`
+		DeletedAt   *internal.DateTime `json:"deleted_at,omitempty"`
+		DeliveredAt *internal.DateTime `json:"delivered_at,omitempty"`
+		FailedAt    *internal.DateTime `json:"failed_at,omitempty"`
+		ReceivedAt  *internal.DateTime `json:"received_at,omitempty"`
+		SentAt      *internal.DateTime `json:"sent_at,omitempty"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*u = UserAuthResponse(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
+	*p = PhoneMessage(unmarshaler.embed)
+	p.AcceptedAt = unmarshaler.AcceptedAt.TimePtr()
+	p.CreatedAt = unmarshaler.CreatedAt.Time()
+	p.DeletedAt = unmarshaler.DeletedAt.TimePtr()
+	p.DeliveredAt = unmarshaler.DeliveredAt.TimePtr()
+	p.FailedAt = unmarshaler.FailedAt.TimePtr()
+	p.ReceivedAt = unmarshaler.ReceivedAt.TimePtr()
+	p.SentAt = unmarshaler.SentAt.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
 	if err != nil {
 		return err
 	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
 	return nil
 }
 
-func (u *UserAuthResponse) MarshalJSON() ([]byte, error) {
-	type embed UserAuthResponse
+func (p *PhoneMessage) MarshalJSON() ([]byte, error) {
+	type embed PhoneMessage
 	var marshaler = struct {
 		embed
+		AcceptedAt  *internal.DateTime `json:"accepted_at,omitempty"`
+		CreatedAt   *internal.DateTime `json:"created_at"`
+		DeletedAt   *internal.DateTime `json:"deleted_at,omitempty"`
+		DeliveredAt *internal.DateTime `json:"delivered_at,omitempty"`
+		FailedAt    *internal.DateTime `json:"failed_at,omitempty"`
+		ReceivedAt  *internal.DateTime `json:"received_at,omitempty"`
+		SentAt      *internal.DateTime `json:"sent_at,omitempty"`
 	}{
-		embed: embed(*u),
+		embed:       embed(*p),
+		AcceptedAt:  internal.NewOptionalDateTime(p.AcceptedAt),
+		CreatedAt:   internal.NewDateTime(p.CreatedAt),
+		DeletedAt:   internal.NewOptionalDateTime(p.DeletedAt),
+		DeliveredAt: internal.NewOptionalDateTime(p.DeliveredAt),
+		FailedAt:    internal.NewOptionalDateTime(p.FailedAt),
+		ReceivedAt:  internal.NewOptionalDateTime(p.ReceivedAt),
+		SentAt:      internal.NewOptionalDateTime(p.SentAt),
 	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
 	return json.Marshal(explicitMarshaler)
 }
 
-func (u *UserAuthResponse) String() string {
-	if u == nil {
+func (p *PhoneMessage) String() string {
+	if p == nil {
 		return "<nil>"
 	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
 			return value
 		}
 	}
-	if value, err := internal.StringifyJSON(u); err == nil {
+	if value, err := internal.StringifyJSON(p); err == nil {
 		return value
 	}
-	return fmt.Sprintf("%#v", u)
+	return fmt.Sprintf("%#v", p)
 }
 
-// Whether a provided invite code is valid.
-var (
-	userInviteCodeValidationResponseFieldMessage = big.NewInt(1 << 0)
-	userInviteCodeValidationResponseFieldValid   = big.NewInt(1 << 1)
+// How the message travelled: sms (plain text), mms (multimedia, including group texts and some long texts), or rcs. More channels may be added; treat a value you don't know as a channel you don't handle.
+type PhoneMessageChannel string
+
+const (
+	PhoneMessageChannelSms PhoneMessageChannel = "sms"
+	PhoneMessageChannelMms PhoneMessageChannel = "mms"
+	PhoneMessageChannelRcs PhoneMessageChannel = "rcs"
 )
 
-type UserInviteCodeValidationResponse struct {
-	// Error description when the code is invalid.
-	Message *string `json:"message,omitempty" url:"message,omitempty"`
-	// Whether the invite code is accepted.
-	Valid bool `json:"valid" url:"valid"`
+func NewPhoneMessageChannelFromString(s string) (PhoneMessageChannel, error) {
+	switch s {
+	case "sms":
+		return PhoneMessageChannelSms, nil
+	case "mms":
+		return PhoneMessageChannelMms, nil
+	case "rcs":
+		return PhoneMessageChannelRcs, nil
+	}
+	var t PhoneMessageChannel
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneMessageChannel) Ptr() *PhoneMessageChannel {
+	return &p
+}
+
+// inbound for a message the phone received, outbound for one it sent.
+type PhoneMessageDirection string
+
+const (
+	PhoneMessageDirectionInbound  PhoneMessageDirection = "inbound"
+	PhoneMessageDirectionOutbound PhoneMessageDirection = "outbound"
+)
+
+func NewPhoneMessageDirectionFromString(s string) (PhoneMessageDirection, error) {
+	switch s {
+	case "inbound":
+		return PhoneMessageDirectionInbound, nil
+	case "outbound":
+		return PhoneMessageDirectionOutbound, nil
+	}
+	var t PhoneMessageDirection
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneMessageDirection) Ptr() *PhoneMessageDirection {
+	return &p
+}
+
+// Why an outbound message failed or is unconfirmed, as a code to branch on: phone_unreachable (the phone never got it before its deadline; it did not go out), no_result (unconfirmed: the phone had it but has not reported), policy_off (the phone's sending switch is off), expired (its deadline passed before the phone could send it), no_subscription (no SIM line), no_service (no mobile service or data), radio_off, carrier_rejected, phone_rate_limited (Android's outgoing-message limit on the phone), media_fetch_failed (the phone could not download the attachment), connection_lost (the phone lost its connection before sending; it did not go out), queue_full (the phone was too busy), or send_failed (any other failure; error has the detail). Empty when error is. Absent on a failure reported by older phone software.
+type PhoneMessageErrorCode string
+
+const (
+	PhoneMessageErrorCodePhoneUnreachable PhoneMessageErrorCode = "phone_unreachable"
+	PhoneMessageErrorCodeNoResult         PhoneMessageErrorCode = "no_result"
+	PhoneMessageErrorCodePolicyOff        PhoneMessageErrorCode = "policy_off"
+	PhoneMessageErrorCodeExpired          PhoneMessageErrorCode = "expired"
+	PhoneMessageErrorCodeNoSubscription   PhoneMessageErrorCode = "no_subscription"
+	PhoneMessageErrorCodeNoService        PhoneMessageErrorCode = "no_service"
+	PhoneMessageErrorCodeRadioOff         PhoneMessageErrorCode = "radio_off"
+	PhoneMessageErrorCodeCarrierRejected  PhoneMessageErrorCode = "carrier_rejected"
+	PhoneMessageErrorCodePhoneRateLimited PhoneMessageErrorCode = "phone_rate_limited"
+	PhoneMessageErrorCodeMediaFetchFailed PhoneMessageErrorCode = "media_fetch_failed"
+	PhoneMessageErrorCodeConnectionLost   PhoneMessageErrorCode = "connection_lost"
+	PhoneMessageErrorCodeQueueFull        PhoneMessageErrorCode = "queue_full"
+	PhoneMessageErrorCodeSendFailed       PhoneMessageErrorCode = "send_failed"
+)
+
+func NewPhoneMessageErrorCodeFromString(s string) (PhoneMessageErrorCode, error) {
+	switch s {
+	case "phone_unreachable":
+		return PhoneMessageErrorCodePhoneUnreachable, nil
+	case "no_result":
+		return PhoneMessageErrorCodeNoResult, nil
+	case "policy_off":
+		return PhoneMessageErrorCodePolicyOff, nil
+	case "expired":
+		return PhoneMessageErrorCodeExpired, nil
+	case "no_subscription":
+		return PhoneMessageErrorCodeNoSubscription, nil
+	case "no_service":
+		return PhoneMessageErrorCodeNoService, nil
+	case "radio_off":
+		return PhoneMessageErrorCodeRadioOff, nil
+	case "carrier_rejected":
+		return PhoneMessageErrorCodeCarrierRejected, nil
+	case "phone_rate_limited":
+		return PhoneMessageErrorCodePhoneRateLimited, nil
+	case "media_fetch_failed":
+		return PhoneMessageErrorCodeMediaFetchFailed, nil
+	case "connection_lost":
+		return PhoneMessageErrorCodeConnectionLost, nil
+	case "queue_full":
+		return PhoneMessageErrorCodeQueueFull, nil
+	case "send_failed":
+		return PhoneMessageErrorCodeSendFailed, nil
+	}
+	var t PhoneMessageErrorCode
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneMessageErrorCode) Ptr() *PhoneMessageErrorCode {
+	return &p
+}
+
+// One page of the organization's messages.
+var (
+	phoneMessageListResponseFieldSchema   = big.NewInt(1 << 0)
+	phoneMessageListResponseFieldMessages = big.NewInt(1 << 1)
+	phoneMessageListResponseFieldTotal    = big.NewInt(1 << 2)
+)
+
+type PhoneMessageListResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Messages, newest first by created_at.
+	Messages []*PhoneMessage `json:"messages,omitempty" url:"messages,omitempty"`
+	// Total messages matching the query.
+	Total int64 `json:"total" url:"total"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -148,364 +663,127 @@ type UserInviteCodeValidationResponse struct {
 	rawJSON         json.RawMessage
 }
 
-func (u *UserInviteCodeValidationResponse) GetMessage() *string {
-	if u == nil {
+func (p *PhoneMessageListResponse) GetSchema() *string {
+	if p == nil {
 		return nil
 	}
-	return u.Message
+	return p.Schema
 }
 
-func (u *UserInviteCodeValidationResponse) GetValid() bool {
-	if u == nil {
-		return false
-	}
-	return u.Valid
-}
-
-func (u *UserInviteCodeValidationResponse) GetExtraProperties() map[string]interface{} {
-	if u == nil {
+func (p *PhoneMessageListResponse) GetMessages() []*PhoneMessage {
+	if p == nil {
 		return nil
 	}
-	return u.extraProperties
+	return p.Messages
 }
 
-func (u *UserInviteCodeValidationResponse) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+func (p *PhoneMessageListResponse) GetTotal() int64 {
+	if p == nil {
+		return 0
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	return p.Total
 }
 
-// SetMessage sets the Message field and marks it as non-optional;
+func (p *PhoneMessageListResponse) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneMessageListResponse) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserInviteCodeValidationResponse) SetMessage(message *string) {
-	u.Message = message
-	u.require(userInviteCodeValidationResponseFieldMessage)
+func (p *PhoneMessageListResponse) SetSchema(schema *string) {
+	p.Schema = schema
+	p.require(phoneMessageListResponseFieldSchema)
 }
 
-// SetValid sets the Valid field and marks it as non-optional;
+// SetMessages sets the Messages field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserInviteCodeValidationResponse) SetValid(valid bool) {
-	u.Valid = valid
-	u.require(userInviteCodeValidationResponseFieldValid)
+func (p *PhoneMessageListResponse) SetMessages(messages []*PhoneMessage) {
+	p.Messages = messages
+	p.require(phoneMessageListResponseFieldMessages)
 }
 
-func (u *UserInviteCodeValidationResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler UserInviteCodeValidationResponse
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessageListResponse) SetTotal(total int64) {
+	p.Total = total
+	p.require(phoneMessageListResponseFieldTotal)
+}
+
+func (p *PhoneMessageListResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneMessageListResponse
 	var value unmarshaler
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*u = UserInviteCodeValidationResponse(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
+	*p = PhoneMessageListResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
 	if err != nil {
 		return err
 	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
 	return nil
 }
 
-func (u *UserInviteCodeValidationResponse) MarshalJSON() ([]byte, error) {
-	type embed UserInviteCodeValidationResponse
+func (p *PhoneMessageListResponse) MarshalJSON() ([]byte, error) {
+	type embed PhoneMessageListResponse
 	var marshaler = struct {
 		embed
 	}{
-		embed: embed(*u),
+		embed: embed(*p),
 	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
 	return json.Marshal(explicitMarshaler)
 }
 
-func (u *UserInviteCodeValidationResponse) String() string {
-	if u == nil {
+func (p *PhoneMessageListResponse) String() string {
+	if p == nil {
 		return "<nil>"
 	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
 			return value
 		}
 	}
-	if value, err := internal.StringifyJSON(u); err == nil {
+	if value, err := internal.StringifyJSON(p); err == nil {
 		return value
 	}
-	return fmt.Sprintf("%#v", u)
+	return fmt.Sprintf("%#v", p)
 }
 
-// Request body for authenticating an existing user.
+// One piece of a message's content: text, or a media file in the organization's file library.
 var (
-	userSignInRequestFieldEmail    = big.NewInt(1 << 0)
-	userSignInRequestFieldPassword = big.NewInt(1 << 1)
+	phoneMessagePartFieldFileID    = big.NewInt(1 << 0)
+	phoneMessagePartFieldMimeType  = big.NewInt(1 << 1)
+	phoneMessagePartFieldName      = big.NewInt(1 << 2)
+	phoneMessagePartFieldSizeBytes = big.NewInt(1 << 3)
+	phoneMessagePartFieldText      = big.NewInt(1 << 4)
+	phoneMessagePartFieldType      = big.NewInt(1 << 5)
 )
 
-type UserSignInRequest struct {
-	// User's email address.
-	Email string `json:"email" url:"email"`
-	// User's password.
-	Password string `json:"password" url:"password"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (u *UserSignInRequest) GetEmail() string {
-	if u == nil {
-		return ""
-	}
-	return u.Email
-}
-
-func (u *UserSignInRequest) GetPassword() string {
-	if u == nil {
-		return ""
-	}
-	return u.Password
-}
-
-func (u *UserSignInRequest) GetExtraProperties() map[string]interface{} {
-	if u == nil {
-		return nil
-	}
-	return u.extraProperties
-}
-
-func (u *UserSignInRequest) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
-	}
-	u.explicitFields.Or(u.explicitFields, field)
-}
-
-// SetEmail sets the Email field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserSignInRequest) SetEmail(email string) {
-	u.Email = email
-	u.require(userSignInRequestFieldEmail)
-}
-
-// SetPassword sets the Password field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserSignInRequest) SetPassword(password string) {
-	u.Password = password
-	u.require(userSignInRequestFieldPassword)
-}
-
-func (u *UserSignInRequest) UnmarshalJSON(data []byte) error {
-	type unmarshaler UserSignInRequest
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*u = UserSignInRequest(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
-	if err != nil {
-		return err
-	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (u *UserSignInRequest) MarshalJSON() ([]byte, error) {
-	type embed UserSignInRequest
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*u),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (u *UserSignInRequest) String() string {
-	if u == nil {
-		return "<nil>"
-	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(u); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", u)
-}
-
-// Request body for creating a new user account.
-var (
-	userSignUpRequestFieldEmail      = big.NewInt(1 << 0)
-	userSignUpRequestFieldFirstName  = big.NewInt(1 << 1)
-	userSignUpRequestFieldInviteCode = big.NewInt(1 << 2)
-	userSignUpRequestFieldLastName   = big.NewInt(1 << 3)
-	userSignUpRequestFieldPassword   = big.NewInt(1 << 4)
-)
-
-type UserSignUpRequest struct {
-	// New user's email address.
-	Email string `json:"email" url:"email"`
-	// New user's first name.
-	FirstName string `json:"first_name" url:"first_name"`
-	// Invite code required for registration.
-	InviteCode *string `json:"invite_code,omitempty" url:"invite_code,omitempty"`
-	// New user's last name.
-	LastName string `json:"last_name" url:"last_name"`
-	// New user's password.
-	Password string `json:"password" url:"password"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (u *UserSignUpRequest) GetEmail() string {
-	if u == nil {
-		return ""
-	}
-	return u.Email
-}
-
-func (u *UserSignUpRequest) GetFirstName() string {
-	if u == nil {
-		return ""
-	}
-	return u.FirstName
-}
-
-func (u *UserSignUpRequest) GetInviteCode() *string {
-	if u == nil {
-		return nil
-	}
-	return u.InviteCode
-}
-
-func (u *UserSignUpRequest) GetLastName() string {
-	if u == nil {
-		return ""
-	}
-	return u.LastName
-}
-
-func (u *UserSignUpRequest) GetPassword() string {
-	if u == nil {
-		return ""
-	}
-	return u.Password
-}
-
-func (u *UserSignUpRequest) GetExtraProperties() map[string]interface{} {
-	if u == nil {
-		return nil
-	}
-	return u.extraProperties
-}
-
-func (u *UserSignUpRequest) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
-	}
-	u.explicitFields.Or(u.explicitFields, field)
-}
-
-// SetEmail sets the Email field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserSignUpRequest) SetEmail(email string) {
-	u.Email = email
-	u.require(userSignUpRequestFieldEmail)
-}
-
-// SetFirstName sets the FirstName field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserSignUpRequest) SetFirstName(firstName string) {
-	u.FirstName = firstName
-	u.require(userSignUpRequestFieldFirstName)
-}
-
-// SetInviteCode sets the InviteCode field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserSignUpRequest) SetInviteCode(inviteCode *string) {
-	u.InviteCode = inviteCode
-	u.require(userSignUpRequestFieldInviteCode)
-}
-
-// SetLastName sets the LastName field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserSignUpRequest) SetLastName(lastName string) {
-	u.LastName = lastName
-	u.require(userSignUpRequestFieldLastName)
-}
-
-// SetPassword sets the Password field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserSignUpRequest) SetPassword(password string) {
-	u.Password = password
-	u.require(userSignUpRequestFieldPassword)
-}
-
-func (u *UserSignUpRequest) UnmarshalJSON(data []byte) error {
-	type unmarshaler UserSignUpRequest
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*u = UserSignUpRequest(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
-	if err != nil {
-		return err
-	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (u *UserSignUpRequest) MarshalJSON() ([]byte, error) {
-	type embed UserSignUpRequest
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*u),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (u *UserSignUpRequest) String() string {
-	if u == nil {
-		return "<nil>"
-	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(u); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", u)
-}
-
-// Request body for joining the Axilio waitlist.
-var (
-	userWaitlistRequestFieldCompany = big.NewInt(1 << 0)
-	userWaitlistRequestFieldEmail   = big.NewInt(1 << 1)
-	userWaitlistRequestFieldName    = big.NewInt(1 << 2)
-	userWaitlistRequestFieldUseCase = big.NewInt(1 << 3)
-)
-
-type UserWaitlistRequest struct {
-	// Applicant's company name.
-	Company *string `json:"company,omitempty" url:"company,omitempty"`
-	// Applicant's email address.
-	Email string `json:"email" url:"email"`
-	// Applicant's name.
+type PhoneMessagePart struct {
+	// The file holding the media, in the organization's file library, where the file API returns a short-lived download link. Present on media parts.
+	FileID *string `json:"file_id,omitempty" url:"file_id,omitempty"`
+	// The attachment's content type, for example image/jpeg. Present on media parts.
+	MimeType *string `json:"mime_type,omitempty" url:"mime_type,omitempty"`
+	// The attachment's filename as the sender's phone named it. Present on media parts.
 	Name *string `json:"name,omitempty" url:"name,omitempty"`
-	// Optional description of the applicant's use case.
-	UseCase *string `json:"use_case,omitempty" url:"use_case,omitempty"`
+	// The attachment's size in bytes. Present on media parts.
+	SizeBytes *int64 `json:"size_bytes,omitempty" url:"size_bytes,omitempty"`
+	// The text. Present on text parts.
+	Text *string `json:"text,omitempty" url:"text,omitempty"`
+	// text for a run of message text; media for an attachment. More part types may be added; skip a part whose type you don't know.
+	Type PhoneMessagePartType `json:"type" url:"type"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -514,129 +792,183 @@ type UserWaitlistRequest struct {
 	rawJSON         json.RawMessage
 }
 
-func (u *UserWaitlistRequest) GetCompany() *string {
-	if u == nil {
+func (p *PhoneMessagePart) GetFileID() *string {
+	if p == nil {
 		return nil
 	}
-	return u.Company
+	return p.FileID
 }
 
-func (u *UserWaitlistRequest) GetEmail() string {
-	if u == nil {
+func (p *PhoneMessagePart) GetMimeType() *string {
+	if p == nil {
+		return nil
+	}
+	return p.MimeType
+}
+
+func (p *PhoneMessagePart) GetName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Name
+}
+
+func (p *PhoneMessagePart) GetSizeBytes() *int64 {
+	if p == nil {
+		return nil
+	}
+	return p.SizeBytes
+}
+
+func (p *PhoneMessagePart) GetText() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Text
+}
+
+func (p *PhoneMessagePart) GetType() PhoneMessagePartType {
+	if p == nil {
 		return ""
 	}
-	return u.Email
+	return p.Type
 }
 
-func (u *UserWaitlistRequest) GetName() *string {
-	if u == nil {
+func (p *PhoneMessagePart) GetExtraProperties() map[string]interface{} {
+	if p == nil {
 		return nil
 	}
-	return u.Name
+	return p.extraProperties
 }
 
-func (u *UserWaitlistRequest) GetUseCase() *string {
-	if u == nil {
-		return nil
+func (p *PhoneMessagePart) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
 	}
-	return u.UseCase
+	p.explicitFields.Or(p.explicitFields, field)
 }
 
-func (u *UserWaitlistRequest) GetExtraProperties() map[string]interface{} {
-	if u == nil {
-		return nil
-	}
-	return u.extraProperties
-}
-
-func (u *UserWaitlistRequest) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
-	}
-	u.explicitFields.Or(u.explicitFields, field)
-}
-
-// SetCompany sets the Company field and marks it as non-optional;
+// SetFileID sets the FileID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserWaitlistRequest) SetCompany(company *string) {
-	u.Company = company
-	u.require(userWaitlistRequestFieldCompany)
+func (p *PhoneMessagePart) SetFileID(fileID *string) {
+	p.FileID = fileID
+	p.require(phoneMessagePartFieldFileID)
 }
 
-// SetEmail sets the Email field and marks it as non-optional;
+// SetMimeType sets the MimeType field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserWaitlistRequest) SetEmail(email string) {
-	u.Email = email
-	u.require(userWaitlistRequestFieldEmail)
+func (p *PhoneMessagePart) SetMimeType(mimeType *string) {
+	p.MimeType = mimeType
+	p.require(phoneMessagePartFieldMimeType)
 }
 
 // SetName sets the Name field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserWaitlistRequest) SetName(name *string) {
-	u.Name = name
-	u.require(userWaitlistRequestFieldName)
+func (p *PhoneMessagePart) SetName(name *string) {
+	p.Name = name
+	p.require(phoneMessagePartFieldName)
 }
 
-// SetUseCase sets the UseCase field and marks it as non-optional;
+// SetSizeBytes sets the SizeBytes field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserWaitlistRequest) SetUseCase(useCase *string) {
-	u.UseCase = useCase
-	u.require(userWaitlistRequestFieldUseCase)
+func (p *PhoneMessagePart) SetSizeBytes(sizeBytes *int64) {
+	p.SizeBytes = sizeBytes
+	p.require(phoneMessagePartFieldSizeBytes)
 }
 
-func (u *UserWaitlistRequest) UnmarshalJSON(data []byte) error {
-	type unmarshaler UserWaitlistRequest
+// SetText sets the Text field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessagePart) SetText(text *string) {
+	p.Text = text
+	p.require(phoneMessagePartFieldText)
+}
+
+// SetType sets the Type field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessagePart) SetType(type_ PhoneMessagePartType) {
+	p.Type = type_
+	p.require(phoneMessagePartFieldType)
+}
+
+func (p *PhoneMessagePart) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneMessagePart
 	var value unmarshaler
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*u = UserWaitlistRequest(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
+	*p = PhoneMessagePart(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
 	if err != nil {
 		return err
 	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
 	return nil
 }
 
-func (u *UserWaitlistRequest) MarshalJSON() ([]byte, error) {
-	type embed UserWaitlistRequest
+func (p *PhoneMessagePart) MarshalJSON() ([]byte, error) {
+	type embed PhoneMessagePart
 	var marshaler = struct {
 		embed
 	}{
-		embed: embed(*u),
+		embed: embed(*p),
 	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
 	return json.Marshal(explicitMarshaler)
 }
 
-func (u *UserWaitlistRequest) String() string {
-	if u == nil {
+func (p *PhoneMessagePart) String() string {
+	if p == nil {
 		return "<nil>"
 	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
 			return value
 		}
 	}
-	if value, err := internal.StringifyJSON(u); err == nil {
+	if value, err := internal.StringifyJSON(p); err == nil {
 		return value
 	}
-	return fmt.Sprintf("%#v", u)
+	return fmt.Sprintf("%#v", p)
 }
 
-// WaitlistResponse confirms a successful waitlist submission.
-var (
-	userWaitlistResponseFieldMessage = big.NewInt(1 << 0)
-	userWaitlistResponseFieldSuccess = big.NewInt(1 << 1)
+// text for a run of message text; media for an attachment. More part types may be added; skip a part whose type you don't know.
+type PhoneMessagePartType string
+
+const (
+	PhoneMessagePartTypeText  PhoneMessagePartType = "text"
+	PhoneMessagePartTypeMedia PhoneMessagePartType = "media"
 )
 
-type UserWaitlistResponse struct {
-	// Human-readable confirmation or error.
-	Message string `json:"message" url:"message"`
-	// Whether the submission was recorded.
-	Success bool `json:"success" url:"success"`
+func NewPhoneMessagePartTypeFromString(s string) (PhoneMessagePartType, error) {
+	switch s {
+	case "text":
+		return PhoneMessagePartTypeText, nil
+	case "media":
+		return PhoneMessagePartTypeMedia, nil
+	}
+	var t PhoneMessagePartType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneMessagePartType) Ptr() *PhoneMessagePartType {
+	return &p
+}
+
+// What the delete did to the copy on the phone itself.
+var (
+	phoneMessagePhoneDeletionFieldNextCheckAt = big.NewInt(1 << 0)
+	phoneMessagePhoneDeletionFieldReason      = big.NewInt(1 << 1)
+	phoneMessagePhoneDeletionFieldStatus      = big.NewInt(1 << 2)
+)
+
+type PhoneMessagePhoneDeletion struct {
+	// When Axilio next checks this delete: it asks the phone again if the phone can delete and the 7 days after the delete aren't over, or settles it. Null once the outcome is final: deleted, not_found, ambiguous, not_matched and not_sent at once, unconfirmed when the 7 days run out; message.phone_deleted or message.phone_delete_failed fires then.
+	NextCheckAt *time.Time `json:"next_check_at,omitempty" url:"next_check_at,omitempty"`
+	// A human-readable explanation of status.
+	Reason string `json:"reason" url:"reason"`
+	// pending (the phone has been asked and has not answered yet), deleted (the phone deleted its copy), not_found (the phone has no copy), ambiguous (an older text the phone cannot tell apart from an identical one; left on the phone), not_default_app (the phone is not set up to delete messages yet; it is asked once it can), not_matched (the phone stored this message before it became the phone's messaging app and could not identify it; its copy may still be there), failed (the phone tried and failed; it is asked again), unconfirmed (the phone has not confirmed the delete: the request could not be sent, or 7 days passed without an answer; its copy may still be there), or not_sent (the organization no longer rents the phone, so nothing was sent). next_check_at is null once the outcome is final. More values may be added.
+	Status PhoneMessagePhoneDeletionStatus `json:"status" url:"status"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -645,88 +977,858 @@ type UserWaitlistResponse struct {
 	rawJSON         json.RawMessage
 }
 
-func (u *UserWaitlistResponse) GetMessage() string {
-	if u == nil {
-		return ""
-	}
-	return u.Message
-}
-
-func (u *UserWaitlistResponse) GetSuccess() bool {
-	if u == nil {
-		return false
-	}
-	return u.Success
-}
-
-func (u *UserWaitlistResponse) GetExtraProperties() map[string]interface{} {
-	if u == nil {
+func (p *PhoneMessagePhoneDeletion) GetNextCheckAt() *time.Time {
+	if p == nil {
 		return nil
 	}
-	return u.extraProperties
+	return p.NextCheckAt
 }
 
-func (u *UserWaitlistResponse) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
+func (p *PhoneMessagePhoneDeletion) GetReason() string {
+	if p == nil {
+		return ""
 	}
-	u.explicitFields.Or(u.explicitFields, field)
+	return p.Reason
 }
 
-// SetMessage sets the Message field and marks it as non-optional;
+func (p *PhoneMessagePhoneDeletion) GetStatus() PhoneMessagePhoneDeletionStatus {
+	if p == nil {
+		return ""
+	}
+	return p.Status
+}
+
+func (p *PhoneMessagePhoneDeletion) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneMessagePhoneDeletion) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetNextCheckAt sets the NextCheckAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserWaitlistResponse) SetMessage(message string) {
-	u.Message = message
-	u.require(userWaitlistResponseFieldMessage)
+func (p *PhoneMessagePhoneDeletion) SetNextCheckAt(nextCheckAt *time.Time) {
+	p.NextCheckAt = nextCheckAt
+	p.require(phoneMessagePhoneDeletionFieldNextCheckAt)
 }
 
-// SetSuccess sets the Success field and marks it as non-optional;
+// SetReason sets the Reason field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UserWaitlistResponse) SetSuccess(success bool) {
-	u.Success = success
-	u.require(userWaitlistResponseFieldSuccess)
+func (p *PhoneMessagePhoneDeletion) SetReason(reason string) {
+	p.Reason = reason
+	p.require(phoneMessagePhoneDeletionFieldReason)
 }
 
-func (u *UserWaitlistResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler UserWaitlistResponse
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessagePhoneDeletion) SetStatus(status PhoneMessagePhoneDeletionStatus) {
+	p.Status = status
+	p.require(phoneMessagePhoneDeletionFieldStatus)
+}
+
+func (p *PhoneMessagePhoneDeletion) UnmarshalJSON(data []byte) error {
+	type embed PhoneMessagePhoneDeletion
+	var unmarshaler = struct {
+		embed
+		NextCheckAt *internal.DateTime `json:"next_check_at,omitempty"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = PhoneMessagePhoneDeletion(unmarshaler.embed)
+	p.NextCheckAt = unmarshaler.NextCheckAt.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PhoneMessagePhoneDeletion) MarshalJSON() ([]byte, error) {
+	type embed PhoneMessagePhoneDeletion
+	var marshaler = struct {
+		embed
+		NextCheckAt *internal.DateTime `json:"next_check_at,omitempty"`
+	}{
+		embed:       embed(*p),
+		NextCheckAt: internal.NewOptionalDateTime(p.NextCheckAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *PhoneMessagePhoneDeletion) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// pending (the phone has been asked and has not answered yet), deleted (the phone deleted its copy), not_found (the phone has no copy), ambiguous (an older text the phone cannot tell apart from an identical one; left on the phone), not_default_app (the phone is not set up to delete messages yet; it is asked once it can), not_matched (the phone stored this message before it became the phone's messaging app and could not identify it; its copy may still be there), failed (the phone tried and failed; it is asked again), unconfirmed (the phone has not confirmed the delete: the request could not be sent, or 7 days passed without an answer; its copy may still be there), or not_sent (the organization no longer rents the phone, so nothing was sent). next_check_at is null once the outcome is final. More values may be added.
+type PhoneMessagePhoneDeletionStatus string
+
+const (
+	PhoneMessagePhoneDeletionStatusPending       PhoneMessagePhoneDeletionStatus = "pending"
+	PhoneMessagePhoneDeletionStatusDeleted       PhoneMessagePhoneDeletionStatus = "deleted"
+	PhoneMessagePhoneDeletionStatusNotFound      PhoneMessagePhoneDeletionStatus = "not_found"
+	PhoneMessagePhoneDeletionStatusAmbiguous     PhoneMessagePhoneDeletionStatus = "ambiguous"
+	PhoneMessagePhoneDeletionStatusNotDefaultApp PhoneMessagePhoneDeletionStatus = "not_default_app"
+	PhoneMessagePhoneDeletionStatusNotMatched    PhoneMessagePhoneDeletionStatus = "not_matched"
+	PhoneMessagePhoneDeletionStatusFailed        PhoneMessagePhoneDeletionStatus = "failed"
+	PhoneMessagePhoneDeletionStatusUnconfirmed   PhoneMessagePhoneDeletionStatus = "unconfirmed"
+	PhoneMessagePhoneDeletionStatusNotSent       PhoneMessagePhoneDeletionStatus = "not_sent"
+)
+
+func NewPhoneMessagePhoneDeletionStatusFromString(s string) (PhoneMessagePhoneDeletionStatus, error) {
+	switch s {
+	case "pending":
+		return PhoneMessagePhoneDeletionStatusPending, nil
+	case "deleted":
+		return PhoneMessagePhoneDeletionStatusDeleted, nil
+	case "not_found":
+		return PhoneMessagePhoneDeletionStatusNotFound, nil
+	case "ambiguous":
+		return PhoneMessagePhoneDeletionStatusAmbiguous, nil
+	case "not_default_app":
+		return PhoneMessagePhoneDeletionStatusNotDefaultApp, nil
+	case "not_matched":
+		return PhoneMessagePhoneDeletionStatusNotMatched, nil
+	case "failed":
+		return PhoneMessagePhoneDeletionStatusFailed, nil
+	case "unconfirmed":
+		return PhoneMessagePhoneDeletionStatusUnconfirmed, nil
+	case "not_sent":
+		return PhoneMessagePhoneDeletionStatusNotSent, nil
+	}
+	var t PhoneMessagePhoneDeletionStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneMessagePhoneDeletionStatus) Ptr() *PhoneMessagePhoneDeletionStatus {
+	return &p
+}
+
+var (
+	phoneMessageSendPartFieldFileID = big.NewInt(1 << 0)
+	phoneMessageSendPartFieldText   = big.NewInt(1 << 1)
+	phoneMessageSendPartFieldType   = big.NewInt(1 << 2)
+)
+
+type PhoneMessageSendPart struct {
+	// A ready file from your library, for a media part.
+	FileID *string `json:"file_id,omitempty" url:"file_id,omitempty"`
+	// The text, for a text part.
+	Text *string `json:"text,omitempty" url:"text,omitempty"`
+	// text for a run of text, media for an attachment.
+	Type PhoneMessageSendPartType `json:"type" url:"type"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PhoneMessageSendPart) GetFileID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.FileID
+}
+
+func (p *PhoneMessageSendPart) GetText() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Text
+}
+
+func (p *PhoneMessageSendPart) GetType() PhoneMessageSendPartType {
+	if p == nil {
+		return ""
+	}
+	return p.Type
+}
+
+func (p *PhoneMessageSendPart) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *PhoneMessageSendPart) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetFileID sets the FileID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessageSendPart) SetFileID(fileID *string) {
+	p.FileID = fileID
+	p.require(phoneMessageSendPartFieldFileID)
+}
+
+// SetText sets the Text field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessageSendPart) SetText(text *string) {
+	p.Text = text
+	p.require(phoneMessageSendPartFieldText)
+}
+
+// SetType sets the Type field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneMessageSendPart) SetType(type_ PhoneMessageSendPartType) {
+	p.Type = type_
+	p.require(phoneMessageSendPartFieldType)
+}
+
+func (p *PhoneMessageSendPart) UnmarshalJSON(data []byte) error {
+	type unmarshaler PhoneMessageSendPart
 	var value unmarshaler
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*u = UserWaitlistResponse(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
+	*p = PhoneMessageSendPart(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
 	if err != nil {
 		return err
 	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
 	return nil
 }
 
-func (u *UserWaitlistResponse) MarshalJSON() ([]byte, error) {
-	type embed UserWaitlistResponse
+func (p *PhoneMessageSendPart) MarshalJSON() ([]byte, error) {
+	type embed PhoneMessageSendPart
 	var marshaler = struct {
 		embed
 	}{
-		embed: embed(*u),
+		embed: embed(*p),
 	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
 	return json.Marshal(explicitMarshaler)
 }
 
-func (u *UserWaitlistResponse) String() string {
-	if u == nil {
+func (p *PhoneMessageSendPart) String() string {
+	if p == nil {
 		return "<nil>"
 	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
 			return value
 		}
 	}
-	if value, err := internal.StringifyJSON(u); err == nil {
+	if value, err := internal.StringifyJSON(p); err == nil {
 		return value
 	}
-	return fmt.Sprintf("%#v", u)
+	return fmt.Sprintf("%#v", p)
+}
+
+// text for a run of text, media for an attachment.
+type PhoneMessageSendPartType string
+
+const (
+	PhoneMessageSendPartTypeText  PhoneMessageSendPartType = "text"
+	PhoneMessageSendPartTypeMedia PhoneMessageSendPartType = "media"
+)
+
+func NewPhoneMessageSendPartTypeFromString(s string) (PhoneMessageSendPartType, error) {
+	switch s {
+	case "text":
+		return PhoneMessageSendPartTypeText, nil
+	case "media":
+		return PhoneMessageSendPartTypeMedia, nil
+	}
+	var t PhoneMessageSendPartType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneMessageSendPartType) Ptr() *PhoneMessageSendPartType {
+	return &p
+}
+
+// The delivery state of a message this phone sent: queued (accepted and issued to the phone), sent (the network accepted it), delivered (the recipient acknowledged it), failed, or unconfirmed (the phone had it but has not reported whether it went out; do not resend automatically, it may still turn sent or failed). Empty for a received message. More statuses may be added; treat one you don't know as still in progress.
+type PhoneMessageStatus string
+
+const (
+	PhoneMessageStatusQueued      PhoneMessageStatus = "queued"
+	PhoneMessageStatusSent        PhoneMessageStatus = "sent"
+	PhoneMessageStatusDelivered   PhoneMessageStatus = "delivered"
+	PhoneMessageStatusFailed      PhoneMessageStatus = "failed"
+	PhoneMessageStatusUnconfirmed PhoneMessageStatus = "unconfirmed"
+)
+
+func NewPhoneMessageStatusFromString(s string) (PhoneMessageStatus, error) {
+	switch s {
+	case "queued":
+		return PhoneMessageStatusQueued, nil
+	case "sent":
+		return PhoneMessageStatusSent, nil
+	case "delivered":
+		return PhoneMessageStatusDelivered, nil
+	case "failed":
+		return PhoneMessageStatusFailed, nil
+	case "unconfirmed":
+		return PhoneMessageStatusUnconfirmed, nil
+	}
+	var t PhoneMessageStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneMessageStatus) Ptr() *PhoneMessageStatus {
+	return &p
+}
+
+// Span outcome.
+var (
+	runFrameStatusFieldCode    = big.NewInt(1 << 0)
+	runFrameStatusFieldMessage = big.NewInt(1 << 1)
+)
+
+type RunFrameStatus struct {
+	// "ok" or "error".
+	Code string `json:"code" url:"code"`
+	// Human-readable failure message; empty on success.
+	Message string `json:"message" url:"message"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunFrameStatus) GetCode() string {
+	if r == nil {
+		return ""
+	}
+	return r.Code
+}
+
+func (r *RunFrameStatus) GetMessage() string {
+	if r == nil {
+		return ""
+	}
+	return r.Message
+}
+
+func (r *RunFrameStatus) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunFrameStatus) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetCode sets the Code field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunFrameStatus) SetCode(code string) {
+	r.Code = code
+	r.require(runFrameStatusFieldCode)
+}
+
+// SetMessage sets the Message field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunFrameStatus) SetMessage(message string) {
+	r.Message = message
+	r.require(runFrameStatusFieldMessage)
+}
+
+func (r *RunFrameStatus) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunFrameStatus
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunFrameStatus(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunFrameStatus) MarshalJSON() ([]byte, error) {
+	type embed RunFrameStatus
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunFrameStatus) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// One point-in-time telemetry log event in the canonical frame envelope.
+var (
+	runLogFrameFieldAttributes   = big.NewInt(1 << 0)
+	runLogFrameFieldBody         = big.NewInt(1 << 1)
+	runLogFrameFieldLogType      = big.NewInt(1 << 2)
+	runLogFrameFieldSeverity     = big.NewInt(1 << 3)
+	runLogFrameFieldSpanID       = big.NewInt(1 << 4)
+	runLogFrameFieldTimeUnixNano = big.NewInt(1 << 5)
+	runLogFrameFieldTraceID      = big.NewInt(1 << 6)
+)
+
+type RunLogFrame struct {
+	// Every attribute the producer stamped (axilio.* vocabulary), verbatim.
+	Attributes map[string]any `json:"attributes,omitempty" url:"attributes,omitempty"`
+	// The log's human-readable text.
+	Body string `json:"body" url:"body"`
+	// Product log type, e.g. output_log, output_error, kernel_status, transfer_progress. Unknown values MUST be rendered generically, never rejected.
+	LogType string `json:"log_type" url:"log_type"`
+	// Log severity (INFO / ERROR).
+	Severity string `json:"severity" url:"severity"`
+	// Span the log occurred under; omitted for session-level logs.
+	SpanID *string `json:"span_id,omitempty" url:"span_id,omitempty"`
+	// Event time, nanoseconds since the Unix epoch.
+	TimeUnixNano int64 `json:"time_unix_nano" url:"time_unix_nano"`
+	// Telemetry trace ID (32 lowercase hex characters) for the session that produced this log.
+	TraceID string `json:"trace_id" url:"trace_id"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunLogFrame) GetAttributes() map[string]any {
+	if r == nil {
+		return nil
+	}
+	return r.Attributes
+}
+
+func (r *RunLogFrame) GetBody() string {
+	if r == nil {
+		return ""
+	}
+	return r.Body
+}
+
+func (r *RunLogFrame) GetLogType() string {
+	if r == nil {
+		return ""
+	}
+	return r.LogType
+}
+
+func (r *RunLogFrame) GetSeverity() string {
+	if r == nil {
+		return ""
+	}
+	return r.Severity
+}
+
+func (r *RunLogFrame) GetSpanID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.SpanID
+}
+
+func (r *RunLogFrame) GetTimeUnixNano() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.TimeUnixNano
+}
+
+func (r *RunLogFrame) GetTraceID() string {
+	if r == nil {
+		return ""
+	}
+	return r.TraceID
+}
+
+func (r *RunLogFrame) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunLogFrame) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetAttributes sets the Attributes field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetAttributes(attributes map[string]any) {
+	r.Attributes = attributes
+	r.require(runLogFrameFieldAttributes)
+}
+
+// SetBody sets the Body field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetBody(body string) {
+	r.Body = body
+	r.require(runLogFrameFieldBody)
+}
+
+// SetLogType sets the LogType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetLogType(logType string) {
+	r.LogType = logType
+	r.require(runLogFrameFieldLogType)
+}
+
+// SetSeverity sets the Severity field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetSeverity(severity string) {
+	r.Severity = severity
+	r.require(runLogFrameFieldSeverity)
+}
+
+// SetSpanID sets the SpanID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetSpanID(spanID *string) {
+	r.SpanID = spanID
+	r.require(runLogFrameFieldSpanID)
+}
+
+// SetTimeUnixNano sets the TimeUnixNano field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetTimeUnixNano(timeUnixNano int64) {
+	r.TimeUnixNano = timeUnixNano
+	r.require(runLogFrameFieldTimeUnixNano)
+}
+
+// SetTraceID sets the TraceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunLogFrame) SetTraceID(traceID string) {
+	r.TraceID = traceID
+	r.require(runLogFrameFieldTraceID)
+}
+
+func (r *RunLogFrame) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunLogFrame
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunLogFrame(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunLogFrame) MarshalJSON() ([]byte, error) {
+	type embed RunLogFrame
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunLogFrame) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// One completed telemetry span in the canonical frame envelope.
+var (
+	runSpanFrameFieldAttributes        = big.NewInt(1 << 0)
+	runSpanFrameFieldEndTimeUnixNano   = big.NewInt(1 << 1)
+	runSpanFrameFieldName              = big.NewInt(1 << 2)
+	runSpanFrameFieldParentSpanID      = big.NewInt(1 << 3)
+	runSpanFrameFieldPhase             = big.NewInt(1 << 4)
+	runSpanFrameFieldSpanID            = big.NewInt(1 << 5)
+	runSpanFrameFieldSpanType          = big.NewInt(1 << 6)
+	runSpanFrameFieldStartTimeUnixNano = big.NewInt(1 << 7)
+	runSpanFrameFieldStatus            = big.NewInt(1 << 8)
+	runSpanFrameFieldTraceID           = big.NewInt(1 << 9)
+)
+
+type RunSpanFrame struct {
+	// Every attribute the producer stamped (axilio.* vocabulary), verbatim. Attributes are the contract's extension seam: new keys appear here without a version bump.
+	Attributes map[string]any `json:"attributes,omitempty" url:"attributes,omitempty"`
+	// Span end, nanoseconds since the Unix epoch. Always set in the archive; omitted on the live stream's "start" phase, where the span is still in flight.
+	EndTimeUnixNano *int64 `json:"end_time_unix_nano,omitempty" url:"end_time_unix_nano,omitempty"`
+	// Span name (for sdk_call spans, the SDK operation, e.g. Screen.observe).
+	Name string `json:"name" url:"name"`
+	// Parent span id; omitted on root spans.
+	ParentSpanID *string `json:"parent_span_id,omitempty" url:"parent_span_id,omitempty"`
+	// Span phase. The archive returns completed spans only ("end"); "start" phases exist only on the live stream.
+	Phase string `json:"phase" url:"phase"`
+	// Telemetry span ID (16 lowercase hex characters). The live and archived copies of a span use the same ID.
+	SpanID string `json:"span_id" url:"span_id"`
+	// Product span role: session (the session root), run, sdk_call, inference, file_push, media_capture. Spans stored before the 2026-08-21 vocabulary cutover carry the retired phone_session value for the session root. Unknown values MUST be rendered generically, never rejected.
+	SpanType string `json:"span_type" url:"span_type"`
+	// Span start, nanoseconds since the Unix epoch.
+	StartTimeUnixNano int64 `json:"start_time_unix_nano" url:"start_time_unix_nano"`
+	// Span outcome. Always set in the archive; omitted on the live stream's "start" phase, where the span has no outcome yet.
+	Status *RunFrameStatus `json:"status,omitempty" url:"status,omitempty"`
+	// Telemetry trace ID (32 lowercase hex characters), derived from the session ID; one session produces one trace.
+	TraceID string `json:"trace_id" url:"trace_id"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunSpanFrame) GetAttributes() map[string]any {
+	if r == nil {
+		return nil
+	}
+	return r.Attributes
+}
+
+func (r *RunSpanFrame) GetEndTimeUnixNano() *int64 {
+	if r == nil {
+		return nil
+	}
+	return r.EndTimeUnixNano
+}
+
+func (r *RunSpanFrame) GetName() string {
+	if r == nil {
+		return ""
+	}
+	return r.Name
+}
+
+func (r *RunSpanFrame) GetParentSpanID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.ParentSpanID
+}
+
+func (r *RunSpanFrame) GetPhase() string {
+	if r == nil {
+		return ""
+	}
+	return r.Phase
+}
+
+func (r *RunSpanFrame) GetSpanID() string {
+	if r == nil {
+		return ""
+	}
+	return r.SpanID
+}
+
+func (r *RunSpanFrame) GetSpanType() string {
+	if r == nil {
+		return ""
+	}
+	return r.SpanType
+}
+
+func (r *RunSpanFrame) GetStartTimeUnixNano() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.StartTimeUnixNano
+}
+
+func (r *RunSpanFrame) GetStatus() *RunFrameStatus {
+	if r == nil {
+		return nil
+	}
+	return r.Status
+}
+
+func (r *RunSpanFrame) GetTraceID() string {
+	if r == nil {
+		return ""
+	}
+	return r.TraceID
+}
+
+func (r *RunSpanFrame) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunSpanFrame) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetAttributes sets the Attributes field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetAttributes(attributes map[string]any) {
+	r.Attributes = attributes
+	r.require(runSpanFrameFieldAttributes)
+}
+
+// SetEndTimeUnixNano sets the EndTimeUnixNano field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetEndTimeUnixNano(endTimeUnixNano *int64) {
+	r.EndTimeUnixNano = endTimeUnixNano
+	r.require(runSpanFrameFieldEndTimeUnixNano)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetName(name string) {
+	r.Name = name
+	r.require(runSpanFrameFieldName)
+}
+
+// SetParentSpanID sets the ParentSpanID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetParentSpanID(parentSpanID *string) {
+	r.ParentSpanID = parentSpanID
+	r.require(runSpanFrameFieldParentSpanID)
+}
+
+// SetPhase sets the Phase field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetPhase(phase string) {
+	r.Phase = phase
+	r.require(runSpanFrameFieldPhase)
+}
+
+// SetSpanID sets the SpanID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetSpanID(spanID string) {
+	r.SpanID = spanID
+	r.require(runSpanFrameFieldSpanID)
+}
+
+// SetSpanType sets the SpanType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetSpanType(spanType string) {
+	r.SpanType = spanType
+	r.require(runSpanFrameFieldSpanType)
+}
+
+// SetStartTimeUnixNano sets the StartTimeUnixNano field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetStartTimeUnixNano(startTimeUnixNano int64) {
+	r.StartTimeUnixNano = startTimeUnixNano
+	r.require(runSpanFrameFieldStartTimeUnixNano)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetStatus(status *RunFrameStatus) {
+	r.Status = status
+	r.require(runSpanFrameFieldStatus)
+}
+
+// SetTraceID sets the TraceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunSpanFrame) SetTraceID(traceID string) {
+	r.TraceID = traceID
+	r.require(runSpanFrameFieldTraceID)
+}
+
+func (r *RunSpanFrame) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunSpanFrame
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunSpanFrame(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunSpanFrame) MarshalJSON() ([]byte, error) {
+	type embed RunSpanFrame
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunSpanFrame) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
 }
 
 // One specific problem within an error response, locating the offending part of the request.

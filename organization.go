@@ -292,10 +292,10 @@ var (
 )
 
 type OrganizationInvitationSummaryResponse struct {
-	Email         string     `json:"email" url:"email"`
-	InvitedAt     *time.Time `json:"invited_at,omitempty" url:"invited_at,omitempty"`
-	InvitedByName *string    `json:"invited_by_name,omitempty" url:"invited_by_name,omitempty"`
-	Role          string     `json:"role" url:"role"`
+	Email         string                                    `json:"email" url:"email"`
+	InvitedAt     *time.Time                                `json:"invited_at,omitempty" url:"invited_at,omitempty"`
+	InvitedByName *string                                   `json:"invited_by_name,omitempty" url:"invited_by_name,omitempty"`
+	Role          OrganizationInvitationSummaryResponseRole `json:"role" url:"role"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -325,7 +325,7 @@ func (o *OrganizationInvitationSummaryResponse) GetInvitedByName() *string {
 	return o.InvitedByName
 }
 
-func (o *OrganizationInvitationSummaryResponse) GetRole() string {
+func (o *OrganizationInvitationSummaryResponse) GetRole() OrganizationInvitationSummaryResponseRole {
 	if o == nil {
 		return ""
 	}
@@ -369,7 +369,7 @@ func (o *OrganizationInvitationSummaryResponse) SetInvitedByName(invitedByName *
 
 // SetRole sets the Role field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (o *OrganizationInvitationSummaryResponse) SetRole(role string) {
+func (o *OrganizationInvitationSummaryResponse) SetRole(role OrganizationInvitationSummaryResponseRole) {
 	o.Role = role
 	o.require(organizationInvitationSummaryResponseFieldRole)
 }
@@ -422,6 +422,31 @@ func (o *OrganizationInvitationSummaryResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", o)
+}
+
+type OrganizationInvitationSummaryResponseRole string
+
+const (
+	OrganizationInvitationSummaryResponseRoleAdmin  OrganizationInvitationSummaryResponseRole = "admin"
+	OrganizationInvitationSummaryResponseRoleMember OrganizationInvitationSummaryResponseRole = "member"
+	OrganizationInvitationSummaryResponseRoleViewer OrganizationInvitationSummaryResponseRole = "viewer"
+)
+
+func NewOrganizationInvitationSummaryResponseRoleFromString(s string) (OrganizationInvitationSummaryResponseRole, error) {
+	switch s {
+	case "admin":
+		return OrganizationInvitationSummaryResponseRoleAdmin, nil
+	case "member":
+		return OrganizationInvitationSummaryResponseRoleMember, nil
+	case "viewer":
+		return OrganizationInvitationSummaryResponseRoleViewer, nil
+	}
+	var t OrganizationInvitationSummaryResponseRole
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (o OrganizationInvitationSummaryResponseRole) Ptr() *OrganizationInvitationSummaryResponseRole {
+	return &o
 }
 
 var (
@@ -532,9 +557,9 @@ var (
 )
 
 type OrganizationMemberSummaryResponse struct {
-	Email    string     `json:"email" url:"email"`
-	JoinedAt *time.Time `json:"joined_at,omitempty" url:"joined_at,omitempty"`
-	Role     string     `json:"role" url:"role"`
+	Email    string                                `json:"email" url:"email"`
+	JoinedAt *time.Time                            `json:"joined_at,omitempty" url:"joined_at,omitempty"`
+	Role     OrganizationMemberSummaryResponseRole `json:"role" url:"role"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -557,7 +582,7 @@ func (o *OrganizationMemberSummaryResponse) GetJoinedAt() *time.Time {
 	return o.JoinedAt
 }
 
-func (o *OrganizationMemberSummaryResponse) GetRole() string {
+func (o *OrganizationMemberSummaryResponse) GetRole() OrganizationMemberSummaryResponseRole {
 	if o == nil {
 		return ""
 	}
@@ -594,7 +619,7 @@ func (o *OrganizationMemberSummaryResponse) SetJoinedAt(joinedAt *time.Time) {
 
 // SetRole sets the Role field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (o *OrganizationMemberSummaryResponse) SetRole(role string) {
+func (o *OrganizationMemberSummaryResponse) SetRole(role OrganizationMemberSummaryResponseRole) {
 	o.Role = role
 	o.require(organizationMemberSummaryResponseFieldRole)
 }
@@ -647,4 +672,29 @@ func (o *OrganizationMemberSummaryResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", o)
+}
+
+type OrganizationMemberSummaryResponseRole string
+
+const (
+	OrganizationMemberSummaryResponseRoleAdmin  OrganizationMemberSummaryResponseRole = "admin"
+	OrganizationMemberSummaryResponseRoleMember OrganizationMemberSummaryResponseRole = "member"
+	OrganizationMemberSummaryResponseRoleViewer OrganizationMemberSummaryResponseRole = "viewer"
+)
+
+func NewOrganizationMemberSummaryResponseRoleFromString(s string) (OrganizationMemberSummaryResponseRole, error) {
+	switch s {
+	case "admin":
+		return OrganizationMemberSummaryResponseRoleAdmin, nil
+	case "member":
+		return OrganizationMemberSummaryResponseRoleMember, nil
+	case "viewer":
+		return OrganizationMemberSummaryResponseRoleViewer, nil
+	}
+	var t OrganizationMemberSummaryResponseRole
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (o OrganizationMemberSummaryResponseRole) Ptr() *OrganizationMemberSummaryResponseRole {
+	return &o
 }
