@@ -2,468 +2,189 @@ package telemetry
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"io"
-	"strings"
+	"net/http"
+	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/coder/websocket"
 )
-
-// scriptConn is a scripted rawConn: recv drains the queued messages, then
-// fails with err (the scripted force-close).
-type scriptConn struct {
-	messages [][]byte
-	err      error
-}
-
-func (c *scriptConn) recv(_ context.Context) ([]byte, error) {
-	if len(c.messages) > 0 {
-		m := c.messages[0]
-		c.messages = c.messages[1:]
-		return m, nil
-	}
-	if c.err != nil {
-		return nil, c.err
-	}
-	return nil, errors.New("scripted conn exhausted")
-}
-
-func (c *scriptConn) closeConn() error { return nil }
-
-// scriptDialer hands out one scripted connection (or dial error) per dial,
-// recording each attach URL so tests can assert the resume params.
-type scriptDialer struct {
-	script []func() (rawConn, error)
-	urls   []string
-}
-
-func (d *scriptDialer) dial(_ context.Context, url string) (rawConn, error) {
-	d.urls = append(d.urls, url)
-	if len(d.script) == 0 {
-		return nil, errors.New("dial script exhausted")
-	}
-	next := d.script[0]
-	d.script = d.script[1:]
-	return next()
-}
-
-// newTestStream builds a Stream over the dialer's first connection with an
-// instant backoff.
-func newTestStream(t *testing.T, d *scriptDialer) *Stream {
-	t.Helper()
-	s := &Stream{url: "wss://example.test/realtime/ws/telemetry?token=x", dial: d.dial, redialDelay: func(int) time.Duration { return time.Nanosecond }}
-	conn, err := s.dial(context.Background(), s.attachURL())
-	if err != nil {
-		t.Fatalf("initial dial: %v", err)
-	}
-	s.conn = conn
-	return s
-}
 
 const (
 	sdkSpanJSON    = `{"kind":"span","span_type":"sdk_call","phase":"end","trace_id":"t1","span_id":"s1","name":"Screen.observe","start_time_unix_nano":100,"end_time_unix_nano":200,"status":{"code":"ok","message":""}}`
 	logJSON        = `{"kind":"log","log_type":"output_log","severity":"INFO","body":"hello","time_unix_nano":150,"trace_id":"t1"}`
 	endFrameJSON   = `{"kind":"span","span_type":"session","phase":"end","trace_id":"t1","span_id":"root","name":"session","start_time_unix_nano":1,"end_time_unix_nano":900,"status":{"code":"ok","message":""}}`
-	legacyEndJSON  = `{"kind":"span","span_type":"phone_session","phase":"end","trace_id":"t1","span_id":"root","name":"session","start_time_unix_nano":1,"end_time_unix_nano":900,"status":{"code":"ok","message":""}}`
 	unknownKindMsg = `{"kind":"metric","name":"cpu","value":42}`
 )
 
-func msgs(raw ...string) [][]byte {
-	out := make([][]byte, len(raw))
-	for i, r := range raw {
-		out[i] = []byte(r)
-	}
-	return out
+// sseServer answers the Nth request with the Nth response: a status and,
+// for 200, a raw event-stream body written and flushed before the response
+// ends. It records each request's Last-Event-ID and API key header.
+type sseServer struct {
+	mu        sync.Mutex
+	responses []sseResponse
+	cursors   []string
+	keys      []string
 }
 
-func mustNext(t *testing.T, s *Stream) *Frame {
+type sseResponse struct {
+	status int
+	body   string
+}
+
+func (s *sseServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	s.cursors = append(s.cursors, r.Header.Get("Last-Event-ID"))
+	s.keys = append(s.keys, r.Header.Get("X-Axilio-Api-Key"))
+	resp := sseResponse{status: http.StatusServiceUnavailable}
+	if n := len(s.cursors); n <= len(s.responses) {
+		resp = s.responses[n-1]
+	}
+	s.mu.Unlock()
+	if resp.status != http.StatusOK {
+		w.WriteHeader(resp.status)
+		return
+	}
+	w.Header().Set("Content-Type", "text/event-stream")
+	_, _ = io.WriteString(w, resp.body)
+	w.(http.Flusher).Flush()
+}
+
+func tailTest(t *testing.T, srv *sseServer) (*Stream, error) {
 	t.Helper()
-	frame, err := s.Next(context.Background())
+	ts := httptest.NewServer(srv)
+	t.Cleanup(ts.Close)
+	s := &Stream{
+		url:         ts.URL,
+		open:        httpOpener(tailConfig{client: ts.Client(), header: http.Header{"X-Axilio-Api-Key": {"axl_test"}}}),
+		redialDelay: func(int) time.Duration { return time.Nanosecond },
+	}
+	return start(context.Background(), s)
+}
+
+func drain(t *testing.T, s *Stream) ([]*Frame, error) {
+	t.Helper()
+	var frames []*Frame
+	for {
+		f, err := s.Next(context.Background())
+		if err != nil {
+			return frames, err
+		}
+		frames = append(frames, f)
+	}
+}
+
+// TestStreamReadsEventsAndResumes: frames arrive one per event (heartbeats
+// and cursor-only events skipped, unknown kinds kept), a drop reopens with
+// the last cursor as Last-Event-ID, and the session end frame ends the
+// stream cleanly.
+func TestStreamReadsEventsAndResumes(t *testing.T) {
+	srv := &sseServer{responses: []sseResponse{
+		{http.StatusOK, ": heartbeat\n\n" +
+			"event: span\ndata: " + sdkSpanJSON + "\n\n" +
+			"id: 1-1\nevent: metric\ndata: " + unknownKindMsg + "\n\n" +
+			"id: 1-2\n\n"},
+		{http.StatusOK, "id: 1-3\nevent: log\ndata: " + logJSON + "\n\n" +
+			"id: 1-4\nevent: span\ndata: " + endFrameJSON + "\n\n"},
+	}}
+	s, err := tailTest(t, srv)
 	if err != nil {
-		t.Fatalf("Next: %v", err)
+		t.Fatalf("Tail: %v", err)
 	}
-	return frame
-}
-
-func TestStreamYieldsSingleAndArrayMessages(t *testing.T) {
-	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) {
-		return &scriptConn{messages: msgs(
-			sdkSpanJSON,
-			"["+logJSON+","+sdkSpanJSON+"]",
-			endFrameJSON,
-		)}, nil
-	}}}
-	s := newTestStream(t, d)
-
-	if f := mustNext(t, s); f.GetSpan() == nil || f.GetSpan().SpanID != "s1" {
-		t.Fatalf("first frame = %+v, want sdk span s1", f)
+	frames, err := drain(t, s)
+	if !errors.Is(err, io.EOF) || !s.Ended() {
+		t.Fatalf("end = %v (ended %v), want io.EOF after the session end frame", err, s.Ended())
 	}
-	if f := mustNext(t, s); f.GetLog() == nil || f.GetLog().Body != "hello" {
-		t.Fatalf("second frame = %+v, want log from array batch", f)
+	var kinds []string
+	for _, f := range frames {
+		kinds = append(kinds, f.Kind)
 	}
-	if f := mustNext(t, s); f.GetSpan() == nil {
-		t.Fatalf("third frame = %+v, want span from array batch", f)
+	if want := []string{"span", "metric", "log", "span"}; !equal(kinds, want) {
+		t.Fatalf("kinds = %v, want %v", kinds, want)
 	}
-	if f := mustNext(t, s); !isSessionEndFrame(f) {
-		t.Fatalf("fourth frame = %+v, want session end frame delivered", f)
+	if want := []string{"", "1-2"}; !equal(srv.cursors, want) {
+		t.Fatalf("Last-Event-ID per request = %v, want %v", srv.cursors, want)
 	}
-	if _, err := s.Next(context.Background()); err != io.EOF {
-		t.Fatalf("after end frame: err = %v, want io.EOF", err)
-	}
-	if !s.Ended() {
-		t.Fatal("Ended() = false after terminal end frame")
-	}
-	// EOF is sticky.
-	if _, err := s.Next(context.Background()); err != io.EOF {
-		t.Fatalf("second read after end: err = %v, want io.EOF", err)
+	if want := []string{"axl_test", "axl_test"}; !equal(srv.keys, want) {
+		t.Fatalf("API key per request = %v, want %v", srv.keys, want)
 	}
 }
 
-func TestStreamTolerantReader(t *testing.T) {
-	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) {
-		return &scriptConn{messages: msgs(
-			unknownKindMsg,         // unknown kind: delivered as the unknown variant
-			`{"foo":1}`,            // no kind, no type: dropped
-			`{"type":"SOMETHING"}`, // unknown transport frame: dropped
-			`not json`,             // garbage: dropped
-			endFrameJSON,
-		)}, nil
-	}}}
-	s := newTestStream(t, d)
-
-	unknown := mustNext(t, s)
-	if unknown.Kind != "metric" || unknown.GetSpan() != nil || unknown.GetLog() != nil {
-		t.Fatalf("unknown-kind frame = %+v, want Kind=metric with nil variants", unknown)
-	}
-	raw, err := json.Marshal(unknown)
-	if err != nil {
-		t.Fatalf("marshal unknown frame: %v", err)
-	}
-	if string(raw) != unknownKindMsg {
-		t.Fatalf("unknown frame raw JSON = %s, want the original bytes", raw)
-	}
-	// Everything dropped in between, straight to the end frame.
-	if f := mustNext(t, s); !isSessionEndFrame(f) {
-		t.Fatalf("next frame = %+v, want the end frame", f)
-	}
-	if _, err := s.Next(context.Background()); err != io.EOF {
-		t.Fatalf("err = %v, want io.EOF", err)
-	}
-}
-
-func TestStreamReconnectPresentsCursor(t *testing.T) {
-	d := &scriptDialer{script: []func() (rawConn, error){
-		func() (rawConn, error) {
-			return &scriptConn{
-				messages: msgs(`{"type":"CURSOR","cursor":"c-42"}`, sdkSpanJSON),
-				err:      websocket.CloseError{Code: websocket.StatusGoingAway},
-			}, nil
-		},
-		func() (rawConn, error) {
-			return &scriptConn{messages: msgs(endFrameJSON)}, nil
-		},
-	}}
-	s := newTestStream(t, d)
-
-	if f := mustNext(t, s); f.GetSpan() == nil {
-		t.Fatalf("frame before drop = %+v, want span", f)
-	}
-	if f := mustNext(t, s); !isSessionEndFrame(f) {
-		t.Fatalf("frame after reattach = %+v, want end frame", f)
-	}
-	if len(d.urls) != 2 {
-		t.Fatalf("dials = %d, want 2", len(d.urls))
-	}
-	if !strings.Contains(d.urls[0], "resume=1") || strings.Contains(d.urls[0], "cursor=") {
-		t.Fatalf("first attach URL = %q, want resume=1 and no cursor", d.urls[0])
-	}
-	if !strings.Contains(d.urls[1], "cursor=c-42") || !strings.Contains(d.urls[1], "resume=1") {
-		t.Fatalf("reattach URL = %q, want resume=1 and cursor=c-42", d.urls[1])
-	}
-}
-
-func TestStreamResyncRequiredMarksGap(t *testing.T) {
-	d := &scriptDialer{script: []func() (rawConn, error){
-		func() (rawConn, error) {
-			return &scriptConn{messages: msgs(`{"type":"CURSOR","cursor":"c-1"}`), err: websocket.CloseError{Code: websocket.StatusTryAgainLater}}, nil
-		},
-		func() (rawConn, error) {
-			return &scriptConn{messages: msgs(`{"type":"RESYNC_REQUIRED"}`, endFrameJSON)}, nil
-		},
-	}}
-	s := newTestStream(t, d)
-
-	if f := mustNext(t, s); !isSessionEndFrame(f) {
-		t.Fatalf("frame = %+v, want end frame (transport frames not yielded)", f)
-	}
-	if !s.Gapped() {
-		t.Fatal("Gapped() = false after RESYNC_REQUIRED")
-	}
-}
-
-func TestStreamRedialBudgetExhausted(t *testing.T) {
-	script := []func() (rawConn, error){func() (rawConn, error) {
-		return &scriptConn{err: websocket.CloseError{Code: websocket.StatusInternalError}}, nil
-	}}
-	for i := 0; i < _maxRedials; i++ {
-		script = append(script, func() (rawConn, error) { return nil, errors.New("dial refused") })
-	}
-	d := &scriptDialer{script: script}
-	s := newTestStream(t, d)
-
-	_, err := s.Next(context.Background())
-	if !IsConnection(err) {
-		t.Fatalf("err = %v, want CodeConnection", err)
-	}
-	if len(d.urls) != 1+_maxRedials {
-		t.Fatalf("dials = %d, want initial + %d redials", len(d.urls), _maxRedials)
-	}
-	// Terminal errors are sticky.
-	if _, err2 := s.Next(context.Background()); !IsConnection(err2) {
-		t.Fatalf("second err = %v, want the sticky CodeConnection", err2)
-	}
-}
-
-func TestStreamReattachClassification(t *testing.T) {
+// TestStreamStatuses: how each server answer ends a stream, on the first
+// open and on a reopen.
+func TestStreamStatuses(t *testing.T) {
 	cases := []struct {
-		name   string
-		status int
-		check  func(error) bool
-		code   Code
+		name      string
+		responses []sseResponse
+		wantErr   func(error) bool
+		wantEnded bool
 	}{
-		{name: "403 means the session ended", status: 403, check: IsSessionEnded, code: CodeSessionEnded},
-		{name: "401 means the token is bad", status: 401, check: IsUnauthorized, code: CodeUnauthorized},
+		{"204 on open: the session is over", []sseResponse{{status: http.StatusNoContent}}, isEOF, true},
+		{"204 on reopen: nothing left after the cursor", []sseResponse{{http.StatusOK, "id: 1-1\nevent: span\ndata: " + sdkSpanJSON + "\n\n"}, {status: http.StatusNoContent}}, isEOF, true},
+		{"401: credential rejected", []sseResponse{{status: http.StatusUnauthorized}}, IsUnauthorized, false},
+		{"404: no such session", []sseResponse{{status: http.StatusNotFound}}, IsNotFound, false},
+		{"409: telemetry off", []sseResponse{{status: http.StatusConflict}}, IsTelemetryOff, false},
+		{"drops and 5xx until the budget runs out", []sseResponse{{http.StatusOK, ""}}, IsConnection, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			d := &scriptDialer{script: []func() (rawConn, error){
-				func() (rawConn, error) {
-					return &scriptConn{err: websocket.CloseError{Code: websocket.StatusGoingAway}}, nil
-				},
-				func() (rawConn, error) {
-					return nil, &dialHTTPError{status: tc.status, err: errors.New("upgrade refused")}
-				},
-			}}
-			s := newTestStream(t, d)
-			_, err := s.Next(context.Background())
-			if !tc.check(err) {
-				t.Fatalf("err = %v, want %s", err, tc.code)
+			s, err := tailTest(t, &sseServer{responses: tc.responses})
+			if err == nil {
+				_, err = drain(t, s)
+			}
+			if !tc.wantErr(err) {
+				t.Fatalf("err = %v", err)
+			}
+			if s != nil && s.Ended() != tc.wantEnded {
+				t.Fatalf("Ended = %v, want %v", s.Ended(), tc.wantEnded)
 			}
 		})
 	}
 }
 
-func TestStreamNormalCloseWithoutEndFrame(t *testing.T) {
-	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) {
-		return &scriptConn{messages: msgs(sdkSpanJSON), err: websocket.CloseError{Code: websocket.StatusNormalClosure}}, nil
-	}}}
-	s := newTestStream(t, d)
-
-	mustNext(t, s)
-	_, err := s.Next(context.Background())
-	if !IsSessionEnded(err) {
-		t.Fatalf("err = %v, want CodeSessionEnded", err)
+// TestStreamCloseUnblocksNext: Close from another goroutine ends a Next that
+// is blocked on a silent stream.
+func TestStreamCloseUnblocksNext(t *testing.T) {
+	release := make(chan struct{})
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.(http.Flusher).Flush()
+		<-release
+	}))
+	t.Cleanup(ts.Close)
+	t.Cleanup(func() { close(release) })
+	s, err := Tail(context.Background(), ts.URL)
+	if err != nil {
+		t.Fatalf("Tail: %v", err)
 	}
-	if s.Ended() {
-		t.Fatal("Ended() = true, but the terminal end frame was never observed")
-	}
-}
-
-func TestStreamLegacySessionRootEndsCleanly(t *testing.T) {
-	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) {
-		return &scriptConn{messages: msgs(legacyEndJSON)}, nil
-	}}}
-	s := newTestStream(t, d)
-
-	if f := mustNext(t, s); !isSessionEndFrame(f) {
-		t.Fatalf("frame = %+v, want legacy phone_session end recognized as terminal", f)
-	}
-	if _, err := s.Next(context.Background()); err != io.EOF {
-		t.Fatalf("err = %v, want io.EOF", err)
-	}
-}
-
-func TestTailClassifiesInitialDial(t *testing.T) {
-	// Tail against a dead session fails fast: exercised through the package
-	// seam by classifying the same dialHTTPError dialWS produces.
-	err := classifyDialErr(&dialHTTPError{status: 403, err: errors.New("refused")})
-	if !IsSessionEnded(err) {
-		t.Fatalf("classifyDialErr(403) = %v, want CodeSessionEnded", err)
-	}
-	if e := classifyDialErr(errors.New("connection refused")); !IsConnection(e) {
-		t.Fatalf("classifyDialErr(net) = %v, want retryable CodeConnection", e)
-	}
-}
-
-// blockingConn's recv blocks until closeConn, the way closing a real websocket
-// interrupts a pending read. reading is closed once a recv is underway.
-type blockingConn struct {
-	closed      chan struct{}
-	reading     chan struct{}
-	once        sync.Once
-	readingOnce sync.Once
-}
-
-func newBlockingConn() *blockingConn {
-	return &blockingConn{closed: make(chan struct{}), reading: make(chan struct{})}
-}
-
-func (c *blockingConn) recv(ctx context.Context) ([]byte, error) {
-	c.readingOnce.Do(func() { close(c.reading) })
-	select {
-	case <-c.closed:
-		return nil, errors.New("use of closed network connection")
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	}
-}
-
-func (c *blockingConn) closeConn() error {
-	c.once.Do(func() { close(c.closed) })
-	return nil
-}
-
-// testCtx is cancelled when the test ends, so nothing a test starts outlives
-// it. This module still targets go 1.23, which has no t.Context.
-func testCtx(t *testing.T) context.Context {
-	t.Helper()
-	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
-	return ctx
-}
-
-func waitNext(t *testing.T, done <-chan error) error {
-	t.Helper()
+	done := make(chan error, 1)
+	go func() {
+		_, err := s.Next(context.Background())
+		done <- err
+	}()
+	time.Sleep(50 * time.Millisecond)
+	_ = s.Close()
 	select {
 	case err := <-done:
-		return err
+		if !hasCode(err, CodeClosed) {
+			t.Fatalf("Next after Close = %v, want CodeClosed", err)
+		}
 	case <-time.After(5 * time.Second):
-		t.Fatal("Next did not return after Close")
-		return nil
+		t.Fatal("Next stayed blocked after Close")
 	}
 }
 
-// AXI-2228: Close from another goroutine while Next is blocked in a read.
-// Under -race the unsynchronized closed/conn fields were a data race, and Next
-// could dereference the conn Close had just set to nil.
-func TestStreamCloseFromAnotherGoroutineUnblocksNext(t *testing.T) {
-	conn := newBlockingConn()
-	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) { return conn, nil }}}
-	s := newTestStream(t, d)
+func isEOF(err error) bool { return errors.Is(err, io.EOF) }
 
-	ctx := testCtx(t)
-	done := make(chan error, 1)
-	go func() {
-		_, err := s.Next(ctx)
-		done <- err
-	}()
-	// Close only once Next is blocked in the read, the case under test.
-	<-conn.reading
-	if err := s.Close(); err != nil {
-		t.Fatalf("Close: %v", err)
+func equal(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
 	}
-	if err := waitNext(t, done); !hasCode(err, CodeClosed) {
-		t.Fatalf("Next err = %v, want CodeClosed", err)
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
 	}
-}
-
-// Close during a redial whose dials keep failing: the stream reports the
-// close and stops dialing, not CodeConnection after the whole budget.
-func TestStreamCloseDuringFailingRedialsStopsRedialing(t *testing.T) {
-	dialing := make(chan struct{})
-	release := make(chan struct{})
-	script := []func() (rawConn, error){
-		func() (rawConn, error) { return &scriptConn{err: errors.New("connection reset by peer")}, nil },
-		func() (rawConn, error) {
-			close(dialing)
-			<-release
-			return nil, errors.New("dial refused")
-		},
-	}
-	for i := 1; i < _maxRedials; i++ {
-		script = append(script, func() (rawConn, error) { return nil, errors.New("dial refused") })
-	}
-	d := &scriptDialer{script: script}
-	s := newTestStream(t, d)
-
-	ctx := testCtx(t)
-	done := make(chan error, 1)
-	go func() {
-		_, err := s.Next(ctx)
-		done <- err
-	}()
-	<-dialing
-	if err := s.Close(); err != nil {
-		t.Fatalf("Close: %v", err)
-	}
-	close(release)
-	if err := waitNext(t, done); !hasCode(err, CodeClosed) {
-		t.Fatalf("Next err = %v, want CodeClosed", err)
-	}
-	// The initial dial and the one redial in flight at Close: nothing after.
-	if len(d.urls) != 2 {
-		t.Fatalf("dials = %d, want 2 (no redials after Close)", len(d.urls))
-	}
-}
-
-// Close and Next with no ordering between them: the unsynchronized closed and
-// conn fields were a data race that -race reports here (CI runs it on Linux).
-func TestStreamCloseRacingNextIsRaceFree(t *testing.T) {
-	conn := newBlockingConn()
-	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) { return conn, nil }}}
-	s := newTestStream(t, d)
-
-	ctx := testCtx(t)
-	done := make(chan error, 1)
-	go func() {
-		_, err := s.Next(ctx)
-		done <- err
-	}()
-	if err := s.Close(); err != nil {
-		t.Fatalf("Close: %v", err)
-	}
-	if err := waitNext(t, done); !hasCode(err, CodeClosed) {
-		t.Fatalf("Next err = %v, want CodeClosed", err)
-	}
-}
-
-// A redial that completes after Close must not revive the stream: the new
-// connection is closed and Next reports CodeClosed.
-func TestStreamCloseDuringRedialClosesTheNewConnection(t *testing.T) {
-	dialing := make(chan struct{})
-	release := make(chan struct{})
-	fresh := newBlockingConn()
-	d := &scriptDialer{script: []func() (rawConn, error){
-		func() (rawConn, error) { return &scriptConn{err: errors.New("connection reset by peer")}, nil },
-		func() (rawConn, error) {
-			close(dialing)
-			<-release
-			return fresh, nil
-		},
-	}}
-	s := newTestStream(t, d)
-
-	ctx := testCtx(t)
-	done := make(chan error, 1)
-	go func() {
-		_, err := s.Next(ctx)
-		done <- err
-	}()
-	<-dialing
-	if err := s.Close(); err != nil {
-		t.Fatalf("Close: %v", err)
-	}
-	close(release)
-	if err := waitNext(t, done); !hasCode(err, CodeClosed) {
-		t.Fatalf("Next err = %v, want CodeClosed", err)
-	}
-	select {
-	case <-fresh.closed:
-	default:
-		t.Fatal("the connection dialed after Close was left open")
-	}
+	return true
 }

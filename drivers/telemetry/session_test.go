@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -148,10 +150,12 @@ func TestLogsArchiveMode(t *testing.T) {
 }
 
 func TestLogsLiveModeFiltersToLogs(t *testing.T) {
-	d := &scriptDialer{script: []func() (rawConn, error){func() (rawConn, error) {
-		return &scriptConn{messages: msgs(sdkSpanJSON, logJSON, endFrameJSON)}, nil
-	}}}
-	session := &Session{id: "sess-1", telemetryURL: "wss://example.test/ws", dial: d.dial}
+	ts := httptest.NewServer(&sseServer{responses: []sseResponse{{http.StatusOK,
+		"event: span\ndata: " + sdkSpanJSON + "\n\n" +
+			"event: log\ndata: " + logJSON + "\n\n" +
+			"event: span\ndata: " + endFrameJSON + "\n\n"}}})
+	t.Cleanup(ts.Close)
+	session := &Session{id: "sess-1", telemetryURL: ts.URL, open: httpOpener(tailConfig{client: ts.Client()})}
 	logs, err := session.Logs(context.Background(), true)
 	if err != nil {
 		t.Fatalf("Logs(live): %v", err)
