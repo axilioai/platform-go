@@ -133,7 +133,7 @@ func TestSendWaitMatchesPushWait(t *testing.T) {
 				"upload_url":                "http://" + r.Host + "/put-here",
 				"upload_expires_in_seconds": 900,
 			})
-		case r.URL.Path == "/api/v1/files/file_1/complete":
+		case r.URL.Path == "/api/v1/files/file_1:complete":
 			writeJSON(t, w, map[string]any{"file": fileJSON("ready")})
 		case r.Method == http.MethodPost:
 			writeJSON(t, w, map[string]any{"delivery": deliveryJSON("dispatched")})

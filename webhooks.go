@@ -176,14 +176,26 @@ func (w *WebhooksGetEndpointRequest) SetEndpointID(endpointID string) {
 }
 
 var (
-	webhooksGetMetricsRequestFieldRange      = big.NewInt(1 << 0)
-	webhooksGetMetricsRequestFieldEndpointID = big.NewInt(1 << 1)
+	webhooksGetMetricsRequestFieldPeriodStartAt = big.NewInt(1 << 0)
+	webhooksGetMetricsRequestFieldPeriodEndAt   = big.NewInt(1 << 1)
+	webhooksGetMetricsRequestFieldGranularity   = big.NewInt(1 << 2)
+	webhooksGetMetricsRequestFieldTimeZone      = big.NewInt(1 << 3)
+	webhooksGetMetricsRequestFieldGroupBy       = big.NewInt(1 << 4)
+	webhooksGetMetricsRequestFieldEndpointID    = big.NewInt(1 << 5)
 )
 
 type WebhooksGetMetricsRequest struct {
-	// Window and bucket size: 24h (hourly buckets), 7d or 30d (daily buckets).
-	Range *WebhooksGetMetricsRequestRange `json:"-" url:"range,omitempty"`
-	// One destination's series. Omit to get every destination grouped, for the list-view sparklines.
+	// Start of the window (RFC 3339). Defaults to 7 days before period_end_at, and may be at most a year before now.
+	PeriodStartAt *time.Time `json:"-" url:"period_start_at,omitempty"`
+	// End of the window (RFC 3339). Defaults to now, and a later time is read as now.
+	PeriodEndAt *time.Time `json:"-" url:"period_end_at,omitempty"`
+	// Bucket size: hour or day. hour is allowed for windows of 7 days or less.
+	Granularity *WebhooksGetMetricsRequestGranularity `json:"-" url:"granularity,omitempty"`
+	// IANA time zone the buckets follow, such as America/Los_Angeles: a day starts at local midnight and an hour on the local hour. An unknown name is an error.
+	TimeZone *string `json:"-" url:"time_zone,omitempty"`
+	// Split each bucket by destination, one series per destination that had attempts (the list-view sparklines). Omit for one point per bucket.
+	GroupBy *WebhooksGetMetricsRequestGroupBy `json:"-" url:"group_by,omitempty"`
+	// Only this destination's attempts.
 	EndpointID *string `json:"-" url:"endpoint_id,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -197,11 +209,39 @@ func (w *WebhooksGetMetricsRequest) require(field *big.Int) {
 	w.explicitFields.Or(w.explicitFields, field)
 }
 
-// SetRange sets the Range field and marks it as non-optional;
+// SetPeriodStartAt sets the PeriodStartAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WebhooksGetMetricsRequest) SetRange(range_ *WebhooksGetMetricsRequestRange) {
-	w.Range = range_
-	w.require(webhooksGetMetricsRequestFieldRange)
+func (w *WebhooksGetMetricsRequest) SetPeriodStartAt(periodStartAt *time.Time) {
+	w.PeriodStartAt = periodStartAt
+	w.require(webhooksGetMetricsRequestFieldPeriodStartAt)
+}
+
+// SetPeriodEndAt sets the PeriodEndAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WebhooksGetMetricsRequest) SetPeriodEndAt(periodEndAt *time.Time) {
+	w.PeriodEndAt = periodEndAt
+	w.require(webhooksGetMetricsRequestFieldPeriodEndAt)
+}
+
+// SetGranularity sets the Granularity field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WebhooksGetMetricsRequest) SetGranularity(granularity *WebhooksGetMetricsRequestGranularity) {
+	w.Granularity = granularity
+	w.require(webhooksGetMetricsRequestFieldGranularity)
+}
+
+// SetTimeZone sets the TimeZone field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WebhooksGetMetricsRequest) SetTimeZone(timeZone *string) {
+	w.TimeZone = timeZone
+	w.require(webhooksGetMetricsRequestFieldTimeZone)
+}
+
+// SetGroupBy sets the GroupBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WebhooksGetMetricsRequest) SetGroupBy(groupBy *WebhooksGetMetricsRequestGroupBy) {
+	w.GroupBy = groupBy
+	w.require(webhooksGetMetricsRequestFieldGroupBy)
 }
 
 // SetEndpointID sets the EndpointID field and marks it as non-optional;
@@ -262,6 +302,7 @@ var (
 	webhooksListDeliveriesRequestFieldCursor     = big.NewInt(1 << 1)
 	webhooksListDeliveriesRequestFieldEventType  = big.NewInt(1 << 2)
 	webhooksListDeliveriesRequestFieldEndpointID = big.NewInt(1 << 3)
+	webhooksListDeliveriesRequestFieldMessageID  = big.NewInt(1 << 4)
 )
 
 type WebhooksListDeliveriesRequest struct {
@@ -273,6 +314,8 @@ type WebhooksListDeliveriesRequest struct {
 	EventType *string `json:"-" url:"event_type,omitempty"`
 	// Restrict the log to deliveries to one destination (endpoint id). Omit for all destinations.
 	EndpointID *string `json:"-" url:"endpoint_id,omitempty"`
+	// Restrict the log to the events for one message: message.received for a received message, the status events (message.sent, message.delivered, message.failed, message.unconfirmed) for a sent one, and the deletion events (message.deleted, message.phone_deleted, message.phone_delete_failed) for a deleted one. Omit for every event.
+	MessageID *string `json:"-" url:"message_id,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -311,6 +354,13 @@ func (w *WebhooksListDeliveriesRequest) SetEventType(eventType *string) {
 func (w *WebhooksListDeliveriesRequest) SetEndpointID(endpointID *string) {
 	w.EndpointID = endpointID
 	w.require(webhooksListDeliveriesRequestFieldEndpointID)
+}
+
+// SetMessageID sets the MessageID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WebhooksListDeliveriesRequest) SetMessageID(messageID *string) {
+	w.MessageID = messageID
+	w.require(webhooksListDeliveriesRequestFieldMessageID)
 }
 
 var (
@@ -1352,36 +1402,36 @@ func (w *WebhookDeliveryListResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// One aggregated bucket of delivery-attempt metrics.
+// One bucket of delivery-attempt metrics, and one destination's when grouped by endpoint_id.
 var (
-	webhookDeliveryMetricPointFieldAvgLatencyMs = big.NewInt(1 << 0)
-	webhookDeliveryMetricPointFieldEndpointID   = big.NewInt(1 << 1)
-	webhookDeliveryMetricPointFieldErrorRate    = big.NewInt(1 << 2)
-	webhookDeliveryMetricPointFieldFailed       = big.NewInt(1 << 3)
-	webhookDeliveryMetricPointFieldP50LatencyMs = big.NewInt(1 << 4)
-	webhookDeliveryMetricPointFieldP95LatencyMs = big.NewInt(1 << 5)
-	webhookDeliveryMetricPointFieldP99LatencyMs = big.NewInt(1 << 6)
-	webhookDeliveryMetricPointFieldTimeBucket   = big.NewInt(1 << 7)
-	webhookDeliveryMetricPointFieldTotal        = big.NewInt(1 << 8)
+	webhookDeliveryMetricPointFieldAvgLatencyMs  = big.NewInt(1 << 0)
+	webhookDeliveryMetricPointFieldEndpointID    = big.NewInt(1 << 1)
+	webhookDeliveryMetricPointFieldErrorRate     = big.NewInt(1 << 2)
+	webhookDeliveryMetricPointFieldFailed        = big.NewInt(1 << 3)
+	webhookDeliveryMetricPointFieldP50LatencyMs  = big.NewInt(1 << 4)
+	webhookDeliveryMetricPointFieldP95LatencyMs  = big.NewInt(1 << 5)
+	webhookDeliveryMetricPointFieldP99LatencyMs  = big.NewInt(1 << 6)
+	webhookDeliveryMetricPointFieldPeriodStartAt = big.NewInt(1 << 7)
+	webhookDeliveryMetricPointFieldTotal         = big.NewInt(1 << 8)
 )
 
 type WebhookDeliveryMetricPoint struct {
 	// Mean destination response time in the bucket, in milliseconds. Null when no attempt in the bucket recorded a latency.
 	AvgLatencyMs *float64 `json:"avg_latency_ms,omitempty" url:"avg_latency_ms,omitempty"`
-	// Destination this bucket aggregates. Empty when the series is not grouped by destination.
+	// The destination. Set only with group_by=endpoint_id.
 	EndpointID *string `json:"endpoint_id,omitempty" url:"endpoint_id,omitempty"`
-	// Failed over total in the bucket, from 0 to 1.
+	// Failed over total in the bucket, from 0 to 1. 0 when there were no attempts.
 	ErrorRate float64 `json:"error_rate" url:"error_rate"`
 	// Failed-attempt count in the bucket.
 	Failed int64 `json:"failed" url:"failed"`
-	// Median destination response time in the bucket, in milliseconds. Null when no attempt recorded a latency.
+	// Median destination response time in the bucket, in milliseconds. Null when no attempt recorded a latency. Outside UTC, a day's percentiles (and an hour's, in a zone off the hour) are estimated from the hours in it.
 	P50LatencyMs *float64 `json:"p50_latency_ms,omitempty" url:"p50_latency_ms,omitempty"`
-	// 95th-percentile destination response time in the bucket, in milliseconds. Null when no attempt recorded a latency.
+	// 95th-percentile destination response time in the bucket, in milliseconds. Null when no attempt recorded a latency. Estimated like p50_latency_ms.
 	P95LatencyMs *float64 `json:"p95_latency_ms,omitempty" url:"p95_latency_ms,omitempty"`
-	// 99th-percentile destination response time in the bucket, in milliseconds. Null when no attempt recorded a latency.
+	// 99th-percentile destination response time in the bucket, in milliseconds. Null when no attempt recorded a latency. Estimated like p50_latency_ms.
 	P99LatencyMs *float64 `json:"p99_latency_ms,omitempty" url:"p99_latency_ms,omitempty"`
-	// Start of the time bucket. Null for a single aggregate over the whole window.
-	TimeBucket *time.Time `json:"time_bucket,omitempty" url:"time_bucket,omitempty"`
+	// Start of the bucket (RFC 3339, UTC): a local hour or a local midnight in time_zone.
+	PeriodStartAt time.Time `json:"period_start_at" url:"period_start_at"`
 	// Delivery-attempt count in the bucket.
 	Total int64 `json:"total" url:"total"`
 
@@ -1441,11 +1491,11 @@ func (w *WebhookDeliveryMetricPoint) GetP99LatencyMs() *float64 {
 	return w.P99LatencyMs
 }
 
-func (w *WebhookDeliveryMetricPoint) GetTimeBucket() *time.Time {
+func (w *WebhookDeliveryMetricPoint) GetPeriodStartAt() time.Time {
 	if w == nil {
-		return nil
+		return time.Time{}
 	}
-	return w.TimeBucket
+	return w.PeriodStartAt
 }
 
 func (w *WebhookDeliveryMetricPoint) GetTotal() int64 {
@@ -1518,11 +1568,11 @@ func (w *WebhookDeliveryMetricPoint) SetP99LatencyMs(p99LatencyMs *float64) {
 	w.require(webhookDeliveryMetricPointFieldP99LatencyMs)
 }
 
-// SetTimeBucket sets the TimeBucket field and marks it as non-optional;
+// SetPeriodStartAt sets the PeriodStartAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WebhookDeliveryMetricPoint) SetTimeBucket(timeBucket *time.Time) {
-	w.TimeBucket = timeBucket
-	w.require(webhookDeliveryMetricPointFieldTimeBucket)
+func (w *WebhookDeliveryMetricPoint) SetPeriodStartAt(periodStartAt time.Time) {
+	w.PeriodStartAt = periodStartAt
+	w.require(webhookDeliveryMetricPointFieldPeriodStartAt)
 }
 
 // SetTotal sets the Total field and marks it as non-optional;
@@ -1536,7 +1586,7 @@ func (w *WebhookDeliveryMetricPoint) UnmarshalJSON(data []byte) error {
 	type embed WebhookDeliveryMetricPoint
 	var unmarshaler = struct {
 		embed
-		TimeBucket *internal.DateTime `json:"time_bucket,omitempty"`
+		PeriodStartAt *internal.DateTime `json:"period_start_at"`
 	}{
 		embed: embed(*w),
 	}
@@ -1544,7 +1594,7 @@ func (w *WebhookDeliveryMetricPoint) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*w = WebhookDeliveryMetricPoint(unmarshaler.embed)
-	w.TimeBucket = unmarshaler.TimeBucket.TimePtr()
+	w.PeriodStartAt = unmarshaler.PeriodStartAt.Time()
 	extraProperties, err := internal.ExtractExtraProperties(data, *w)
 	if err != nil {
 		return err
@@ -1558,10 +1608,10 @@ func (w *WebhookDeliveryMetricPoint) MarshalJSON() ([]byte, error) {
 	type embed WebhookDeliveryMetricPoint
 	var marshaler = struct {
 		embed
-		TimeBucket *internal.DateTime `json:"time_bucket,omitempty"`
+		PeriodStartAt *internal.DateTime `json:"period_start_at"`
 	}{
-		embed:      embed(*w),
-		TimeBucket: internal.NewOptionalDateTime(w.TimeBucket),
+		embed:         embed(*w),
+		PeriodStartAt: internal.NewDateTime(w.PeriodStartAt),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, w.explicitFields)
 	return json.Marshal(explicitMarshaler)
@@ -1591,7 +1641,7 @@ var (
 type WebhookDeliveryMetricsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// Aggregated metric buckets over the window.
+	// One point per bucket, oldest first, and per destination within a bucket when grouped. The first bucket starts at or before period_start_at.
 	Points []*WebhookDeliveryMetricPoint `json:"points,omitempty" url:"points,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -2763,7 +2813,7 @@ var (
 type WebhookEventTypeDescriptor struct {
 	// What the event means and when it fires.
 	Description string `json:"description" url:"description"`
-	// The area of the product the event belongs to, for grouping: platform, runs, sessions, billing, files or phones.
+	// The area of the product the event belongs to, for grouping: platform, runs, sessions, billing, files, phones or messages.
 	Domain WebhookEventTypeDescriptorDomain `json:"domain" url:"domain"`
 	// A representative payload of this event type: the data object of the delivered body. A test of this type delivers exactly this, with test set to true, so a handler can be exercised before the real event fires.
 	Sample any `json:"sample,omitempty" url:"sample,omitempty"`
@@ -2889,7 +2939,7 @@ func (w *WebhookEventTypeDescriptor) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// The area of the product the event belongs to, for grouping: platform, runs, sessions, billing, files or phones.
+// The area of the product the event belongs to, for grouping: platform, runs, sessions, billing, files, phones or messages.
 type WebhookEventTypeDescriptorDomain string
 
 const (
@@ -2899,6 +2949,7 @@ const (
 	WebhookEventTypeDescriptorDomainBilling  WebhookEventTypeDescriptorDomain = "billing"
 	WebhookEventTypeDescriptorDomainFiles    WebhookEventTypeDescriptorDomain = "files"
 	WebhookEventTypeDescriptorDomainPhones   WebhookEventTypeDescriptorDomain = "phones"
+	WebhookEventTypeDescriptorDomainMessages WebhookEventTypeDescriptorDomain = "messages"
 )
 
 func NewWebhookEventTypeDescriptorDomainFromString(s string) (WebhookEventTypeDescriptorDomain, error) {
@@ -2915,6 +2966,8 @@ func NewWebhookEventTypeDescriptorDomainFromString(s string) (WebhookEventTypeDe
 		return WebhookEventTypeDescriptorDomainFiles, nil
 	case "phones":
 		return WebhookEventTypeDescriptorDomainPhones, nil
+	case "messages":
+		return WebhookEventTypeDescriptorDomainMessages, nil
 	}
 	var t WebhookEventTypeDescriptorDomain
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -3378,29 +3431,46 @@ func (w WebhookRotateSecretRequestMode) Ptr() *WebhookRotateSecretRequestMode {
 	return &w
 }
 
-// Window and bucket size: 24h (hourly buckets), 7d or 30d (daily buckets).
-type WebhooksGetMetricsRequestRange string
+// Bucket size: hour or day. hour is allowed for windows of 7 days or less.
+type WebhooksGetMetricsRequestGranularity string
 
 const (
-	WebhooksGetMetricsRequestRangeTwentyFourH WebhooksGetMetricsRequestRange = "24h"
-	WebhooksGetMetricsRequestRangeSevenD      WebhooksGetMetricsRequestRange = "7d"
-	WebhooksGetMetricsRequestRangeThirtyD     WebhooksGetMetricsRequestRange = "30d"
+	WebhooksGetMetricsRequestGranularityHour WebhooksGetMetricsRequestGranularity = "hour"
+	WebhooksGetMetricsRequestGranularityDay  WebhooksGetMetricsRequestGranularity = "day"
 )
 
-func NewWebhooksGetMetricsRequestRangeFromString(s string) (WebhooksGetMetricsRequestRange, error) {
+func NewWebhooksGetMetricsRequestGranularityFromString(s string) (WebhooksGetMetricsRequestGranularity, error) {
 	switch s {
-	case "24h":
-		return WebhooksGetMetricsRequestRangeTwentyFourH, nil
-	case "7d":
-		return WebhooksGetMetricsRequestRangeSevenD, nil
-	case "30d":
-		return WebhooksGetMetricsRequestRangeThirtyD, nil
+	case "hour":
+		return WebhooksGetMetricsRequestGranularityHour, nil
+	case "day":
+		return WebhooksGetMetricsRequestGranularityDay, nil
 	}
-	var t WebhooksGetMetricsRequestRange
+	var t WebhooksGetMetricsRequestGranularity
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
 }
 
-func (w WebhooksGetMetricsRequestRange) Ptr() *WebhooksGetMetricsRequestRange {
+func (w WebhooksGetMetricsRequestGranularity) Ptr() *WebhooksGetMetricsRequestGranularity {
+	return &w
+}
+
+// Split each bucket by destination, one series per destination that had attempts (the list-view sparklines). Omit for one point per bucket.
+type WebhooksGetMetricsRequestGroupBy string
+
+const (
+	WebhooksGetMetricsRequestGroupByEndpointID WebhooksGetMetricsRequestGroupBy = "endpoint_id"
+)
+
+func NewWebhooksGetMetricsRequestGroupByFromString(s string) (WebhooksGetMetricsRequestGroupBy, error) {
+	switch s {
+	case "endpoint_id":
+		return WebhooksGetMetricsRequestGroupByEndpointID, nil
+	}
+	var t WebhooksGetMetricsRequestGroupBy
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WebhooksGetMetricsRequestGroupBy) Ptr() *WebhooksGetMetricsRequestGroupBy {
 	return &w
 }
 

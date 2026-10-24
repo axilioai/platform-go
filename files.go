@@ -130,19 +130,46 @@ func (f *FilesDeleteRequest) SetFileID(fileID string) {
 }
 
 var (
+	filesGetRequestFieldFileID = big.NewInt(1 << 0)
+)
+
+type FilesGetRequest struct {
+	// file identifier
+	FileID string `json:"-" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (f *FilesGetRequest) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetFileID sets the FileID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FilesGetRequest) SetFileID(fileID string) {
+	f.FileID = fileID
+	f.require(filesGetRequestFieldFileID)
+}
+
+var (
 	filesListRequestFieldLimit         = big.NewInt(1 << 0)
 	filesListRequestFieldOffset        = big.NewInt(1 << 1)
-	filesListRequestFieldQ             = big.NewInt(1 << 2)
+	filesListRequestFieldSearch        = big.NewInt(1 << 2)
 	filesListRequestFieldSource        = big.NewInt(1 << 3)
 	filesListRequestFieldSurface       = big.NewInt(1 << 4)
 	filesListRequestFieldSessionID     = big.NewInt(1 << 5)
-	filesListRequestFieldMimeType      = big.NewInt(1 << 6)
-	filesListRequestFieldMinSizeBytes  = big.NewInt(1 << 7)
-	filesListRequestFieldMaxSizeBytes  = big.NewInt(1 << 8)
-	filesListRequestFieldCreatedAfter  = big.NewInt(1 << 9)
-	filesListRequestFieldCreatedBefore = big.NewInt(1 << 10)
-	filesListRequestFieldSort          = big.NewInt(1 << 11)
-	filesListRequestFieldOrder         = big.NewInt(1 << 12)
+	filesListRequestFieldPhoneID       = big.NewInt(1 << 6)
+	filesListRequestFieldMimeType      = big.NewInt(1 << 7)
+	filesListRequestFieldMediaType     = big.NewInt(1 << 8)
+	filesListRequestFieldMinSizeBytes  = big.NewInt(1 << 9)
+	filesListRequestFieldMaxSizeBytes  = big.NewInt(1 << 10)
+	filesListRequestFieldCreatedAfter  = big.NewInt(1 << 11)
+	filesListRequestFieldCreatedBefore = big.NewInt(1 << 12)
+	filesListRequestFieldOrderBy       = big.NewInt(1 << 13)
 )
 
 type FilesListRequest struct {
@@ -151,15 +178,19 @@ type FilesListRequest struct {
 	// pagination offset
 	Offset *int64 `json:"-" url:"offset,omitempty"`
 	// filter by filename, case-insensitive substring match
-	Q *string `json:"-" url:"q,omitempty"`
+	Search *string `json:"-" url:"search,omitempty"`
 	// only files of this source
 	Source *FilesListRequestSource `json:"-" url:"source,omitempty"`
 	// only captures off this surface
 	Surface *FilesListRequestSurface `json:"-" url:"surface,omitempty"`
 	// only files captured by this session
 	SessionID *string `json:"-" url:"session_id,omitempty"`
+	// only files from this phone: attachments on messages it received, and files its sessions captured
+	PhoneID *string `json:"-" url:"phone_id,omitempty"`
 	// only files of exactly this media type
 	MimeType *string `json:"-" url:"mime_type,omitempty"`
+	// only images or only videos, whatever their exact media type
+	MediaType *FilesListRequestMediaType `json:"-" url:"media_type,omitempty"`
 	// only files at least this many bytes (0 = no bound)
 	MinSizeBytes *int64 `json:"-" url:"min_size_bytes,omitempty"`
 	// only files at most this many bytes (0 = no bound)
@@ -168,10 +199,8 @@ type FilesListRequest struct {
 	CreatedAfter *time.Time `json:"-" url:"created_after,omitempty"`
 	// only files registered at or before this time (RFC 3339)
 	CreatedBefore *time.Time `json:"-" url:"created_before,omitempty"`
-	// field to sort by; source groups uploads and captures
-	Sort *FilesListRequestSort `json:"-" url:"sort,omitempty"`
-	// sort direction
-	Order *FilesListRequestOrder `json:"-" url:"order,omitempty"`
+	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is created_at, filename, size_bytes or source (which groups files by source, newest first within each).
+	OrderBy *string `json:"-" url:"order_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -198,11 +227,11 @@ func (f *FilesListRequest) SetOffset(offset *int64) {
 	f.require(filesListRequestFieldOffset)
 }
 
-// SetQ sets the Q field and marks it as non-optional;
+// SetSearch sets the Search field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (f *FilesListRequest) SetQ(q *string) {
-	f.Q = q
-	f.require(filesListRequestFieldQ)
+func (f *FilesListRequest) SetSearch(search *string) {
+	f.Search = search
+	f.require(filesListRequestFieldSearch)
 }
 
 // SetSource sets the Source field and marks it as non-optional;
@@ -226,11 +255,25 @@ func (f *FilesListRequest) SetSessionID(sessionID *string) {
 	f.require(filesListRequestFieldSessionID)
 }
 
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FilesListRequest) SetPhoneID(phoneID *string) {
+	f.PhoneID = phoneID
+	f.require(filesListRequestFieldPhoneID)
+}
+
 // SetMimeType sets the MimeType field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (f *FilesListRequest) SetMimeType(mimeType *string) {
 	f.MimeType = mimeType
 	f.require(filesListRequestFieldMimeType)
+}
+
+// SetMediaType sets the MediaType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FilesListRequest) SetMediaType(mediaType *FilesListRequestMediaType) {
+	f.MediaType = mediaType
+	f.require(filesListRequestFieldMediaType)
 }
 
 // SetMinSizeBytes sets the MinSizeBytes field and marks it as non-optional;
@@ -261,25 +304,18 @@ func (f *FilesListRequest) SetCreatedBefore(createdBefore *time.Time) {
 	f.require(filesListRequestFieldCreatedBefore)
 }
 
-// SetSort sets the Sort field and marks it as non-optional;
+// SetOrderBy sets the OrderBy field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (f *FilesListRequest) SetSort(sort *FilesListRequestSort) {
-	f.Sort = sort
-	f.require(filesListRequestFieldSort)
-}
-
-// SetOrder sets the Order field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (f *FilesListRequest) SetOrder(order *FilesListRequestOrder) {
-	f.Order = order
-	f.require(filesListRequestFieldOrder)
+func (f *FilesListRequest) SetOrderBy(orderBy *string) {
+	f.OrderBy = orderBy
+	f.require(filesListRequestFieldOrderBy)
 }
 
 var (
 	phonesSessionFilesRequestFieldSessionID     = big.NewInt(1 << 0)
 	phonesSessionFilesRequestFieldLimit         = big.NewInt(1 << 1)
 	phonesSessionFilesRequestFieldOffset        = big.NewInt(1 << 2)
-	phonesSessionFilesRequestFieldQ             = big.NewInt(1 << 3)
+	phonesSessionFilesRequestFieldSearch        = big.NewInt(1 << 3)
 	phonesSessionFilesRequestFieldMimeType      = big.NewInt(1 << 4)
 	phonesSessionFilesRequestFieldMinSizeBytes  = big.NewInt(1 << 5)
 	phonesSessionFilesRequestFieldMaxSizeBytes  = big.NewInt(1 << 6)
@@ -295,7 +331,7 @@ type PhonesSessionFilesRequest struct {
 	// pagination offset
 	Offset *int64 `json:"-" url:"offset,omitempty"`
 	// filter by filename, case-insensitive substring match
-	Q *string `json:"-" url:"q,omitempty"`
+	Search *string `json:"-" url:"search,omitempty"`
 	// only files of exactly this media type
 	MimeType *string `json:"-" url:"mime_type,omitempty"`
 	// only files at least this many bytes (0 = no bound)
@@ -339,11 +375,11 @@ func (p *PhonesSessionFilesRequest) SetOffset(offset *int64) {
 	p.require(phonesSessionFilesRequestFieldOffset)
 }
 
-// SetQ sets the Q field and marks it as non-optional;
+// SetSearch sets the Search field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesSessionFilesRequest) SetQ(q *string) {
-	p.Q = q
-	p.require(phonesSessionFilesRequestFieldQ)
+func (p *PhonesSessionFilesRequest) SetSearch(search *string) {
+	p.Search = search
+	p.require(phonesSessionFilesRequestFieldSearch)
 }
 
 // SetMimeType sets the MimeType field and marks it as non-optional;
@@ -379,63 +415,6 @@ func (p *PhonesSessionFilesRequest) SetCreatedAfter(createdAfter *time.Time) {
 func (p *PhonesSessionFilesRequest) SetCreatedBefore(createdBefore *time.Time) {
 	p.CreatedBefore = createdBefore
 	p.require(phonesSessionFilesRequestFieldCreatedBefore)
-}
-
-var (
-	fileRenameRequestFieldFileID   = big.NewInt(1 << 0)
-	fileRenameRequestFieldFilename = big.NewInt(1 << 1)
-)
-
-type FileRenameRequest struct {
-	// file identifier to rename
-	FileID string `json:"-" url:"-"`
-	// New display name for the file.
-	Filename string `json:"filename" url:"-"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-}
-
-func (f *FileRenameRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
-	}
-	f.explicitFields.Or(f.explicitFields, field)
-}
-
-// SetFileID sets the FileID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (f *FileRenameRequest) SetFileID(fileID string) {
-	f.FileID = fileID
-	f.require(fileRenameRequestFieldFileID)
-}
-
-// SetFilename sets the Filename field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (f *FileRenameRequest) SetFilename(filename string) {
-	f.Filename = filename
-	f.require(fileRenameRequestFieldFilename)
-}
-
-func (f *FileRenameRequest) UnmarshalJSON(data []byte) error {
-	type unmarshaler FileRenameRequest
-	var body unmarshaler
-	if err := json.Unmarshal(data, &body); err != nil {
-		return err
-	}
-	*f = FileRenameRequest(body)
-	return nil
-}
-
-func (f *FileRenameRequest) MarshalJSON() ([]byte, error) {
-	type embed FileRenameRequest
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*f),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
-	return json.Marshal(explicitMarshaler)
 }
 
 var (
@@ -781,43 +760,51 @@ func (f *FileListResponse) String() string {
 
 // One file in the org's library.
 var (
-	fileSummaryFieldAttachmentURL    = big.NewInt(1 << 0)
-	fileSummaryFieldBytesTransferred = big.NewInt(1 << 1)
-	fileSummaryFieldCaptureError     = big.NewInt(1 << 2)
-	fileSummaryFieldCaptureState     = big.NewInt(1 << 3)
-	fileSummaryFieldChecksum         = big.NewInt(1 << 4)
-	fileSummaryFieldCreatedAt        = big.NewInt(1 << 5)
-	fileSummaryFieldDownloadURL      = big.NewInt(1 << 6)
-	fileSummaryFieldDurationSeconds  = big.NewInt(1 << 7)
-	fileSummaryFieldFilename         = big.NewInt(1 << 8)
-	fileSummaryFieldHeight           = big.NewInt(1 << 9)
-	fileSummaryFieldID               = big.NewInt(1 << 10)
-	fileSummaryFieldMimeType         = big.NewInt(1 << 11)
-	fileSummaryFieldOnPhoneCount     = big.NewInt(1 << 12)
-	fileSummaryFieldPreviewState     = big.NewInt(1 << 13)
-	fileSummaryFieldReelURL          = big.NewInt(1 << 14)
-	fileSummaryFieldSessionID        = big.NewInt(1 << 15)
-	fileSummaryFieldSizeBytes        = big.NewInt(1 << 16)
-	fileSummaryFieldSource           = big.NewInt(1 << 17)
-	fileSummaryFieldStatus           = big.NewInt(1 << 18)
-	fileSummaryFieldSurface          = big.NewInt(1 << 19)
-	fileSummaryFieldThumbnailURL     = big.NewInt(1 << 20)
-	fileSummaryFieldWidth            = big.NewInt(1 << 21)
+	fileSummaryFieldSchema           = big.NewInt(1 << 0)
+	fileSummaryFieldAttachmentURL    = big.NewInt(1 << 1)
+	fileSummaryFieldBytesTransferred = big.NewInt(1 << 2)
+	fileSummaryFieldCaptureError     = big.NewInt(1 << 3)
+	fileSummaryFieldCaptureState     = big.NewInt(1 << 4)
+	fileSummaryFieldChecksum         = big.NewInt(1 << 5)
+	fileSummaryFieldCreatedAt        = big.NewInt(1 << 6)
+	fileSummaryFieldDisplayURL       = big.NewInt(1 << 7)
+	fileSummaryFieldDownloadURL      = big.NewInt(1 << 8)
+	fileSummaryFieldDurationSeconds  = big.NewInt(1 << 9)
+	fileSummaryFieldFilename         = big.NewInt(1 << 10)
+	fileSummaryFieldHeight           = big.NewInt(1 << 11)
+	fileSummaryFieldID               = big.NewInt(1 << 12)
+	fileSummaryFieldMessageID        = big.NewInt(1 << 13)
+	fileSummaryFieldMimeType         = big.NewInt(1 << 14)
+	fileSummaryFieldOnPhoneCount     = big.NewInt(1 << 15)
+	fileSummaryFieldPhoneID          = big.NewInt(1 << 16)
+	fileSummaryFieldPreviewState     = big.NewInt(1 << 17)
+	fileSummaryFieldReelURL          = big.NewInt(1 << 18)
+	fileSummaryFieldSessionID        = big.NewInt(1 << 19)
+	fileSummaryFieldSizeBytes        = big.NewInt(1 << 20)
+	fileSummaryFieldSource           = big.NewInt(1 << 21)
+	fileSummaryFieldStatus           = big.NewInt(1 << 22)
+	fileSummaryFieldSurface          = big.NewInt(1 << 23)
+	fileSummaryFieldThumbnailURL     = big.NewInt(1 << 24)
+	fileSummaryFieldWidth            = big.NewInt(1 << 25)
 )
 
 type FileSummary struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	// Short-lived signed URL that downloads the file as an attachment under its name. Present only for ready files.
 	AttachmentURL *string `json:"attachment_url,omitempty" url:"attachment_url,omitempty"`
 	// Bytes moved so far for an in-flight phone transfer. Absent until the phone reports progress.
 	BytesTransferred *int64 `json:"bytes_transferred,omitempty" url:"bytes_transferred,omitempty"`
-	// Reason the capture failed, when it did. Present only for captures.
+	// Reason the phone's upload failed, when it did. Present for captures and message attachments.
 	CaptureError *string `json:"capture_error,omitempty" url:"capture_error,omitempty"`
-	// Capture lifecycle: detected/uploading while in flight, ready when usable, or a terminal skip/failure with its reason. Present only for captures.
+	// Upload lifecycle of a file the phone sends itself: detected/uploading while in flight, ready when usable, or a terminal skip/failure with its reason. Present for captures and message attachments.
 	CaptureState *FileSummaryCaptureState `json:"capture_state,omitempty" url:"capture_state,omitempty"`
-	// SHA-256 of the bytes, computed on the phone during a capture upload. Present only for captures.
+	// SHA-256 of the bytes, computed on the phone while uploading. Present for captures and message attachments.
 	Checksum *string `json:"checksum,omitempty" url:"checksum,omitempty"`
 	// When the file was registered: upload registration, or capture detection.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
+	// Short-lived signed URL for a full-resolution JPEG of a HEIC or HEIF original, for display where a browser cannot draw the original. Absent for other types and until generated.
+	DisplayURL *string `json:"display_url,omitempty" url:"display_url,omitempty"`
 	// Short-lived signed URL to read the file's bytes. Present only for ready files; re-list to refresh an expired one.
 	DownloadURL *string `json:"download_url,omitempty" url:"download_url,omitempty"`
 	// Video duration in seconds.
@@ -828,10 +815,14 @@ type FileSummary struct {
 	Height *int64 `json:"height,omitempty" url:"height,omitempty"`
 	// File identifier. Unique across the whole library; deliverable to a phone regardless of source.
 	ID string `json:"id" url:"id"`
+	// The message this file was attached to. Present for message attachments once the message is stored; a file whose message never arrived still names its phone.
+	MessageID *string `json:"message_id,omitempty" url:"message_id,omitempty"`
 	// Declared MIME type, pinned by the presigned upload.
 	MimeType string `json:"mime_type" url:"mime_type"`
 	// Distinct phones currently holding or receiving a delivered copy. Informational: deleting the file from the library does not remove these.
 	OnPhoneCount int64 `json:"on_phone_count" url:"on_phone_count"`
+	// The phone that received the message this file was attached to. Present for message attachments.
+	PhoneID *string `json:"phone_id,omitempty" url:"phone_id,omitempty"`
 	// Whether the preview exists, is still being generated, or will never be available for this format.
 	PreviewState FileSummaryPreviewState `json:"preview_state" url:"preview_state"`
 	// Short-lived signed URL for the animated hover preview. Videos only; absent until generated.
@@ -840,11 +831,11 @@ type FileSummary struct {
 	SessionID *string `json:"session_id,omitempty" url:"session_id,omitempty"`
 	// Declared size in bytes, pinned by the presigned upload.
 	SizeBytes int64 `json:"size_bytes" url:"size_bytes"`
-	// How the file entered the library: upload (put in directly) or capture (lifted off a session).
+	// How the file entered the library: upload (put in directly), capture (lifted off a session), or message (attached to a message one of the org's dedicated phones received).
 	Source FileSummarySource `json:"source" url:"source"`
 	// uploading until the object is verified in storage, then ready. For a capture, read capture_state for the fuller lifecycle.
 	Status FileSummaryStatus `json:"status" url:"status"`
-	// Which surface a capture came off (phone today). Absent for a direct upload.
+	// Which surface a capture or message attachment came off (phone today). Absent for a direct upload.
 	Surface *FileSummarySurface `json:"surface,omitempty" url:"surface,omitempty"`
 	// Short-lived signed URL for the generated preview image. Absent while generation is pending, and permanently absent for formats without a preview.
 	ThumbnailURL *string `json:"thumbnail_url,omitempty" url:"thumbnail_url,omitempty"`
@@ -856,6 +847,13 @@ type FileSummary struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (f *FileSummary) GetSchema() *string {
+	if f == nil {
+		return nil
+	}
+	return f.Schema
 }
 
 func (f *FileSummary) GetAttachmentURL() *string {
@@ -900,6 +898,13 @@ func (f *FileSummary) GetCreatedAt() time.Time {
 	return f.CreatedAt
 }
 
+func (f *FileSummary) GetDisplayURL() *string {
+	if f == nil {
+		return nil
+	}
+	return f.DisplayURL
+}
+
 func (f *FileSummary) GetDownloadURL() *string {
 	if f == nil {
 		return nil
@@ -935,6 +940,13 @@ func (f *FileSummary) GetID() string {
 	return f.ID
 }
 
+func (f *FileSummary) GetMessageID() *string {
+	if f == nil {
+		return nil
+	}
+	return f.MessageID
+}
+
 func (f *FileSummary) GetMimeType() string {
 	if f == nil {
 		return ""
@@ -947,6 +959,13 @@ func (f *FileSummary) GetOnPhoneCount() int64 {
 		return 0
 	}
 	return f.OnPhoneCount
+}
+
+func (f *FileSummary) GetPhoneID() *string {
+	if f == nil {
+		return nil
+	}
+	return f.PhoneID
 }
 
 func (f *FileSummary) GetPreviewState() FileSummaryPreviewState {
@@ -1026,6 +1045,13 @@ func (f *FileSummary) require(field *big.Int) {
 	f.explicitFields.Or(f.explicitFields, field)
 }
 
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetSchema(schema *string) {
+	f.Schema = schema
+	f.require(fileSummaryFieldSchema)
+}
+
 // SetAttachmentURL sets the AttachmentURL field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (f *FileSummary) SetAttachmentURL(attachmentURL *string) {
@@ -1068,6 +1094,13 @@ func (f *FileSummary) SetCreatedAt(createdAt time.Time) {
 	f.require(fileSummaryFieldCreatedAt)
 }
 
+// SetDisplayURL sets the DisplayURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetDisplayURL(displayURL *string) {
+	f.DisplayURL = displayURL
+	f.require(fileSummaryFieldDisplayURL)
+}
+
 // SetDownloadURL sets the DownloadURL field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (f *FileSummary) SetDownloadURL(downloadURL *string) {
@@ -1103,6 +1136,13 @@ func (f *FileSummary) SetID(id string) {
 	f.require(fileSummaryFieldID)
 }
 
+// SetMessageID sets the MessageID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetMessageID(messageID *string) {
+	f.MessageID = messageID
+	f.require(fileSummaryFieldMessageID)
+}
+
 // SetMimeType sets the MimeType field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (f *FileSummary) SetMimeType(mimeType string) {
@@ -1115,6 +1155,13 @@ func (f *FileSummary) SetMimeType(mimeType string) {
 func (f *FileSummary) SetOnPhoneCount(onPhoneCount int64) {
 	f.OnPhoneCount = onPhoneCount
 	f.require(fileSummaryFieldOnPhoneCount)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetPhoneID(phoneID *string) {
+	f.PhoneID = phoneID
+	f.require(fileSummaryFieldPhoneID)
 }
 
 // SetPreviewState sets the PreviewState field and marks it as non-optional;
@@ -1230,7 +1277,7 @@ func (f *FileSummary) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// Capture lifecycle: detected/uploading while in flight, ready when usable, or a terminal skip/failure with its reason. Present only for captures.
+// Upload lifecycle of a file the phone sends itself: detected/uploading while in flight, ready when usable, or a terminal skip/failure with its reason. Present for captures and message attachments.
 type FileSummaryCaptureState string
 
 const (
@@ -1297,12 +1344,13 @@ func (f FileSummaryPreviewState) Ptr() *FileSummaryPreviewState {
 	return &f
 }
 
-// How the file entered the library: upload (put in directly) or capture (lifted off a session).
+// How the file entered the library: upload (put in directly), capture (lifted off a session), or message (attached to a message one of the org's dedicated phones received).
 type FileSummarySource string
 
 const (
 	FileSummarySourceUpload  FileSummarySource = "upload"
 	FileSummarySourceCapture FileSummarySource = "capture"
+	FileSummarySourceMessage FileSummarySource = "message"
 )
 
 func NewFileSummarySourceFromString(s string) (FileSummarySource, error) {
@@ -1311,6 +1359,8 @@ func NewFileSummarySourceFromString(s string) (FileSummarySource, error) {
 		return FileSummarySourceUpload, nil
 	case "capture":
 		return FileSummarySourceCapture, nil
+	case "message":
+		return FileSummarySourceMessage, nil
 	}
 	var t FileSummarySource
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -1343,7 +1393,7 @@ func (f FileSummaryStatus) Ptr() *FileSummaryStatus {
 	return &f
 }
 
-// Which surface a capture came off (phone today). Absent for a direct upload.
+// Which surface a capture or message attachment came off (phone today). Absent for a direct upload.
 type FileSummarySurface string
 
 const (
@@ -1738,55 +1788,26 @@ func (r *RenameFileOutputBody) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// sort direction
-type FilesListRequestOrder string
+// only images or only videos, whatever their exact media type
+type FilesListRequestMediaType string
 
 const (
-	FilesListRequestOrderAsc  FilesListRequestOrder = "asc"
-	FilesListRequestOrderDesc FilesListRequestOrder = "desc"
+	FilesListRequestMediaTypeImage FilesListRequestMediaType = "image"
+	FilesListRequestMediaTypeVideo FilesListRequestMediaType = "video"
 )
 
-func NewFilesListRequestOrderFromString(s string) (FilesListRequestOrder, error) {
+func NewFilesListRequestMediaTypeFromString(s string) (FilesListRequestMediaType, error) {
 	switch s {
-	case "asc":
-		return FilesListRequestOrderAsc, nil
-	case "desc":
-		return FilesListRequestOrderDesc, nil
+	case "image":
+		return FilesListRequestMediaTypeImage, nil
+	case "video":
+		return FilesListRequestMediaTypeVideo, nil
 	}
-	var t FilesListRequestOrder
+	var t FilesListRequestMediaType
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
 }
 
-func (f FilesListRequestOrder) Ptr() *FilesListRequestOrder {
-	return &f
-}
-
-// field to sort by; source groups uploads and captures
-type FilesListRequestSort string
-
-const (
-	FilesListRequestSortCreatedAt FilesListRequestSort = "created_at"
-	FilesListRequestSortFilename  FilesListRequestSort = "filename"
-	FilesListRequestSortSizeBytes FilesListRequestSort = "size_bytes"
-	FilesListRequestSortSource    FilesListRequestSort = "source"
-)
-
-func NewFilesListRequestSortFromString(s string) (FilesListRequestSort, error) {
-	switch s {
-	case "created_at":
-		return FilesListRequestSortCreatedAt, nil
-	case "filename":
-		return FilesListRequestSortFilename, nil
-	case "size_bytes":
-		return FilesListRequestSortSizeBytes, nil
-	case "source":
-		return FilesListRequestSortSource, nil
-	}
-	var t FilesListRequestSort
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (f FilesListRequestSort) Ptr() *FilesListRequestSort {
+func (f FilesListRequestMediaType) Ptr() *FilesListRequestMediaType {
 	return &f
 }
 
@@ -1796,6 +1817,7 @@ type FilesListRequestSource string
 const (
 	FilesListRequestSourceUpload  FilesListRequestSource = "upload"
 	FilesListRequestSourceCapture FilesListRequestSource = "capture"
+	FilesListRequestSourceMessage FilesListRequestSource = "message"
 )
 
 func NewFilesListRequestSourceFromString(s string) (FilesListRequestSource, error) {
@@ -1804,6 +1826,8 @@ func NewFilesListRequestSourceFromString(s string) (FilesListRequestSource, erro
 		return FilesListRequestSourceUpload, nil
 	case "capture":
 		return FilesListRequestSourceCapture, nil
+	case "message":
+		return FilesListRequestSourceMessage, nil
 	}
 	var t FilesListRequestSource
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -1831,4 +1855,61 @@ func NewFilesListRequestSurfaceFromString(s string) (FilesListRequestSurface, er
 
 func (f FilesListRequestSurface) Ptr() *FilesListRequestSurface {
 	return &f
+}
+
+var (
+	fileRenameRequestFieldFileID   = big.NewInt(1 << 0)
+	fileRenameRequestFieldFilename = big.NewInt(1 << 1)
+)
+
+type FileRenameRequest struct {
+	// file identifier to rename
+	FileID string `json:"-" url:"-"`
+	// New display name for the file.
+	Filename string `json:"filename" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (f *FileRenameRequest) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetFileID sets the FileID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileRenameRequest) SetFileID(fileID string) {
+	f.FileID = fileID
+	f.require(fileRenameRequestFieldFileID)
+}
+
+// SetFilename sets the Filename field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileRenameRequest) SetFilename(filename string) {
+	f.Filename = filename
+	f.require(fileRenameRequestFieldFilename)
+}
+
+func (f *FileRenameRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler FileRenameRequest
+	var body unmarshaler
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	*f = FileRenameRequest(body)
+	return nil
+}
+
+func (f *FileRenameRequest) MarshalJSON() ([]byte, error) {
+	type embed FileRenameRequest
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*f),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
 }

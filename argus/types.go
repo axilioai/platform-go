@@ -9,12 +9,29 @@ import (
 	big "math/big"
 )
 
+// RFC 9457 problem details, as argus (and the backend) answer every error.
 var (
-	hTTPValidationErrorFieldDetail = big.NewInt(1 << 0)
+	problemFieldCode   = big.NewInt(1 << 0)
+	problemFieldDetail = big.NewInt(1 << 1)
+	problemFieldErrors = big.NewInt(1 << 2)
+	problemFieldStatus = big.NewInt(1 << 3)
+	problemFieldTitle  = big.NewInt(1 << 4)
+	problemFieldType   = big.NewInt(1 << 5)
 )
 
-type HTTPValidationError struct {
-	Detail []*ValidationError `json:"detail,omitempty" url:"detail,omitempty"`
+type Problem struct {
+	// Stable machine-readable category, e.g. validation, not_found
+	Code string `json:"code" url:"code"`
+	// Human-readable explanation; masked for internal errors
+	Detail string `json:"detail" url:"detail"`
+	// Per-field messages on a request validation problem
+	Errors []map[string]string `json:"errors,omitempty" url:"errors,omitempty"`
+	// The HTTP status code
+	Status int `json:"status" url:"status"`
+	// The status's reason phrase
+	Title string `json:"title" url:"title"`
+	// Always about:blank
+	Type *string `json:"type,omitempty" url:"type,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -23,250 +40,142 @@ type HTTPValidationError struct {
 	rawJSON         json.RawMessage
 }
 
-func (h *HTTPValidationError) GetDetail() []*ValidationError {
-	if h == nil {
-		return nil
+func (p *Problem) GetCode() string {
+	if p == nil {
+		return ""
 	}
-	return h.Detail
+	return p.Code
 }
 
-func (h *HTTPValidationError) GetExtraProperties() map[string]interface{} {
-	if h == nil {
-		return nil
+func (p *Problem) GetDetail() string {
+	if p == nil {
+		return ""
 	}
-	return h.extraProperties
+	return p.Detail
 }
 
-func (h *HTTPValidationError) require(field *big.Int) {
-	if h.explicitFields == nil {
-		h.explicitFields = big.NewInt(0)
+func (p *Problem) GetErrors() []map[string]string {
+	if p == nil {
+		return nil
 	}
-	h.explicitFields.Or(h.explicitFields, field)
+	return p.Errors
+}
+
+func (p *Problem) GetStatus() int {
+	if p == nil {
+		return 0
+	}
+	return p.Status
+}
+
+func (p *Problem) GetTitle() string {
+	if p == nil {
+		return ""
+	}
+	return p.Title
+}
+
+func (p *Problem) GetType() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Type
+}
+
+func (p *Problem) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *Problem) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetCode sets the Code field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *Problem) SetCode(code string) {
+	p.Code = code
+	p.require(problemFieldCode)
 }
 
 // SetDetail sets the Detail field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (h *HTTPValidationError) SetDetail(detail []*ValidationError) {
-	h.Detail = detail
-	h.require(hTTPValidationErrorFieldDetail)
+func (p *Problem) SetDetail(detail string) {
+	p.Detail = detail
+	p.require(problemFieldDetail)
 }
 
-func (h *HTTPValidationError) UnmarshalJSON(data []byte) error {
-	type unmarshaler HTTPValidationError
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*h = HTTPValidationError(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *h)
-	if err != nil {
-		return err
-	}
-	h.extraProperties = extraProperties
-	h.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (h *HTTPValidationError) MarshalJSON() ([]byte, error) {
-	type embed HTTPValidationError
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*h),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, h.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (h *HTTPValidationError) String() string {
-	if h == nil {
-		return "<nil>"
-	}
-	if len(h.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(h.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(h); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", h)
-}
-
-var (
-	validationErrorFieldLoc  = big.NewInt(1 << 0)
-	validationErrorFieldMsg  = big.NewInt(1 << 1)
-	validationErrorFieldType = big.NewInt(1 << 2)
-)
-
-type ValidationError struct {
-	Loc  []*ValidationErrorLocItem `json:"loc" url:"loc"`
-	Msg  string                    `json:"msg" url:"msg"`
-	Type string                    `json:"type" url:"type"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (v *ValidationError) GetLoc() []*ValidationErrorLocItem {
-	if v == nil {
-		return nil
-	}
-	return v.Loc
-}
-
-func (v *ValidationError) GetMsg() string {
-	if v == nil {
-		return ""
-	}
-	return v.Msg
-}
-
-func (v *ValidationError) GetType() string {
-	if v == nil {
-		return ""
-	}
-	return v.Type
-}
-
-func (v *ValidationError) GetExtraProperties() map[string]interface{} {
-	if v == nil {
-		return nil
-	}
-	return v.extraProperties
-}
-
-func (v *ValidationError) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
-	}
-	v.explicitFields.Or(v.explicitFields, field)
-}
-
-// SetLoc sets the Loc field and marks it as non-optional;
+// SetErrors sets the Errors field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (v *ValidationError) SetLoc(loc []*ValidationErrorLocItem) {
-	v.Loc = loc
-	v.require(validationErrorFieldLoc)
+func (p *Problem) SetErrors(errors []map[string]string) {
+	p.Errors = errors
+	p.require(problemFieldErrors)
 }
 
-// SetMsg sets the Msg field and marks it as non-optional;
+// SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (v *ValidationError) SetMsg(msg string) {
-	v.Msg = msg
-	v.require(validationErrorFieldMsg)
+func (p *Problem) SetStatus(status int) {
+	p.Status = status
+	p.require(problemFieldStatus)
+}
+
+// SetTitle sets the Title field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *Problem) SetTitle(title string) {
+	p.Title = title
+	p.require(problemFieldTitle)
 }
 
 // SetType sets the Type field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (v *ValidationError) SetType(type_ string) {
-	v.Type = type_
-	v.require(validationErrorFieldType)
+func (p *Problem) SetType(type_ *string) {
+	p.Type = type_
+	p.require(problemFieldType)
 }
 
-func (v *ValidationError) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValidationError
+func (p *Problem) UnmarshalJSON(data []byte) error {
+	type unmarshaler Problem
 	var value unmarshaler
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*v = ValidationError(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	*p = Problem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
 	if err != nil {
 		return err
 	}
-	v.extraProperties = extraProperties
-	v.rawJSON = json.RawMessage(data)
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
 	return nil
 }
 
-func (v *ValidationError) MarshalJSON() ([]byte, error) {
-	type embed ValidationError
+func (p *Problem) MarshalJSON() ([]byte, error) {
+	type embed Problem
 	var marshaler = struct {
 		embed
 	}{
-		embed: embed(*v),
+		embed: embed(*p),
 	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
 	return json.Marshal(explicitMarshaler)
 }
 
-func (v *ValidationError) String() string {
-	if v == nil {
+func (p *Problem) String() string {
+	if p == nil {
 		return "<nil>"
 	}
-	if len(v.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
 			return value
 		}
 	}
-	if value, err := internal.StringifyJSON(v); err == nil {
+	if value, err := internal.StringifyJSON(p); err == nil {
 		return value
 	}
-	return fmt.Sprintf("%#v", v)
-}
-
-type ValidationErrorLocItem struct {
-	String  string
-	Integer int
-
-	typ string
-}
-
-func (v *ValidationErrorLocItem) GetString() string {
-	if v == nil {
-		return ""
-	}
-	return v.String
-}
-
-func (v *ValidationErrorLocItem) GetInteger() int {
-	if v == nil {
-		return 0
-	}
-	return v.Integer
-}
-
-func (v *ValidationErrorLocItem) UnmarshalJSON(data []byte) error {
-	var valueString string
-	if err := json.Unmarshal(data, &valueString); err == nil {
-		v.typ = "String"
-		v.String = valueString
-		return nil
-	}
-	var valueInteger int
-	if err := json.Unmarshal(data, &valueInteger); err == nil {
-		v.typ = "Integer"
-		v.Integer = valueInteger
-		return nil
-	}
-	return fmt.Errorf("%s cannot be deserialized as a %T", data, v)
-}
-
-func (v ValidationErrorLocItem) MarshalJSON() ([]byte, error) {
-	if v.typ == "String" || v.String != "" {
-		return json.Marshal(v.String)
-	}
-	if v.typ == "Integer" || v.Integer != 0 {
-		return json.Marshal(v.Integer)
-	}
-	return nil, fmt.Errorf("type %T does not include a non-empty union type", v)
-}
-
-type ValidationErrorLocItemVisitor interface {
-	VisitString(string) error
-	VisitInteger(int) error
-}
-
-func (v *ValidationErrorLocItem) Accept(visitor ValidationErrorLocItemVisitor) error {
-	if v.typ == "String" || v.String != "" {
-		return visitor.VisitString(v.String)
-	}
-	if v.typ == "Integer" || v.Integer != 0 {
-		return visitor.VisitInteger(v.Integer)
-	}
-	return fmt.Errorf("type %T does not include a non-empty union type", v)
+	return fmt.Sprintf("%#v", p)
 }

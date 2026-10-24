@@ -91,14 +91,16 @@ func (t *RemoteTransport) attachURL() string {
 // isMutatingMethod reports whether a DCP method mutates device state. Only
 // these carry idempotency keys: reads are naturally safe to re-send, and
 // keyless reads are what keep the executor's ledger small. Touch.* and
-// Keyboard.* are entirely mutating, but Locator is a mixed domain (tap/fill/
-// press mutate; waitFor/boundingBox/text/count are reads), so this lists
-// methods rather than gating by domain prefix.
+// Keyboard.* are entirely mutating, but Locator and Accessibility are mixed
+// domains (Locator tap/fill/press and Accessibility enable/disable mutate;
+// the rest are reads), so this lists methods rather than gating by domain
+// prefix.
 func isMutatingMethod(method string) bool {
 	switch method {
 	case methodTouchTap, methodTouchLongPress, methodTouchSwipe,
 		methodKeyboardTypeText, methodKeyboardKeyPress,
-		methodLocatorTap, methodLocatorFill, methodLocatorPress:
+		methodLocatorTap, methodLocatorFill, methodLocatorPress,
+		methodAccessibilityEnable, methodAccessibilityDisable:
 		return true
 	default:
 		return false

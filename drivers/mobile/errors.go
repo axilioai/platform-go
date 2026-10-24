@@ -46,11 +46,22 @@ const (
 	// retryable: an inference already running when the budget ended was
 	// allowed to finish, so a bare retry races the same clock again.
 	CodeActionTimeout Code = "action_timeout"
-	// CodeStrategyUnavailable: the locator needs a resolver the session
-	// doesn't have (role/name/id/states/platform need the accessibility
-	// tree, and today's phones have none). Not retryable:
-	// the session's capabilities won't change mid-call.
+	// CodeStrategyUnavailable: the call needs a resolver the session doesn't
+	// have. A locator with a tree-only selector (role, name, id, states,
+	// value, windowId, nodeId, platform) or StrategyAccessibility, or an
+	// Accessibility tree read, on a session whose accessibility tree is
+	// off. Not retryable as is: turn the tree on (Accessibility().Enable,
+	// where State().Toggleable) or change the selector.
 	CodeStrategyUnavailable Code = "strategy_unavailable"
+	// CodeTreeUnavailable: the accessibility tree is on but has no app
+	// window to read, typically because a system dialog such as a runtime
+	// permission prompt is covering the app. Not retryable as is: dismiss
+	// the dialog (vision still sees it) and try again.
+	CodeTreeUnavailable Code = "tree_unavailable"
+	// CodeStaleNode: a node id from an earlier snapshot (NodeID, or
+	// Accessibility().Partial / Children) no longer exists. Never matched
+	// against a different element. Take a fresh snapshot.
+	CodeStaleNode Code = "stale_node"
 )
 
 // Error is the single error type this package returns. Classify it with the
@@ -92,10 +103,17 @@ func IsDeviceOffline(err error) bool { return hasCode(err, CodeDeviceOffline) }
 // auto-wait exceeded its timeoutMs budget.
 func IsActionTimeout(err error) bool { return hasCode(err, CodeActionTimeout) }
 
-// IsStrategyUnavailable reports whether err is a locator that needs a
-// resolver the session doesn't have (e.g. role/id need the accessibility
-// tree, which today's phones don't advertise).
+// IsStrategyUnavailable reports whether err is a call that needs a resolver
+// the session doesn't have (e.g. role/id need the accessibility tree, and
+// it is off for this session).
 func IsStrategyUnavailable(err error) bool { return hasCode(err, CodeStrategyUnavailable) }
+
+// IsTreeUnavailable reports whether err is the accessibility tree having no
+// app window to read (a system dialog is covering the app).
+func IsTreeUnavailable(err error) bool { return hasCode(err, CodeTreeUnavailable) }
+
+// IsStaleNode reports whether err is a node id that no longer exists.
+func IsStaleNode(err error) bool { return hasCode(err, CodeStaleNode) }
 
 // IsRetryable reports whether err carries the retryable flag.
 func IsRetryable(err error) bool {
@@ -116,6 +134,8 @@ var _kindToCode = map[string]Code{
 	kindCanceled:            CodeCanceled,
 	kindActionTimeout:       CodeActionTimeout,
 	kindStrategyUnavailable: CodeStrategyUnavailable,
+	kindTreeUnavailable:     CodeTreeUnavailable,
+	kindStaleNode:           CodeStaleNode,
 }
 
 // fromDCPError maps a DCP error frame's error object onto an *Error. An unknown

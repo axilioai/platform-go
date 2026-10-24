@@ -103,30 +103,6 @@ func TestPhonesListWithWireMock(
 	VerifyRequestCount(t, "TestPhonesListWithWireMock", "GET", "/phones", map[string]interface{}{"ownership": "dedicated"}, 1)
 }
 
-func TestPhonesSupportedAppsWithWireMock(
-	t *testing.T,
-) {
-	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
-	if WireMockBaseURL == "" {
-		WireMockBaseURL = "http://localhost:8080"
-	}
-	client := client.NewClient(
-		option.WithBaseURL(WireMockBaseURL),
-		option.WithAPIKey("test-value"),
-	)
-	request := &platformgo.PhonesSupportedAppsRequest{}
-	_, invocationErr := client.Phones.SupportedApps(
-		context.TODO(),
-		request,
-		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestPhonesSupportedAppsWithWireMock"}},
-		),
-	)
-
-	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestPhonesSupportedAppsWithWireMock", "GET", "/phones/apps/supported", nil, 1)
-}
-
 func TestPhonesAvailabilityWithWireMock(
 	t *testing.T,
 ) {
@@ -175,30 +151,6 @@ func TestPhonesListSessionsWithWireMock(
 	VerifyRequestCount(t, "TestPhonesListSessionsWithWireMock", "GET", "/phones/sessions", nil, 1)
 }
 
-func TestPhonesActiveSessionsWithWireMock(
-	t *testing.T,
-) {
-	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
-	if WireMockBaseURL == "" {
-		WireMockBaseURL = "http://localhost:8080"
-	}
-	client := client.NewClient(
-		option.WithBaseURL(WireMockBaseURL),
-		option.WithAPIKey("test-value"),
-	)
-	request := &platformgo.PhonesActiveSessionsRequest{}
-	_, invocationErr := client.Phones.ActiveSessions(
-		context.TODO(),
-		request,
-		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestPhonesActiveSessionsWithWireMock"}},
-		),
-	)
-
-	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestPhonesActiveSessionsWithWireMock", "GET", "/phones/sessions/active", nil, 1)
-}
-
 func TestPhonesGetSessionWithWireMock(
 	t *testing.T,
 ) {
@@ -223,32 +175,6 @@ func TestPhonesGetSessionWithWireMock(
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
 	VerifyRequestCount(t, "TestPhonesGetSessionWithWireMock", "GET", "/phones/sessions/session_id", nil, 1)
-}
-
-func TestPhonesSessionLiveViewTokenWithWireMock(
-	t *testing.T,
-) {
-	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
-	if WireMockBaseURL == "" {
-		WireMockBaseURL = "http://localhost:8080"
-	}
-	client := client.NewClient(
-		option.WithBaseURL(WireMockBaseURL),
-		option.WithAPIKey("test-value"),
-	)
-	request := &platformgo.PhonesSessionLiveViewTokenRequest{
-		SessionID: "session_id",
-	}
-	_, invocationErr := client.Phones.SessionLiveViewToken(
-		context.TODO(),
-		request,
-		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestPhonesSessionLiveViewTokenWithWireMock"}},
-		),
-	)
-
-	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestPhonesSessionLiveViewTokenWithWireMock", "POST", "/phones/sessions/session_id/live-view-token", nil, 1)
 }
 
 func TestPhonesSessionRecordingWithWireMock(
@@ -277,7 +203,7 @@ func TestPhonesSessionRecordingWithWireMock(
 	VerifyRequestCount(t, "TestPhonesSessionRecordingWithWireMock", "GET", "/phones/sessions/session_id/recording", nil, 1)
 }
 
-func TestPhonesSessionTelemetryTokenWithWireMock(
+func TestPhonesSessionLiveViewTokenWithWireMock(
 	t *testing.T,
 ) {
 	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
@@ -288,22 +214,22 @@ func TestPhonesSessionTelemetryTokenWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.PhonesSessionTelemetryTokenRequest{
+	request := &platformgo.PhonesSessionLiveViewTokenRequest{
 		SessionID: "session_id",
 	}
-	_, invocationErr := client.Phones.SessionTelemetryToken(
+	_, invocationErr := client.Phones.SessionLiveViewToken(
 		context.TODO(),
 		request,
 		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestPhonesSessionTelemetryTokenWithWireMock"}},
+			http.Header{"X-Test-Id": []string{"TestPhonesSessionLiveViewTokenWithWireMock"}},
 		),
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestPhonesSessionTelemetryTokenWithWireMock", "POST", "/phones/sessions/session_id/telemetry-token", nil, 1)
+	VerifyRequestCount(t, "TestPhonesSessionLiveViewTokenWithWireMock", "POST", "/phones/sessions/session_id:createLiveViewToken", nil, 1)
 }
 
-func TestPhonesSessionThumbnailWithWireMock(
+func TestPhonesSupportedAppsWithWireMock(
 	t *testing.T,
 ) {
 	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
@@ -314,19 +240,17 @@ func TestPhonesSessionThumbnailWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.PhonesSessionThumbnailRequest{
-		SessionID: "session_id",
-	}
-	_, invocationErr := client.Phones.SessionThumbnail(
+	request := &platformgo.PhonesSupportedAppsRequest{}
+	_, invocationErr := client.Phones.SupportedApps(
 		context.TODO(),
 		request,
 		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestPhonesSessionThumbnailWithWireMock"}},
+			http.Header{"X-Test-Id": []string{"TestPhonesSupportedAppsWithWireMock"}},
 		),
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestPhonesSessionThumbnailWithWireMock", "GET", "/phones/sessions/session_id/thumbnail", nil, 1)
+	VerifyRequestCount(t, "TestPhonesSupportedAppsWithWireMock", "GET", "/phones/supported-apps", nil, 1)
 }
 
 func TestPhonesGetWithWireMock(
@@ -353,6 +277,33 @@ func TestPhonesGetWithWireMock(
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
 	VerifyRequestCount(t, "TestPhonesGetWithWireMock", "GET", "/phones/phone_id", nil, 1)
+}
+
+func TestPhonesUpdateWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.PhoneUpdatePhoneRequest{
+		PhoneID:  "phone_id",
+		Nickname: "nickname",
+	}
+	_, invocationErr := client.Phones.Update(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestPhonesUpdateWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestPhonesUpdateWithWireMock", "PATCH", "/phones/phone_id", nil, 1)
 }
 
 func TestPhonesListDeliveriesWithWireMock(
@@ -435,33 +386,6 @@ func TestPhonesGetDeliveryWithWireMock(
 	VerifyRequestCount(t, "TestPhonesGetDeliveryWithWireMock", "GET", "/phones/phone_id/deliveries/delivery_id", nil, 1)
 }
 
-func TestPhonesNicknameWithWireMock(
-	t *testing.T,
-) {
-	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
-	if WireMockBaseURL == "" {
-		WireMockBaseURL = "http://localhost:8080"
-	}
-	client := client.NewClient(
-		option.WithBaseURL(WireMockBaseURL),
-		option.WithAPIKey("test-value"),
-	)
-	request := &platformgo.PhoneUpdateNicknameRequest{
-		PhoneID:  "phone_id",
-		Nickname: "nickname",
-	}
-	_, invocationErr := client.Phones.Nickname(
-		context.TODO(),
-		request,
-		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestPhonesNicknameWithWireMock"}},
-		),
-	)
-
-	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestPhonesNicknameWithWireMock", "PATCH", "/phones/phone_id/nickname", nil, 1)
-}
-
 func TestPhonesPreviewWithWireMock(
 	t *testing.T,
 ) {
@@ -499,7 +423,7 @@ func TestPhonesDeallocateWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.PhonesDeallocateRequest{
+	request := &platformgo.PhoneDeallocateRequest{
 		PhoneID: "phone_id",
 	}
 	_, invocationErr := client.Phones.Deallocate(

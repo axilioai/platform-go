@@ -7,22 +7,29 @@ const protocolVersion = 1
 
 // DCP command method names ("Domain.method").
 const (
-	methodDeviceInfo         = "Device.info"
-	methodKeyboardKeyPress   = "Keyboard.keyPress"
-	methodKeyboardTypeText   = "Keyboard.typeText"
-	methodLocatorBoundingBox = "Locator.boundingBox"
-	methodLocatorCount       = "Locator.count"
-	methodLocatorFill        = "Locator.fill"
-	methodLocatorPress       = "Locator.press"
-	methodLocatorTap         = "Locator.tap"
-	methodLocatorText        = "Locator.text"
-	methodLocatorWaitFor     = "Locator.waitFor"
-	methodProtocolHandshake  = "Protocol.handshake"
-	methodScreenObserve      = "Screen.observe"
-	methodScreenScreenshot   = "Screen.screenshot"
-	methodTouchLongPress     = "Touch.longPress"
-	methodTouchSwipe         = "Touch.swipe"
-	methodTouchTap           = "Touch.tap"
+	methodAccessibilityDisable          = "Accessibility.disable"
+	methodAccessibilityEnable           = "Accessibility.enable"
+	methodAccessibilityGetChildAXNodes  = "Accessibility.getChildAXNodes"
+	methodAccessibilityGetFullAXTree    = "Accessibility.getFullAXTree"
+	methodAccessibilityGetPartialAXTree = "Accessibility.getPartialAXTree"
+	methodAccessibilityGetState         = "Accessibility.getState"
+	methodAccessibilityQueryAXTree      = "Accessibility.queryAXTree"
+	methodDeviceInfo                    = "Device.info"
+	methodKeyboardKeyPress              = "Keyboard.keyPress"
+	methodKeyboardTypeText              = "Keyboard.typeText"
+	methodLocatorBoundingBox            = "Locator.boundingBox"
+	methodLocatorCount                  = "Locator.count"
+	methodLocatorFill                   = "Locator.fill"
+	methodLocatorPress                  = "Locator.press"
+	methodLocatorTap                    = "Locator.tap"
+	methodLocatorText                   = "Locator.text"
+	methodLocatorWaitFor                = "Locator.waitFor"
+	methodProtocolHandshake             = "Protocol.handshake"
+	methodScreenObserve                 = "Screen.observe"
+	methodScreenScreenshot              = "Screen.screenshot"
+	methodTouchLongPress                = "Touch.longPress"
+	methodTouchSwipe                    = "Touch.swipe"
+	methodTouchTap                      = "Touch.tap"
 )
 
 // DCP error kinds (the data.kind on a CDP error frame).
@@ -34,8 +41,10 @@ const (
 	kindInvalidArgs         = "InvalidArgs"
 	kindNoAllocation        = "NoAllocation"
 	kindNotConnected        = "NotConnected"
+	kindStaleNode           = "StaleNode"
 	kindStrategyUnavailable = "StrategyUnavailable"
 	kindTimeout             = "Timeout"
+	kindTreeUnavailable     = "TreeUnavailable"
 	kindUnauthorized        = "Unauthorized"
 	kindUnknownOp           = "UnknownOp"
 )
@@ -43,7 +52,8 @@ const (
 // Nested object schemas a locator param frame references (locator.go builds
 // these from the hand-written Locator via toWire).
 type androidLocatorWire struct {
-	ClassName string `json:"className,omitempty"`
+	ClassName   string `json:"className,omitempty"`
+	PackageName string `json:"packageName,omitempty"`
 }
 
 type locatorWire struct {
@@ -51,12 +61,15 @@ type locatorWire struct {
 	Has      *locatorWire         `json:"has,omitempty"`
 	Id       string               `json:"id,omitempty"`
 	Name     string               `json:"name,omitempty"`
+	NodeId   string               `json:"nodeId,omitempty"`
 	Nth      *int                 `json:"nth,omitempty"`
 	Platform *locatorPlatformWire `json:"platform,omitempty"`
 	Query    string               `json:"query,omitempty"`
 	Role     string               `json:"role,omitempty"`
 	States   []string             `json:"states,omitempty"`
 	Text     string               `json:"text,omitempty"`
+	Value    string               `json:"value,omitempty"`
+	WindowId string               `json:"windowId,omitempty"`
 	Within   *locatorWire         `json:"within,omitempty"`
 }
 
@@ -65,7 +78,7 @@ type locatorPlatformWire struct {
 }
 
 // Input param frames (wire casing per contract: snake_case for the pre-locator
-// domains, camelCase for Locator), one per contract schema.
+// domains, camelCase for Locator and Accessibility), one per contract schema.
 type tapParams struct {
 	IdempotencyKey string `json:"idempotencyKey,omitempty"`
 	X              int    `json:"x"`
@@ -159,4 +172,29 @@ type locatorCountParams struct {
 	Model     string       `json:"model,omitempty"`
 	OcrEngine string       `json:"ocrEngine,omitempty"`
 	Strategy  string       `json:"strategy,omitempty"`
+}
+
+type accessibilityToggleParams struct {
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
+}
+
+type getFullAXTreeParams struct {
+	Depth           *int   `json:"depth,omitempty"`
+	InterestingOnly *bool  `json:"interestingOnly,omitempty"`
+	WindowId        string `json:"windowId,omitempty"`
+}
+
+type getPartialAXTreeParams struct {
+	FetchRelatives *bool  `json:"fetchRelatives,omitempty"`
+	NodeId         string `json:"nodeId"`
+}
+
+type getChildAXNodesParams struct {
+	Id string `json:"id"`
+}
+
+type queryAXTreeParams struct {
+	AccessibleName string       `json:"accessibleName,omitempty"`
+	Role           string       `json:"role,omitempty"`
+	Selector       *locatorWire `json:"selector,omitempty"`
 }

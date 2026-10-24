@@ -12,7 +12,7 @@
 <dl>
 <dd>
 
-Lists the API keys for the caller's organization, with optional paging (limit + offset). Ordered newest-first.
+Lists the API keys for the caller's organization. Filter by search (name or key preview), created_by_id and a created_after/created_before window; order with order_by ('<field> <asc|desc>'), field one of name, created_by_id, created_at or last_used_at. Defaults to created_at desc.
 </dd>
 </dl>
 </dd>
@@ -56,6 +56,46 @@ client.APIKeys.List(
 <dd>
 
 **offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**search:** `*string` — only keys whose name or key preview contains this text
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdByID:** `[]string` — only keys created by one of these users; repeatable
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdAfter:** `*time.Time` — only keys created at or after this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdBefore:** `*time.Time` — only keys created at or before this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is name, created_by_id, created_at or last_used_at. Defaults to created_at desc.
     
 </dd>
 </dl>
@@ -259,11 +299,7 @@ Configures automatic balance top-up: when the balance drops below the threshold,
 <dd>
 
 ```go
-request := &platformgo.SubscriptionAutoRechargeSettings{
-        Enabled: true,
-        TargetCents: int64(1000000),
-        ThresholdCents: int64(1000000),
-    }
+request := &platformgo.SubscriptionAutoRechargeSettingsUpdate{}
 client.Billing.UpdateAutoRecharge(
         context.TODO(),
         request,
@@ -283,7 +319,7 @@ client.Billing.UpdateAutoRecharge(
 <dl>
 <dd>
 
-**enabled:** `bool` — Whether auto-recharge is active.
+**enabled:** `*bool` — Whether auto-recharge is active. Enabling clears any prior payment-failure auto-disable.
     
 </dd>
 </dl>
@@ -291,7 +327,7 @@ client.Billing.UpdateAutoRecharge(
 <dl>
 <dd>
 
-**targetCents:** `int64` — Balance the recharge restores to, in cents (minimum 500 = $5.00). The charge is target minus current balance.
+**targetMicrodollars:** `*int64` — Balance the recharge restores to, in microdollars (minimum 5_000_000 = $5.00 while enabled).
     
 </dd>
 </dl>
@@ -299,7 +335,7 @@ client.Billing.UpdateAutoRecharge(
 <dl>
 <dd>
 
-**thresholdCents:** `int64` — Recharge when the balance drops below this amount, in cents.
+**thresholdMicrodollars:** `*int64` — Recharge when the balance drops below this amount, in microdollars.
     
 </dd>
 </dl>
@@ -343,6 +379,179 @@ client.Billing.GetBalance(
     )
 }
 ```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Billing.GetBalanceStatement() -> *platformgo.SubscriptionBalanceStatement</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+The organization's balance over a period, like a bank statement: the starting balance, credit added, what each product used, credit taken back by refunds and chargebacks, credit that expired, and the ending balance.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.BillingGetBalanceStatementRequest{
+        PeriodStartAt: platformgo.MustParseDateTime(
+            "2024-01-15T09:30:00Z",
+        ),
+        PeriodEndAt: platformgo.MustParseDateTime(
+            "2024-01-15T09:30:00Z",
+        ),
+    }
+client.Billing.GetBalanceStatement(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**periodStartAt:** `time.Time` — start of the period (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**periodEndAt:** `time.Time` — end of the period, exclusive (RFC 3339)
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Billing.ListBalanceTransactions() -> *platformgo.SubscriptionBalanceTransactionsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+The organization's balance history: every movement of its balance (usage, credit added or granted, expiry, refunds and disputes), newest first, with optional filters.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.BillingListBalanceTransactionsRequest{}
+client.Billing.ListBalanceTransactions(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — max items per page
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**type_:** `[]*platformgo.BillingListBalanceTransactionsRequestTypeItem` — Only transactions of one of these types; repeatable.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdAfter:** `*time.Time` — only transactions at/after this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdBefore:** `*time.Time` — only transactions at/before this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**orderBy:** `*string` — Sort expression 'created_at [asc|desc]', direction defaulting to desc.
+    
 </dd>
 </dl>
 </dd>
@@ -424,7 +633,7 @@ client.Billing.GetHistory(
 <dl>
 <dd>
 
-**billingCycle:** `*string` — filter by billing cycle
+**billingCycle:** `*platformgo.BillingGetHistoryRequestBillingCycle` — filter by billing cycle
     
 </dd>
 </dl>
@@ -432,7 +641,7 @@ client.Billing.GetHistory(
 <dl>
 <dd>
 
-**sortBy:** `*string` — column to sort by
+**status:** `*platformgo.BillingGetHistoryRequestStatus` — only invoices at this status
     
 </dd>
 </dl>
@@ -440,7 +649,7 @@ client.Billing.GetHistory(
 <dl>
 <dd>
 
-**sortOrder:** `*string` — asc or desc
+**invoicedAfter:** `*time.Time` — only invoices created at/after this time (RFC 3339)
     
 </dd>
 </dl>
@@ -448,23 +657,7 @@ client.Billing.GetHistory(
 <dl>
 <dd>
 
-**status:** `*string` — invoice status filter (lowercase)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**dateFrom:** `*string` — RFC3339 lower bound for invoice_date
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**dateTo:** `*string` — RFC3339 upper bound for invoice_date (with date_from = an exact calendar month)
+**invoicedBefore:** `*time.Time` — only invoices created at/before this time (RFC 3339; with invoiced_after, an exact calendar month)
     
 </dd>
 </dl>
@@ -481,6 +674,14 @@ client.Billing.GetHistory(
 <dd>
 
 **phoneID:** `*string` — filter to invoices for a dedicated phone
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is invoiced_at, amount_microdollars, status, plan_name, invoice_number or paid_at.
     
 </dd>
 </dl>
@@ -565,7 +766,7 @@ client.Billing.DownloadInvoice(
 <dl>
 <dd>
 
-Returns every phone rental subscription owned by the caller's organization, in any lifecycle state (active or canceled) - canceled rentals are included so past rentals stay visible. Each item's status field tells them apart. The summary block (active_count, combined monthly cost) counts only active rentals.
+Returns one page of the caller organization's phone rental subscriptions, in any lifecycle state unless status filters it (canceled rentals stay listed so past rentals remain visible). Filter by search, status, plan_interval, cancel_at_period_end, payment_status and a current_period_end_after/current_period_end_before window; order with order_by ('<field> <asc|desc>'). The summary block (active_count, combined monthly cost, per-interval breakdown, upcoming charges) covers every active rental and ignores the filters.
 </dd>
 </dl>
 </dd>
@@ -580,11 +781,100 @@ Returns every phone rental subscription owned by the caller's organization, in a
 <dd>
 
 ```go
+request := &platformgo.BillingGetRentalSubscriptionsRequest{}
 client.Billing.GetRentalSubscriptions(
         context.TODO(),
+        request,
     )
 }
 ```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — max items per page
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**search:** `*string` — only rentals whose phone name or nickname contains this text
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**status:** `[]*platformgo.BillingGetRentalSubscriptionsRequestStatusItem` — only rentals at one of these lifecycle statuses; repeatable. Omit for every status.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**planInterval:** `[]*platformgo.BillingGetRentalSubscriptionsRequestPlanIntervalItem` — only rentals on one of these plan intervals; repeatable
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**cancelAtPeriodEnd:** `*platformgo.BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd` — true for rentals set to cancel at period end, false for renewing ones
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**paymentStatus:** `[]*platformgo.BillingGetRentalSubscriptionsRequestPaymentStatusItem` — only rentals in one of these billing states; repeatable
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**currentPeriodEndAfter:** `*time.Time` — only rentals whose current period ends at or after this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**currentPeriodEndBefore:** `*time.Time` — only rentals whose current period ends at or before this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is phone_name, current_period_end_at, plan_interval or plan_price_microdollars. Defaults to current_period_end_at asc.
+    
 </dd>
 </dl>
 </dd>
@@ -706,10 +996,7 @@ Configures the low-balance alert: while enabled and the balance sits below the t
 <dd>
 
 ```go
-request := &platformgo.SubscriptionUsageAlertSettings{
-        Enabled: true,
-        ThresholdCents: int64(1000000),
-    }
+request := &platformgo.SubscriptionUsageAlertSettingsUpdate{}
 client.Billing.UpdateUsageAlerts(
         context.TODO(),
         request,
@@ -729,7 +1016,7 @@ client.Billing.UpdateUsageAlerts(
 <dl>
 <dd>
 
-**enabled:** `bool` — Whether low-balance alerts are active. Negative-balance alerts are always on.
+**enabled:** `*bool` — Whether low-balance alerts are active.
     
 </dd>
 </dl>
@@ -737,7 +1024,424 @@ client.Billing.UpdateUsageAlerts(
 <dl>
 <dd>
 
-**thresholdCents:** `int64` — Alert while the balance sits below this amount, in cents. Must be positive.
+**thresholdMicrodollars:** `*int64` — Alert while the balance sits below this amount, in microdollars. Must be positive while enabled.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+## Conversations
+<details><summary><code>client.Conversations.List() -> *platformgo.ConversationListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns one page of your dedicated phones' conversations, newest activity first: one per phone and set of people it texts with, each with its participants and latest message. Filter by phone (phone_id, or phone_number, the phone's own number), and search the participants with search, which matches any part of a person's number with formatting ignored. A text sent to a number and the replies from it are one conversation; the same number on two of your phones is two. Filter by what became of your texts with status, error_code and replied, optionally within a period (period_start_at, period_end_at): they look only at texts you sent in that period (the 7 days before period_end_at when the start is unset, the same window rules as GET /messages/metrics), combine with each other and with the other filters, and list a conversation when it passes every one. status and error_code match a conversation with at least one such text, so they list conversations, not texts: GET /messages/metrics counts both, in totals (texts) and conversations.by_outcome and failures[].conversations (conversations). With only a period, it lists the conversations you texted in it.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.ConversationsListRequest{}
+client.Conversations.List(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — max items per page
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**phoneID:** `*string` — only conversations on this phone
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**phoneNumber:** `*string` — only conversations on the phone with this own number, E.164 (for example +16282788410)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**status:** `*platformgo.ConversationsListRequestStatus` — only conversations with at least one text of yours, sent in the period, in this status: the same values as a message's status. sent means it left the phone but no delivery report came. A conversation counts once however many of its texts match. More statuses may be added.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**errorCode:** `*platformgo.ConversationsListRequestErrorCode` — only conversations with at least one text of yours, sent in the period, that failed for this reason: the same codes as a message's error_code. A conversation counts once however many of its texts match. More codes may be added.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**replied:** `*platformgo.ConversationsListRequestReplied` — true: only conversations you texted in the period where they wrote back within 24 hours of one of those texts (the reply may land after the period ends). false: only the ones you texted that they did not answer that way. The same rule as replied in GET /messages/metrics, so its texted minus replied is the number false lists.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**periodStartAt:** `*time.Time` — start of the period (RFC 3339) the status, error_code and replied filters look at your texts in. Unset: 7 days before period_end_at. It may be at most a year before now.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**periodEndAt:** `*time.Time` — end of the period (RFC 3339). Unset: now, and a later time is read as now. Must be after period_start_at.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**search:** `*string` — free-text search across the conversation's participants: a conversation matches when someone's handle contains this. For a number the digits are compared with formatting ignored, so +1 (415) 555-0123, 4155550123 and 0123 all match +14155550123; other text matches a short code or an alphanumeric sender, case-insensitive.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Conversations.Get(ConversationID) -> *platformgo.Conversation</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns one conversation: its phone, its participants and its latest message. Another organization's conversation reads as not found.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.ConversationsGetRequest{
+        ConversationID: "conversation_id",
+    }
+client.Conversations.Get(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**conversationID:** `string` — conversation identifier
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Conversations.Delete(ConversationID) -> *platformgo.ConversationDeleted</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Deletes every message in a conversation, as DELETE /messages/{message_id} does for one: the conversation and its messages are removed from every list at once, attachments within 48 hours, and the phone is asked to delete the conversation's messages on its side up to the newest message deleted here (anything it holds that is newer, including texts it has not passed on yet, stays). The response returns at once, with phone_deletion.status pending while the phone has not answered; Axilio keeps checking for up to 7 days, asking the phone again until it confirms (phone_deletion.next_check_at is the next check), and a phone not yet set up to delete messages (not_default_app) is asked once it can. GET /messages/{message_id} on any of the deleted messages shows where the phone's copy stands, and each message fires message.deleted, then message.phone_deleted or message.phone_delete_failed, as DELETE /messages/{message_id} describes. Deleting a conversation does not stop a message in it the phone is still sending. A conversation with no messages left is a 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.ConversationsDeleteRequest{
+        ConversationID: "conversation_id",
+    }
+client.Conversations.Delete(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**conversationID:** `string` — conversation identifier
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Conversations.ListMessages(ConversationID) -> *platformgo.PhoneMessageListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns one page of a conversation's messages, both directions, newest first by default (order_by created_at asc reads it oldest first, as a thread shows it). Each message has its full body.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.ConversationsListMessagesRequest{
+        ConversationID: "conversation_id",
+    }
+client.Conversations.ListMessages(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**conversationID:** `string` — conversation identifier
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — max items per page
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**orderBy:** `*string` — Sort expression 'created_at [asc|desc]': when the platform stored each message, newest first by default.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Conversations.CreateMessage(ConversationID, request) -> *platformgo.PhoneMessage</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Sends a message into a conversation, from its phone to its participant: the same send as POST /messages, with the same limits, idempotency and webhooks, and the same 202 response: the message, queued. A conversation with more than one other person, or whose other party is a short code or an unknown sender, can't take a reply yet (422).
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.ReplyInputBody{
+        ConversationID: "conversation_id",
+        IdempotencyKey: "idempotency_key",
+    }
+client.Conversations.CreateMessage(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**conversationID:** `string` — conversation identifier
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**idempotencyKey:** `string` — A caller-chosen key; the same key for your organization sends at most once.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**parts:** `[]*platformgo.PhoneMessageSendPart` — The message content in order. An SMS is one text part; media parts (at most 2 MiB in all) make it an MMS, with any text part first.
     
 </dd>
 </dl>
@@ -762,7 +1466,7 @@ client.Billing.UpdateUsageAlerts(
 <dl>
 <dd>
 
-Returns one page of the org's file library, newest first, with the org's standing usage against its storage quota. Every file carries its source (upload or capture) and, for a capture, its surface and capture state. Filter with source, surface and session_id. Files persist until deleted and any ready file can be delivered to a phone the org holds.
+Returns one page of the org's file library, newest first, with the org's standing usage against its storage quota. Every file carries its source (upload, capture or message) and, for a capture or message attachment, its surface and capture state. Filter with source, surface, session_id, phone_id and media_type, among others. Files persist until deleted and any ready file can be delivered to a phone the org holds.
 </dd>
 </dl>
 </dd>
@@ -813,7 +1517,7 @@ client.Files.List(
 <dl>
 <dd>
 
-**q:** `*string` — filter by filename, case-insensitive substring match
+**search:** `*string` — filter by filename, case-insensitive substring match
     
 </dd>
 </dl>
@@ -845,7 +1549,23 @@ client.Files.List(
 <dl>
 <dd>
 
+**phoneID:** `*string` — only files from this phone: attachments on messages it received, and files its sessions captured
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **mimeType:** `*string` — only files of exactly this media type
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**mediaType:** `*platformgo.FilesListRequestMediaType` — only images or only videos, whatever their exact media type
     
 </dd>
 </dl>
@@ -885,15 +1605,7 @@ client.Files.List(
 <dl>
 <dd>
 
-**sort:** `*platformgo.FilesListRequestSort` — field to sort by; source groups uploads and captures
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**order:** `*platformgo.FilesListRequestOrder` — sort direction
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is created_at, filename, size_bytes or source (which groups files by source, newest first within each).
     
 </dd>
 </dl>
@@ -984,6 +1696,67 @@ client.Files.Create(
 </dl>
 </details>
 
+<details><summary><code>client.Files.Get(FileID) -> *platformgo.FileSummary</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns one file from the org's library, with a short-lived read URL once its bytes are ready. A message's media part names its file by id; this is where that id resolves. Another org's file id reads as not found.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.FilesGetRequest{
+        FileID: "file_id",
+    }
+client.Files.Get(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**fileID:** `string` — file identifier
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Files.Delete(FileID) -> *platformgo.DeleteFileOutputBody</code></summary>
 <dl>
 <dd>
@@ -1045,7 +1818,7 @@ client.Files.Delete(
 </dl>
 </details>
 
-<details><summary><code>client.Files.Rename(FileID, request) -> *platformgo.RenameFileOutputBody</code></summary>
+<details><summary><code>client.Files.Update(FileID, request) -> *platformgo.RenameFileOutputBody</code></summary>
 <dl>
 <dd>
 
@@ -1076,7 +1849,7 @@ request := &platformgo.FileRenameRequest{
         FileID: "file_id",
         Filename: "filename",
     }
-client.Files.Rename(
+client.Files.Update(
         context.TODO(),
         request,
     )
@@ -1249,7 +2022,7 @@ client.Files.PhonesSessionFiles(
 <dl>
 <dd>
 
-**q:** `*string` — filter by filename, case-insensitive substring match
+**search:** `*string` — filter by filename, case-insensitive substring match
     
 </dd>
 </dl>
@@ -1290,6 +2063,421 @@ client.Files.PhonesSessionFiles(
 <dd>
 
 **createdBefore:** `*time.Time` — only files registered at or before this time (RFC 3339)
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+## Messages
+<details><summary><code>client.Messages.List() -> *platformgo.PhoneMessageListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns one page of every text message your dedicated phones have received and sent, across conversations, newest first, each with its full body and its conversation_id; direction tells them apart. Filter by phone_id, direction and when the platform stored the message (created_after, created_before), for example to collect everything since your last read. To read a conversation, use GET /conversations/{conversation_id}/messages. Only dedicated phones with a current rental receive messages; texts arriving on shared phones, or after a rental lapses, are never stored.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.MessagesListRequest{}
+client.Messages.List(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — max items per page
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — pagination offset
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**phoneID:** `*string` — only messages on this phone
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdAfter:** `*time.Time` — only messages stored at or after this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdBefore:** `*time.Time` — only messages stored at or before this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**direction:** `*platformgo.MessagesListRequestDirection` — only received (inbound) or sent (outbound) messages
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc. field is created_at (when the platform stored the message), sent_at (when it was sent) or received_at (when the phone received it); messages without that time come last.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Messages.Create(request) -> *platformgo.PhoneMessage</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Sends a message from one of your dedicated phones: an SMS when parts is one text part, an MMS when it carries media from your file library. The phone must have outbound messaging enabled by your administrator. Returns 202 with the message, queued; the outcome arrives as a message.sent or message.failed webhook and is readable at GET /messages/{message_id}. A phone that never received the message within about 15 minutes (it is offline, say) fails it rather than sending it late; one that received it but has not reported back by then makes it unconfirmed until it does. Each phone sends at most 15 messages per 30 minutes. Reusing an idempotency_key returns the original message, as it is now, instead of sending again; reusing it for a different message is a 409.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.SendMessageInputBody{
+        IdempotencyKey: "idempotency_key",
+        PhoneID: "phone_id",
+    }
+client.Messages.Create(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**idempotencyKey:** `string` — A caller-chosen key; the same key for your organization sends at most once.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**parts:** `[]*platformgo.PhoneMessageSendPart` — The message content in order. An SMS is one text part; media parts (at most 2 MiB in all) make it an MMS, with any text part first.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**phoneID:** `string` — The dedicated phone to send from, by its public id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**to:** `[]string` — The recipients, as E.164 numbers such as +14155550123. One recipient for now.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Messages.GetMetrics() -> *platformgo.PhoneMessageMetrics</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns your texting over a window (the last 7 days by default, starting at most a year back): texts sent and received, how the sent ones ended up (delivered, left the phone with no delivery report, unconfirmed, failed, still queued) and the delivery rate, how long they took to send and to be delivered, why they failed, your conversations and how many of the ones you texted wrote back within a day, and each phone's share with its busiest 30 minutes, to compare with the send_limit the response carries. The points chart it by the hour or the day (granularity) in time_zone; hour buckets need a window of 7 days or less. Scope it to one phone with phone_id or one conversation with conversation_id. A text counts at the time the platform stored it when sent, and when the phone received it when received.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.MessagesGetMetricsRequest{}
+client.Messages.GetMetrics(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**periodStartAt:** `*time.Time` — Start of the window (RFC 3339). Defaults to 7 days before period_end_at, and may be at most a year before now.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**periodEndAt:** `*time.Time` — End of the window (RFC 3339). Defaults to now, and a later time is read as now.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**granularity:** `*platformgo.MessagesGetMetricsRequestGranularity` — Bucket size: hour or day. hour is allowed for windows of 7 days or less.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**timeZone:** `*string` — IANA time zone the buckets follow, such as America/Los_Angeles: a day starts at local midnight and an hour on the local hour. An unknown name is an error.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**phoneID:** `*string` — Only this phone's texts. A phone your organization doesn't rent is not found.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**conversationID:** `*string` — Only this conversation's texts, and only its phone. Another organization's conversation is not found. When phone_id is also given, it is ignored: the conversation names the phone.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Messages.Get(MessageID) -> *platformgo.PhoneMessage</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns one text message a dedicated phone received or sent, with its full body. A sent message carries its delivery status.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.MessagesGetRequest{
+        MessageID: "message_id",
+    }
+client.Messages.Get(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**messageID:** `string` — message identifier
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Messages.Delete(MessageID) -> *platformgo.PhoneMessage</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Deletes a message: it is removed from every list and conversation at once, its attachments are removed from your file library within 48 hours, and the delete is recorded with who made it. The phone is also asked to delete its own copy, asynchronously. The response returns at once with the deleted message as GET /messages/{message_id} returns it (deleted_at set, no body or parts), with phone_deletion.status pending while the phone has not answered. Axilio keeps checking for up to 7 days, asking the phone again until it confirms; phone_deletion.next_check_at is when it next checks (null once the outcome is final). A phone not yet set up to delete messages (not_default_app) is asked once it can, within those 7 days. GET /messages/{message_id} keeps returning the deleted message and shows where the phone's copy stands in phone_deletion. Webhooks: message.deleted fires at once; message.phone_deleted fires when the phone holds no copy, and message.phone_delete_failed when it is final that the copy is still there or may be (ambiguous, not_matched, not_sent, or unconfirmed after the 7 days). A message the phone stored before it became the phone's messaging app can only be deleted on the phone when it is a plain text the phone can match, and only on the first attempt; otherwise the phone answers not_matched. Deleting a message the phone is still sending does not stop the send. Deleting a message that does not exist or is already deleted is a 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.MessagesDeleteRequest{
+        MessageID: "message_id",
+    }
+client.Messages.Delete(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**messageID:** `string` — message identifier
     
 </dd>
 </dl>
@@ -1510,7 +2698,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**search:** `*string` — free-text search across nickname, name, model, location
+**search:** `*string` — free-text search across phone_id, nickname, name, model, location
     
 </dd>
 </dl>
@@ -1518,7 +2706,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**status:** `[]string` — filter by phone status (active/inactive/maintenance/suspended/recovering/out_of_service); case-insensitive
+**status:** `[]*platformgo.PhonesListRequestStatusItem` — only phones at one of these statuses; repeatable
     
 </dd>
 </dl>
@@ -1526,7 +2714,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**type_:** `[]string` — filter by phone type (iphone/android); case-insensitive
+**phoneType:** `[]*platformgo.PhonesListRequestPhoneTypeItem` — only phones of one of these platforms; repeatable
     
 </dd>
 </dl>
@@ -1534,7 +2722,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**rentalExpiresAfter:** `*string` — only phones whose rental expires at/after this RFC3339 time
+**rentalExpiresAfter:** `*time.Time` — only phones whose rental expires at/after this time (RFC 3339)
     
 </dd>
 </dl>
@@ -1542,7 +2730,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**rentalExpiresBefore:** `*string` — only phones whose rental expires at/before this RFC3339 time
+**rentalExpiresBefore:** `*time.Time` — only phones whose rental expires at/before this time (RFC 3339)
     
 </dd>
 </dl>
@@ -1550,7 +2738,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**lastActiveAfter:** `*string` — only phones last seen at/after this RFC3339 time
+**lastHeartbeatAfter:** `*time.Time` — only phones whose last heartbeat is at/after this time (RFC 3339)
     
 </dd>
 </dl>
@@ -1558,7 +2746,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**lastActiveBefore:** `*string` — only phones last seen at/before this RFC3339 time
+**lastHeartbeatBefore:** `*time.Time` — only phones whose last heartbeat is at/before this time (RFC 3339)
     
 </dd>
 </dl>
@@ -1566,82 +2754,7 @@ client.Phones.List(
 <dl>
 <dd>
 
-**sort:** `*string` — sort column (created|rental_expires|last_active|status|type|location)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**order:** `*string` — sort direction (asc|desc)
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Phones.SupportedApps() -> *platformgo.PhoneSupportedAppsResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns the apps the platform supports orchestration for, optionally filtered by platform and category.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.PhonesSupportedAppsRequest{}
-client.Phones.SupportedApps(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**platform:** `*string` — filter by platform
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**category:** `*string` — filter by app category
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is created_at, rental_expires_at, last_heartbeat_at, status, phone_type or location.
     
 </dd>
 </dl>
@@ -1767,7 +2880,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**limit:** `*int64` — max rows to return (default 50, max 100)
+**limit:** `*int64` — max rows to return
     
 </dd>
 </dl>
@@ -1799,7 +2912,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**status:** `[]string` — filter by session status (ACTIVE/COMPLETED/CANCELLED/EXPIRED); repeatable
+**status:** `[]*platformgo.PhonesListSessionsRequestStatusItem` — only sessions at one of these statuses; repeatable
     
 </dd>
 </dl>
@@ -1807,7 +2920,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**source:** `[]string` — filter by source: workflow and/or interactive; repeatable
+**source:** `[]*platformgo.PhonesListSessionsRequestSourceItem` — only sessions from one of these sources; repeatable
     
 </dd>
 </dl>
@@ -1815,7 +2928,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**dedicated:** `[]string` — filter by type: shared and/or dedicated; repeatable
+**dedicated:** `[]*platformgo.PhonesListSessionsRequestDedicatedItem` — only sessions on shared and/or dedicated phones; repeatable
     
 </dd>
 </dl>
@@ -1823,7 +2936,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**startedAfter:** `*string` — only sessions started at/after this RFC3339 time
+**allocatedAfter:** `*time.Time` — only sessions allocated at/after this time (RFC 3339)
     
 </dd>
 </dl>
@@ -1831,7 +2944,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**startedBefore:** `*string` — only sessions started at/before this RFC3339 time
+**allocatedBefore:** `*time.Time` — only sessions allocated at/before this time (RFC 3339)
     
 </dd>
 </dl>
@@ -1839,7 +2952,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**endedAfter:** `*string` — only sessions de-allocated at/after this RFC3339 time
+**deallocatedAfter:** `*time.Time` — only sessions de-allocated at/after this time (RFC 3339)
     
 </dd>
 </dl>
@@ -1847,7 +2960,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**endedBefore:** `*string` — only sessions de-allocated at/before this RFC3339 time
+**deallocatedBefore:** `*time.Time` — only sessions de-allocated at/before this time (RFC 3339)
     
 </dd>
 </dl>
@@ -1855,106 +2968,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**sort:** `*string` — sort column: started|ended|status|duration|source (default started)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**order:** `*string` — sort direction: asc|desc (default desc)
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Phones.ActiveSessions() -> *platformgo.PhoneActiveSessionsResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns one page of the organization's currently-active phone sessions joined with phone + workflow display fields: in-flight runs, workflow-less interactive leases, and dedicated phones in use. Paginated via limit (default 25, max 100) + offset; the response total is the full active count.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.PhonesActiveSessionsRequest{}
-client.Phones.ActiveSessions(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**limit:** `*int64` — max rows to return (default 25, max 100)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `*int64` — rows to skip for pagination
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**search:** `*string` — case-insensitive match on phone name/nickname/id, session id, or workflow name
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**dedicated:** `*string` — filter by ownership: 'dedicated' or 'shared'
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**source:** `*string` — filter by source: 'workflow' or 'interactive'
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is allocated_at, deallocated_at, status, duration_seconds or source.
     
 </dd>
 </dl>
@@ -2027,67 +3041,6 @@ client.Phones.GetSession(
 </dl>
 </details>
 
-<details><summary><code>client.Phones.SessionLiveViewToken(SessionID) -> *platformgo.PhoneLiveViewTokenResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Mints a fresh live-view token (and hosted viewer URL) for an active session, per the session's allocate-time live_view settings: token-mode sessions re-issue the bearer link allocate returned once, org-mode sessions exchange the caller's identity. Refused for sessions allocated with live_view.disabled, for inactive sessions, and for sessions outside the caller's organization (reads as not found). Sharp edge: the returned URL embeds the token and is a bearer capability — whoever holds it can watch (and, unless the session was allocated view-only, drive) the phone until the session ends, at which point both stop working.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.PhonesSessionLiveViewTokenRequest{
-        SessionID: "session_id",
-    }
-client.Phones.SessionLiveViewToken(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**sessionID:** `string` — Phone session identifier
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
 <details><summary><code>client.Phones.SessionRecording(SessionID) -> *platformgo.PhoneSessionRecordingResponse</code></summary>
 <dl>
 <dd>
@@ -2100,7 +3053,7 @@ client.Phones.SessionLiveViewToken(
 <dl>
 <dd>
 
-Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for workflow runs and workflow-less interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet. Org-scoped: another org's session reads as not found.
+Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for workflow runs and workflow-less interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet, and "off" when the session was not recorded. Org-scoped: another org's session reads as not found.
 </dd>
 </dl>
 </dd>
@@ -2149,7 +3102,7 @@ client.Phones.SessionRecording(
 </dl>
 </details>
 
-<details><summary><code>client.Phones.SessionTelemetryToken(SessionID) -> *platformgo.PhoneTelemetryTokenResponse</code></summary>
+<details><summary><code>client.Phones.SessionLiveViewToken(SessionID) -> *platformgo.PhoneLiveViewTokenResponse</code></summary>
 <dl>
 <dd>
 
@@ -2161,7 +3114,7 @@ client.Phones.SessionRecording(
 <dl>
 <dd>
 
-Mints a fresh telemetry_url for an active session — the same read-only WebSocket URL POST /phones:allocate returns once (live trace spans + output logs for exactly this session, 3h token). This is the telemetry/frames leg, distinct from the live-view (video) token: it can only watch the trace, never the screen, and never drive the phone. The stream's end frame is the session-end signal. Refused for inactive sessions — an ended session's telemetry is served by GET /phones/sessions/{session_id}/frames — and for sessions outside the caller's organization (reads as not found).
+Mints a fresh live-view token (and hosted viewer URL) for an active session, per the session's allocate-time live_view settings: token-mode sessions re-issue the bearer link allocate returned once, org-mode sessions exchange the caller's identity. The token is view-only when the session was allocated with live_view.view_only or the caller has the viewer role; only members and admins get a token that can drive the phone. Refused for sessions allocated with live_view.disabled, for inactive sessions, and for sessions outside the caller's organization (reads as not found). Sharp edge: the returned URL embeds the token and is a bearer capability — whoever holds it can watch (and, unless the token is view-only, drive) the phone until the session ends, at which point both stop working.
 </dd>
 </dl>
 </dd>
@@ -2176,10 +3129,10 @@ Mints a fresh telemetry_url for an active session — the same read-only WebSock
 <dd>
 
 ```go
-request := &platformgo.PhonesSessionTelemetryTokenRequest{
+request := &platformgo.PhonesSessionLiveViewTokenRequest{
         SessionID: "session_id",
     }
-client.Phones.SessionTelemetryToken(
+client.Phones.SessionLiveViewToken(
         context.TODO(),
         request,
     )
@@ -2210,7 +3163,7 @@ client.Phones.SessionTelemetryToken(
 </dl>
 </details>
 
-<details><summary><code>client.Phones.SessionThumbnail(SessionID) -> *platformgo.PhoneSessionThumbnailResponse</code></summary>
+<details><summary><code>client.Phones.SupportedApps() -> *platformgo.PhoneSupportedAppsResponse</code></summary>
 <dl>
 <dd>
 
@@ -2222,7 +3175,7 @@ client.Phones.SessionTelemetryToken(
 <dl>
 <dd>
 
-Returns a short-lived URL for the session's current screen thumbnail — a rolling JPEG refreshed every few seconds while the session is active. Poll this endpoint and swap the image; every call mints a fresh URL. Status is "pending" (no URL) before the first frame lands or after the session ends. Org-scoped: another org's session reads as not found.
+Returns the apps the platform supports orchestration for, optionally filtered by platform and category.
 </dd>
 </dl>
 </dd>
@@ -2237,10 +3190,8 @@ Returns a short-lived URL for the session's current screen thumbnail — a rolli
 <dd>
 
 ```go
-request := &platformgo.PhonesSessionThumbnailRequest{
-        SessionID: "session_id",
-    }
-client.Phones.SessionThumbnail(
+request := &platformgo.PhonesSupportedAppsRequest{}
+client.Phones.SupportedApps(
         context.TODO(),
         request,
     )
@@ -2259,7 +3210,15 @@ client.Phones.SessionThumbnail(
 <dl>
 <dd>
 
-**sessionID:** `string` — Phone session identifier
+**platform:** `*platformgo.PhonesSupportedAppsRequestPlatform` — only apps for this platform
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**category:** `*platformgo.PhonesSupportedAppsRequestCategory` — only apps in this category
     
 </dd>
 </dl>
@@ -2321,6 +3280,76 @@ client.Phones.Get(
 <dd>
 
 **phoneID:** `string` — device identifier
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Phones.Update(PhoneID, request) -> *platformgo.PhoneSummary</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Changes the fields a customer may set on a dedicated phone the caller's org owns: its nickname. Returns the updated phone.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.PhoneUpdatePhoneRequest{
+        PhoneID: "phone_id",
+        Nickname: "nickname",
+    }
+client.Phones.Update(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**phoneID:** `string` — device identifier
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**nickname:** `string` — New display name for the phone.
     
 </dd>
 </dl>
@@ -2421,7 +3450,7 @@ client.Phones.ListDeliveries(
 <dl>
 <dd>
 
-Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts any file by id regardless of source (uploaded or captured), and the file must already be ready - finish an uploaded file with POST /files/{file_id}/complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
+Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts any file by id regardless of source (uploaded or captured), and the file must already be ready - finish an uploaded file with POST /files/{file_id}:complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
 </dd>
 </dl>
 </dd>
@@ -2467,7 +3496,7 @@ client.Phones.CreateDelivery(
 <dl>
 <dd>
 
-**collection:** `*platformgo.FileDeliveryCreateRequestCollection` — Media collection to insert into on the phone; defaults to Pictures for images and Movies for videos.
+**collection:** `*platformgo.FileDeliveryCreateRequestCollection` — Media collection to insert into on the phone; defaults to pictures for images and Movies for videos.
     
 </dd>
 </dl>
@@ -2557,76 +3586,6 @@ client.Phones.GetDelivery(
 </dl>
 </details>
 
-<details><summary><code>client.Phones.Nickname(PhoneID, request) -> *platformgo.PhoneSummary</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Sets the human-readable display name on a private phone the caller's org owns. Returns the updated phone summary.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.PhoneUpdateNicknameRequest{
-        PhoneID: "phone_id",
-        Nickname: "nickname",
-    }
-client.Phones.Nickname(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**phoneID:** `string` — device identifier
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**nickname:** `string` — New display name for the device.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
 <details><summary><code>client.Phones.Preview(PhoneID) -> *platformgo.PhonePreviewResponse</code></summary>
 <dl>
 <dd>
@@ -2688,7 +3647,7 @@ client.Phones.Preview(
 </dl>
 </details>
 
-<details><summary><code>client.Phones.Deallocate(PhoneID) -> *platformgo.PhoneDeallocateResponse</code></summary>
+<details><summary><code>client.Phones.Deallocate(PhoneID, request) -> *platformgo.PhoneDeallocateResponse</code></summary>
 <dl>
 <dd>
 
@@ -2700,7 +3659,7 @@ client.Phones.Preview(
 <dl>
 <dd>
 
-Deallocates a phone the caller's org currently holds. The session is billed and the phone is torn down asynchronously.
+Deallocates a phone the caller's org currently holds. The session is billed and the phone is torn down asynchronously. Pass session_id to end that session only: if the phone has already moved on to another session, nothing is released and the call still succeeds.
 </dd>
 </dl>
 </dd>
@@ -2715,7 +3674,7 @@ Deallocates a phone the caller's org currently holds. The session is billed and 
 <dd>
 
 ```go
-request := &platformgo.PhonesDeallocateRequest{
+request := &platformgo.PhoneDeallocateRequest{
         PhoneID: "phone_id",
     }
 client.Phones.Deallocate(
@@ -2738,6 +3697,14 @@ client.Phones.Deallocate(
 <dd>
 
 **phoneID:** `string` — phone identifier to deallocate
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sessionID:** `*string` — End this session only. If the phone has already moved on to another session, nothing is released and the call still succeeds. Omit to end whatever session the phone holds.
     
 </dd>
 </dl>
@@ -2859,6 +3826,14 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
+**accessibility:** `*bool` — Accessibility mode for this session, which lets locators resolve against the phone's accessibility tree. Defaults to false. true requires a phone that supports it: only such phones are claimed, and a phone_id that does not support it is refused with an accessibility_unavailable conflict. It also needs your organization to have access to accessibility mode; without it the request is refused with a 403 whose message starts with accessibility_unavailable. While on, the accessibility service is visible to apps on the phone.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **capture:** `*bool` — Capture media this session produces on the phone into the org's file library (default true). false disables capture for this session entirely.
     
 </dd>
@@ -2907,7 +3882,7 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
-**recording:** `*bool` — Record this session's screen (default true). false suppresses the video recording and rolling thumbnail entirely - no screen content is ever written.
+**recording:** `*bool` — Record this session's screen (default false). true stores a video of the session, available from the session's recording once it ends.
     
 </dd>
 </dl>
@@ -2964,7 +3939,7 @@ client.Phones.Allocate(
 <dl>
 <dd>
 
-Returns the paginated telemetry frames for a session in the canonical frame envelope: one completed span frame per durable span (operations that never completed appear via their synthesized failed closures) plus log frames, ordered by span start / log time, with response-level billed-cost maps. This is the same envelope the live telemetry WebSocket streams; live and archive differ only in cardinality (start+end frames live, one completed frame here). Org-scoped: another org's session reads as not found. A trace past the organization's telemetry retention window returns an empty list with retention_expired=true; when the retention policy itself cannot be resolved the request fails with a 500 rather than serving frames whose retention state is unknown. Tolerant reader (unified frame contract): consumers MUST ignore frames with an unknown kind, unknown fields within known kinds, and unknown span_type/log_type values (render generically, never error). Generated SDK types surface an unrecognized frame as an explicit UnknownFrame variant carrying the raw JSON, never a silent drop. A live-stream message MAY carry a JSON array of frame objects; consumers MUST accept a single object or an array.
+Returns the paginated telemetry frames for a session in the canonical frame envelope: one completed span frame per durable span (operations that never completed appear via their synthesized failed closures) plus log frames, ordered by span start / log time, with response-level billed-cost maps. This is the same envelope the live telemetry event stream (GET /realtime/sessions/{session_id}/events) carries; live and archive differ only in cardinality (start+end frames live, one completed frame here). Org-scoped: another org's session reads as not found. A trace past the organization's telemetry retention window returns an empty list with retention_expired=true; when the retention policy itself cannot be resolved the request fails with a 500 rather than serving frames whose retention state is unknown. Tolerant reader (unified frame contract): consumers MUST ignore frames with an unknown kind, unknown fields within known kinds, and unknown span_type/log_type values (render generically, never error). Generated SDK types surface an unrecognized frame as an explicit UnknownFrame variant carrying the raw JSON, never a silent drop. A live-stream message MAY carry a JSON array of frame objects; consumers MUST accept a single object or an array.
 </dd>
 </dl>
 </dd>
@@ -3041,7 +4016,7 @@ client.Runs.SessionsListFrames(
 <dl>
 <dd>
 
-Returns paginated recent (non-archived) runs the caller started - scoped to their own user within the org, not every member's runs. Filters: workflow_id, search (run ID substring), status_filter, trigger_filter. Order with order_by ('<field> <asc|desc>'), field one of status, started_at, completed_at, created_at.
+Returns paginated recent (non-archived) runs across the caller's organization, every member's runs included. Filters: workflow_id, search (run ID substring), status, trigger. Order with order_by ('<field> <asc|desc>'), field one of status, started_at, completed_at, created_at.
 </dd>
 </dl>
 </dd>
@@ -3108,7 +4083,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**statusFilter:** `[]*platformgo.RunsListRequestStatusFilterItem` — Restrict results to the given run statuses.
+**status:** `[]*platformgo.RunsListRequestStatusItem` — Only runs at one of these statuses; repeatable.
     
 </dd>
 </dl>
@@ -3116,7 +4091,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**triggerFilter:** `[]*platformgo.RunsListRequestTriggerFilterItem` — Restrict results to the given triggers.
+**trigger:** `[]*platformgo.RunsListRequestTriggerItem` — Only runs started by one of these triggers; repeatable.
     
 </dd>
 </dl>
@@ -3124,7 +4099,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-**orderBy:** `*string` — Sort expression '<field> <asc|desc>'; field is one of status, started_at, completed_at, created_at. Defaults to created_at desc.
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is status, started_at, completed_at or created_at. Defaults to created_at desc.
     
 </dd>
 </dl>
@@ -3148,7 +4123,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-Returns paginated historic runs for the caller's user over a required time window (start_date/end_date). Use GET /runs for recent (non-archived) runs.
+Returns paginated historic runs across the caller's organization over a required time window (completed_after/completed_before). Use GET /runs for recent (non-archived) runs.
 </dd>
 </dl>
 </dd>
@@ -3164,10 +4139,10 @@ Returns paginated historic runs for the caller's user over a required time windo
 
 ```go
 request := &platformgo.RunsListHistoricRequest{
-        StartDate: platformgo.MustParseDateTime(
+        CompletedAfter: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
-        EndDate: platformgo.MustParseDateTime(
+        CompletedBefore: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
     }
@@ -3190,7 +4165,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**startDate:** `time.Time` — Beginning of the query time window (RFC 3339).
+**completedAfter:** `time.Time` — Only runs that finished (completed, failed or were cancelled) at or after this time (RFC 3339).
     
 </dd>
 </dl>
@@ -3198,7 +4173,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**endDate:** `time.Time` — End of the query time window (RFC 3339).
+**completedBefore:** `time.Time` — Only runs that finished before this time (RFC 3339).
     
 </dd>
 </dl>
@@ -3230,7 +4205,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**statusFilter:** `[]*platformgo.RunsListHistoricRequestStatusFilterItem` — Restrict results to the given run statuses (case-insensitive).
+**status:** `[]*platformgo.RunsListHistoricRequestStatusItem` — Only runs at one of these statuses; repeatable.
     
 </dd>
 </dl>
@@ -3239,67 +4214,6 @@ client.Runs.ListHistoric(
 <dd>
 
 **search:** `*string` — Filter by run id or workflow id substring.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Runs.Stats(WorkflowID) -> *platformgo.RunStatsResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns total run count + success rate for the given workflow, scoped to the caller's user.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.RunsStatsRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Runs.Stats(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
     
 </dd>
 </dl>
@@ -3577,7 +4491,7 @@ client.Skill.GetSkill(
 <dl>
 <dd>
 
-Paginated, filterable list of inference calls (detect + locate) the caller's user was billed for over a required time window (start_date/end_date). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
+Paginated, filterable list of inference calls (detect, locate and element_locate) the caller's user was billed for over a required time window (created_after/created_before). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
 </dd>
 </dl>
 </dd>
@@ -3593,10 +4507,10 @@ Paginated, filterable list of inference calls (detect + locate) the caller's use
 
 ```go
 request := &platformgo.UsageListInferencesRequest{
-        StartDate: platformgo.MustParseDateTime(
+        CreatedAfter: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
-        EndDate: platformgo.MustParseDateTime(
+        CreatedBefore: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
     }
@@ -3619,7 +4533,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**startDate:** `time.Time` — Beginning of the inferences query window (RFC 3339).
+**createdAfter:** `time.Time` — Only inferences created at or after this time (RFC 3339).
     
 </dd>
 </dl>
@@ -3627,7 +4541,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**endDate:** `time.Time` — End of the inferences query window (RFC 3339).
+**createdBefore:** `time.Time` — Only inferences created before this time (RFC 3339).
     
 </dd>
 </dl>
@@ -3651,7 +4565,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**endpointFilter:** `[]string` — Restrict results to the given vision endpoints ('detect'/'locate').
+**endpoint:** `[]*platformgo.UsageListInferencesRequestEndpointItem` — Only inferences of one of these operations; repeatable.
     
 </dd>
 </dl>
@@ -3683,7 +4597,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**orderBy:** `*string` — Sort expression '<field> <asc|desc>'; field one of created_at, cost_microdollars, latency_ms, endpoint, model, inference_id. Defaults to created_at desc.
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is created_at, cost_microdollars, latency_ms, endpoint, model or inference_id. Defaults to created_at desc.
     
 </dd>
 </dl>
@@ -3707,7 +4621,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-Returns infrastructure cost and compute-minute summaries for the caller's user over a date range, plus per-bucket chart data. Granularity is hourly (≤24h window) or daily. Pass the window and granularity as query params.
+Returns your organization's usage spend over a window as points: one per hour or day in time_zone (and per product with group_by=product), each with the total, phone-session and inference spend in microdollars, zero when nothing was billed. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
 </dd>
 </dl>
 </dd>
@@ -3722,14 +4636,7 @@ Returns infrastructure cost and compute-minute summaries for the caller's user o
 <dd>
 
 ```go
-request := &platformgo.UsageGetMetricsRequest{
-        StartDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-        EndDate: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-    }
+request := &platformgo.UsageGetMetricsRequest{}
 client.Usage.GetMetrics(
         context.TODO(),
         request,
@@ -3749,7 +4656,7 @@ client.Usage.GetMetrics(
 <dl>
 <dd>
 
-**startDate:** `time.Time` — start of reporting window (RFC3339)
+**periodStartAt:** `*time.Time` — Start of the window (RFC 3339). Defaults to 7 days before period_end_at, and may be at most a year before now.
     
 </dd>
 </dl>
@@ -3757,7 +4664,7 @@ client.Usage.GetMetrics(
 <dl>
 <dd>
 
-**endDate:** `time.Time` — end of reporting window (RFC3339)
+**periodEndAt:** `*time.Time` — End of the window (RFC 3339). Defaults to now, and a later time is read as now.
     
 </dd>
 </dl>
@@ -3765,7 +4672,7 @@ client.Usage.GetMetrics(
 <dl>
 <dd>
 
-**granularity:** `*platformgo.UsageGetMetricsRequestGranularity` — bucket resolution
+**granularity:** `*platformgo.UsageGetMetricsRequestGranularity` — Bucket size: hour or day. hour is allowed for windows of 7 days or less.
     
 </dd>
 </dl>
@@ -3773,7 +4680,15 @@ client.Usage.GetMetrics(
 <dl>
 <dd>
 
-**timezone:** `*string` — IANA timezone for bucketing periods (e.g., America/Los_Angeles)
+**timeZone:** `*string` — IANA time zone the buckets follow, such as America/Los_Angeles: a day starts at local midnight and an hour on the local hour. An unknown name is an error.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**groupBy:** `*platformgo.UsageGetMetricsRequestGroupBy` — Split each bucket by product (session or inference). Omit for one point per bucket.
     
 </dd>
 </dl>
@@ -3797,7 +4712,7 @@ client.Usage.GetMetrics(
 <dl>
 <dd>
 
-Paginated, filterable list of the caller's phone sessions over a required time window (start_date/end_date), each row carrying billing detail: phone-time cost, inference cost, and combined total in microdollars, billing processing status, and allocation source. Filters: session status, billing processing status, workflow, allocation source, free-text search. Order with order_by ('<field> <asc|desc>').
+Paginated, filterable list of the caller's phone sessions over a required time window (allocated_after/allocated_before), each row carrying billing detail: phone-time cost, inference cost, and combined total in microdollars, billing processing status, and allocation source. Filters: session status, billing processing status, workflow, allocation source, free-text search. Order with order_by ('<field> <asc|desc>').
 </dd>
 </dl>
 </dd>
@@ -3813,10 +4728,10 @@ Paginated, filterable list of the caller's phone sessions over a required time w
 
 ```go
 request := &platformgo.UsageListSessionsRequest{
-        StartDate: platformgo.MustParseDateTime(
+        AllocatedAfter: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
-        EndDate: platformgo.MustParseDateTime(
+        AllocatedBefore: platformgo.MustParseDateTime(
             "2024-01-15T09:30:00Z",
         ),
     }
@@ -3839,7 +4754,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-**startDate:** `time.Time` — Beginning of the sessions query window (RFC 3339).
+**allocatedAfter:** `time.Time` — Only sessions allocated at or after this time (RFC 3339).
     
 </dd>
 </dl>
@@ -3847,7 +4762,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-**endDate:** `time.Time` — End of the sessions query window (RFC 3339).
+**allocatedBefore:** `time.Time` — Only sessions allocated before this time (RFC 3339).
     
 </dd>
 </dl>
@@ -3871,7 +4786,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-**sessionStatusFilter:** `[]string` — Restrict results to the given session lifecycle statuses.
+**sessionStatus:** `[]*platformgo.UsageListSessionsRequestSessionStatusItem` — Only sessions at one of these lifecycle statuses; repeatable.
     
 </dd>
 </dl>
@@ -3879,7 +4794,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-**processedStatusFilter:** `[]string` — Restrict results to the given billing processing statuses.
+**processedStatus:** `[]*platformgo.UsageListSessionsRequestProcessedStatusItem` — Only sessions at one of these billing processing statuses; repeatable.
     
 </dd>
 </dl>
@@ -3895,7 +4810,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-**allocatedBy:** `[]string` — Restrict results to the given allocation sources.
+**allocatedBy:** `[]*platformgo.UsageListSessionsRequestAllocatedByItem` — Restrict results to the given allocation sources; repeatable.
     
 </dd>
 </dl>
@@ -3911,7 +4826,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-**orderBy:** `*string` — Sort expression '<field> <asc|desc>'; field one of allocated_at, deallocated_at, duration, cost_microdollars, session_status, processed_status, allocated_by, session_id, workflow_id. Defaults to allocated_at desc.
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is allocated_at, deallocated_at, duration_seconds, cost_microdollars, session_status, processed_status, allocated_by, session_id or workflow_id. Defaults to allocated_at desc.
     
 </dd>
 </dl>
@@ -3936,7 +4851,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-Lists events published for the caller's organization, newest first, one page at a time. Pass the response's next_cursor as cursor to fetch the following page.
+Lists events published for the caller's organization, newest first, one page at a time. Narrow it to one event type (event_type), one destination (endpoint_id) or one message's events (message_id). Pass the response's next_cursor as cursor to fetch the following page.
 </dd>
 </dl>
 </dd>
@@ -3996,6 +4911,14 @@ client.Webhooks.ListDeliveries(
 <dd>
 
 **endpointID:** `*string` — Restrict the log to deliveries to one destination (endpoint id). Omit for all destinations.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**messageID:** `*string` — Restrict the log to the events for one message: message.received for a received message, the status events (message.sent, message.delivered, message.failed, message.unconfirmed) for a sent one, and the deletion events (message.deleted, message.phone_deleted, message.phone_delete_failed) for a deleted one. Omit for every event.
     
 </dd>
 </dl>
@@ -4769,7 +5692,7 @@ client.Webhooks.ListEventTypes(
 <dl>
 <dd>
 
-Returns delivery volume and error rate over a window, either for one destination (endpoint_id) or grouped across all of them, time-bucketed for charting. Response time is not included: the gateway records no per-attempt latency.
+Returns delivery volume, error rate and destination response time over a window as points: one per hour or day in time_zone, for every destination together, one (endpoint_id), or each one (group_by=endpoint_id). Counts are zero and latencies null for a bucket with no attempts. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
 </dd>
 </dl>
 </dd>
@@ -4804,7 +5727,7 @@ client.Webhooks.GetMetrics(
 <dl>
 <dd>
 
-**range_:** `*platformgo.WebhooksGetMetricsRequestRange` — Window and bucket size: 24h (hourly buckets), 7d or 30d (daily buckets).
+**periodStartAt:** `*time.Time` — Start of the window (RFC 3339). Defaults to 7 days before period_end_at, and may be at most a year before now.
     
 </dd>
 </dl>
@@ -4812,7 +5735,39 @@ client.Webhooks.GetMetrics(
 <dl>
 <dd>
 
-**endpointID:** `*string` — One destination's series. Omit to get every destination grouped, for the list-view sparklines.
+**periodEndAt:** `*time.Time` — End of the window (RFC 3339). Defaults to now, and a later time is read as now.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**granularity:** `*platformgo.WebhooksGetMetricsRequestGranularity` — Bucket size: hour or day. hour is allowed for windows of 7 days or less.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**timeZone:** `*string` — IANA time zone the buckets follow, such as America/Los_Angeles: a day starts at local midnight and an hour on the local hour. An unknown name is an error.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**groupBy:** `*platformgo.WebhooksGetMetricsRequestGroupBy` — Split each bucket by destination, one series per destination that had attempts (the list-view sparklines). Omit for one point per bucket.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**endpointID:** `*string` — Only this destination's attempts.
     
 </dd>
 </dl>
@@ -4837,7 +5792,7 @@ client.Webhooks.GetMetrics(
 <dl>
 <dd>
 
-Paginated list of workflows in the caller's org, with optional search, status, platform, and created/last-run date filters via query params.
+Paginated list of workflows in the caller's org, with optional search, status, platform, and created/last-run date filters via query params. Order with order_by ('<field> <asc|desc>'), field a path into the listed item such as workflow.name.
 </dd>
 </dl>
 </dd>
@@ -4896,7 +5851,7 @@ client.Workflows.List(
 <dl>
 <dd>
 
-**status:** `[]string` — filter by workflow status (lowercase)
+**status:** `[]*platformgo.WorkflowsListRequestStatusItem` — only workflows at one of these statuses; repeatable
     
 </dd>
 </dl>
@@ -4904,7 +5859,7 @@ client.Workflows.List(
 <dl>
 <dd>
 
-**platform:** `[]string` — filter by device platform (lowercase)
+**platform:** `[]*platformgo.WorkflowsListRequestPlatformItem` — only workflows for one of these platforms; repeatable
     
 </dd>
 </dl>
@@ -4912,7 +5867,7 @@ client.Workflows.List(
 <dl>
 <dd>
 
-**createdAfter:** `*string` — only workflows created at/after this RFC3339 time
+**createdAfter:** `*time.Time` — only workflows created at/after this time (RFC 3339)
     
 </dd>
 </dl>
@@ -4920,7 +5875,7 @@ client.Workflows.List(
 <dl>
 <dd>
 
-**createdBefore:** `*string` — only workflows created at/before this RFC3339 time
+**createdBefore:** `*time.Time` — only workflows created at/before this time (RFC 3339)
     
 </dd>
 </dl>
@@ -4928,7 +5883,7 @@ client.Workflows.List(
 <dl>
 <dd>
 
-**lastRunAfter:** `*string` — only workflows last run at/after this RFC3339 time
+**lastRunAfter:** `*time.Time` — only workflows last run at/after this time (RFC 3339)
     
 </dd>
 </dl>
@@ -4936,7 +5891,15 @@ client.Workflows.List(
 <dl>
 <dd>
 
-**lastRunBefore:** `*string` — only workflows last run at/before this RFC3339 time
+**lastRunBefore:** `*time.Time` — only workflows last run at/before this time (RFC 3339)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is workflow.id, workflow.name, workflow.platform, workflow.status, workflow.last_run_at, workflow.created_at or workflow.updated_at. Defaults to workflow.created_at desc.
     
 </dd>
 </dl>
@@ -4997,6 +5960,14 @@ client.Workflows.Create(
 <dl>
 <dd>
 
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs (default false). true requires a phone that supports it for every run dispatched through the scheduler, and your organization's access to accessibility mode: without it the save is refused with a 403 whose message starts with accessibility_unavailable.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **capture:** `*bool` — Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
     
 </dd>
@@ -5037,7 +6008,7 @@ client.Workflows.Create(
 <dl>
 <dd>
 
-**recording:** `*bool` — Record this workflow's runs (default true). false suppresses video recording and the rolling thumbnail entirely, for every run dispatched through the scheduler.
+**recording:** `*bool` — Record the screen of this workflow's runs (default false). true stores a video of every run dispatched through the scheduler.
     
 </dd>
 </dl>
@@ -5045,7 +6016,7 @@ client.Workflows.Create(
 <dl>
 <dd>
 
-**telemetry:** `*bool` — Persist telemetry spans for this workflow's runs (default true). false skips the durable trace store; the live telemetry stream still works while a run is active.
+**telemetry:** `*bool` — Emit telemetry for this workflow's runs (default true). false suppresses both live frames and durable trace storage.
     
 </dd>
 </dl>
@@ -5236,6 +6207,14 @@ client.Workflows.Update(
 <dl>
 <dd>
 
+**accessibility:** `*bool` — Accessibility mode for this workflow's runs. true requires a phone that supports it for every run dispatched through the scheduler, and your organization's access to accessibility mode: without it the update is refused with a 403 whose message starts with accessibility_unavailable. false turns it off. Omit to leave it unchanged.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **capture:** `*bool` — Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
     
 </dd>
@@ -5268,7 +6247,7 @@ client.Workflows.Update(
 <dl>
 <dd>
 
-**recording:** `*bool` — Record this workflow's runs (default true). false suppresses video recording and the rolling thumbnail entirely, for every run dispatched through the scheduler.
+**recording:** `*bool` — Record the screen of this workflow's runs. true stores a video of every run dispatched through the scheduler; false stops recording. Omit to leave it unchanged. New workflows default to false.
     
 </dd>
 </dl>
@@ -5284,7 +6263,7 @@ client.Workflows.Update(
 <dl>
 <dd>
 
-**telemetry:** `*bool` — Persist telemetry spans for this workflow's runs (default true). false skips the durable trace store; the live telemetry stream still works while a run is active.
+**telemetry:** `*bool` — Emit telemetry for this workflow's runs (default true). false suppresses both live frames and durable trace storage.
     
 </dd>
 </dl>
@@ -5308,7 +6287,7 @@ client.Workflows.Update(
 <dl>
 <dd>
 
-Returns the source code of the workflow's current revision, scoped to the caller's org.
+Returns the source code of the workflow's current revision, or of revision_id when given, scoped to the caller's org. A revision_id that is not one of this workflow's revisions reads as not found.
 </dd>
 </dl>
 </dd>
@@ -5349,151 +6328,11 @@ client.Workflows.GetCode(
     
 </dd>
 </dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.SaveCode(WorkflowID, request) -> *platformgo.WorkflowSaveCodeResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
 
 <dl>
 <dd>
 
-<dl>
-<dd>
-
-Persists a new revision of the workflow's code. Hash-deduplicates against the current revision (no-op if unchanged). Source is capped at 256KB.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowSaveCodeRequest{
-        WorkflowID: "workflow_id",
-        Source: "source",
-    }
-client.Workflows.SaveCode(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**message:** `*string` — Optional commit-style note.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**source:** `string` — Python source the user typed.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.RestoreRevision(WorkflowID, request) -> *platformgo.WorkflowSaveCodeResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Creates a new revision with the source of the named revision. Does NOT dedup against the current revision so the action is auditable in the revision history.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowRestoreRevisionRequest{
-        WorkflowID: "workflow_id",
-        RevisionID: "revision_id",
-    }
-client.Workflows.RestoreRevision(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**revisionID:** `string` — Revision to restore.
+**revisionID:** `*string` — Revision whose source to return. Defaults to the workflow's current revision.
     
 </dd>
 </dl>
@@ -5582,6 +6421,84 @@ client.Workflows.ListRevisions(
 </dl>
 </details>
 
+<details><summary><code>client.Workflows.CreateRevision(WorkflowID, request) -> *platformgo.WorkflowCreateRevisionResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Saves source as the workflow's new current revision. Hash-deduplicates against the current revision (no_op is true and nothing changes when the source is unchanged). Source is capped at 256KB.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WorkflowCreateRevisionRequest{
+        WorkflowID: "workflow_id",
+        Source: "source",
+    }
+client.Workflows.CreateRevision(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**workflowID:** `string` — workflow identifier
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**message:** `*string` — Optional commit-style note.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**source:** `string` — Python source the user typed.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Workflows.GetRevision(WorkflowID, RevisionID) -> *platformgo.WorkflowRevisionDetail</code></summary>
 <dl>
 <dd>
@@ -5641,6 +6558,137 @@ client.Workflows.GetRevision(
 <dd>
 
 **revisionID:** `string` — revision identifier
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Workflows.RestoreRevision(WorkflowID, RevisionID) -> *platformgo.WorkflowCreateRevisionResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Creates a new revision with the source of the named revision. Does NOT dedup against the current revision so the action is auditable in the revision history.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WorkflowsRestoreRevisionRequest{
+        WorkflowID: "workflow_id",
+        RevisionID: "revision_id",
+    }
+client.Workflows.RestoreRevision(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**workflowID:** `string` — workflow identifier
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**revisionID:** `string` — revision to restore
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Workflows.GetRunStats(WorkflowID) -> *platformgo.RunStatsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns the total run count and success rate of the caller's own runs of the given workflow. A workflow outside the caller's organization reads as not found.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.WorkflowsGetRunStatsRequest{
+        WorkflowID: "workflow_id",
+    }
+client.Workflows.GetRunStats(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**workflowID:** `string` — workflow identifier
     
 </dd>
 </dl>

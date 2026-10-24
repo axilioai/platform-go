@@ -110,11 +110,7 @@ func TestBillingUpdateAutoRechargeWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.SubscriptionAutoRechargeSettings{
-		Enabled:        true,
-		TargetCents:    int64(1000000),
-		ThresholdCents: int64(1000000),
-	}
+	request := &platformgo.SubscriptionAutoRechargeSettingsUpdate{}
 	_, invocationErr := client.Billing.UpdateAutoRecharge(
 		context.TODO(),
 		request,
@@ -124,7 +120,7 @@ func TestBillingUpdateAutoRechargeWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestBillingUpdateAutoRechargeWithWireMock", "PUT", "/billing/auto-recharge", nil, 1)
+	VerifyRequestCount(t, "TestBillingUpdateAutoRechargeWithWireMock", "PATCH", "/billing/auto-recharge", nil, 1)
 }
 
 func TestBillingGetBalanceWithWireMock(
@@ -147,6 +143,61 @@ func TestBillingGetBalanceWithWireMock(
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
 	VerifyRequestCount(t, "TestBillingGetBalanceWithWireMock", "GET", "/billing/balance", nil, 1)
+}
+
+func TestBillingGetBalanceStatementWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.BillingGetBalanceStatementRequest{
+		PeriodStartAt: platformgo.MustParseDateTime(
+			"2024-01-15T09:30:00Z",
+		),
+		PeriodEndAt: platformgo.MustParseDateTime(
+			"2024-01-15T09:30:00Z",
+		),
+	}
+	_, invocationErr := client.Billing.GetBalanceStatement(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestBillingGetBalanceStatementWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestBillingGetBalanceStatementWithWireMock", "GET", "/billing/balance/statement", map[string]interface{}{"period_start_at": "2024-01-15T09:30:00.000Z", "period_end_at": "2024-01-15T09:30:00.000Z"}, 1)
+}
+
+func TestBillingListBalanceTransactionsWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.BillingListBalanceTransactionsRequest{}
+	_, invocationErr := client.Billing.ListBalanceTransactions(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestBillingListBalanceTransactionsWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestBillingListBalanceTransactionsWithWireMock", "GET", "/billing/balance/transactions", nil, 1)
 }
 
 func TestBillingGetHistoryWithWireMock(
@@ -210,8 +261,10 @@ func TestBillingGetRentalSubscriptionsWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
+	request := &platformgo.BillingGetRentalSubscriptionsRequest{}
 	_, invocationErr := client.Billing.GetRentalSubscriptions(
 		context.TODO(),
+		request,
 		option.WithHTTPHeader(
 			http.Header{"X-Test-Id": []string{"TestBillingGetRentalSubscriptionsWithWireMock"}},
 		),
@@ -276,10 +329,7 @@ func TestBillingUpdateUsageAlertsWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.SubscriptionUsageAlertSettings{
-		Enabled:        true,
-		ThresholdCents: int64(1000000),
-	}
+	request := &platformgo.SubscriptionUsageAlertSettingsUpdate{}
 	_, invocationErr := client.Billing.UpdateUsageAlerts(
 		context.TODO(),
 		request,
@@ -289,5 +339,5 @@ func TestBillingUpdateUsageAlertsWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestBillingUpdateUsageAlertsWithWireMock", "PUT", "/billing/usage-alerts", nil, 1)
+	VerifyRequestCount(t, "TestBillingUpdateUsageAlertsWithWireMock", "PATCH", "/billing/usage-alerts", nil, 1)
 }

@@ -51,23 +51,6 @@ func (c *Client) List(
 	return response.Body, nil
 }
 
-// Returns the apps the platform supports orchestration for, optionally filtered by platform and category.
-func (c *Client) SupportedApps(
-	ctx context.Context,
-	request *platformgo.PhonesSupportedAppsRequest,
-	opts ...option.RequestOption,
-) (*platformgo.PhoneSupportedAppsResponse, error) {
-	response, err := c.WithRawResponse.SupportedApps(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
 // Returns a capacity snapshot to check before POST /phones:allocate: shared-pool availability broken down by phone type and by location, plus the caller org's dedicated phones with how many are idle (claimable right now). Optional phone_type and location filters narrow every count. Advisory only - availability can change between this read and an allocate, so allocation remains the authority and can still refuse.
 func (c *Client) Availability(
 	ctx context.Context,
@@ -102,23 +85,6 @@ func (c *Client) ListSessions(
 	return response.Body, nil
 }
 
-// Returns one page of the organization's currently-active phone sessions joined with phone + workflow display fields: in-flight runs, workflow-less interactive leases, and dedicated phones in use. Paginated via limit (default 25, max 100) + offset; the response total is the full active count.
-func (c *Client) ActiveSessions(
-	ctx context.Context,
-	request *platformgo.PhonesActiveSessionsRequest,
-	opts ...option.RequestOption,
-) (*platformgo.PhoneActiveSessionsResponse, error) {
-	response, err := c.WithRawResponse.ActiveSessions(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
 // Returns one session for the Session Inspector: session lifecycle + phone display fields + workflow name (when tied to one) + an inlined presigned recording URL. Works for active and terminal sessions, and for workflow runs and workflow-less interactive leases. Org-scoped: another org's session reads as not found.
 func (c *Client) GetSession(
 	ctx context.Context,
@@ -136,24 +102,7 @@ func (c *Client) GetSession(
 	return response.Body, nil
 }
 
-// Mints a fresh live-view token (and hosted viewer URL) for an active session, per the session's allocate-time live_view settings: token-mode sessions re-issue the bearer link allocate returned once, org-mode sessions exchange the caller's identity. Refused for sessions allocated with live_view.disabled, for inactive sessions, and for sessions outside the caller's organization (reads as not found). Sharp edge: the returned URL embeds the token and is a bearer capability — whoever holds it can watch (and, unless the session was allocated view-only, drive) the phone until the session ends, at which point both stop working.
-func (c *Client) SessionLiveViewToken(
-	ctx context.Context,
-	request *platformgo.PhonesSessionLiveViewTokenRequest,
-	opts ...option.RequestOption,
-) (*platformgo.PhoneLiveViewTokenResponse, error) {
-	response, err := c.WithRawResponse.SessionLiveViewToken(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
-// Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for workflow runs and workflow-less interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet. Org-scoped: another org's session reads as not found.
+// Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for workflow runs and workflow-less interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet, and "off" when the session was not recorded. Org-scoped: another org's session reads as not found.
 func (c *Client) SessionRecording(
 	ctx context.Context,
 	request *platformgo.PhonesSessionRecordingRequest,
@@ -170,13 +119,13 @@ func (c *Client) SessionRecording(
 	return response.Body, nil
 }
 
-// Mints a fresh telemetry_url for an active session — the same read-only WebSocket URL POST /phones:allocate returns once (live trace spans + output logs for exactly this session, 3h token). This is the telemetry/frames leg, distinct from the live-view (video) token: it can only watch the trace, never the screen, and never drive the phone. The stream's end frame is the session-end signal. Refused for inactive sessions — an ended session's telemetry is served by GET /phones/sessions/{session_id}/frames — and for sessions outside the caller's organization (reads as not found).
-func (c *Client) SessionTelemetryToken(
+// Mints a fresh live-view token (and hosted viewer URL) for an active session, per the session's allocate-time live_view settings: token-mode sessions re-issue the bearer link allocate returned once, org-mode sessions exchange the caller's identity. The token is view-only when the session was allocated with live_view.view_only or the caller has the viewer role; only members and admins get a token that can drive the phone. Refused for sessions allocated with live_view.disabled, for inactive sessions, and for sessions outside the caller's organization (reads as not found). Sharp edge: the returned URL embeds the token and is a bearer capability — whoever holds it can watch (and, unless the token is view-only, drive) the phone until the session ends, at which point both stop working.
+func (c *Client) SessionLiveViewToken(
 	ctx context.Context,
-	request *platformgo.PhonesSessionTelemetryTokenRequest,
+	request *platformgo.PhonesSessionLiveViewTokenRequest,
 	opts ...option.RequestOption,
-) (*platformgo.PhoneTelemetryTokenResponse, error) {
-	response, err := c.WithRawResponse.SessionTelemetryToken(
+) (*platformgo.PhoneLiveViewTokenResponse, error) {
+	response, err := c.WithRawResponse.SessionLiveViewToken(
 		ctx,
 		request,
 		opts...,
@@ -187,13 +136,13 @@ func (c *Client) SessionTelemetryToken(
 	return response.Body, nil
 }
 
-// Returns a short-lived URL for the session's current screen thumbnail — a rolling JPEG refreshed every few seconds while the session is active. Poll this endpoint and swap the image; every call mints a fresh URL. Status is "pending" (no URL) before the first frame lands or after the session ends. Org-scoped: another org's session reads as not found.
-func (c *Client) SessionThumbnail(
+// Returns the apps the platform supports orchestration for, optionally filtered by platform and category.
+func (c *Client) SupportedApps(
 	ctx context.Context,
-	request *platformgo.PhonesSessionThumbnailRequest,
+	request *platformgo.PhonesSupportedAppsRequest,
 	opts ...option.RequestOption,
-) (*platformgo.PhoneSessionThumbnailResponse, error) {
-	response, err := c.WithRawResponse.SessionThumbnail(
+) (*platformgo.PhoneSupportedAppsResponse, error) {
+	response, err := c.WithRawResponse.SupportedApps(
 		ctx,
 		request,
 		opts...,
@@ -221,6 +170,23 @@ func (c *Client) Get(
 	return response.Body, nil
 }
 
+// Changes the fields a customer may set on a dedicated phone the caller's org owns: its nickname. Returns the updated phone.
+func (c *Client) Update(
+	ctx context.Context,
+	request *platformgo.PhoneUpdatePhoneRequest,
+	opts ...option.RequestOption,
+) (*platformgo.PhoneSummary, error) {
+	response, err := c.WithRawResponse.Update(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Returns the phone's file delivery records, newest first: which library files were sent to it and where each stands (dispatching / dispatched / delivered / failed). Org-scoped: another org's phone reads as not found.
 func (c *Client) ListDeliveries(
 	ctx context.Context,
@@ -238,7 +204,7 @@ func (c *Client) ListDeliveries(
 	return response.Body, nil
 }
 
-// Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts any file by id regardless of source (uploaded or captured), and the file must already be ready - finish an uploaded file with POST /files/{file_id}/complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
+// Sends a library file to a phone the caller's org holds: the phone downloads it over its own connection and inserts it into the media gallery, where app pickers can select it. Accepts any file by id regardless of source (uploaded or captured), and the file must already be ready - finish an uploaded file with POST /files/{file_id}:complete before delivering it. Returns 202 with the delivery record once the phone acknowledges the download started; watch GET /phones/{phone_id}/deliveries or the live preview for completion. Optionally choose the target collection (DCIM / Pictures / Movies).
 func (c *Client) CreateDelivery(
 	ctx context.Context,
 	request *platformgo.FileDeliveryCreateRequest,
@@ -272,23 +238,6 @@ func (c *Client) GetDelivery(
 	return response.Body, nil
 }
 
-// Sets the human-readable display name on a private phone the caller's org owns. Returns the updated phone summary.
-func (c *Client) Nickname(
-	ctx context.Context,
-	request *platformgo.PhoneUpdateNicknameRequest,
-	opts ...option.RequestOption,
-) (*platformgo.PhoneSummary, error) {
-	response, err := c.WithRawResponse.Nickname(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
 // Returns a short-lived URL for the phone's current screen preview — a rolling JPEG refreshed every few seconds while the phone is paired, available with or without an active session. Poll this endpoint and swap the image; every call mints a fresh URL. Status is "pending" when no preview exists yet. Authorized to the org that owns the phone or currently holds its active session; any other org reads as not found.
 func (c *Client) Preview(
 	ctx context.Context,
@@ -306,10 +255,10 @@ func (c *Client) Preview(
 	return response.Body, nil
 }
 
-// Deallocates a phone the caller's org currently holds. The session is billed and the phone is torn down asynchronously.
+// Deallocates a phone the caller's org currently holds. The session is billed and the phone is torn down asynchronously. Pass session_id to end that session only: if the phone has already moved on to another session, nothing is released and the call still succeeds.
 func (c *Client) Deallocate(
 	ctx context.Context,
-	request *platformgo.PhonesDeallocateRequest,
+	request *platformgo.PhoneDeallocateRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.PhoneDeallocateResponse, error) {
 	response, err := c.WithRawResponse.Deallocate(

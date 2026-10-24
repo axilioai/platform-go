@@ -1,13 +1,14 @@
 // Package telemetry is the read-only client for a session's telemetry: the
-// live WebSocket leg allocate returns in telemetry_url, and helpers that
-// reconstruct the dashboard's trace view from the durable frame archive
-// (sessions_list_frames). Live and archive speak the same unified frame
-// envelope and differ only in cardinality — the live stream carries start and
-// end phases of a span, the archive one completed frame per span.
+// live event stream (telemetry_url, Server-Sent Events on the realtime host)
+// and helpers that reconstruct the dashboard's trace view from the durable
+// frame archive (sessions_list_frames). Live and archive speak the same
+// unified frame envelope and differ only in cardinality: the live stream
+// carries start and end phases of a span, the archive one completed frame per
+// span.
 package telemetry
 
 import (
-	"bytes"
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -15,10 +16,10 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
-
-	"github.com/coder/websocket"
 
 	platformgo "github.com/axilioai/platform-go"
 )
@@ -38,101 +39,131 @@ const (
 	spanPhaseEnd          = "end"
 )
 
-// Telemetry-leg transport frames (AXI-1740): type-tagged JSON below the frame
-// envelope, disjoint from every frame kind so a non-upgraded viewer drops
-// them as unknown. CURSOR checkpoints delivery (presented back on reattach);
-// RESYNC_REQUIRED says the presented cursor fell off the live window, so the
-// archive is the only complete record of what was missed.
-const (
-	transportFrameCursor         = "CURSOR"
-	transportFrameResyncRequired = "RESYNC_REQUIRED"
-)
-
-// Redial budget: bounded exponential backoff with full jitter, same schedule
-// as the control leg. The budget counts consecutive failures — a successful
-// reattach resets it, so a long tail survives any number of isolated drops.
+// Reopen budget: bounded exponential backoff with full jitter, same schedule
+// as the control leg. The budget counts consecutive failures, so a long tail
+// survives any number of isolated drops.
 const (
 	_maxRedials = 6
 	_redialBase = 250 * time.Millisecond
 	_redialCap  = 8 * time.Second
 )
 
-// _readLimit matches the hub's write side: frames are small, but the limit
-// stays aligned with the control leg's so a burst of array-batched frames
-// never trips it.
-const _readLimit = 16 << 20
+// _maxLineBytes caps one line of the stream. Client protection only: frames
+// are small, and this keeps a broken server from growing the buffer forever.
+const _maxLineBytes = 16 << 20
 
-// rawConn is the minimal WebSocket surface the stream needs, so tests can
-// inject a scripted connection without a real socket. The telemetry leg is
-// read-only (the hub swallows anything a viewer sends), so there is no send.
-type rawConn interface {
-	recv(ctx context.Context) ([]byte, error)
-	closeConn() error
+// _idleTimeout ends a stream that has gone silent. The server sends a
+// heartbeat every 15 s, so silence this long means a dead connection, and
+// the stream reopens from its cursor.
+const _idleTimeout = 45 * time.Second
+
+// event is one server-sent event. hasID is set when the event carried an id
+// field, which moves the cursor even when there is no data.
+type event struct {
+	id, name, data string
+	hasID          bool
 }
 
-type dialFunc func(ctx context.Context, url string) (rawConn, error)
+// eventSource reads the events of one stream response.
+type eventSource interface {
+	next() (event, error)
+	close() error
+}
+
+// openFunc opens the stream, resuming after cursor when it is set.
+type openFunc func(ctx context.Context, url, cursor string) (eventSource, error)
 
 // Stream is a live tail of one session's telemetry. Next yields frames in
-// arrival order; the stream reconnects transparently on transient drops
-// (presenting its cursor so delivery resumes where it left off) and ends
-// cleanly — io.EOF — after the terminal session end frame, the platform's
-// only session-end signal (peer_disconnected is never emitted).
+// order; the stream reopens transparently on a drop (sending its cursor as
+// Last-Event-ID, so delivery resumes with no gap) and ends cleanly with
+// io.EOF after the session end frame, or when the server reports the session
+// over with nothing left to send. The server backfills the archive on a fresh
+// stream and deduplicates within it. A reopen whose cursor the server's live
+// window has trimmed past (about 10 minutes or 2,000 frames) replays the
+// archive again, so Next also skips frames it has already returned, on the
+// dashboard viewer's key (a span's id and phase, a log's time and body); each
+// frame arrives once. Unknown kinds have no stable key and are never skipped.
 //
 // Next and Close may be called from different goroutines; Next itself is not
 // safe for concurrent use.
 type Stream struct {
 	url         string
-	dial        dialFunc
+	open        openFunc
 	redialDelay func(attempt int) time.Duration
 
-	// mu guards conn and closed, the only state Close shares with Next. Next
+	// mu guards src and closed, the only state Close shares with Next. Next
 	// never holds it across a blocking read, so Close can always interrupt one.
 	mu     sync.Mutex
-	conn   rawConn
+	src    eventSource
 	closed bool
 
 	// The rest belongs to the goroutine calling Next.
-	cursor  string
-	pending []*Frame
-	ended   bool // terminal session end frame observed
-	eof     bool
-	gapped  bool
-	err     error // sticky terminal error
+	cursor string
+	seen   map[string]struct{} // frameKey of every frame returned
+	ended  bool                // the session is over: end frame seen, or 204 from the server
+	eof    bool
+	err    error // sticky terminal error
 }
 
-// Tail attaches to a session's live telemetry leg. telemetryURL is the value
-// allocate returned (wss …/realtime/ws/telemetry, credential embedded); the
-// dial fails fast with CodeUnauthorized / CodeSessionEnded when the server
-// refuses the attach.
-func Tail(ctx context.Context, telemetryURL string) (*Stream, error) {
-	s := &Stream{
-		url:         telemetryURL,
-		dial:        dialWS,
-		redialDelay: redialDelay,
+// TailOption configures Tail.
+type TailOption func(*tailConfig)
+
+type tailConfig struct {
+	header http.Header
+	client *http.Client
+}
+
+// WithHeader sends header on every request of the stream, for example the
+// X-Axilio-Api-Key credential when the URL carries no token.
+func WithHeader(header http.Header) TailOption {
+	return func(c *tailConfig) { c.header = header.Clone() }
+}
+
+// WithHTTPClient sets the HTTP client. It must not set a total Timeout: the
+// stream is long-lived.
+func WithHTTPClient(client *http.Client) TailOption {
+	return func(c *tailConfig) { c.client = client }
+}
+
+// StreamURL is the event stream of a session on the API host (apiBaseURL
+// ends in /api/v1), for callers that hold a session id and an API key but no
+// telemetry_url. Send the key with WithHeader.
+func StreamURL(apiBaseURL, sessionID string) string {
+	return strings.TrimRight(apiBaseURL, "/") + "/realtime/sessions/" + url.PathEscape(sessionID) + "/events"
+}
+
+// Tail opens a session's telemetry stream. telemetryURL is the session's
+// telemetry_url (its read-only token embedded) or StreamURL with an API key
+// header. It fails fast with CodeUnauthorized, CodeNotFound or
+// CodeTelemetryOff when the server refuses the stream.
+func Tail(ctx context.Context, telemetryURL string, opts ...TailOption) (*Stream, error) {
+	cfg := tailConfig{client: &http.Client{}}
+	for _, opt := range opts {
+		opt(&cfg)
 	}
-	conn, err := s.dial(ctx, s.attachURL())
+	return start(ctx, &Stream{url: telemetryURL, open: httpOpener(cfg), redialDelay: redialDelay})
+}
+
+// start opens s for the first time.
+func start(ctx context.Context, s *Stream) (*Stream, error) {
+	src, err := s.open(ctx, s.url, "")
+	if isSessionOver(err) {
+		s.ended, s.eof = true, true
+		return s, nil
+	}
 	if err != nil {
-		return nil, classifyDialErr(err)
+		return nil, classifyOpenErr(err)
 	}
-	s.conn = conn
+	s.src = src
 	return s, nil
 }
 
-// Next returns the next frame. It returns io.EOF after the terminal session
-// end frame has been delivered (check Ended to distinguish that clean end
-// from a Close), the context's own error when ctx ends, and a terminal
-// *Error otherwise. After a non-nil error every subsequent call returns the
-// same result.
+// Next returns the next frame. It returns io.EOF once the session is over
+// (check Ended to tell that from a Close), the context's own error when ctx
+// ends, and a terminal *Error otherwise. After a non-nil error every
+// subsequent call returns the same result.
 func (s *Stream) Next(ctx context.Context) (*Frame, error) {
 	for {
-		if len(s.pending) > 0 {
-			frame := s.pending[0]
-			s.pending = s.pending[1:]
-			if isSessionEndFrame(frame) {
-				s.ended = true
-			}
-			return frame, nil
-		}
 		if s.err != nil {
 			return nil, s.err
 		}
@@ -140,54 +171,77 @@ func (s *Stream) Next(ctx context.Context) (*Frame, error) {
 			return nil, io.EOF
 		}
 		if s.ended {
-			// The end frame was delivered and nothing is buffered behind
-			// it: the session is over, so the socket is done too.
 			s.eof = true
-			_ = s.closeConn()
+			_ = s.closeSrc()
 			return nil, io.EOF
 		}
-		conn, live := s.liveConn()
+		src, live := s.liveSrc()
 		if !live {
 			s.err = errClosed()
 			return nil, s.err
 		}
 
-		data, err := conn.recv(ctx)
+		ev, err := readEvent(ctx, src)
 		if err != nil {
-			if fail := s.recvErr(ctx, err); fail != nil {
+			if fail := s.readErr(ctx, err); fail != nil {
 				return nil, fail
 			}
-			continue // reattached; read again
+			continue // reopened, or the session turned out to be over
 		}
-		s.ingest(data)
+		if ev.hasID {
+			s.cursor = ev.id
+		}
+		if ev.data == "" {
+			continue // a cursor-only event
+		}
+		frame := new(Frame)
+		if err := json.Unmarshal([]byte(ev.data), frame); err != nil {
+			// Not a frame at all (no kind). Drop it rather than fail a live
+			// stream over one message; an unknown kind is NOT this case: it
+			// unmarshals into the explicit unknown variant and is delivered.
+			continue
+		}
+		if key, ok := frameKey(frame); ok {
+			if _, dup := s.seen[key]; dup {
+				continue // a replay past the live window repeats it
+			}
+			if s.seen == nil {
+				s.seen = make(map[string]struct{})
+			}
+			s.seen[key] = struct{}{}
+		}
+		if isSessionEndFrame(frame) {
+			s.ended = true
+		}
+		return frame, nil
 	}
 }
 
-// Ended reports whether the terminal session end frame was observed. False
-// after an io.EOF means the stream ended without it (Close, or a normal
-// server close that raced the frame) — the durable archive is then the
-// authoritative record.
-func (s *Stream) Ended() bool { return s.ended }
+// readEvent reads one event, unblocking when ctx ends.
+func readEvent(ctx context.Context, src eventSource) (event, error) {
+	stop := context.AfterFunc(ctx, func() { _ = src.close() })
+	defer stop()
+	return src.next()
+}
 
-// Gapped reports whether a reattach fell off the live retention window
-// (RESYNC_REQUIRED): frames were missed and the live stream alone is no
-// longer the full trace. Refetch the archive (Session.Trace) to true up.
-func (s *Stream) Gapped() bool { return s.gapped }
+// Ended reports whether the session is over: the session end frame was
+// delivered, or the server answered a reopen with nothing left to send.
+// False after an io.EOF means the stream was closed locally.
+func (s *Stream) Ended() bool { return s.ended }
 
 // Close tears the stream down. A blocked Next returns with CodeClosed.
 func (s *Stream) Close() error {
 	s.markClosed()
-	return s.closeConn()
+	return s.closeSrc()
 }
 
-// closeConn detaches the connection, then closes it with no lock held: the
-// close is network I/O.
-func (s *Stream) closeConn() error {
-	conn := s.takeConn()
-	if conn == nil {
+// closeSrc detaches the response, then closes it with no lock held.
+func (s *Stream) closeSrc() error {
+	src := s.takeSrc()
+	if src == nil {
 		return nil
 	}
-	return conn.closeConn()
+	return src.close()
 }
 
 // The state helpers below are the only code that touches mu. Each locks with
@@ -206,40 +260,39 @@ func (s *Stream) isClosed() bool {
 	return s.closed
 }
 
-// liveConn returns the connection to read from, and false once Close has run.
-func (s *Stream) liveConn() (rawConn, bool) {
+func (s *Stream) liveSrc() (eventSource, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.conn, !s.closed
+	return s.src, !s.closed
 }
 
-func (s *Stream) takeConn() rawConn {
+func (s *Stream) takeSrc() eventSource {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	conn := s.conn
-	s.conn = nil
-	return conn
+	src := s.src
+	s.src = nil
+	return src
 }
 
-// attach installs a redialed connection and reports false, leaving the
-// connection to the caller, if Close has already run. The check and the
-// install share one lock so a Close can't land between them.
-func (s *Stream) attach(conn rawConn) bool {
+// attach installs a reopened response and reports false, leaving it to the
+// caller, if Close has already run.
+func (s *Stream) attach(src eventSource) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
 		return false
 	}
-	s.conn = conn
+	s.src = src
 	return true
 }
 
 func errClosed() *Error { return &Error{Code: CodeClosed, Message: "stream closed"} }
 
-// recvErr handles one failed read: context errors and terminal conditions
-// come back as the error to surface (sticky), a transient drop runs the
-// bounded redial loop and returns nil once reattached.
-func (s *Stream) recvErr(ctx context.Context, err error) error {
+// readErr handles one failed read: a context error or a terminal condition
+// comes back as the error to surface (sticky); a drop runs the bounded reopen
+// loop and returns nil once reopened or once the server says the session is
+// over.
+func (s *Stream) readErr(ctx context.Context, err error) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
@@ -247,47 +300,33 @@ func (s *Stream) recvErr(ctx context.Context, err error) error {
 		s.err = errClosed()
 		return s.err
 	}
-	if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
-		// A normal close without the end frame: the session is over, but
-		// the terminal frame is best-effort and this one lost the race (or
-		// was dropped edge-side). The archive holds whatever was recorded.
-		s.err = &Error{Code: CodeSessionEnded, Message: "telemetry websocket closed before the session end frame: " + err.Error()}
-		return s.err
-	}
-	// Everything else — 1001 going away, 1013 try again later, 1011
-	// internal error, abrupt TCP loss — is a transient drop the redial
-	// loop recovers.
-	_ = s.closeConn()
+	_ = s.closeSrc()
 	for attempt := 1; ; attempt++ {
-		// Close can land at any point in this loop. Once it has, stop
-		// redialing and report the close, not a later dial outcome.
 		if s.isClosed() {
 			s.err = errClosed()
 			return s.err
 		}
 		if attempt > _maxRedials {
-			s.err = &Error{Code: CodeConnection, Message: "telemetry websocket lost and could not be re-established", Retryable: true}
+			s.err = &Error{Code: CodeConnection, Message: "telemetry stream lost and could not be re-established", Retryable: true}
 			return s.err
 		}
 		if sleepCtx(ctx, s.redialDelay(attempt-1)) != nil {
 			return ctx.Err()
 		}
-		conn, dialErr := s.dial(ctx, s.attachURL())
-		if dialErr == nil {
-			if !s.attach(conn) {
-				// Close ran while this redial was in flight: the new
-				// connection belongs to a closed stream.
-				_ = conn.closeConn()
+		src, openErr := s.open(ctx, s.url, s.cursor)
+		if isSessionOver(openErr) {
+			s.ended = true
+			return nil
+		}
+		if openErr == nil {
+			if !s.attach(src) {
+				_ = src.close()
 				s.err = errClosed()
 				return s.err
 			}
 			return nil
 		}
-		if s.isClosed() {
-			s.err = errClosed()
-			return s.err
-		}
-		classified := classifyDialErr(dialErr)
+		classified := classifyOpenErr(openErr)
 		var e *Error
 		if errors.As(classified, &e) && !e.Retryable {
 			s.err = classified
@@ -296,63 +335,24 @@ func (s *Stream) recvErr(ctx context.Context, err error) error {
 	}
 }
 
-// ingest parses one wire message: a single frame object, a JSON array of
-// frame objects, or a transport frame. Malformed or unrecognized content is
-// dropped, never an error — the tolerant reader contract.
-func (s *Stream) ingest(data []byte) {
-	trimmed := bytes.TrimSpace(data)
-	if len(trimmed) == 0 {
-		return
-	}
-	if trimmed[0] == '[' {
-		var elements []json.RawMessage
-		if err := json.Unmarshal(trimmed, &elements); err != nil {
-			return
-		}
-		for _, element := range elements {
-			s.ingestObject(element)
-		}
-		return
-	}
-	s.ingestObject(trimmed)
-}
-
-func (s *Stream) ingestObject(data []byte) {
-	// Transport frames are type-tagged and kind-less, so probing type first
-	// cleanly separates them from the frame envelope.
-	var probe struct {
-		Type   string `json:"type"`
-		Cursor string `json:"cursor"`
-	}
-	if err := json.Unmarshal(data, &probe); err != nil {
-		return
-	}
-	switch probe.Type {
-	case transportFrameCursor:
-		if probe.Cursor != "" {
-			s.cursor = probe.Cursor
-		}
-		return
-	case transportFrameResyncRequired:
-		s.gapped = true
-		return
-	}
-	if probe.Type != "" {
-		return // unknown transport frame: drop, per the tolerant reader
-	}
-	frame := new(Frame)
-	if err := json.Unmarshal(data, frame); err != nil {
-		// No kind discriminant at all — not a frame. Drop rather than
-		// erroring a live stream over one unrecognized message. A frame
-		// with an unknown kind is NOT this case: it unmarshals into the
-		// explicit unknown variant and is delivered.
-		return
-	}
-	s.pending = append(s.pending, frame)
-}
-
 // isSessionEndFrame recognizes the terminal frame: the session-root span
 // (neutral or legacy name) closing.
+// frameKey is the dashboard viewer's frameKey: one per span phase and per log
+// line. False for an unknown kind.
+func frameKey(f *Frame) (string, bool) {
+	if span := f.GetSpan(); span != nil {
+		return "span:" + span.TraceID + ":" + span.SpanID + ":" + span.Phase, true
+	}
+	if log := f.GetLog(); log != nil {
+		spanID := ""
+		if log.SpanID != nil {
+			spanID = *log.SpanID
+		}
+		return "log:" + log.TraceID + ":" + spanID + ":" + strconv.FormatInt(log.TimeUnixNano, 10) + ":" + log.Body, true
+	}
+	return "", false
+}
+
 func isSessionEndFrame(f *Frame) bool {
 	span := f.GetSpan()
 	if span == nil {
@@ -364,25 +364,7 @@ func isSessionEndFrame(f *Frame) bool {
 	return span.Phase == spanPhaseEnd || spanEndNano(span) > 0
 }
 
-// attachURL is the telemetry URL plus the resume params: every attach opts
-// in to cursor checkpoints (resume=1), and a reattach that holds a cursor
-// presents it so delivery continues where this client left off.
-func (s *Stream) attachURL() string {
-	u, err := url.Parse(s.url)
-	if err != nil {
-		// An unparsable URL fails at dial with a real error; don't mask it.
-		return s.url
-	}
-	q := u.Query()
-	q.Set("resume", "1")
-	if s.cursor != "" {
-		q.Set("cursor", s.cursor)
-	}
-	u.RawQuery = q.Encode()
-	return u.String()
-}
-
-// redialDelay returns the wait before redial attempt (0-based): uniformly
+// redialDelay returns the wait before reopen attempt (0-based): uniformly
 // random in (0, min(cap, base·2^attempt)]. Full jitter so a fleet of viewers
 // that lost the same pod doesn't reconnect in lockstep.
 func redialDelay(attempt int) time.Duration {
@@ -408,55 +390,130 @@ func sleepCtx(ctx context.Context, d time.Duration) error {
 	}
 }
 
-// --- real WebSocket ---------------------------------------------------------
+// --- HTTP -------------------------------------------------------------------
 
-// dialHTTPError carries the HTTP status of a refused upgrade so the attach
-// classification can tell a dead session (403) from a bad token (401) from a
-// transient failure.
-type dialHTTPError struct {
-	status int
-	err    error
+// statusError carries the HTTP status of a refused stream.
+type statusError struct{ status int }
+
+func (e *statusError) Error() string { return "telemetry stream answered " + http.StatusText(e.status) }
+
+// isSessionOver reports a 204: the session has ended and nothing is left
+// after the cursor.
+func isSessionOver(err error) bool {
+	var se *statusError
+	return errors.As(err, &se) && se.status == http.StatusNoContent
 }
 
-func (e *dialHTTPError) Error() string { return e.err.Error() }
-func (e *dialHTTPError) Unwrap() error { return e.err }
-
-func dialWS(ctx context.Context, url string) (rawConn, error) {
-	c, resp, err := websocket.Dial(ctx, url, nil) //nolint:bodyclose // coder/websocket owns resp.Body.
-	if err != nil {
-		if resp != nil {
-			return nil, &dialHTTPError{status: resp.StatusCode, err: err}
+// httpOpener opens the stream with a GET. The response outlives the ctx it
+// was opened with (Next takes its own), so the request runs on a detached
+// context that ctx can cancel only until the headers arrive.
+func httpOpener(cfg tailConfig) openFunc {
+	return func(ctx context.Context, url, cursor string) (eventSource, error) {
+		reqCtx, cancel := context.WithCancel(context.WithoutCancel(ctx))
+		stop := context.AfterFunc(ctx, cancel)
+		defer stop()
+		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, url, nil)
+		if err != nil {
+			cancel()
+			return nil, err
 		}
-		return nil, err
+		for k, v := range cfg.header {
+			req.Header[k] = v
+		}
+		req.Header.Set("Accept", "text/event-stream")
+		if cursor != "" {
+			req.Header.Set("Last-Event-ID", cursor)
+		}
+		resp, err := cfg.client.Do(req)
+		if err != nil {
+			cancel()
+			return nil, err
+		}
+		if resp.StatusCode != http.StatusOK {
+			_ = resp.Body.Close()
+			cancel()
+			return nil, &statusError{status: resp.StatusCode}
+		}
+		return newSSEReader(resp.Body, cancel), nil
 	}
-	c.SetReadLimit(_readLimit)
-	return &wsRawConn{c: c}, nil
 }
 
-// classifyDialErr maps a failed (re)attach onto the contract's out-of-band
-// liveness signal: 403 means the allocation is no longer active — the
-// allocation-scoped token dies at deallocation regardless of its exp — and
-// 401 means the token is bad; both terminal. Anything else is transient.
-func classifyDialErr(err error) error {
-	var de *dialHTTPError
-	if errors.As(err, &de) {
-		switch de.status {
-		case http.StatusForbidden:
-			return &Error{Code: CodeSessionEnded, Message: "session is no longer active: " + err.Error()}
-		case http.StatusUnauthorized:
-			return &Error{Code: CodeUnauthorized, Message: "telemetry token rejected: " + err.Error()}
+// classifyOpenErr maps a refused (re)open onto the error taxonomy: 401 is a
+// bad credential, 404 an unknown session (or another org's), 409 a session
+// with telemetry off; all terminal. Anything else is transient.
+func classifyOpenErr(err error) error {
+	var se *statusError
+	if errors.As(err, &se) {
+		switch se.status {
+		case http.StatusUnauthorized, http.StatusForbidden:
+			return &Error{Code: CodeUnauthorized, Message: "telemetry credential rejected: " + err.Error()}
+		case http.StatusNotFound:
+			return &Error{Code: CodeNotFound, Message: "session not found: " + err.Error()}
+		case http.StatusConflict:
+			return &Error{Code: CodeTelemetryOff, Message: "telemetry is off for this session"}
 		}
 	}
-	return &Error{Code: CodeConnection, Message: "cannot connect to telemetry websocket: " + err.Error(), Retryable: true}
+	return &Error{Code: CodeConnection, Message: "cannot open telemetry stream: " + err.Error(), Retryable: true}
 }
 
-type wsRawConn struct{ c *websocket.Conn }
-
-func (w *wsRawConn) recv(ctx context.Context) ([]byte, error) {
-	_, data, err := w.c.Read(ctx)
-	return data, err
+// sseReader parses a text/event-stream body. A stream that stays silent past
+// _idleTimeout is closed, which surfaces as a read error and a reopen.
+type sseReader struct {
+	body   io.ReadCloser
+	cancel context.CancelFunc
+	sc     *bufio.Scanner
+	idle   *time.Timer
 }
 
-func (w *wsRawConn) closeConn() error {
-	return w.c.Close(websocket.StatusNormalClosure, "")
+func newSSEReader(body io.ReadCloser, cancel context.CancelFunc) *sseReader {
+	sc := bufio.NewScanner(body)
+	sc.Buffer(make([]byte, 0, 64<<10), _maxLineBytes)
+	r := &sseReader{body: body, cancel: cancel, sc: sc}
+	r.idle = time.AfterFunc(_idleTimeout, func() { _ = r.close() })
+	return r
+}
+
+// next reads one event per the SSE spec: field lines up to a blank line,
+// comments (":") ignored, multi-line data joined with "\n".
+func (r *sseReader) next() (event, error) {
+	var (
+		ev   event
+		data []string
+		seen bool
+	)
+	for r.sc.Scan() {
+		r.idle.Reset(_idleTimeout)
+		line := r.sc.Text()
+		if line == "" {
+			if !seen {
+				continue
+			}
+			ev.data = strings.Join(data, "\n")
+			return ev, nil
+		}
+		if strings.HasPrefix(line, ":") {
+			continue
+		}
+		field, value, _ := strings.Cut(line, ":")
+		value = strings.TrimPrefix(value, " ")
+		seen = true
+		switch field {
+		case "id":
+			ev.id, ev.hasID = value, true
+		case "event":
+			ev.name = value
+		case "data":
+			data = append(data, value)
+		}
+	}
+	if err := r.sc.Err(); err != nil {
+		return event{}, err
+	}
+	return event{}, io.EOF
+}
+
+func (r *sseReader) close() error {
+	r.idle.Stop()
+	r.cancel()
+	return r.body.Close()
 }

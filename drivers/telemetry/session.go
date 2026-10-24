@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"net/http"
 	"sort"
 	"time"
 
@@ -39,46 +40,47 @@ type framesLister interface {
 }
 
 // Session reads one session's telemetry: the durable trace archive through
-// the API client, and — when constructed with the allocation's telemetry URL
-// — the live leg.
+// the API client, and, when constructed with a stream URL, the live stream.
 type Session struct {
 	id           string
 	frames       framesLister
 	telemetryURL string
-	dial         dialFunc
+	open         openFunc
+	tail         tailConfig
 }
 
 // SessionOption configures a Session.
 type SessionOption func(*Session)
 
-// WithTelemetryURL enables the live leg (Tail, Logs with live=true) with the
-// telemetry_url the allocation returned.
+// WithTelemetryURL enables the live stream (Tail, Logs with live=true) with
+// the session's telemetry_url, or with StreamURL plus WithStreamHeader.
 func WithTelemetryURL(telemetryURL string) SessionOption {
 	return func(s *Session) { s.telemetryURL = telemetryURL }
 }
 
+// WithStreamHeader sends header on the live stream's requests, for example
+// the X-Axilio-Api-Key credential with a StreamURL.
+func WithStreamHeader(header http.Header) SessionOption {
+	return func(s *Session) { s.tail.header = header.Clone() }
+}
+
 // NewSession builds the telemetry view of one session.
 func NewSession(c *client.Client, sessionID string, opts ...SessionOption) *Session {
-	s := &Session{id: sessionID, frames: c.Runs, dial: dialWS}
+	s := &Session{id: sessionID, frames: c.Runs, tail: tailConfig{client: &http.Client{}}}
 	for _, opt := range opts {
 		opt(s)
 	}
+	s.open = httpOpener(s.tail)
 	return s
 }
 
-// Tail attaches to the session's live telemetry leg. Requires the session to
+// Tail opens the session's live telemetry stream. Requires the session to
 // have been constructed with WithTelemetryURL.
 func (s *Session) Tail(ctx context.Context) (*Stream, error) {
 	if s.telemetryURL == "" {
 		return nil, &Error{Code: CodeUnauthorized, Message: "no telemetry URL: construct the session with WithTelemetryURL(allocation.TelemetryURL)"}
 	}
-	stream := &Stream{url: s.telemetryURL, dial: s.dial, redialDelay: redialDelay}
-	conn, err := stream.dial(ctx, stream.attachURL())
-	if err != nil {
-		return nil, classifyDialErr(err)
-	}
-	stream.conn = conn
-	return stream, nil
+	return start(ctx, &Stream{url: s.telemetryURL, open: s.open, redialDelay: redialDelay})
 }
 
 // TraceSpan is one completed span with its billed cost joined in. Billed

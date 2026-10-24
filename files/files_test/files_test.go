@@ -129,6 +129,32 @@ func TestFilesCreateWithWireMock(
 	VerifyRequestCount(t, "TestFilesCreateWithWireMock", "POST", "/files", nil, 1)
 }
 
+func TestFilesGetWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.FilesGetRequest{
+		FileID: "file_id",
+	}
+	_, invocationErr := client.Files.Get(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestFilesGetWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestFilesGetWithWireMock", "GET", "/files/file_id", nil, 1)
+}
+
 func TestFilesDeleteWithWireMock(
 	t *testing.T,
 ) {
@@ -155,7 +181,7 @@ func TestFilesDeleteWithWireMock(
 	VerifyRequestCount(t, "TestFilesDeleteWithWireMock", "DELETE", "/files/file_id", nil, 1)
 }
 
-func TestFilesRenameWithWireMock(
+func TestFilesUpdateWithWireMock(
 	t *testing.T,
 ) {
 	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
@@ -170,16 +196,16 @@ func TestFilesRenameWithWireMock(
 		FileID:   "file_id",
 		Filename: "filename",
 	}
-	_, invocationErr := client.Files.Rename(
+	_, invocationErr := client.Files.Update(
 		context.TODO(),
 		request,
 		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestFilesRenameWithWireMock"}},
+			http.Header{"X-Test-Id": []string{"TestFilesUpdateWithWireMock"}},
 		),
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestFilesRenameWithWireMock", "PATCH", "/files/file_id", nil, 1)
+	VerifyRequestCount(t, "TestFilesUpdateWithWireMock", "PATCH", "/files/file_id", nil, 1)
 }
 
 func TestFilesCompleteWithWireMock(
@@ -205,7 +231,7 @@ func TestFilesCompleteWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestFilesCompleteWithWireMock", "POST", "/files/file_id/complete", nil, 1)
+	VerifyRequestCount(t, "TestFilesCompleteWithWireMock", "POST", "/files/file_id:complete", nil, 1)
 }
 
 func TestFilesPhonesSessionFilesWithWireMock(

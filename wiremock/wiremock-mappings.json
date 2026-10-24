@@ -113,7 +113,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionAutoRechargeSettingsResponse.json\",\n  \"disabled_reason\": \"payment_failed\",\n  \"enabled\": true,\n  \"target_cents\": 1000000,\n  \"threshold_cents\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionAutoRechargeSettingsResponse.json\",\n  \"disabled_reason\": \"payment_failed\",\n  \"enabled\": true,\n  \"in_flight\": {\n    \"amount_microdollars\": 1000000,\n    \"failed_attempts\": 1000000,\n    \"last_error\": \"last_error\",\n    \"next_attempt_at\": \"2024-01-15T09:30:00Z\",\n    \"started_at\": \"2024-01-15T09:30:00Z\",\n    \"state\": \"pending\"\n  },\n  \"target_microdollars\": 1000000,\n  \"threshold_microdollars\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -132,11 +132,11 @@
       "postServeActions": []
     },
     {
-      "id": "f58f4296-fb7b-48af-8c7e-25ee6eadf559",
+      "id": "4fbbe362-8fe7-47b8-8c1f-2c22684b731c",
       "name": "Update auto-recharge settings - default",
       "request": {
         "urlPathTemplate": "/billing/auto-recharge",
-        "method": "PUT",
+        "method": "PATCH",
         "headers": {
           "X-Axilio-Api-Key": {
             "matches": ".+"
@@ -145,12 +145,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionAutoRechargeSettingsResponse.json\",\n  \"disabled_reason\": \"payment_failed\",\n  \"enabled\": true,\n  \"target_cents\": 1000000,\n  \"threshold_cents\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionAutoRechargeSettingsResponse.json\",\n  \"disabled_reason\": \"payment_failed\",\n  \"enabled\": true,\n  \"in_flight\": {\n    \"amount_microdollars\": 1000000,\n    \"failed_attempts\": 1000000,\n    \"last_error\": \"last_error\",\n    \"next_attempt_at\": \"2024-01-15T09:30:00Z\",\n    \"started_at\": \"2024-01-15T09:30:00Z\",\n    \"state\": \"pending\"\n  },\n  \"target_microdollars\": 1000000,\n  \"threshold_microdollars\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "f58f4296-fb7b-48af-8c7e-25ee6eadf559",
+      "uuid": "4fbbe362-8fe7-47b8-8c1f-2c22684b731c",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -176,12 +176,84 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionBalanceResponse.json\",\n  \"balance_display\": \"balance_display\",\n  \"balance_microdollars\": 1000000,\n  \"included_microdollars\": 1000000,\n  \"purchased_microdollars\": 1000000,\n  \"purchased_next_expiry\": \"2024-01-15T09:30:00Z\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionBalanceResponse.json\",\n  \"balance_display\": \"balance_display\",\n  \"balance_microdollars\": 1000000,\n  \"included_microdollars\": 1000000,\n  \"purchased_expires_at\": \"2024-01-15T09:30:00Z\",\n  \"purchased_microdollars\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
       "uuid": "17a5fcc4-ccc8-4e7a-9ca3-bdc00a3942e1",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "347a4ae9-3875-434f-8312-bced5620181c",
+      "name": "Get balance statement - default",
+      "request": {
+        "urlPathTemplate": "/billing/balance/statement",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "queryParameters": {
+          "period_start_at": {
+            "equalTo": "2024-01-15T09:30:00.000Z"
+          },
+          "period_end_at": {
+            "equalTo": "2024-01-15T09:30:00.000Z"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionBalanceStatement.json\",\n  \"added_microdollars\": 1000000,\n  \"ending_balance_microdollars\": 1000000,\n  \"expired_microdollars\": 1000000,\n  \"other_microdollars\": 1000000,\n  \"period_end_at\": \"2024-01-15T09:30:00Z\",\n  \"period_start_at\": \"2024-01-15T09:30:00Z\",\n  \"refunded_microdollars\": 1000000,\n  \"starting_balance_microdollars\": 1000000,\n  \"usage\": [\n    {\n      \"amount_microdollars\": 1000000,\n      \"count\": 1000000,\n      \"product\": \"product\"\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "347a4ae9-3875-434f-8312-bced5620181c",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "0af42309-bc5f-4c94-a186-af3de8f77094",
+      "name": "List balance transactions - default",
+      "request": {
+        "urlPathTemplate": "/billing/balance/transactions",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionBalanceTransactionsResponse.json\",\n  \"items\": [\n    {\n      \"amount_display\": \"amount_display\",\n      \"amount_microdollars\": 1000000,\n      \"balance_after_microdollars\": 1000000,\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"description\": \"description\",\n      \"id\": \"id\",\n      \"source_id\": \"source_id\",\n      \"source_type\": \"session\",\n      \"type\": \"opening_balance\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "0af42309-bc5f-4c94-a186-af3de8f77094",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -208,7 +280,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/BillingHistoryResponse.json\",\n  \"items\": [\n    {\n      \"amount_cents\": 1000000,\n      \"amount_dollars\": 1.1,\n      \"billing_cycle\": \"billing_cycle\",\n      \"currency\": \"currency\",\n      \"description\": \"description\",\n      \"due_date\": \"2024-01-15T09:30:00Z\",\n      \"formatted_amount\": \"formatted_amount\",\n      \"hosted_invoice_url\": \"hosted_invoice_url\",\n      \"id\": \"id\",\n      \"invoice_date\": \"2024-01-15T09:30:00Z\",\n      \"invoice_number\": \"invoice_number\",\n      \"invoice_pdf_url\": \"invoice_pdf_url\",\n      \"paid_at\": \"2024-01-15T09:30:00Z\",\n      \"plan_name\": \"plan_name\",\n      \"status\": \"paid\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/BillingHistoryResponse.json\",\n  \"items\": [\n    {\n      \"amount_display\": \"amount_display\",\n      \"amount_microdollars\": 1000000,\n      \"billing_cycle\": \"daily\",\n      \"currency\": \"currency\",\n      \"description\": \"description\",\n      \"due_at\": \"2024-01-15T09:30:00Z\",\n      \"hosted_invoice_url\": \"hosted_invoice_url\",\n      \"id\": \"id\",\n      \"invoice_number\": \"invoice_number\",\n      \"invoice_pdf_url\": \"invoice_pdf_url\",\n      \"invoiced_at\": \"2024-01-15T09:30:00Z\",\n      \"paid_at\": \"2024-01-15T09:30:00Z\",\n      \"plan_name\": \"plan_name\",\n      \"status\": \"paid\"\n    }\n  ],\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -276,7 +348,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneRentalSubscriptionListResponse.json\",\n  \"subscriptions\": [\n    {\n      \"cancel_at_period_end\": true,\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"current_period_end\": \"2024-01-15T09:30:00Z\",\n      \"current_period_start\": \"2024-01-15T09:30:00Z\",\n      \"id\": \"id\",\n      \"organization_id\": \"organization_id\",\n      \"payment_status\": \"healthy\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_nickname\": \"phone_nickname\",\n      \"plan_id\": \"plan_id\",\n      \"plan_interval\": \"plan_interval\",\n      \"plan_name\": \"plan_name\",\n      \"plan_price_cents\": 1000000,\n      \"status\": \"active\"\n    }\n  ],\n  \"summary\": {\n    \"active_count\": 1000000,\n    \"combined_monthly_cents\": 1000000,\n    \"per_interval\": [\n      {\n        \"count\": 1000000,\n        \"interval\": \"interval\",\n        \"monthly_cents\": 1000000\n      }\n    ],\n    \"upcoming_charges\": [\n      {\n        \"amount_cents\": 1000000,\n        \"count\": 1000000,\n        \"date\": \"2024-01-15T09:30:00Z\"\n      }\n    ]\n  },\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneRentalSubscriptionListResponse.json\",\n  \"subscriptions\": [\n    {\n      \"cancel_at_period_end\": true,\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"current_period_end_at\": \"2024-01-15T09:30:00Z\",\n      \"current_period_start_at\": \"2024-01-15T09:30:00Z\",\n      \"id\": \"id\",\n      \"organization_id\": \"organization_id\",\n      \"payment_status\": \"healthy\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_nickname\": \"phone_nickname\",\n      \"plan_id\": \"plan_id\",\n      \"plan_interval\": \"day\",\n      \"plan_name\": \"plan_name\",\n      \"plan_price_microdollars\": 1000000,\n      \"status\": \"active\"\n    }\n  ],\n  \"summary\": {\n    \"active_count\": 1000000,\n    \"combined_monthly_microdollars\": 1000000,\n    \"per_interval\": [\n      {\n        \"count\": 1000000,\n        \"interval\": \"day\",\n        \"monthly_microdollars\": 1000000\n      }\n    ],\n    \"upcoming_charges\": [\n      {\n        \"amount_microdollars\": 1000000,\n        \"count\": 1000000,\n        \"due_at\": \"2024-01-15T09:30:00Z\"\n      }\n    ]\n  },\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -308,7 +380,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionResponse.json\",\n  \"balance_display\": \"balance_display\",\n  \"balance_microdollars\": 1000000,\n  \"billing_cycle\": \"monthly\",\n  \"cancel_at_period_end\": true,\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"current_period_end\": \"2024-01-15T09:30:00Z\",\n  \"current_period_start\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"included_balance_display\": \"included_balance_display\",\n  \"included_balance_microdollars\": 1000000,\n  \"max_concurrent_runs\": 1000000,\n  \"monthly_price\": 1.1,\n  \"pending_downgrade_effective_date\": \"2024-01-15T09:30:00Z\",\n  \"pending_downgrade_plan_id\": \"pending_downgrade_plan_id\",\n  \"plan_id\": \"plan_id\",\n  \"plan_name\": \"plan_name\",\n  \"price_per_second_microdollars\": 1000000,\n  \"status\": \"active\",\n  \"trial_end\": \"2024-01-15T09:30:00Z\",\n  \"yearly_price\": 1.1\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionResponse.json\",\n  \"balance_display\": \"balance_display\",\n  \"balance_microdollars\": 1000000,\n  \"billing_cycle\": \"monthly\",\n  \"cancel_at_period_end\": true,\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"current_period_end_at\": \"2024-01-15T09:30:00Z\",\n  \"current_period_start_at\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"included_balance_display\": \"included_balance_display\",\n  \"included_balance_microdollars\": 1000000,\n  \"max_concurrent_runs\": 1000000,\n  \"monthly_price_microdollars\": 1000000,\n  \"pending_downgrade_at\": \"2024-01-15T09:30:00Z\",\n  \"pending_downgrade_plan_id\": \"pending_downgrade_plan_id\",\n  \"plan_id\": \"plan_id\",\n  \"plan_name\": \"plan_name\",\n  \"price_per_second_microdollars\": 1000000,\n  \"status\": \"active\",\n  \"trial_end_at\": \"2024-01-15T09:30:00Z\",\n  \"yearly_price_microdollars\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -340,7 +412,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionUsageAlertSettingsResponse.json\",\n  \"active_alerts\": [\n    {\n      \"balance_cents\": 1000000,\n      \"kind\": \"low_balance\",\n      \"threshold_cents\": 1000000,\n      \"triggered_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"enabled\": true,\n  \"threshold_cents\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionUsageAlertSettingsResponse.json\",\n  \"active_alerts\": [\n    {\n      \"balance_microdollars\": 1000000,\n      \"kind\": \"low_balance\",\n      \"threshold_microdollars\": 1000000,\n      \"triggered_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"enabled\": true,\n  \"threshold_microdollars\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -359,11 +431,11 @@
       "postServeActions": []
     },
     {
-      "id": "f0b88577-28af-4b5d-b847-972202513966",
+      "id": "f3df07a9-5fe2-4d51-acd1-05ab08daeae8",
       "name": "Update usage-alert settings - default",
       "request": {
         "urlPathTemplate": "/billing/usage-alerts",
-        "method": "PUT",
+        "method": "PATCH",
         "headers": {
           "X-Axilio-Api-Key": {
             "matches": ".+"
@@ -372,12 +444,188 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionUsageAlertSettingsResponse.json\",\n  \"active_alerts\": [\n    {\n      \"balance_cents\": 1000000,\n      \"kind\": \"low_balance\",\n      \"threshold_cents\": 1000000,\n      \"triggered_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"enabled\": true,\n  \"threshold_cents\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/SubscriptionUsageAlertSettingsResponse.json\",\n  \"active_alerts\": [\n    {\n      \"balance_microdollars\": 1000000,\n      \"kind\": \"low_balance\",\n      \"threshold_microdollars\": 1000000,\n      \"triggered_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"enabled\": true,\n  \"threshold_microdollars\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "f0b88577-28af-4b5d-b847-972202513966",
+      "uuid": "f3df07a9-5fe2-4d51-acd1-05ab08daeae8",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "d33104ab-2ac4-466d-bfc7-e9a26810a1da",
+      "name": "List conversations - default",
+      "request": {
+        "urlPathTemplate": "/conversations",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/ConversationListResponse.json\",\n  \"conversations\": [\n    {\n      \"$schema\": \"/api/v1/Conversation.json\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"id\": \"id\",\n      \"is_group\": true,\n      \"last_message\": {\n        \"$schema\": \"/api/v1/PhoneMessage.json\",\n        \"body\": \"body\",\n        \"channel\": \"sms\",\n        \"conversation_id\": \"conversation_id\",\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"direction\": \"inbound\",\n        \"from\": null,\n        \"id\": \"id\",\n        \"is_group\": true,\n        \"parts\": null,\n        \"phone_id\": \"phone_id\",\n        \"received_at\": null,\n        \"sent_at\": null,\n        \"to\": null,\n        \"truncated\": true\n      },\n      \"last_message_at\": \"2024-01-15T09:30:00Z\",\n      \"participants\": [\n        {\n          \"handle\": \"handle\"\n        }\n      ],\n      \"phone_id\": \"phone_id\",\n      \"phone_number\": \"phone_number\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "d33104ab-2ac4-466d-bfc7-e9a26810a1da",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "df01bf80-3029-4a7c-8db1-76eed07573ea",
+      "name": "Get a conversation - default",
+      "request": {
+        "urlPathTemplate": "/conversations/{conversation_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "conversation_id": {
+            "equalTo": "conversation_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/Conversation.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"is_group\": true,\n  \"last_message\": {\n    \"$schema\": \"/api/v1/PhoneMessage.json\",\n    \"accepted_at\": \"2024-01-15T09:30:00Z\",\n    \"api_key_id\": \"api_key_id\",\n    \"body\": \"body\",\n    \"channel\": \"sms\",\n    \"conversation_id\": \"conversation_id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"deleted_at\": \"2024-01-15T09:30:00Z\",\n    \"delivered_at\": \"2024-01-15T09:30:00Z\",\n    \"direction\": \"inbound\",\n    \"error\": \"error\",\n    \"error_code\": \"phone_unreachable\",\n    \"failed_at\": \"2024-01-15T09:30:00Z\",\n    \"from\": \"from\",\n    \"id\": \"id\",\n    \"is_group\": true,\n    \"parts\": [\n      {\n        \"type\": \"text\"\n      }\n    ],\n    \"phone_deletion\": {\n      \"next_check_at\": \"2024-01-15T09:30:00Z\",\n      \"reason\": \"reason\",\n      \"status\": \"pending\"\n    },\n    \"phone_id\": \"phone_id\",\n    \"received_at\": \"2024-01-15T09:30:00Z\",\n    \"sent_at\": \"2024-01-15T09:30:00Z\",\n    \"status\": \"queued\",\n    \"to\": [\n      \"to\"\n    ],\n    \"truncated\": true,\n    \"user_id\": \"user_id\"\n  },\n  \"last_message_at\": \"2024-01-15T09:30:00Z\",\n  \"participants\": [\n    {\n      \"handle\": \"handle\"\n    }\n  ],\n  \"phone_id\": \"phone_id\",\n  \"phone_number\": \"phone_number\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "df01bf80-3029-4a7c-8db1-76eed07573ea",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "a7d51b7f-ea63-466c-b414-cde2296e1794",
+      "name": "Delete a conversation - default",
+      "request": {
+        "urlPathTemplate": "/conversations/{conversation_id}",
+        "method": "DELETE",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "conversation_id": {
+            "equalTo": "conversation_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/ConversationDeleted.json\",\n  \"deleted_at\": \"2024-01-15T09:30:00Z\",\n  \"id\": \"id\",\n  \"message_count\": 1000000,\n  \"phone_deletion\": {\n    \"next_check_at\": \"2024-01-15T09:30:00Z\",\n    \"reason\": \"reason\",\n    \"status\": \"pending\"\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "a7d51b7f-ea63-466c-b414-cde2296e1794",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "abe154ec-00b5-41a7-b6b1-7163470b7e38",
+      "name": "List a conversation's messages - default",
+      "request": {
+        "urlPathTemplate": "/conversations/{conversation_id}/messages",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "conversation_id": {
+            "equalTo": "conversation_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneMessageListResponse.json\",\n  \"messages\": [\n    {\n      \"$schema\": \"/api/v1/PhoneMessage.json\",\n      \"accepted_at\": \"2024-01-15T09:30:00Z\",\n      \"api_key_id\": \"api_key_id\",\n      \"body\": \"body\",\n      \"channel\": \"sms\",\n      \"conversation_id\": \"conversation_id\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"deleted_at\": \"2024-01-15T09:30:00Z\",\n      \"delivered_at\": \"2024-01-15T09:30:00Z\",\n      \"direction\": \"inbound\",\n      \"error\": \"error\",\n      \"error_code\": \"phone_unreachable\",\n      \"failed_at\": \"2024-01-15T09:30:00Z\",\n      \"from\": \"from\",\n      \"id\": \"id\",\n      \"is_group\": true,\n      \"parts\": [\n        {\n          \"type\": \"text\"\n        }\n      ],\n      \"phone_deletion\": {\n        \"next_check_at\": null,\n        \"reason\": \"reason\",\n        \"status\": \"pending\"\n      },\n      \"phone_id\": \"phone_id\",\n      \"received_at\": \"2024-01-15T09:30:00Z\",\n      \"sent_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"to\": [\n        \"to\"\n      ],\n      \"truncated\": true,\n      \"user_id\": \"user_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "abe154ec-00b5-41a7-b6b1-7163470b7e38",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "12c97450-929f-4ec7-9edd-76c55f6212aa",
+      "name": "Reply in a conversation - default",
+      "request": {
+        "urlPathTemplate": "/conversations/{conversation_id}/messages",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "conversation_id": {
+            "equalTo": "conversation_id"
+          }
+        }
+      },
+      "response": {
+        "status": 202,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneMessage.json\",\n  \"accepted_at\": \"2024-01-15T09:30:00Z\",\n  \"api_key_id\": \"api_key_id\",\n  \"body\": \"body\",\n  \"channel\": \"sms\",\n  \"conversation_id\": \"conversation_id\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"deleted_at\": \"2024-01-15T09:30:00Z\",\n  \"delivered_at\": \"2024-01-15T09:30:00Z\",\n  \"direction\": \"inbound\",\n  \"error\": \"error\",\n  \"error_code\": \"phone_unreachable\",\n  \"failed_at\": \"2024-01-15T09:30:00Z\",\n  \"from\": \"from\",\n  \"id\": \"id\",\n  \"is_group\": true,\n  \"parts\": [\n    {\n      \"file_id\": \"file_id\",\n      \"mime_type\": \"mime_type\",\n      \"name\": \"name\",\n      \"size_bytes\": 1000000,\n      \"text\": \"text\",\n      \"type\": \"text\"\n    }\n  ],\n  \"phone_deletion\": {\n    \"next_check_at\": \"2024-01-15T09:30:00Z\",\n    \"reason\": \"reason\",\n    \"status\": \"pending\"\n  },\n  \"phone_id\": \"phone_id\",\n  \"received_at\": \"2024-01-15T09:30:00Z\",\n  \"sent_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"to\": [\n    \"to\"\n  ],\n  \"truncated\": true,\n  \"user_id\": \"user_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "12c97450-929f-4ec7-9edd-76c55f6212aa",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -403,7 +651,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"source\": \"upload\",\n      \"status\": \"uploading\",\n      \"surface\": \"phone\",\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"$schema\": \"/api/v1/FileSummary.json\",\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"display_url\": \"display_url\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"message_id\": \"message_id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"phone_id\": \"phone_id\",\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"source\": \"upload\",\n      \"status\": \"uploading\",\n      \"surface\": \"phone\",\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -435,12 +683,48 @@
       },
       "response": {
         "status": 201,
-        "body": "{\n  \"$schema\": \"/api/v1/FileUploadResponse.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"capture_error\": \"capture_error\",\n    \"capture_state\": \"detected\",\n    \"checksum\": \"checksum\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"session_id\": \"session_id\",\n    \"size_bytes\": 1000000,\n    \"source\": \"upload\",\n    \"status\": \"uploading\",\n    \"surface\": \"phone\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  },\n  \"upload_expires_in_seconds\": 1000000,\n  \"upload_url\": \"upload_url\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileUploadResponse.json\",\n  \"file\": {\n    \"$schema\": \"/api/v1/FileSummary.json\",\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"capture_error\": \"capture_error\",\n    \"capture_state\": \"detected\",\n    \"checksum\": \"checksum\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"display_url\": \"display_url\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"message_id\": \"message_id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"phone_id\": \"phone_id\",\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"session_id\": \"session_id\",\n    \"size_bytes\": 1000000,\n    \"source\": \"upload\",\n    \"status\": \"uploading\",\n    \"surface\": \"phone\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  },\n  \"upload_expires_in_seconds\": 1000000,\n  \"upload_url\": \"upload_url\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
       "uuid": "d2b45954-4c48-49c0-9dac-552ae4cd96d4",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "46d463d2-55dc-4296-9d14-93b1e4fc9e4c",
+      "name": "Get a file - default",
+      "request": {
+        "urlPathTemplate": "/files/{file_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "file_id": {
+            "equalTo": "file_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/FileSummary.json\",\n  \"attachment_url\": \"attachment_url\",\n  \"bytes_transferred\": 1000000,\n  \"capture_error\": \"capture_error\",\n  \"capture_state\": \"detected\",\n  \"checksum\": \"checksum\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"display_url\": \"display_url\",\n  \"download_url\": \"download_url\",\n  \"duration_seconds\": 1000000,\n  \"filename\": \"filename\",\n  \"height\": 1000000,\n  \"id\": \"id\",\n  \"message_id\": \"message_id\",\n  \"mime_type\": \"mime_type\",\n  \"on_phone_count\": 1000000,\n  \"phone_id\": \"phone_id\",\n  \"preview_state\": \"processing\",\n  \"reel_url\": \"reel_url\",\n  \"session_id\": \"session_id\",\n  \"size_bytes\": 1000000,\n  \"source\": \"upload\",\n  \"status\": \"uploading\",\n  \"surface\": \"phone\",\n  \"thumbnail_url\": \"thumbnail_url\",\n  \"width\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "46d463d2-55dc-4296-9d14-93b1e4fc9e4c",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -489,8 +773,8 @@
       }
     },
     {
-      "id": "fc3bd046-a999-416e-b8a4-93886dd41d85",
-      "name": "Rename a file - default",
+      "id": "b79895d9-e508-427e-b5fb-f5d03ee0a230",
+      "name": "Update a file - default",
       "request": {
         "urlPathTemplate": "/files/{file_id}",
         "method": "PATCH",
@@ -507,12 +791,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RenameFileOutputBody.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"capture_error\": \"capture_error\",\n    \"capture_state\": \"detected\",\n    \"checksum\": \"checksum\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"session_id\": \"session_id\",\n    \"size_bytes\": 1000000,\n    \"source\": \"upload\",\n    \"status\": \"uploading\",\n    \"surface\": \"phone\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RenameFileOutputBody.json\",\n  \"file\": {\n    \"$schema\": \"/api/v1/FileSummary.json\",\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"capture_error\": \"capture_error\",\n    \"capture_state\": \"detected\",\n    \"checksum\": \"checksum\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"display_url\": \"display_url\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"message_id\": \"message_id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"phone_id\": \"phone_id\",\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"session_id\": \"session_id\",\n    \"size_bytes\": 1000000,\n    \"source\": \"upload\",\n    \"status\": \"uploading\",\n    \"surface\": \"phone\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "fc3bd046-a999-416e-b8a4-93886dd41d85",
+      "uuid": "b79895d9-e508-427e-b5fb-f5d03ee0a230",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -525,10 +809,10 @@
       }
     },
     {
-      "id": "47dd6b5a-6a95-4efe-a460-e92940a1bcec",
+      "id": "cbf73590-16a1-4fde-af8e-d97a520ebb75",
       "name": "Mark an upload complete - default",
       "request": {
-        "urlPathTemplate": "/files/{file_id}/complete",
+        "urlPathTemplate": "/files/{file_id}:complete",
         "method": "POST",
         "headers": {
           "X-Axilio-Api-Key": {
@@ -543,12 +827,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/CompleteFileOutputBody.json\",\n  \"file\": {\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"capture_error\": \"capture_error\",\n    \"capture_state\": \"detected\",\n    \"checksum\": \"checksum\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"session_id\": \"session_id\",\n    \"size_bytes\": 1000000,\n    \"source\": \"upload\",\n    \"status\": \"uploading\",\n    \"surface\": \"phone\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/CompleteFileOutputBody.json\",\n  \"file\": {\n    \"$schema\": \"/api/v1/FileSummary.json\",\n    \"attachment_url\": \"attachment_url\",\n    \"bytes_transferred\": 1000000,\n    \"capture_error\": \"capture_error\",\n    \"capture_state\": \"detected\",\n    \"checksum\": \"checksum\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"display_url\": \"display_url\",\n    \"download_url\": \"download_url\",\n    \"duration_seconds\": 1000000,\n    \"filename\": \"filename\",\n    \"height\": 1000000,\n    \"id\": \"id\",\n    \"message_id\": \"message_id\",\n    \"mime_type\": \"mime_type\",\n    \"on_phone_count\": 1000000,\n    \"phone_id\": \"phone_id\",\n    \"preview_state\": \"processing\",\n    \"reel_url\": \"reel_url\",\n    \"session_id\": \"session_id\",\n    \"size_bytes\": 1000000,\n    \"source\": \"upload\",\n    \"status\": \"uploading\",\n    \"surface\": \"phone\",\n    \"thumbnail_url\": \"thumbnail_url\",\n    \"width\": 1000000\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "47dd6b5a-6a95-4efe-a460-e92940a1bcec",
+      "uuid": "cbf73590-16a1-4fde-af8e-d97a520ebb75",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -579,12 +863,179 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"source\": \"upload\",\n      \"status\": \"uploading\",\n      \"surface\": \"phone\",\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/FileListResponse.json\",\n  \"files\": [\n    {\n      \"$schema\": \"/api/v1/FileSummary.json\",\n      \"attachment_url\": \"attachment_url\",\n      \"bytes_transferred\": 1000000,\n      \"capture_error\": \"capture_error\",\n      \"capture_state\": \"detected\",\n      \"checksum\": \"checksum\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"display_url\": \"display_url\",\n      \"download_url\": \"download_url\",\n      \"duration_seconds\": 1000000,\n      \"filename\": \"filename\",\n      \"height\": 1000000,\n      \"id\": \"id\",\n      \"message_id\": \"message_id\",\n      \"mime_type\": \"mime_type\",\n      \"on_phone_count\": 1000000,\n      \"phone_id\": \"phone_id\",\n      \"preview_state\": \"processing\",\n      \"reel_url\": \"reel_url\",\n      \"session_id\": \"session_id\",\n      \"size_bytes\": 1000000,\n      \"source\": \"upload\",\n      \"status\": \"uploading\",\n      \"surface\": \"phone\",\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"width\": 1000000\n    }\n  ],\n  \"total\": 1000000,\n  \"usage\": {\n    \"byte_limit\": 1000000,\n    \"file_count\": 1000000,\n    \"file_limit\": 1000000,\n    \"total_bytes\": 1000000\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
       "uuid": "a522900a-46e9-4bfc-9a80-deb62ddaddc1",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "4d8b0556-c108-4bef-a2ce-6070e540cc66",
+      "name": "List messages - default",
+      "request": {
+        "urlPathTemplate": "/messages",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneMessageListResponse.json\",\n  \"messages\": [\n    {\n      \"$schema\": \"/api/v1/PhoneMessage.json\",\n      \"accepted_at\": \"2024-01-15T09:30:00Z\",\n      \"api_key_id\": \"api_key_id\",\n      \"body\": \"body\",\n      \"channel\": \"sms\",\n      \"conversation_id\": \"conversation_id\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"deleted_at\": \"2024-01-15T09:30:00Z\",\n      \"delivered_at\": \"2024-01-15T09:30:00Z\",\n      \"direction\": \"inbound\",\n      \"error\": \"error\",\n      \"error_code\": \"phone_unreachable\",\n      \"failed_at\": \"2024-01-15T09:30:00Z\",\n      \"from\": \"from\",\n      \"id\": \"id\",\n      \"is_group\": true,\n      \"parts\": [\n        {\n          \"type\": \"text\"\n        }\n      ],\n      \"phone_deletion\": {\n        \"next_check_at\": null,\n        \"reason\": \"reason\",\n        \"status\": \"pending\"\n      },\n      \"phone_id\": \"phone_id\",\n      \"received_at\": \"2024-01-15T09:30:00Z\",\n      \"sent_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"queued\",\n      \"to\": [\n        \"to\"\n      ],\n      \"truncated\": true,\n      \"user_id\": \"user_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "4d8b0556-c108-4bef-a2ce-6070e540cc66",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "e30ef3f2-c6e6-4564-ad10-f209c27e6400",
+      "name": "Send a message - default",
+      "request": {
+        "urlPathTemplate": "/messages",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 202,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneMessage.json\",\n  \"accepted_at\": \"2024-01-15T09:30:00Z\",\n  \"api_key_id\": \"api_key_id\",\n  \"body\": \"body\",\n  \"channel\": \"sms\",\n  \"conversation_id\": \"conversation_id\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"deleted_at\": \"2024-01-15T09:30:00Z\",\n  \"delivered_at\": \"2024-01-15T09:30:00Z\",\n  \"direction\": \"inbound\",\n  \"error\": \"error\",\n  \"error_code\": \"phone_unreachable\",\n  \"failed_at\": \"2024-01-15T09:30:00Z\",\n  \"from\": \"from\",\n  \"id\": \"id\",\n  \"is_group\": true,\n  \"parts\": [\n    {\n      \"file_id\": \"file_id\",\n      \"mime_type\": \"mime_type\",\n      \"name\": \"name\",\n      \"size_bytes\": 1000000,\n      \"text\": \"text\",\n      \"type\": \"text\"\n    }\n  ],\n  \"phone_deletion\": {\n    \"next_check_at\": \"2024-01-15T09:30:00Z\",\n    \"reason\": \"reason\",\n    \"status\": \"pending\"\n  },\n  \"phone_id\": \"phone_id\",\n  \"received_at\": \"2024-01-15T09:30:00Z\",\n  \"sent_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"to\": [\n    \"to\"\n  ],\n  \"truncated\": true,\n  \"user_id\": \"user_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "e30ef3f2-c6e6-4564-ad10-f209c27e6400",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "0370e514-2402-48a4-9aac-97072e111884",
+      "name": "Get message metrics - default",
+      "request": {
+        "urlPathTemplate": "/messages/metrics",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneMessageMetrics.json\",\n  \"conversations\": {\n    \"active\": 1000000,\n    \"by_outcome\": {\n      \"delivered\": 1000000,\n      \"failed\": 1000000,\n      \"no_report\": 1000000,\n      \"queued\": 1000000,\n      \"unconfirmed\": 1000000\n    },\n    \"replied\": 1000000,\n    \"reply_latency_ms\": {\n      \"p50\": 1000000,\n      \"p95\": 1000000\n    },\n    \"reply_rate\": 1.1,\n    \"response_latency_ms\": {\n      \"p50\": 1000000,\n      \"p95\": 1000000\n    },\n    \"started\": 1000000,\n    \"texted\": 1000000\n  },\n  \"delivery_latency_ms\": {\n    \"p50\": 1000000,\n    \"p95\": 1000000\n  },\n  \"delivery_rate\": 1.1,\n  \"failures\": [\n    {\n      \"conversations\": 1000000,\n      \"count\": 1000000,\n      \"error_code\": \"phone_unreachable\",\n      \"numbers\": 1000000,\n      \"phones\": [\n        {\n          \"count\": 1000000,\n          \"phone_id\": \"phone_id\"\n        }\n      ]\n    }\n  ],\n  \"period_end_at\": \"2024-01-15T09:30:00Z\",\n  \"period_start_at\": \"2024-01-15T09:30:00Z\",\n  \"phones\": [\n    {\n      \"conversations\": 1000000,\n      \"delivered\": 1000000,\n      \"delivery_rate\": 1.1,\n      \"failed\": 1000000,\n      \"no_report\": 1000000,\n      \"peak_at\": \"2024-01-15T09:30:00Z\",\n      \"peak_sent_30m\": 1000000,\n      \"phone_id\": \"phone_id\",\n      \"queued\": 1000000,\n      \"received\": 1000000,\n      \"sent\": 1000000,\n      \"unconfirmed\": 1000000\n    }\n  ],\n  \"points\": [\n    {\n      \"delivered\": 1000000,\n      \"failed\": 1000000,\n      \"no_report\": 1000000,\n      \"period_start_at\": \"2024-01-15T09:30:00Z\",\n      \"queued\": 1000000,\n      \"received\": 1000000,\n      \"send_p50_ms\": 1000000,\n      \"send_p95_ms\": 1000000,\n      \"sent\": 1000000,\n      \"unconfirmed\": 1000000\n    }\n  ],\n  \"send_latency_ms\": {\n    \"p50\": 1000000,\n    \"p95\": 1000000\n  },\n  \"send_limit\": {\n    \"count\": 1000000,\n    \"window_seconds\": 1000000\n  },\n  \"totals\": {\n    \"delivered\": 1000000,\n    \"failed\": 1000000,\n    \"no_report\": 1000000,\n    \"numbers_received_from\": 1000000,\n    \"numbers_texted\": 1000000,\n    \"phones_sending\": 1000000,\n    \"queued\": 1000000,\n    \"received\": 1000000,\n    \"sent\": 1000000,\n    \"unconfirmed\": 1000000\n  }\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "0370e514-2402-48a4-9aac-97072e111884",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": []
+    },
+    {
+      "id": "61e52aaf-3fd2-4d80-be7d-77d9a76758ce",
+      "name": "Get a message - default",
+      "request": {
+        "urlPathTemplate": "/messages/{message_id}",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "message_id": {
+            "equalTo": "message_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneMessage.json\",\n  \"accepted_at\": \"2024-01-15T09:30:00Z\",\n  \"api_key_id\": \"api_key_id\",\n  \"body\": \"body\",\n  \"channel\": \"sms\",\n  \"conversation_id\": \"conversation_id\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"deleted_at\": \"2024-01-15T09:30:00Z\",\n  \"delivered_at\": \"2024-01-15T09:30:00Z\",\n  \"direction\": \"inbound\",\n  \"error\": \"error\",\n  \"error_code\": \"phone_unreachable\",\n  \"failed_at\": \"2024-01-15T09:30:00Z\",\n  \"from\": \"from\",\n  \"id\": \"id\",\n  \"is_group\": true,\n  \"parts\": [\n    {\n      \"file_id\": \"file_id\",\n      \"mime_type\": \"mime_type\",\n      \"name\": \"name\",\n      \"size_bytes\": 1000000,\n      \"text\": \"text\",\n      \"type\": \"text\"\n    }\n  ],\n  \"phone_deletion\": {\n    \"next_check_at\": \"2024-01-15T09:30:00Z\",\n    \"reason\": \"reason\",\n    \"status\": \"pending\"\n  },\n  \"phone_id\": \"phone_id\",\n  \"received_at\": \"2024-01-15T09:30:00Z\",\n  \"sent_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"to\": [\n    \"to\"\n  ],\n  \"truncated\": true,\n  \"user_id\": \"user_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "61e52aaf-3fd2-4d80-be7d-77d9a76758ce",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "46feb4cd-1ef5-4a55-b9bb-72d96a0541fa",
+      "name": "Delete a message - default",
+      "request": {
+        "urlPathTemplate": "/messages/{message_id}",
+        "method": "DELETE",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "message_id": {
+            "equalTo": "message_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneMessage.json\",\n  \"accepted_at\": \"2024-01-15T09:30:00Z\",\n  \"api_key_id\": \"api_key_id\",\n  \"body\": \"body\",\n  \"channel\": \"sms\",\n  \"conversation_id\": \"conversation_id\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"deleted_at\": \"2024-01-15T09:30:00Z\",\n  \"delivered_at\": \"2024-01-15T09:30:00Z\",\n  \"direction\": \"inbound\",\n  \"error\": \"error\",\n  \"error_code\": \"phone_unreachable\",\n  \"failed_at\": \"2024-01-15T09:30:00Z\",\n  \"from\": \"from\",\n  \"id\": \"id\",\n  \"is_group\": true,\n  \"parts\": [\n    {\n      \"file_id\": \"file_id\",\n      \"mime_type\": \"mime_type\",\n      \"name\": \"name\",\n      \"size_bytes\": 1000000,\n      \"text\": \"text\",\n      \"type\": \"text\"\n    }\n  ],\n  \"phone_deletion\": {\n    \"next_check_at\": \"2024-01-15T09:30:00Z\",\n    \"reason\": \"reason\",\n    \"status\": \"pending\"\n  },\n  \"phone_id\": \"phone_id\",\n  \"received_at\": \"2024-01-15T09:30:00Z\",\n  \"sent_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"queued\",\n  \"to\": [\n    \"to\"\n  ],\n  \"truncated\": true,\n  \"user_id\": \"user_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "46feb4cd-1ef5-4a55-b9bb-72d96a0541fa",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -642,7 +1093,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/OrganizationInvitationSummaryListResponse.json\",\n  \"invitations\": [\n    {\n      \"email\": \"email\",\n      \"invited_at\": \"2024-01-15T09:30:00Z\",\n      \"invited_by_name\": \"invited_by_name\",\n      \"role\": \"role\"\n    }\n  ]\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/OrganizationInvitationSummaryListResponse.json\",\n  \"invitations\": [\n    {\n      \"email\": \"email\",\n      \"invited_at\": \"2024-01-15T09:30:00Z\",\n      \"invited_by_name\": \"invited_by_name\",\n      \"role\": \"admin\"\n    }\n  ]\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -674,7 +1125,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/OrganizationMemberSummaryListResponse.json\",\n  \"members\": [\n    {\n      \"email\": \"email\",\n      \"joined_at\": \"2024-01-15T09:30:00Z\",\n      \"role\": \"role\"\n    }\n  ]\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/OrganizationMemberSummaryListResponse.json\",\n  \"members\": [\n    {\n      \"email\": \"email\",\n      \"joined_at\": \"2024-01-15T09:30:00Z\",\n      \"role\": \"admin\"\n    }\n  ]\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -711,44 +1162,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhonePrivateListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"phones\": [\n    {\n      \"$schema\": \"/api/v1/PhoneSummary.json\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"current_session_id\": \"current_session_id\",\n      \"last_heartbeat\": \"2024-01-15T09:30:00Z\",\n      \"last_interaction_timestamp\": \"2024-01-15T09:30:00Z\",\n      \"location\": \"location\",\n      \"model_id\": \"model_id\",\n      \"model_name\": \"model_name\",\n      \"nickname\": \"nickname\",\n      \"owner_organization_id\": \"owner_organization_id\",\n      \"ownership_type\": \"shared\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_type\": \"android\",\n      \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"active\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhonePrivateListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"phones\": [\n    {\n      \"$schema\": \"/api/v1/PhoneSummary.json\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"current_session_id\": \"current_session_id\",\n      \"last_heartbeat_at\": \"2024-01-15T09:30:00Z\",\n      \"last_interaction_at\": \"2024-01-15T09:30:00Z\",\n      \"location\": \"location\",\n      \"messaging\": {\n        \"checked_at\": null,\n        \"receiving\": \"on\",\n        \"sending\": \"on\",\n        \"service\": \"in_service\"\n      },\n      \"model_id\": \"model_id\",\n      \"model_name\": \"model_name\",\n      \"nickname\": \"nickname\",\n      \"owner_organization_id\": \"owner_organization_id\",\n      \"ownership_type\": \"shared\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_number\": \"phone_number\",\n      \"phone_type\": \"android\",\n      \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"active\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
       "uuid": "de58cbc0-df9e-4f08-a54a-ff56b4fd91e7",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      },
-      "postServeActions": []
-    },
-    {
-      "id": "474d64fe-d16f-4e65-8c6e-3d8c0da2e7fa",
-      "name": "List supported apps - default",
-      "request": {
-        "urlPathTemplate": "/phones/apps/supported",
-        "method": "GET",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneSupportedAppsResponse.json\",\n  \"phone_apps\": [\n    {\n      \"android_package_name\": \"android_package_name\",\n      \"app_metadata\": {\n        \"key\": \"value\"\n      },\n      \"category\": \"category\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"description\": \"description\",\n      \"icon_url\": \"icon_url\",\n      \"id\": \"id\",\n      \"ios_app_store_id\": \"ios_app_store_id\",\n      \"is_supported\": true,\n      \"model_datasets\": [\n        \"model_datasets\"\n      ],\n      \"model_status\": \"model_status\",\n      \"model_trained_at\": \"2024-01-15T09:30:00Z\",\n      \"name\": \"name\",\n      \"platform\": \"android\",\n      \"slug\": \"slug\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"version\": \"version\"\n    }\n  ],\n  \"total\": 1000000\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "474d64fe-d16f-4e65-8c6e-3d8c0da2e7fa",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -775,7 +1194,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneAvailabilityResponse.json\",\n  \"dedicated\": {\n    \"by_type\": [\n      {\n        \"idle\": 1000000,\n        \"phone_type\": \"phone_type\",\n        \"total\": 1000000\n      }\n    ],\n    \"idle\": 1000000,\n    \"total\": 1000000\n  },\n  \"shared\": {\n    \"available\": 1000000,\n    \"by_location\": [\n      {\n        \"available\": 1000000,\n        \"city\": \"city\",\n        \"location\": \"location\",\n        \"region\": \"region\",\n        \"state\": \"state\",\n        \"total\": 1000000\n      }\n    ],\n    \"by_type\": [\n      {\n        \"available\": 1000000,\n        \"phone_type\": \"phone_type\",\n        \"total\": 1000000\n      }\n    ],\n    \"total\": 1000000\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneAvailabilityResponse.json\",\n  \"dedicated\": {\n    \"by_type\": [\n      {\n        \"idle\": 1000000,\n        \"phone_type\": \"android\",\n        \"total\": 1000000\n      }\n    ],\n    \"idle\": 1000000,\n    \"total\": 1000000\n  },\n  \"shared\": {\n    \"available\": 1000000,\n    \"by_location\": [\n      {\n        \"available\": 1000000,\n        \"city\": \"city\",\n        \"location\": \"location\",\n        \"region\": \"region\",\n        \"state\": \"state\",\n        \"total\": 1000000\n      }\n    ],\n    \"by_type\": [\n      {\n        \"available\": 1000000,\n        \"phone_type\": \"android\",\n        \"total\": 1000000\n      }\n    ],\n    \"total\": 1000000\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -807,44 +1226,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"sessions\": [\n    {\n      \"allocated_at\": \"2024-01-15T09:30:00Z\",\n      \"allocated_by\": \"workflow_editor\",\n      \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n      \"duration_seconds\": 1000000,\n      \"is_dedicated_phone\": true,\n      \"location\": \"location\",\n      \"model_name\": \"model_name\",\n      \"name\": \"name\",\n      \"nickname\": \"nickname\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_type\": \"android\",\n      \"session_id\": \"session_id\",\n      \"source\": \"workflow\",\n      \"status\": \"active\",\n      \"tags\": {\n        \"key\": \"value\"\n      },\n      \"thumbnail_url\": \"thumbnail_url\",\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"sessions\": [\n    {\n      \"allocated_at\": \"2024-01-15T09:30:00Z\",\n      \"allocated_by\": \"workflow_editor\",\n      \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n      \"duration_seconds\": 1000000,\n      \"is_dedicated_phone\": true,\n      \"location\": \"location\",\n      \"model_name\": \"model_name\",\n      \"name\": \"name\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_nickname\": \"phone_nickname\",\n      \"phone_type\": \"android\",\n      \"session_id\": \"session_id\",\n      \"source\": \"workflow\",\n      \"status\": \"active\",\n      \"tags\": {\n        \"key\": \"value\"\n      },\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
       "uuid": "09b0d18f-02e0-4090-995c-f84b96e420cc",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      },
-      "postServeActions": []
-    },
-    {
-      "id": "423c7fe8-9b7a-4c0a-9e85-d945ad099203",
-      "name": "List active sessions - default",
-      "request": {
-        "urlPathTemplate": "/phones/sessions/active",
-        "method": "GET",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneActiveSessionsResponse.json\",\n  \"sessions\": [\n    {\n      \"allocated_at\": \"2024-01-15T09:30:00Z\",\n      \"allocated_by\": \"workflow_editor\",\n      \"is_dedicated_phone\": true,\n      \"location\": \"location\",\n      \"model_name\": \"model_name\",\n      \"name\": \"name\",\n      \"nickname\": \"nickname\",\n      \"phone_id\": \"phone_id\",\n      \"phone_name\": \"phone_name\",\n      \"phone_status\": \"active\",\n      \"phone_type\": \"android\",\n      \"session_id\": \"session_id\",\n      \"tags\": {\n        \"key\": \"value\"\n      },\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "423c7fe8-9b7a-4c0a-9e85-d945ad099203",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -876,48 +1263,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionDetailResponse.json\",\n  \"allocated_at\": \"2024-01-15T09:30:00Z\",\n  \"allocated_by\": \"workflow_editor\",\n  \"capture_enabled\": true,\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"is_dedicated_phone\": true,\n  \"location\": \"location\",\n  \"model_name\": \"model_name\",\n  \"name\": \"name\",\n  \"nickname\": \"nickname\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_status\": \"active\",\n  \"phone_type\": \"android\",\n  \"recording_status\": \"ready\",\n  \"recording_url\": \"recording_url\",\n  \"session_id\": \"session_id\",\n  \"source\": \"workflow\",\n  \"status\": \"active\",\n  \"tags\": {\n    \"key\": \"value\"\n  },\n  \"telemetry_disabled\": true,\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionDetailResponse.json\",\n  \"accessibility\": true,\n  \"allocated_at\": \"2024-01-15T09:30:00Z\",\n  \"allocated_by\": \"workflow_editor\",\n  \"capture_enabled\": true,\n  \"deallocated_at\": \"2024-01-15T09:30:00Z\",\n  \"is_dedicated_phone\": true,\n  \"location\": \"location\",\n  \"model_name\": \"model_name\",\n  \"name\": \"name\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_nickname\": \"phone_nickname\",\n  \"phone_status\": \"active\",\n  \"phone_type\": \"android\",\n  \"recording_status\": \"ready\",\n  \"recording_url\": \"recording_url\",\n  \"session_id\": \"session_id\",\n  \"source\": \"workflow\",\n  \"status\": \"active\",\n  \"tags\": {\n    \"key\": \"value\"\n  },\n  \"telemetry_disabled\": true,\n  \"telemetry_url\": \"telemetry_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
       "uuid": "cec100b4-2e02-4040-b09d-a48afb84c0b9",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
-      "id": "dd25dab9-3b31-4381-b9ff-b9fe12d4df2d",
-      "name": "Mint a live-view token - default",
-      "request": {
-        "urlPathTemplate": "/phones/sessions/{session_id}/live-view-token",
-        "method": "POST",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "session_id": {
-            "equalTo": "session_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneLiveViewTokenResponse.json\",\n  \"live_view_url\": \"live_view_url\",\n  \"phone_id\": \"phone_id\",\n  \"session_id\": \"session_id\",\n  \"token\": \"token\",\n  \"view_only\": true\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "dd25dab9-3b31-4381-b9ff-b9fe12d4df2d",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -966,10 +1317,10 @@
       }
     },
     {
-      "id": "1f7ae52b-3315-4cfb-a0e6-7befba7dd7ea",
-      "name": "Mint a telemetry stream URL - default",
+      "id": "9102ad9f-96f1-4766-83ce-5c49a55e8aa0",
+      "name": "Mint a live-view token - default",
       "request": {
-        "urlPathTemplate": "/phones/sessions/{session_id}/telemetry-token",
+        "urlPathTemplate": "/phones/sessions/{session_id}:createLiveViewToken",
         "method": "POST",
         "headers": {
           "X-Axilio-Api-Key": {
@@ -984,12 +1335,12 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneTelemetryTokenResponse.json\",\n  \"session_id\": \"session_id\",\n  \"telemetry_url\": \"telemetry_url\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneLiveViewTokenResponse.json\",\n  \"live_view_url\": \"live_view_url\",\n  \"phone_id\": \"phone_id\",\n  \"session_id\": \"session_id\",\n  \"token\": \"token\",\n  \"view_only\": true\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "1f7ae52b-3315-4cfb-a0e6-7befba7dd7ea",
+      "uuid": "9102ad9f-96f1-4766-83ce-5c49a55e8aa0",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1002,30 +1353,25 @@
       }
     },
     {
-      "id": "aac83306-2fa9-47bd-a995-ecd66fe5d094",
-      "name": "Get a session's live thumbnail - default",
+      "id": "1730062c-32d7-4b56-8aee-ef026ad99b1f",
+      "name": "List supported apps - default",
       "request": {
-        "urlPathTemplate": "/phones/sessions/{session_id}/thumbnail",
+        "urlPathTemplate": "/phones/supported-apps",
         "method": "GET",
         "headers": {
           "X-Axilio-Api-Key": {
             "matches": ".+"
           }
-        },
-        "pathParameters": {
-          "session_id": {
-            "equalTo": "session_id"
-          }
         }
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneSessionThumbnailResponse.json\",\n  \"status\": \"ready\",\n  \"url\": \"url\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSupportedAppsResponse.json\",\n  \"phone_apps\": [\n    {\n      \"android_package_name\": \"android_package_name\",\n      \"app_metadata\": {\n        \"key\": \"value\"\n      },\n      \"category\": \"social\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"description\": \"description\",\n      \"icon_url\": \"icon_url\",\n      \"id\": \"id\",\n      \"ios_app_store_id\": \"ios_app_store_id\",\n      \"is_supported\": true,\n      \"model_datasets\": [\n        \"model_datasets\"\n      ],\n      \"model_status\": \"pending\",\n      \"model_trained_at\": \"2024-01-15T09:30:00Z\",\n      \"name\": \"name\",\n      \"platform\": \"android\",\n      \"slug\": \"slug\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"version\": \"version\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
-      "uuid": "aac83306-2fa9-47bd-a995-ecd66fe5d094",
+      "uuid": "1730062c-32d7-4b56-8aee-ef026ad99b1f",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1035,7 +1381,8 @@
             "via": "SYSTEM"
           }
         }
-      }
+      },
+      "postServeActions": []
     },
     {
       "id": "fe41c550-efa5-47bd-be5d-c4a0dc45e953",
@@ -1056,12 +1403,48 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneSummary.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"current_session_id\": \"current_session_id\",\n  \"last_heartbeat\": \"2024-01-15T09:30:00Z\",\n  \"last_interaction_timestamp\": \"2024-01-15T09:30:00Z\",\n  \"location\": \"location\",\n  \"model_id\": \"model_id\",\n  \"model_name\": \"model_name\",\n  \"nickname\": \"nickname\",\n  \"owner_organization_id\": \"owner_organization_id\",\n  \"ownership_type\": \"shared\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_type\": \"android\",\n  \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"active\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSummary.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"current_session_id\": \"current_session_id\",\n  \"last_heartbeat_at\": \"2024-01-15T09:30:00Z\",\n  \"last_interaction_at\": \"2024-01-15T09:30:00Z\",\n  \"location\": \"location\",\n  \"messaging\": {\n    \"checked_at\": \"2024-01-15T09:30:00Z\",\n    \"receiving\": \"on\",\n    \"sending\": \"on\",\n    \"service\": \"in_service\"\n  },\n  \"model_id\": \"model_id\",\n  \"model_name\": \"model_name\",\n  \"nickname\": \"nickname\",\n  \"owner_organization_id\": \"owner_organization_id\",\n  \"ownership_type\": \"shared\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_number\": \"phone_number\",\n  \"phone_type\": \"android\",\n  \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"active\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
       },
       "uuid": "fe41c550-efa5-47bd-be5d-c4a0dc45e953",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "17bda803-e5a8-4f2e-9dd0-6cc796bd447b",
+      "name": "Update a phone - default",
+      "request": {
+        "urlPathTemplate": "/phones/{phone_id}",
+        "method": "PATCH",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "phone_id": {
+            "equalTo": "phone_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneSummary.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"current_session_id\": \"current_session_id\",\n  \"last_heartbeat_at\": \"2024-01-15T09:30:00Z\",\n  \"last_interaction_at\": \"2024-01-15T09:30:00Z\",\n  \"location\": \"location\",\n  \"messaging\": {\n    \"checked_at\": \"2024-01-15T09:30:00Z\",\n    \"receiving\": \"on\",\n    \"sending\": \"on\",\n    \"service\": \"in_service\"\n  },\n  \"model_id\": \"model_id\",\n  \"model_name\": \"model_name\",\n  \"nickname\": \"nickname\",\n  \"owner_organization_id\": \"owner_organization_id\",\n  \"ownership_type\": \"shared\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_number\": \"phone_number\",\n  \"phone_type\": \"android\",\n  \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"active\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "17bda803-e5a8-4f2e-9dd0-6cc796bd447b",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1173,42 +1556,6 @@
         }
       },
       "uuid": "852116a0-2aed-432c-9ed6-c3e1b2f2b2e5",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
-      "id": "cabacafb-0e5b-4627-99e2-211e1bcf561a",
-      "name": "Rename a phone - default",
-      "request": {
-        "urlPathTemplate": "/phones/{phone_id}/nickname",
-        "method": "PATCH",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "phone_id": {
-            "equalTo": "phone_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneSummary.json\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"current_session_id\": \"current_session_id\",\n  \"last_heartbeat\": \"2024-01-15T09:30:00Z\",\n  \"last_interaction_timestamp\": \"2024-01-15T09:30:00Z\",\n  \"location\": \"location\",\n  \"model_id\": \"model_id\",\n  \"model_name\": \"model_name\",\n  \"nickname\": \"nickname\",\n  \"owner_organization_id\": \"owner_organization_id\",\n  \"ownership_type\": \"shared\",\n  \"phone_id\": \"phone_id\",\n  \"phone_name\": \"phone_name\",\n  \"phone_type\": \"android\",\n  \"rental_expires_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"active\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "cabacafb-0e5b-4627-99e2-211e1bcf561a",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -1342,7 +1689,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/PhoneAllocateResponse.json\",\n  \"control_url\": \"control_url\",\n  \"live_view_url\": \"live_view_url\",\n  \"phone_id\": \"phone_id\",\n  \"region\": \"region\",\n  \"session_id\": \"session_id\",\n  \"telemetry_url\": \"telemetry_url\",\n  \"workflow_started_at\": \"2024-01-15T09:30:00Z\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/PhoneAllocateResponse.json\",\n  \"accessibility\": true,\n  \"control_url\": \"control_url\",\n  \"live_view_url\": \"live_view_url\",\n  \"phone_id\": \"phone_id\",\n  \"region\": \"region\",\n  \"session_id\": \"session_id\",\n  \"telemetry_url\": \"telemetry_url\",\n  \"workflow_started_at\": \"2024-01-15T09:30:00Z\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1409,7 +1756,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"$schema\": \"/api/v1/RunResponse.json\",\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"start_at\": \"2024-01-15T09:30:00Z\",\n      \"start_timeout_seconds\": 1000000,\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"scheduled\",\n      \"success\": true,\n      \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n      \"trigger\": \"manual\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"user_id\": \"user_id\",\n      \"variables\": {\n        \"key\": \"value\"\n      },\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"$schema\": \"/api/v1/RunResponse.json\",\n      \"cancelled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_id\": \"session_id\",\n      \"start_at\": \"2024-01-15T09:30:00Z\",\n      \"start_timeout_seconds\": 1000000,\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"scheduled\",\n      \"success\": true,\n      \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n      \"trigger\": \"manual\",\n      \"updated_at\": \"2024-01-15T09:30:00Z\",\n      \"user_id\": \"user_id\",\n      \"variables\": {\n        \"key\": \"value\"\n      },\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\",\n      \"workflow_name\": \"workflow_name\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1439,17 +1786,17 @@
           }
         },
         "queryParameters": {
-          "start_date": {
+          "completed_after": {
             "equalTo": "2024-01-15T09:30:00.000Z"
           },
-          "end_date": {
+          "completed_before": {
             "equalTo": "2024-01-15T09:30:00.000Z"
           }
         }
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunHistoryResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"canceled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"org_id\": \"org_id\",\n      \"phone_id\": \"phone_id\",\n      \"run_id\": \"run_id\",\n      \"run_metadata\": \"run_metadata\",\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"scheduled\",\n      \"success\": true,\n      \"trigger\": \"manual\",\n      \"user_id\": \"user_id\",\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunHistoryResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"runs\": [\n    {\n      \"cancelled_at\": \"2024-01-15T09:30:00Z\",\n      \"completed_at\": \"2024-01-15T09:30:00Z\",\n      \"created_at\": \"2024-01-15T09:30:00Z\",\n      \"error_message\": \"error_message\",\n      \"id\": \"id\",\n      \"organization_id\": \"organization_id\",\n      \"phone_id\": \"phone_id\",\n      \"run_metadata\": \"run_metadata\",\n      \"started_at\": \"2024-01-15T09:30:00Z\",\n      \"status\": \"scheduled\",\n      \"success\": true,\n      \"trigger\": \"manual\",\n      \"user_id\": \"user_id\",\n      \"video_url\": \"video_url\",\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1466,42 +1813,6 @@
         }
       },
       "postServeActions": []
-    },
-    {
-      "id": "4c7adf14-a385-4548-a5c9-96ba87e661bf",
-      "name": "Get workflow stats - default",
-      "request": {
-        "urlPathTemplate": "/runs/stats/{workflow_id}",
-        "method": "GET",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "workflow_id": {
-            "equalTo": "workflow_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunStatsResponse.json\",\n  \"success_rate\": 1.1,\n  \"total_runs\": 1000000\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "4c7adf14-a385-4548-a5c9-96ba87e661bf",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
     },
     {
       "id": "96af7e2e-2501-4d8c-8047-889cc3f10852",
@@ -1522,7 +1833,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_at\": \"2024-01-15T09:30:00Z\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"scheduled\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"cancelled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_at\": \"2024-01-15T09:30:00Z\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"scheduled\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1558,7 +1869,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"canceled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_at\": \"2024-01-15T09:30:00Z\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"scheduled\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/RunResponse.json\",\n  \"cancelled_at\": \"2024-01-15T09:30:00Z\",\n  \"completed_at\": \"2024-01-15T09:30:00Z\",\n  \"created_at\": \"2024-01-15T09:30:00Z\",\n  \"error_message\": \"error_message\",\n  \"id\": \"id\",\n  \"phone_id\": \"phone_id\",\n  \"run_metadata\": {\n    \"key\": \"value\"\n  },\n  \"session_id\": \"session_id\",\n  \"start_at\": \"2024-01-15T09:30:00Z\",\n  \"start_timeout_seconds\": 1000000,\n  \"started_at\": \"2024-01-15T09:30:00Z\",\n  \"status\": \"scheduled\",\n  \"success\": true,\n  \"trace_expired_at\": \"2024-01-15T09:30:00Z\",\n  \"trigger\": \"manual\",\n  \"updated_at\": \"2024-01-15T09:30:00Z\",\n  \"user_id\": \"user_id\",\n  \"variables\": {\n    \"key\": \"value\"\n  },\n  \"video_url\": \"video_url\",\n  \"workflow_id\": \"workflow_id\",\n  \"workflow_name\": \"workflow_name\"\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1650,10 +1961,10 @@
           }
         },
         "queryParameters": {
-          "start_date": {
+          "created_after": {
             "equalTo": "2024-01-15T09:30:00.000Z"
           },
-          "end_date": {
+          "created_before": {
             "equalTo": "2024-01-15T09:30:00.000Z"
           }
         }
@@ -1688,19 +1999,11 @@
           "X-Axilio-Api-Key": {
             "matches": ".+"
           }
-        },
-        "queryParameters": {
-          "start_date": {
-            "equalTo": "2024-01-15T09:30:00.000Z"
-          },
-          "end_date": {
-            "equalTo": "2024-01-15T09:30:00.000Z"
-          }
         }
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/UsageMetricsResponse.json\",\n  \"compute_minutes\": {\n    \"change\": 1.1,\n    \"chart_data\": [\n      {\n        \"is_current\": true,\n        \"period\": \"period\",\n        \"timestamp\": \"2024-01-15T09:30:00Z\",\n        \"value\": 1.1\n      }\n    ],\n    \"total_minutes\": 1.1\n  },\n  \"cost_by_product\": {\n    \"inference\": 1.1,\n    \"other\": 1.1,\n    \"sessions\": 1.1\n  },\n  \"granularity\": \"hourly\",\n  \"inference_chart_data\": [\n    {\n      \"is_current\": true,\n      \"period\": \"period\",\n      \"timestamp\": \"2024-01-15T09:30:00Z\",\n      \"value\": 1.1\n    }\n  ],\n  \"infra_costs\": {\n    \"change\": 1.1,\n    \"chart_data\": [\n      {\n        \"is_current\": true,\n        \"period\": \"period\",\n        \"timestamp\": \"2024-01-15T09:30:00Z\",\n        \"value\": 1.1\n      }\n    ],\n    \"this_period\": 1.1,\n    \"total\": 1.1\n  },\n  \"period_end\": \"2024-01-15T09:30:00Z\",\n  \"period_start\": \"2024-01-15T09:30:00Z\",\n  \"session_chart_data\": [\n    {\n      \"is_current\": true,\n      \"period\": \"period\",\n      \"timestamp\": \"2024-01-15T09:30:00Z\",\n      \"value\": 1.1\n    }\n  ]\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/UsageMetricsResponse.json\",\n  \"points\": [\n    {\n      \"inference_cost_microdollars\": 1000000,\n      \"period_start_at\": \"2024-01-15T09:30:00Z\",\n      \"product\": \"session\",\n      \"session_cost_microdollars\": 1000000,\n      \"total_cost_microdollars\": 1000000\n    }\n  ]\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -1730,17 +2033,17 @@
           }
         },
         "queryParameters": {
-          "start_date": {
+          "allocated_after": {
             "equalTo": "2024-01-15T09:30:00.000Z"
           },
-          "end_date": {
+          "allocated_before": {
             "equalTo": "2024-01-15T09:30:00.000Z"
           }
         }
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/UsageSessionsResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"sessions\": [\n    {\n      \"allocated_at\": \"allocated_at\",\n      \"allocated_by\": \"allocated_by\",\n      \"billing_plan_id\": \"billing_plan_id\",\n      \"cost_microdollars\": 1000000,\n      \"deallocated_at\": \"deallocated_at\",\n      \"duration_seconds\": 1000000,\n      \"inference_cost_microdollars\": 1000000,\n      \"is_dedicated_phone\": true,\n      \"phone_id\": \"phone_id\",\n      \"processed_status\": \"processed_status\",\n      \"session_id\": \"session_id\",\n      \"session_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_status\": \"session_status\",\n      \"total_cost_microdollars\": 1000000,\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/UsageSessionsResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"sessions\": [\n    {\n      \"allocated_at\": \"allocated_at\",\n      \"allocated_by\": \"workflow_editor\",\n      \"billing_plan_id\": \"billing_plan_id\",\n      \"cost_microdollars\": 1000000,\n      \"deallocated_at\": \"deallocated_at\",\n      \"duration_seconds\": 1000000,\n      \"inference_cost_microdollars\": 1000000,\n      \"is_dedicated_phone\": true,\n      \"phone_id\": \"phone_id\",\n      \"processed_status\": \"pending\",\n      \"session_id\": \"session_id\",\n      \"session_metadata\": {\n        \"key\": \"value\"\n      },\n      \"session_status\": \"active\",\n      \"total_cost_microdollars\": 1000000,\n      \"workflow_id\": \"workflow_id\"\n    }\n  ],\n  \"total\": 1000000\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -2182,7 +2485,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WebhookDeliveryMetricsResponse.json\",\n  \"points\": [\n    {\n      \"avg_latency_ms\": 1.1,\n      \"endpoint_id\": \"endpoint_id\",\n      \"error_rate\": 1.1,\n      \"failed\": 1000000,\n      \"p50_latency_ms\": 1.1,\n      \"p95_latency_ms\": 1.1,\n      \"p99_latency_ms\": 1.1,\n      \"time_bucket\": \"2024-01-15T09:30:00Z\",\n      \"total\": 1000000\n    }\n  ]\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WebhookDeliveryMetricsResponse.json\",\n  \"points\": [\n    {\n      \"avg_latency_ms\": 1.1,\n      \"endpoint_id\": \"endpoint_id\",\n      \"error_rate\": 1.1,\n      \"failed\": 1000000,\n      \"p50_latency_ms\": 1.1,\n      \"p95_latency_ms\": 1.1,\n      \"p99_latency_ms\": 1.1,\n      \"period_start_at\": \"2024-01-15T09:30:00Z\",\n      \"total\": 1000000\n    }\n  ]\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -2214,7 +2517,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000,\n  \"workflows\": [\n    {\n      \"$schema\": \"/api/v1/WorkflowResponse.json\",\n      \"stats\": {\n        \"success_rate\": 1.1,\n        \"total_runs\": 1000000\n      },\n      \"workflow\": {\n        \"capture\": true,\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"id\": \"id\",\n        \"last_run_at\": null,\n        \"name\": \"name\",\n        \"ocr_engine\": \"free\",\n        \"organization_id\": null,\n        \"platform\": \"android\",\n        \"recording\": true,\n        \"status\": \"ready\",\n        \"telemetry\": true,\n        \"updated_at\": \"2024-01-15T09:30:00Z\",\n        \"user_id\": \"user_id\"\n      }\n    }\n  ]\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowListResponse.json\",\n  \"limit\": 1000000,\n  \"offset\": 1000000,\n  \"total\": 1000000,\n  \"workflows\": [\n    {\n      \"$schema\": \"/api/v1/WorkflowResponse.json\",\n      \"stats\": {\n        \"success_rate\": 1.1,\n        \"total_runs\": 1000000\n      },\n      \"workflow\": {\n        \"accessibility\": true,\n        \"capture\": true,\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"id\": \"id\",\n        \"last_run_at\": null,\n        \"name\": \"name\",\n        \"ocr_engine\": \"free\",\n        \"organization_id\": null,\n        \"platform\": \"android\",\n        \"recording\": true,\n        \"status\": \"ready\",\n        \"telemetry\": true,\n        \"updated_at\": \"2024-01-15T09:30:00Z\",\n        \"user_id\": \"user_id\"\n      }\n    }\n  ]\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -2282,7 +2585,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"accessibility\": true,\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -2354,7 +2657,7 @@
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowResponse.json\",\n  \"stats\": {\n    \"success_rate\": 1.1,\n    \"total_runs\": 1000000\n  },\n  \"workflow\": {\n    \"accessibility\": true,\n    \"capture\": true,\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"last_run_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"ocr_engine\": \"free\",\n    \"organization_id\": \"organization_id\",\n    \"platform\": \"android\",\n    \"recording\": true,\n    \"status\": \"ready\",\n    \"telemetry\": true,\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"user_id\": \"user_id\"\n  }\n}",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -2372,8 +2675,8 @@
       }
     },
     {
-      "id": "3b9b6095-cf07-4764-826b-b8e15800a375",
-      "name": "Get current workflow code - default",
+      "id": "edd5b7fd-fb2b-4f91-87e1-0279a4994a02",
+      "name": "Get workflow code - default",
       "request": {
         "urlPathTemplate": "/workflows/{workflow_id}/code",
         "method": "GET",
@@ -2395,79 +2698,7 @@
           "Content-Type": "application/json"
         }
       },
-      "uuid": "3b9b6095-cf07-4764-826b-b8e15800a375",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
-      "id": "c1d9aa59-9f89-4cc7-bfc6-dce8f1cc9319",
-      "name": "Save workflow code - default",
-      "request": {
-        "urlPathTemplate": "/workflows/{workflow_id}/code",
-        "method": "POST",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "workflow_id": {
-            "equalTo": "workflow_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowSaveCodeResponse.json\",\n  \"no_op\": true,\n  \"revision\": 1000000,\n  \"revision_id\": \"revision_id\"\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "c1d9aa59-9f89-4cc7-bfc6-dce8f1cc9319",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
-      "id": "5c6553b4-a397-45a7-9116-4462f19a5384",
-      "name": "Restore a workflow revision - default",
-      "request": {
-        "urlPathTemplate": "/workflows/{workflow_id}/code/restore",
-        "method": "POST",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "workflow_id": {
-            "equalTo": "workflow_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "{\n  \"$schema\": \"/api/v1/WorkflowSaveCodeResponse.json\",\n  \"no_op\": true,\n  \"revision\": 1000000,\n  \"revision_id\": \"revision_id\"\n}",
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      },
-      "uuid": "5c6553b4-a397-45a7-9116-4462f19a5384",
+      "uuid": "edd5b7fd-fb2b-4f91-87e1-0279a4994a02",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -2504,6 +2735,42 @@
         }
       },
       "uuid": "9f1c2b52-723e-4a9f-bc21-a18a18f51c89",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "80a62874-7d65-43a7-ace7-4d0be8e7b9f2",
+      "name": "Save workflow code - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}/revisions",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowCreateRevisionResponse.json\",\n  \"no_op\": true,\n  \"revision\": 1000000,\n  \"revision_id\": \"revision_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "80a62874-7d65-43a7-ace7-4d0be8e7b9f2",
       "persistent": true,
       "priority": 3,
       "metadata": {
@@ -2553,9 +2820,84 @@
           }
         }
       }
+    },
+    {
+      "id": "f0ec2fa3-3caa-470e-953a-78cf47ab748e",
+      "name": "Restore a workflow revision - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}/revisions/{revision_id}:restore",
+        "method": "POST",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          },
+          "revision_id": {
+            "equalTo": "revision_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/WorkflowCreateRevisionResponse.json\",\n  \"no_op\": true,\n  \"revision\": 1000000,\n  \"revision_id\": \"revision_id\"\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "f0ec2fa3-3caa-470e-953a-78cf47ab748e",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
+    },
+    {
+      "id": "72361d60-f6c0-4699-9df7-3b18531691d3",
+      "name": "Get a workflow's run stats - default",
+      "request": {
+        "urlPathTemplate": "/workflows/{workflow_id}/run-stats",
+        "method": "GET",
+        "headers": {
+          "X-Axilio-Api-Key": {
+            "matches": ".+"
+          }
+        },
+        "pathParameters": {
+          "workflow_id": {
+            "equalTo": "workflow_id"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"$schema\": \"/api/v1/RunStatsResponse.json\",\n  \"success_rate\": 1.1,\n  \"total_runs\": 1000000\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "uuid": "72361d60-f6c0-4699-9df7-3b18531691d3",
+      "persistent": true,
+      "priority": 3,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2020-01-01T00:00:00.000Z",
+            "via": "SYSTEM"
+          }
+        }
+      }
     }
   ],
   "meta": {
-    "total": 74
+    "total": 84
   }
 }

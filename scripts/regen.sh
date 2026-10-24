@@ -59,6 +59,8 @@ rsync -a --delete \
   --exclude='/internal/stringer.go' \
   --exclude='/internal/stringer_test.go' \
   --exclude='/generated_runtime_test.go' \
+  --exclude='accessibility_errors.go' \
+  --exclude='accessibility_errors_test.go' \
   .gen/ ./
 
 rm -rf .gen

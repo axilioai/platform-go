@@ -34,7 +34,7 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Lists events published for the caller's organization, newest first, one page at a time. Pass the response's next_cursor as cursor to fetch the following page.
+// Lists events published for the caller's organization, newest first, one page at a time. Narrow it to one event type (event_type), one destination (endpoint_id) or one message's events (message_id). Pass the response's next_cursor as cursor to fetch the following page.
 func (c *Client) ListDeliveries(
 	ctx context.Context,
 	request *platformgo.WebhooksListDeliveriesRequest,
@@ -234,7 +234,7 @@ func (c *Client) ListEventTypes(
 	return response.Body, nil
 }
 
-// Returns delivery volume and error rate over a window, either for one destination (endpoint_id) or grouped across all of them, time-bucketed for charting. Response time is not included: the gateway records no per-attempt latency.
+// Returns delivery volume, error rate and destination response time over a window as points: one per hour or day in time_zone, for every destination together, one (endpoint_id), or each one (group_by=endpoint_id). Counts are zero and latencies null for a bucket with no attempts. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
 func (c *Client) GetMetrics(
 	ctx context.Context,
 	request *platformgo.WebhooksGetMetricsRequest,

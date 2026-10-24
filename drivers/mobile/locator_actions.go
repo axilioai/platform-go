@@ -6,23 +6,20 @@ import (
 	"time"
 )
 
-// locatorStrategy names the resolution strategy for the withStrategy locator
-// option / withDefaultStrategy (driver.go) (the wire's LocatorStrategy).
-// Held back until accessibility support ships: no phone advertises an
-// accessibility tree yet, so today they can only ever answer
-// StrategyUnavailable. Exported once one does.
-type locatorStrategy string
+// LocatorStrategy names the resolution strategy for the Strategy locator
+// option and WithDefaultStrategy (the wire's LocatorStrategy).
+type LocatorStrategy string
 
 const (
-	// strategyAuto uses the accessibility tree when the session has one and
+	// StrategyAuto uses the accessibility tree when the session has one and
 	// the screen otherwise. The server-side default when strategy is omitted.
-	strategyAuto locatorStrategy = "auto"
-	// strategyVision always resolves from the screen (OCR/VLM), even on a
+	StrategyAuto LocatorStrategy = "auto"
+	// StrategyVision always resolves from the screen (OCR/VLM), even on a
 	// session that has an accessibility tree.
-	strategyVision locatorStrategy = "vision"
-	// strategyAccessibility always resolves from the accessibility tree;
-	// answers StrategyUnavailable on a session without one.
-	strategyAccessibility locatorStrategy = "accessibility"
+	StrategyVision LocatorStrategy = "vision"
+	// StrategyAccessibility always resolves from the accessibility tree;
+	// answers CodeStrategyUnavailable on a session without one.
+	StrategyAccessibility LocatorStrategy = "accessibility"
 )
 
 // WaitState is the target state Locator.WaitFor waits for.
@@ -32,9 +29,10 @@ type WaitState string
 const (
 	StateVisible WaitState = "visible"
 	StateHidden  WaitState = "hidden"
-	// stateEnabled needs the accessibility tree (vision cannot tell enabled
-	// from disabled) and is held back until accessibility support ships.
-	stateEnabled WaitState = "enabled"
+	// StateEnabled needs the accessibility tree: vision cannot tell enabled
+	// from disabled, so on a session without one it answers
+	// CodeStrategyUnavailable.
+	StateEnabled WaitState = "enabled"
 )
 
 // Locator call budgets. defaultLocatorTimeout is the device-side auto-wait
@@ -105,7 +103,7 @@ func locatorResultFromWire(w wireLocatorResult) LocatorResult {
 // driverDefault (which is "" if the driver has none either: a locator call
 // omits a field entirely rather than forcing a client-side default onto it,
 // unlike the vision call's resolveEngine, so the server's own default
-// applies). T covers both the model/ocrEngine strings and locatorStrategy.
+// applies). T covers both the model/ocrEngine strings and LocatorStrategy.
 func resolveOverride[T ~string](locatorValue, driverDefault T) T {
 	if locatorValue != "" {
 		return locatorValue
@@ -136,7 +134,7 @@ const maxLocatorTimeout = 60 * time.Second
 // WithDefault*, else omitted so the server's own default applies) and the
 // call's timeout budget.
 type locatorParams struct {
-	strategy         locatorStrategy
+	strategy         LocatorStrategy
 	model, ocrEngine string
 	timeout          time.Duration
 	// timeoutSet records that the call passed WithTimeout, so Locator.Count

@@ -84,8 +84,13 @@ func (a *APIKeysDeleteRequest) SetKeyID(keyID string) {
 }
 
 var (
-	aPIKeysListRequestFieldLimit  = big.NewInt(1 << 0)
-	aPIKeysListRequestFieldOffset = big.NewInt(1 << 1)
+	aPIKeysListRequestFieldLimit         = big.NewInt(1 << 0)
+	aPIKeysListRequestFieldOffset        = big.NewInt(1 << 1)
+	aPIKeysListRequestFieldSearch        = big.NewInt(1 << 2)
+	aPIKeysListRequestFieldCreatedByID   = big.NewInt(1 << 3)
+	aPIKeysListRequestFieldCreatedAfter  = big.NewInt(1 << 4)
+	aPIKeysListRequestFieldCreatedBefore = big.NewInt(1 << 5)
+	aPIKeysListRequestFieldOrderBy       = big.NewInt(1 << 6)
 )
 
 type APIKeysListRequest struct {
@@ -93,6 +98,16 @@ type APIKeysListRequest struct {
 	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// pagination offset
 	Offset *int64 `json:"-" url:"offset,omitempty"`
+	// only keys whose name or key preview contains this text
+	Search *string `json:"-" url:"search,omitempty"`
+	// only keys created by one of these users; repeatable
+	CreatedByID []string `json:"-" url:"created_by_id,omitempty"`
+	// only keys created at or after this time (RFC 3339)
+	CreatedAfter *time.Time `json:"-" url:"created_after,omitempty"`
+	// only keys created at or before this time (RFC 3339)
+	CreatedBefore *time.Time `json:"-" url:"created_before,omitempty"`
+	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is name, created_by_id, created_at or last_used_at. Defaults to created_at desc.
+	OrderBy *string `json:"-" url:"order_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -117,6 +132,41 @@ func (a *APIKeysListRequest) SetLimit(limit *int64) {
 func (a *APIKeysListRequest) SetOffset(offset *int64) {
 	a.Offset = offset
 	a.require(aPIKeysListRequestFieldOffset)
+}
+
+// SetSearch sets the Search field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (a *APIKeysListRequest) SetSearch(search *string) {
+	a.Search = search
+	a.require(aPIKeysListRequestFieldSearch)
+}
+
+// SetCreatedByID sets the CreatedByID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (a *APIKeysListRequest) SetCreatedByID(createdByID []string) {
+	a.CreatedByID = createdByID
+	a.require(aPIKeysListRequestFieldCreatedByID)
+}
+
+// SetCreatedAfter sets the CreatedAfter field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (a *APIKeysListRequest) SetCreatedAfter(createdAfter *time.Time) {
+	a.CreatedAfter = createdAfter
+	a.require(aPIKeysListRequestFieldCreatedAfter)
+}
+
+// SetCreatedBefore sets the CreatedBefore field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (a *APIKeysListRequest) SetCreatedBefore(createdBefore *time.Time) {
+	a.CreatedBefore = createdBefore
+	a.require(aPIKeysListRequestFieldCreatedBefore)
+}
+
+// SetOrderBy sets the OrderBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (a *APIKeysListRequest) SetOrderBy(orderBy *string) {
+	a.OrderBy = orderBy
+	a.require(aPIKeysListRequestFieldOrderBy)
 }
 
 // Response returned when a new API key is created.

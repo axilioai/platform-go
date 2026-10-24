@@ -142,13 +142,13 @@ func (r *RunsGetRequest) SetRunID(runID string) {
 }
 
 var (
-	runsListRequestFieldWorkflowID    = big.NewInt(1 << 0)
-	runsListRequestFieldLimit         = big.NewInt(1 << 1)
-	runsListRequestFieldOffset        = big.NewInt(1 << 2)
-	runsListRequestFieldSearch        = big.NewInt(1 << 3)
-	runsListRequestFieldStatusFilter  = big.NewInt(1 << 4)
-	runsListRequestFieldTriggerFilter = big.NewInt(1 << 5)
-	runsListRequestFieldOrderBy       = big.NewInt(1 << 6)
+	runsListRequestFieldWorkflowID = big.NewInt(1 << 0)
+	runsListRequestFieldLimit      = big.NewInt(1 << 1)
+	runsListRequestFieldOffset     = big.NewInt(1 << 2)
+	runsListRequestFieldSearch     = big.NewInt(1 << 3)
+	runsListRequestFieldStatus     = big.NewInt(1 << 4)
+	runsListRequestFieldTrigger    = big.NewInt(1 << 5)
+	runsListRequestFieldOrderBy    = big.NewInt(1 << 6)
 )
 
 type RunsListRequest struct {
@@ -160,11 +160,11 @@ type RunsListRequest struct {
 	Offset *int64 `json:"-" url:"offset,omitempty"`
 	// Filter by run id substring.
 	Search *string `json:"-" url:"search,omitempty"`
-	// Restrict results to the given run statuses.
-	StatusFilter []RunsListRequestStatusFilterItem `json:"-" url:"status_filter,omitempty"`
-	// Restrict results to the given triggers.
-	TriggerFilter []RunsListRequestTriggerFilterItem `json:"-" url:"trigger_filter,omitempty"`
-	// Sort expression '<field> <asc|desc>'; field is one of status, started_at, completed_at, created_at. Defaults to created_at desc.
+	// Only runs at one of these statuses; repeatable.
+	Status []RunsListRequestStatusItem `json:"-" url:"status,omitempty"`
+	// Only runs started by one of these triggers; repeatable.
+	Trigger []RunsListRequestTriggerItem `json:"-" url:"trigger,omitempty"`
+	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is status, started_at, completed_at or created_at. Defaults to created_at desc.
 	OrderBy *string `json:"-" url:"order_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -206,18 +206,18 @@ func (r *RunsListRequest) SetSearch(search *string) {
 	r.require(runsListRequestFieldSearch)
 }
 
-// SetStatusFilter sets the StatusFilter field and marks it as non-optional;
+// SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunsListRequest) SetStatusFilter(statusFilter []RunsListRequestStatusFilterItem) {
-	r.StatusFilter = statusFilter
-	r.require(runsListRequestFieldStatusFilter)
+func (r *RunsListRequest) SetStatus(status []RunsListRequestStatusItem) {
+	r.Status = status
+	r.require(runsListRequestFieldStatus)
 }
 
-// SetTriggerFilter sets the TriggerFilter field and marks it as non-optional;
+// SetTrigger sets the Trigger field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunsListRequest) SetTriggerFilter(triggerFilter []RunsListRequestTriggerFilterItem) {
-	r.TriggerFilter = triggerFilter
-	r.require(runsListRequestFieldTriggerFilter)
+func (r *RunsListRequest) SetTrigger(trigger []RunsListRequestTriggerItem) {
+	r.Trigger = trigger
+	r.require(runsListRequestFieldTrigger)
 }
 
 // SetOrderBy sets the OrderBy field and marks it as non-optional;
@@ -228,28 +228,28 @@ func (r *RunsListRequest) SetOrderBy(orderBy *string) {
 }
 
 var (
-	runsListHistoricRequestFieldStartDate    = big.NewInt(1 << 0)
-	runsListHistoricRequestFieldEndDate      = big.NewInt(1 << 1)
-	runsListHistoricRequestFieldWorkflowID   = big.NewInt(1 << 2)
-	runsListHistoricRequestFieldLimit        = big.NewInt(1 << 3)
-	runsListHistoricRequestFieldOffset       = big.NewInt(1 << 4)
-	runsListHistoricRequestFieldStatusFilter = big.NewInt(1 << 5)
-	runsListHistoricRequestFieldSearch       = big.NewInt(1 << 6)
+	runsListHistoricRequestFieldCompletedAfter  = big.NewInt(1 << 0)
+	runsListHistoricRequestFieldCompletedBefore = big.NewInt(1 << 1)
+	runsListHistoricRequestFieldWorkflowID      = big.NewInt(1 << 2)
+	runsListHistoricRequestFieldLimit           = big.NewInt(1 << 3)
+	runsListHistoricRequestFieldOffset          = big.NewInt(1 << 4)
+	runsListHistoricRequestFieldStatus          = big.NewInt(1 << 5)
+	runsListHistoricRequestFieldSearch          = big.NewInt(1 << 6)
 )
 
 type RunsListHistoricRequest struct {
-	// Beginning of the query time window (RFC 3339).
-	StartDate time.Time `json:"-" url:"start_date"`
-	// End of the query time window (RFC 3339).
-	EndDate time.Time `json:"-" url:"end_date"`
+	// Only runs that finished (completed, failed or were cancelled) at or after this time (RFC 3339).
+	CompletedAfter time.Time `json:"-" url:"completed_after"`
+	// Only runs that finished before this time (RFC 3339).
+	CompletedBefore time.Time `json:"-" url:"completed_before"`
 	// Filter results to a single workflow.
 	WorkflowID *string `json:"-" url:"workflow_id,omitempty"`
 	// Maximum number of runs to return (1-500).
 	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// Pagination offset.
 	Offset *int64 `json:"-" url:"offset,omitempty"`
-	// Restrict results to the given run statuses (case-insensitive).
-	StatusFilter []RunsListHistoricRequestStatusFilterItem `json:"-" url:"status_filter,omitempty"`
+	// Only runs at one of these statuses; repeatable.
+	Status []RunsListHistoricRequestStatusItem `json:"-" url:"status,omitempty"`
 	// Filter by run id or workflow id substring.
 	Search *string `json:"-" url:"search,omitempty"`
 
@@ -264,18 +264,18 @@ func (r *RunsListHistoricRequest) require(field *big.Int) {
 	r.explicitFields.Or(r.explicitFields, field)
 }
 
-// SetStartDate sets the StartDate field and marks it as non-optional;
+// SetCompletedAfter sets the CompletedAfter field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunsListHistoricRequest) SetStartDate(startDate time.Time) {
-	r.StartDate = startDate
-	r.require(runsListHistoricRequestFieldStartDate)
+func (r *RunsListHistoricRequest) SetCompletedAfter(completedAfter time.Time) {
+	r.CompletedAfter = completedAfter
+	r.require(runsListHistoricRequestFieldCompletedAfter)
 }
 
-// SetEndDate sets the EndDate field and marks it as non-optional;
+// SetCompletedBefore sets the CompletedBefore field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunsListHistoricRequest) SetEndDate(endDate time.Time) {
-	r.EndDate = endDate
-	r.require(runsListHistoricRequestFieldEndDate)
+func (r *RunsListHistoricRequest) SetCompletedBefore(completedBefore time.Time) {
+	r.CompletedBefore = completedBefore
+	r.require(runsListHistoricRequestFieldCompletedBefore)
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -299,11 +299,11 @@ func (r *RunsListHistoricRequest) SetOffset(offset *int64) {
 	r.require(runsListHistoricRequestFieldOffset)
 }
 
-// SetStatusFilter sets the StatusFilter field and marks it as non-optional;
+// SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunsListHistoricRequest) SetStatusFilter(statusFilter []RunsListHistoricRequestStatusFilterItem) {
-	r.StatusFilter = statusFilter
-	r.require(runsListHistoricRequestFieldStatusFilter)
+func (r *RunsListHistoricRequest) SetStatus(status []RunsListHistoricRequestStatusItem) {
+	r.Status = status
+	r.require(runsListHistoricRequestFieldStatus)
 }
 
 // SetSearch sets the Search field and marks it as non-optional;
@@ -357,32 +357,6 @@ func (s *SessionsListFramesRequest) SetLimit(limit *int64) {
 func (s *SessionsListFramesRequest) SetOffset(offset *int64) {
 	s.Offset = offset
 	s.require(sessionsListFramesRequestFieldOffset)
-}
-
-var (
-	runsStatsRequestFieldWorkflowID = big.NewInt(1 << 0)
-)
-
-type RunsStatsRequest struct {
-	// workflow identifier
-	WorkflowID string `json:"-" url:"-"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-}
-
-func (r *RunsStatsRequest) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
-	}
-	r.explicitFields.Or(r.explicitFields, field)
-}
-
-// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunsStatsRequest) SetWorkflowID(workflowID string) {
-	r.WorkflowID = workflowID
-	r.require(runsStatsRequestFieldWorkflowID)
 }
 
 // Per-run variable assignments and optional phone pin.
@@ -696,38 +670,38 @@ func (r *RunFrameStatus) String() string {
 
 // A single historic run record.
 var (
-	runHistoryItemFieldCanceledAt   = big.NewInt(1 << 0)
-	runHistoryItemFieldCompletedAt  = big.NewInt(1 << 1)
-	runHistoryItemFieldCreatedAt    = big.NewInt(1 << 2)
-	runHistoryItemFieldErrorMessage = big.NewInt(1 << 3)
-	runHistoryItemFieldOrgID        = big.NewInt(1 << 4)
-	runHistoryItemFieldPhoneID      = big.NewInt(1 << 5)
-	runHistoryItemFieldRunID        = big.NewInt(1 << 6)
-	runHistoryItemFieldRunMetadata  = big.NewInt(1 << 7)
-	runHistoryItemFieldStartedAt    = big.NewInt(1 << 8)
-	runHistoryItemFieldStatus       = big.NewInt(1 << 9)
-	runHistoryItemFieldSuccess      = big.NewInt(1 << 10)
-	runHistoryItemFieldTrigger      = big.NewInt(1 << 11)
-	runHistoryItemFieldUserID       = big.NewInt(1 << 12)
-	runHistoryItemFieldVideoURL     = big.NewInt(1 << 13)
-	runHistoryItemFieldWorkflowID   = big.NewInt(1 << 14)
+	runHistoryItemFieldCancelledAt    = big.NewInt(1 << 0)
+	runHistoryItemFieldCompletedAt    = big.NewInt(1 << 1)
+	runHistoryItemFieldCreatedAt      = big.NewInt(1 << 2)
+	runHistoryItemFieldErrorMessage   = big.NewInt(1 << 3)
+	runHistoryItemFieldID             = big.NewInt(1 << 4)
+	runHistoryItemFieldOrganizationID = big.NewInt(1 << 5)
+	runHistoryItemFieldPhoneID        = big.NewInt(1 << 6)
+	runHistoryItemFieldRunMetadata    = big.NewInt(1 << 7)
+	runHistoryItemFieldStartedAt      = big.NewInt(1 << 8)
+	runHistoryItemFieldStatus         = big.NewInt(1 << 9)
+	runHistoryItemFieldSuccess        = big.NewInt(1 << 10)
+	runHistoryItemFieldTrigger        = big.NewInt(1 << 11)
+	runHistoryItemFieldUserID         = big.NewInt(1 << 12)
+	runHistoryItemFieldVideoURL       = big.NewInt(1 << 13)
+	runHistoryItemFieldWorkflowID     = big.NewInt(1 << 14)
 )
 
 type RunHistoryItem struct {
 	// Run cancellation time in UTC.
-	CanceledAt *time.Time `json:"canceled_at,omitempty" url:"canceled_at,omitempty"`
+	CancelledAt *time.Time `json:"cancelled_at,omitempty" url:"cancelled_at,omitempty"`
 	// Run completion time in UTC.
 	CompletedAt *time.Time `json:"completed_at,omitempty" url:"completed_at,omitempty"`
 	// Run creation time in UTC.
 	CreatedAt *time.Time `json:"created_at,omitempty" url:"created_at,omitempty"`
 	// Error details if the run failed.
 	ErrorMessage *string `json:"error_message,omitempty" url:"error_message,omitempty"`
+	// Run identifier.
+	ID string `json:"id" url:"id"`
 	// Organization that owns the run.
-	OrgID *string `json:"org_id,omitempty" url:"org_id,omitempty"`
+	OrganizationID *string `json:"organization_id,omitempty" url:"organization_id,omitempty"`
 	// Device that executed the run.
 	PhoneID *string `json:"phone_id,omitempty" url:"phone_id,omitempty"`
-	// Run identifier.
-	RunID string `json:"run_id" url:"run_id"`
 	// Serialized arbitrary metadata for the run.
 	RunMetadata *string `json:"run_metadata,omitempty" url:"run_metadata,omitempty"`
 	// Run start time in UTC.
@@ -752,11 +726,11 @@ type RunHistoryItem struct {
 	rawJSON         json.RawMessage
 }
 
-func (r *RunHistoryItem) GetCanceledAt() *time.Time {
+func (r *RunHistoryItem) GetCancelledAt() *time.Time {
 	if r == nil {
 		return nil
 	}
-	return r.CanceledAt
+	return r.CancelledAt
 }
 
 func (r *RunHistoryItem) GetCompletedAt() *time.Time {
@@ -780,11 +754,18 @@ func (r *RunHistoryItem) GetErrorMessage() *string {
 	return r.ErrorMessage
 }
 
-func (r *RunHistoryItem) GetOrgID() *string {
+func (r *RunHistoryItem) GetID() string {
+	if r == nil {
+		return ""
+	}
+	return r.ID
+}
+
+func (r *RunHistoryItem) GetOrganizationID() *string {
 	if r == nil {
 		return nil
 	}
-	return r.OrgID
+	return r.OrganizationID
 }
 
 func (r *RunHistoryItem) GetPhoneID() *string {
@@ -792,13 +773,6 @@ func (r *RunHistoryItem) GetPhoneID() *string {
 		return nil
 	}
 	return r.PhoneID
-}
-
-func (r *RunHistoryItem) GetRunID() string {
-	if r == nil {
-		return ""
-	}
-	return r.RunID
 }
 
 func (r *RunHistoryItem) GetRunMetadata() *string {
@@ -871,11 +845,11 @@ func (r *RunHistoryItem) require(field *big.Int) {
 	r.explicitFields.Or(r.explicitFields, field)
 }
 
-// SetCanceledAt sets the CanceledAt field and marks it as non-optional;
+// SetCancelledAt sets the CancelledAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunHistoryItem) SetCanceledAt(canceledAt *time.Time) {
-	r.CanceledAt = canceledAt
-	r.require(runHistoryItemFieldCanceledAt)
+func (r *RunHistoryItem) SetCancelledAt(cancelledAt *time.Time) {
+	r.CancelledAt = cancelledAt
+	r.require(runHistoryItemFieldCancelledAt)
 }
 
 // SetCompletedAt sets the CompletedAt field and marks it as non-optional;
@@ -899,11 +873,18 @@ func (r *RunHistoryItem) SetErrorMessage(errorMessage *string) {
 	r.require(runHistoryItemFieldErrorMessage)
 }
 
-// SetOrgID sets the OrgID field and marks it as non-optional;
+// SetID sets the ID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunHistoryItem) SetOrgID(orgID *string) {
-	r.OrgID = orgID
-	r.require(runHistoryItemFieldOrgID)
+func (r *RunHistoryItem) SetID(id string) {
+	r.ID = id
+	r.require(runHistoryItemFieldID)
+}
+
+// SetOrganizationID sets the OrganizationID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunHistoryItem) SetOrganizationID(organizationID *string) {
+	r.OrganizationID = organizationID
+	r.require(runHistoryItemFieldOrganizationID)
 }
 
 // SetPhoneID sets the PhoneID field and marks it as non-optional;
@@ -911,13 +892,6 @@ func (r *RunHistoryItem) SetOrgID(orgID *string) {
 func (r *RunHistoryItem) SetPhoneID(phoneID *string) {
 	r.PhoneID = phoneID
 	r.require(runHistoryItemFieldPhoneID)
-}
-
-// SetRunID sets the RunID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunHistoryItem) SetRunID(runID string) {
-	r.RunID = runID
-	r.require(runHistoryItemFieldRunID)
 }
 
 // SetRunMetadata sets the RunMetadata field and marks it as non-optional;
@@ -980,7 +954,7 @@ func (r *RunHistoryItem) UnmarshalJSON(data []byte) error {
 	type embed RunHistoryItem
 	var unmarshaler = struct {
 		embed
-		CanceledAt  *internal.DateTime `json:"canceled_at,omitempty"`
+		CancelledAt *internal.DateTime `json:"cancelled_at,omitempty"`
 		CompletedAt *internal.DateTime `json:"completed_at,omitempty"`
 		CreatedAt   *internal.DateTime `json:"created_at,omitempty"`
 		StartedAt   *internal.DateTime `json:"started_at,omitempty"`
@@ -991,7 +965,7 @@ func (r *RunHistoryItem) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*r = RunHistoryItem(unmarshaler.embed)
-	r.CanceledAt = unmarshaler.CanceledAt.TimePtr()
+	r.CancelledAt = unmarshaler.CancelledAt.TimePtr()
 	r.CompletedAt = unmarshaler.CompletedAt.TimePtr()
 	r.CreatedAt = unmarshaler.CreatedAt.TimePtr()
 	r.StartedAt = unmarshaler.StartedAt.TimePtr()
@@ -1008,13 +982,13 @@ func (r *RunHistoryItem) MarshalJSON() ([]byte, error) {
 	type embed RunHistoryItem
 	var marshaler = struct {
 		embed
-		CanceledAt  *internal.DateTime `json:"canceled_at,omitempty"`
+		CancelledAt *internal.DateTime `json:"cancelled_at,omitempty"`
 		CompletedAt *internal.DateTime `json:"completed_at,omitempty"`
 		CreatedAt   *internal.DateTime `json:"created_at,omitempty"`
 		StartedAt   *internal.DateTime `json:"started_at,omitempty"`
 	}{
 		embed:       embed(*r),
-		CanceledAt:  internal.NewOptionalDateTime(r.CanceledAt),
+		CancelledAt: internal.NewOptionalDateTime(r.CancelledAt),
 		CompletedAt: internal.NewOptionalDateTime(r.CompletedAt),
 		CreatedAt:   internal.NewOptionalDateTime(r.CreatedAt),
 		StartedAt:   internal.NewOptionalDateTime(r.StartedAt),
@@ -1431,7 +1405,7 @@ type RunLogFrame struct {
 	SpanID *string `json:"span_id,omitempty" url:"span_id,omitempty"`
 	// Event time, nanoseconds since the Unix epoch.
 	TimeUnixNano int64 `json:"time_unix_nano" url:"time_unix_nano"`
-	// OTel trace id (32 lowercase hex chars) of the session the log belongs to.
+	// Telemetry trace ID (32 lowercase hex characters) for the session that produced this log.
 	TraceID string `json:"trace_id" url:"trace_id"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -1598,7 +1572,7 @@ func (r *RunLogFrame) String() string {
 // Full run record returned by run endpoints.
 var (
 	runResponseFieldSchema              = big.NewInt(1 << 0)
-	runResponseFieldCanceledAt          = big.NewInt(1 << 1)
+	runResponseFieldCancelledAt         = big.NewInt(1 << 1)
 	runResponseFieldCompletedAt         = big.NewInt(1 << 2)
 	runResponseFieldCreatedAt           = big.NewInt(1 << 3)
 	runResponseFieldErrorMessage        = big.NewInt(1 << 4)
@@ -1625,7 +1599,7 @@ type RunResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	// Timestamp when the run was cancelled.
-	CanceledAt *time.Time `json:"canceled_at,omitempty" url:"canceled_at,omitempty"`
+	CancelledAt *time.Time `json:"cancelled_at,omitempty" url:"cancelled_at,omitempty"`
 	// Timestamp when the run finished.
 	CompletedAt *time.Time `json:"completed_at,omitempty" url:"completed_at,omitempty"`
 	// Timestamp when the run record was created.
@@ -1634,7 +1608,7 @@ type RunResponse struct {
 	ErrorMessage *string `json:"error_message,omitempty" url:"error_message,omitempty"`
 	// Run identifier.
 	ID string `json:"id" url:"id"`
-	// Device executing the run.
+	// Phone executing the run.
 	PhoneID *string `json:"phone_id,omitempty" url:"phone_id,omitempty"`
 	// Arbitrary metadata attached to the run.
 	RunMetadata map[string]any `json:"run_metadata,omitempty" url:"run_metadata,omitempty"`
@@ -1658,7 +1632,7 @@ type RunResponse struct {
 	UpdatedAt time.Time `json:"updated_at" url:"updated_at"`
 	// User who initiated the run.
 	UserID string `json:"user_id" url:"user_id"`
-	// Variable configuration used for the run.
+	// Variable configuration used for the run. Deleted once the finished run is older than the plan's run data retention window (30 days by default).
 	Variables map[string]any `json:"variables,omitempty" url:"variables,omitempty"`
 	// URL for the run recording video.
 	VideoURL *string `json:"video_url,omitempty" url:"video_url,omitempty"`
@@ -1681,11 +1655,11 @@ func (r *RunResponse) GetSchema() *string {
 	return r.Schema
 }
 
-func (r *RunResponse) GetCanceledAt() *time.Time {
+func (r *RunResponse) GetCancelledAt() *time.Time {
 	if r == nil {
 		return nil
 	}
-	return r.CanceledAt
+	return r.CancelledAt
 }
 
 func (r *RunResponse) GetCompletedAt() *time.Time {
@@ -1849,11 +1823,11 @@ func (r *RunResponse) SetSchema(schema *string) {
 	r.require(runResponseFieldSchema)
 }
 
-// SetCanceledAt sets the CanceledAt field and marks it as non-optional;
+// SetCancelledAt sets the CancelledAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunResponse) SetCanceledAt(canceledAt *time.Time) {
-	r.CanceledAt = canceledAt
-	r.require(runResponseFieldCanceledAt)
+func (r *RunResponse) SetCancelledAt(cancelledAt *time.Time) {
+	r.CancelledAt = cancelledAt
+	r.require(runResponseFieldCancelledAt)
 }
 
 // SetCompletedAt sets the CompletedAt field and marks it as non-optional;
@@ -2000,7 +1974,7 @@ func (r *RunResponse) UnmarshalJSON(data []byte) error {
 	type embed RunResponse
 	var unmarshaler = struct {
 		embed
-		CanceledAt     *internal.DateTime `json:"canceled_at,omitempty"`
+		CancelledAt    *internal.DateTime `json:"cancelled_at,omitempty"`
 		CompletedAt    *internal.DateTime `json:"completed_at,omitempty"`
 		CreatedAt      *internal.DateTime `json:"created_at"`
 		StartAt        *internal.DateTime `json:"start_at,omitempty"`
@@ -2014,7 +1988,7 @@ func (r *RunResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*r = RunResponse(unmarshaler.embed)
-	r.CanceledAt = unmarshaler.CanceledAt.TimePtr()
+	r.CancelledAt = unmarshaler.CancelledAt.TimePtr()
 	r.CompletedAt = unmarshaler.CompletedAt.TimePtr()
 	r.CreatedAt = unmarshaler.CreatedAt.Time()
 	r.StartAt = unmarshaler.StartAt.TimePtr()
@@ -2034,7 +2008,7 @@ func (r *RunResponse) MarshalJSON() ([]byte, error) {
 	type embed RunResponse
 	var marshaler = struct {
 		embed
-		CanceledAt     *internal.DateTime `json:"canceled_at,omitempty"`
+		CancelledAt    *internal.DateTime `json:"cancelled_at,omitempty"`
 		CompletedAt    *internal.DateTime `json:"completed_at,omitempty"`
 		CreatedAt      *internal.DateTime `json:"created_at"`
 		StartAt        *internal.DateTime `json:"start_at,omitempty"`
@@ -2043,7 +2017,7 @@ func (r *RunResponse) MarshalJSON() ([]byte, error) {
 		UpdatedAt      *internal.DateTime `json:"updated_at"`
 	}{
 		embed:          embed(*r),
-		CanceledAt:     internal.NewOptionalDateTime(r.CanceledAt),
+		CancelledAt:    internal.NewOptionalDateTime(r.CancelledAt),
 		CompletedAt:    internal.NewOptionalDateTime(r.CompletedAt),
 		CreatedAt:      internal.NewDateTime(r.CreatedAt),
 		StartAt:        internal.NewOptionalDateTime(r.StartAt),
@@ -2488,7 +2462,7 @@ type RunSpanFrame struct {
 	ParentSpanID *string `json:"parent_span_id,omitempty" url:"parent_span_id,omitempty"`
 	// Span phase. The archive returns completed spans only ("end"); "start" phases exist only on the live stream.
 	Phase string `json:"phase" url:"phase"`
-	// OTel span id (16 lowercase hex chars). Upsert key: the live copy of this span carries the same id.
+	// Telemetry span ID (16 lowercase hex characters). The live and archived copies of a span use the same ID.
 	SpanID string `json:"span_id" url:"span_id"`
 	// Product span role: session (the session root), run, sdk_call, inference, file_push, media_capture. Spans stored before the 2026-08-21 vocabulary cutover carry the retired phone_session value for the session root. Unknown values MUST be rendered generically, never rejected.
 	SpanType string `json:"span_type" url:"span_type"`
@@ -2496,7 +2470,7 @@ type RunSpanFrame struct {
 	StartTimeUnixNano int64 `json:"start_time_unix_nano" url:"start_time_unix_nano"`
 	// Span outcome. Always set in the archive; omitted on the live stream's "start" phase, where the span has no outcome yet.
 	Status *RunFrameStatus `json:"status,omitempty" url:"status,omitempty"`
-	// OTel trace id (32 lowercase hex chars), derived from the session id: one session is one trace.
+	// Telemetry trace ID (32 lowercase hex characters), derived from the session ID; one session produces one trace.
 	TraceID string `json:"trace_id" url:"trace_id"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -2702,215 +2676,95 @@ func (r *RunSpanFrame) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// RunStatsResponse summarizes run statistics for a workflow or organization.
-var (
-	runStatsResponseFieldSchema      = big.NewInt(1 << 0)
-	runStatsResponseFieldSuccessRate = big.NewInt(1 << 1)
-	runStatsResponseFieldTotalRuns   = big.NewInt(1 << 2)
-)
-
-type RunStatsResponse struct {
-	// A URL to the JSON Schema for this object.
-	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// Fraction of completed+failed runs that succeeded, from 0.0 to 1.0 (multiply by 100 for a percentage). Note: total_runs counts all states, so it is a larger population than this rate's denominator.
-	SuccessRate float64 `json:"success_rate" url:"success_rate"`
-	// Total number of runs.
-	TotalRuns int64 `json:"total_runs" url:"total_runs"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (r *RunStatsResponse) GetSchema() *string {
-	if r == nil {
-		return nil
-	}
-	return r.Schema
-}
-
-func (r *RunStatsResponse) GetSuccessRate() float64 {
-	if r == nil {
-		return 0
-	}
-	return r.SuccessRate
-}
-
-func (r *RunStatsResponse) GetTotalRuns() int64 {
-	if r == nil {
-		return 0
-	}
-	return r.TotalRuns
-}
-
-func (r *RunStatsResponse) GetExtraProperties() map[string]interface{} {
-	if r == nil {
-		return nil
-	}
-	return r.extraProperties
-}
-
-func (r *RunStatsResponse) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
-	}
-	r.explicitFields.Or(r.explicitFields, field)
-}
-
-// SetSchema sets the Schema field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunStatsResponse) SetSchema(schema *string) {
-	r.Schema = schema
-	r.require(runStatsResponseFieldSchema)
-}
-
-// SetSuccessRate sets the SuccessRate field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunStatsResponse) SetSuccessRate(successRate float64) {
-	r.SuccessRate = successRate
-	r.require(runStatsResponseFieldSuccessRate)
-}
-
-// SetTotalRuns sets the TotalRuns field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunStatsResponse) SetTotalRuns(totalRuns int64) {
-	r.TotalRuns = totalRuns
-	r.require(runStatsResponseFieldTotalRuns)
-}
-
-func (r *RunStatsResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler RunStatsResponse
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*r = RunStatsResponse(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *r)
-	if err != nil {
-		return err
-	}
-	r.extraProperties = extraProperties
-	r.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (r *RunStatsResponse) MarshalJSON() ([]byte, error) {
-	type embed RunStatsResponse
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*r),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (r *RunStatsResponse) String() string {
-	if r == nil {
-		return "<nil>"
-	}
-	if len(r.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(r); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", r)
-}
-
-type RunsListHistoricRequestStatusFilterItem string
+type RunsListHistoricRequestStatusItem string
 
 const (
-	RunsListHistoricRequestStatusFilterItemScheduled RunsListHistoricRequestStatusFilterItem = "scheduled"
-	RunsListHistoricRequestStatusFilterItemQueued    RunsListHistoricRequestStatusFilterItem = "queued"
-	RunsListHistoricRequestStatusFilterItemRunning   RunsListHistoricRequestStatusFilterItem = "running"
-	RunsListHistoricRequestStatusFilterItemCompleted RunsListHistoricRequestStatusFilterItem = "completed"
-	RunsListHistoricRequestStatusFilterItemFailed    RunsListHistoricRequestStatusFilterItem = "failed"
-	RunsListHistoricRequestStatusFilterItemCancelled RunsListHistoricRequestStatusFilterItem = "cancelled"
+	RunsListHistoricRequestStatusItemScheduled RunsListHistoricRequestStatusItem = "scheduled"
+	RunsListHistoricRequestStatusItemQueued    RunsListHistoricRequestStatusItem = "queued"
+	RunsListHistoricRequestStatusItemRunning   RunsListHistoricRequestStatusItem = "running"
+	RunsListHistoricRequestStatusItemCompleted RunsListHistoricRequestStatusItem = "completed"
+	RunsListHistoricRequestStatusItemFailed    RunsListHistoricRequestStatusItem = "failed"
+	RunsListHistoricRequestStatusItemCancelled RunsListHistoricRequestStatusItem = "cancelled"
 )
 
-func NewRunsListHistoricRequestStatusFilterItemFromString(s string) (RunsListHistoricRequestStatusFilterItem, error) {
+func NewRunsListHistoricRequestStatusItemFromString(s string) (RunsListHistoricRequestStatusItem, error) {
 	switch s {
 	case "scheduled":
-		return RunsListHistoricRequestStatusFilterItemScheduled, nil
+		return RunsListHistoricRequestStatusItemScheduled, nil
 	case "queued":
-		return RunsListHistoricRequestStatusFilterItemQueued, nil
+		return RunsListHistoricRequestStatusItemQueued, nil
 	case "running":
-		return RunsListHistoricRequestStatusFilterItemRunning, nil
+		return RunsListHistoricRequestStatusItemRunning, nil
 	case "completed":
-		return RunsListHistoricRequestStatusFilterItemCompleted, nil
+		return RunsListHistoricRequestStatusItemCompleted, nil
 	case "failed":
-		return RunsListHistoricRequestStatusFilterItemFailed, nil
+		return RunsListHistoricRequestStatusItemFailed, nil
 	case "cancelled":
-		return RunsListHistoricRequestStatusFilterItemCancelled, nil
+		return RunsListHistoricRequestStatusItemCancelled, nil
 	}
-	var t RunsListHistoricRequestStatusFilterItem
+	var t RunsListHistoricRequestStatusItem
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
 }
 
-func (r RunsListHistoricRequestStatusFilterItem) Ptr() *RunsListHistoricRequestStatusFilterItem {
+func (r RunsListHistoricRequestStatusItem) Ptr() *RunsListHistoricRequestStatusItem {
 	return &r
 }
 
-type RunsListRequestStatusFilterItem string
+type RunsListRequestStatusItem string
 
 const (
-	RunsListRequestStatusFilterItemScheduled RunsListRequestStatusFilterItem = "scheduled"
-	RunsListRequestStatusFilterItemQueued    RunsListRequestStatusFilterItem = "queued"
-	RunsListRequestStatusFilterItemRunning   RunsListRequestStatusFilterItem = "running"
-	RunsListRequestStatusFilterItemCompleted RunsListRequestStatusFilterItem = "completed"
-	RunsListRequestStatusFilterItemFailed    RunsListRequestStatusFilterItem = "failed"
-	RunsListRequestStatusFilterItemCancelled RunsListRequestStatusFilterItem = "cancelled"
+	RunsListRequestStatusItemScheduled RunsListRequestStatusItem = "scheduled"
+	RunsListRequestStatusItemQueued    RunsListRequestStatusItem = "queued"
+	RunsListRequestStatusItemRunning   RunsListRequestStatusItem = "running"
+	RunsListRequestStatusItemCompleted RunsListRequestStatusItem = "completed"
+	RunsListRequestStatusItemFailed    RunsListRequestStatusItem = "failed"
+	RunsListRequestStatusItemCancelled RunsListRequestStatusItem = "cancelled"
 )
 
-func NewRunsListRequestStatusFilterItemFromString(s string) (RunsListRequestStatusFilterItem, error) {
+func NewRunsListRequestStatusItemFromString(s string) (RunsListRequestStatusItem, error) {
 	switch s {
 	case "scheduled":
-		return RunsListRequestStatusFilterItemScheduled, nil
+		return RunsListRequestStatusItemScheduled, nil
 	case "queued":
-		return RunsListRequestStatusFilterItemQueued, nil
+		return RunsListRequestStatusItemQueued, nil
 	case "running":
-		return RunsListRequestStatusFilterItemRunning, nil
+		return RunsListRequestStatusItemRunning, nil
 	case "completed":
-		return RunsListRequestStatusFilterItemCompleted, nil
+		return RunsListRequestStatusItemCompleted, nil
 	case "failed":
-		return RunsListRequestStatusFilterItemFailed, nil
+		return RunsListRequestStatusItemFailed, nil
 	case "cancelled":
-		return RunsListRequestStatusFilterItemCancelled, nil
+		return RunsListRequestStatusItemCancelled, nil
 	}
-	var t RunsListRequestStatusFilterItem
+	var t RunsListRequestStatusItem
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
 }
 
-func (r RunsListRequestStatusFilterItem) Ptr() *RunsListRequestStatusFilterItem {
+func (r RunsListRequestStatusItem) Ptr() *RunsListRequestStatusItem {
 	return &r
 }
 
-type RunsListRequestTriggerFilterItem string
+type RunsListRequestTriggerItem string
 
 const (
-	RunsListRequestTriggerFilterItemManual    RunsListRequestTriggerFilterItem = "manual"
-	RunsListRequestTriggerFilterItemScheduled RunsListRequestTriggerFilterItem = "scheduled"
-	RunsListRequestTriggerFilterItemAPI       RunsListRequestTriggerFilterItem = "api"
+	RunsListRequestTriggerItemManual    RunsListRequestTriggerItem = "manual"
+	RunsListRequestTriggerItemScheduled RunsListRequestTriggerItem = "scheduled"
+	RunsListRequestTriggerItemAPI       RunsListRequestTriggerItem = "api"
 )
 
-func NewRunsListRequestTriggerFilterItemFromString(s string) (RunsListRequestTriggerFilterItem, error) {
+func NewRunsListRequestTriggerItemFromString(s string) (RunsListRequestTriggerItem, error) {
 	switch s {
 	case "manual":
-		return RunsListRequestTriggerFilterItemManual, nil
+		return RunsListRequestTriggerItemManual, nil
 	case "scheduled":
-		return RunsListRequestTriggerFilterItemScheduled, nil
+		return RunsListRequestTriggerItemScheduled, nil
 	case "api":
-		return RunsListRequestTriggerFilterItemAPI, nil
+		return RunsListRequestTriggerItemAPI, nil
 	}
-	var t RunsListRequestTriggerFilterItem
+	var t RunsListRequestTriggerItem
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
 }
 
-func (r RunsListRequestTriggerFilterItem) Ptr() *RunsListRequestTriggerFilterItem {
+func (r RunsListRequestTriggerItem) Ptr() *RunsListRequestTriggerItem {
 	return &r
 }
