@@ -78,7 +78,7 @@ type locatorPlatformWire struct {
 }
 
 // Input param frames (wire casing per contract: snake_case for the pre-locator
-// domains, camelCase for Locator), one per contract schema.
+// domains, camelCase for Locator and Accessibility), one per contract schema.
 type tapParams struct {
 	IdempotencyKey string `json:"idempotencyKey,omitempty"`
 	X              int    `json:"x"`
@@ -172,4 +172,29 @@ type locatorCountParams struct {
 	Model     string       `json:"model,omitempty"`
 	OcrEngine string       `json:"ocrEngine,omitempty"`
 	Strategy  string       `json:"strategy,omitempty"`
+}
+
+type accessibilityToggleParams struct {
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
+}
+
+type getFullAXTreeParams struct {
+	Depth           *int   `json:"depth,omitempty"`
+	InterestingOnly *bool  `json:"interestingOnly,omitempty"`
+	WindowId        string `json:"windowId,omitempty"`
+}
+
+type getPartialAXTreeParams struct {
+	FetchRelatives *bool  `json:"fetchRelatives,omitempty"`
+	NodeId         string `json:"nodeId"`
+}
+
+type getChildAXNodesParams struct {
+	Id string `json:"id"`
+}
+
+type queryAXTreeParams struct {
+	AccessibleName string       `json:"accessibleName,omitempty"`
+	Role           string       `json:"role,omitempty"`
+	Selector       *locatorWire `json:"selector,omitempty"`
 }

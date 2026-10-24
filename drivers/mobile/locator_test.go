@@ -24,7 +24,7 @@ func TestLocatorIsLazy(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return dcpResponse{ID: cmd.ID} }}
 	d := driverWith(fc)
 
-	loc := d.GetByText("Continue").Within(d.getByID("panel")).Nth(2).Filter("the enabled one")
+	loc := d.GetByText("Continue").Within(d.GetByID("panel")).Nth(2).Filter("the enabled one")
 	if len(fc.sent) != 0 {
 		t.Fatalf("building a locator must send nothing, sent=%d", len(fc.sent))
 	}
@@ -85,7 +85,7 @@ func TestLocatorTapWireShapeAndDefaults(t *testing.T) {
 func TestLocatorOptionPrecedenceOverDriverDefault(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWithOpts(fc,
-		withDefaultStrategy(strategyAccessibility), WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
+		WithDefaultStrategy(StrategyAccessibility), WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
 
 	// Driver defaults flow through when the locator sets nothing.
 	if _, err := d.Locator(Text("x")).Tap(); err != nil {
@@ -93,16 +93,16 @@ func TestLocatorOptionPrecedenceOverDriverDefault(t *testing.T) {
 	}
 	var p locatorTapParams
 	_ = json.Unmarshal(fc.sent[0].Params, &p)
-	if p.Strategy != string(strategyAccessibility) || p.Model != "driver-model" || p.OcrEngine != "driver-engine" {
+	if p.Strategy != string(StrategyAccessibility) || p.Model != "driver-model" || p.OcrEngine != "driver-engine" {
 		t.Fatalf("want driver defaults, got %+v", p)
 	}
 
 	// A locator's own resolution option wins over the driver default.
-	if _, err := d.Locator(Text("x"), withStrategy(strategyVision), Model("call-model"), OCREngine("call-engine")).Tap(); err != nil {
+	if _, err := d.Locator(Text("x"), Strategy(StrategyVision), Model("call-model"), OCREngine("call-engine")).Tap(); err != nil {
 		t.Fatalf("Tap: %v", err)
 	}
 	_ = json.Unmarshal(fc.sent[1].Params, &p)
-	if p.Strategy != string(strategyVision) || p.Model != "call-model" || p.OcrEngine != "call-engine" {
+	if p.Strategy != string(StrategyVision) || p.Model != "call-model" || p.OcrEngine != "call-engine" {
 		t.Fatalf("want locator overrides, got %+v", p)
 	}
 }
@@ -153,7 +153,7 @@ func TestDriverPressTakesNoResolutionOptions(t *testing.T) {
 	// strategy/model/ocrEngine stay empty even with driver defaults set.
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWithOpts(fc,
-		withDefaultStrategy(strategyAccessibility), WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
+		WithDefaultStrategy(StrategyAccessibility), WithDefaultModel("driver-model"), WithDefaultOCREngine("driver-engine"))
 
 	if _, err := d.Press(KeyEnter); err != nil {
 		t.Fatalf("Press: %v", err)
@@ -169,9 +169,9 @@ func TestLocatorNestedFields(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWith(fc)
 
-	within := d.getByID("panel")
+	within := d.GetByID("panel")
 	has := d.GetByText("badge")
-	loc := d.Locator(withRole("button"), withName("Save"), withStates("checked"), withAndroidClassName("android.widget.Button")).
+	loc := d.Locator(Role("button"), Name("Save"), States("checked"), AndroidClassName("android.widget.Button")).
 		Within(within).Has(has).Nth(0)
 
 	if _, err := loc.Tap(); err != nil {
@@ -191,6 +191,9 @@ func TestLocatorNestedFields(t *testing.T) {
 	}
 	if w.Platform == nil || w.Platform.Android == nil || w.Platform.Android.ClassName != "android.widget.Button" {
 		t.Fatalf("bad platform: %+v", w.Platform)
+	}
+	if w.Platform.Android.PackageName != "" {
+		t.Fatalf("want packageName omitted when unset, got %q", w.Platform.Android.PackageName)
 	}
 	// Nth(0) must round-trip as an explicit 0, not an omitted field: a nil
 	// pointer and a pointer-to-zero are different states on the wire.
@@ -278,14 +281,14 @@ func TestLocatorWaitForHiddenReturnsNilResult(t *testing.T) {
 	}
 }
 
-func TestWaitForAcceptsHeldBackEnabledState(t *testing.T) {
-	// stateEnabled is unexported and held back until accessibility support
-	// ships, but WaitFor forwards it to the wire like any other state.
+func TestWaitForForwardsEnabledState(t *testing.T) {
+	// StateEnabled needs the tree server-side, but the client forwards it to
+	// the wire like any other state.
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse {
 		return okResp(cmd, map[string]any{"resolvedBy": "a11y", "tookMs": 1})
 	}}
 	d := driverWith(fc)
-	if _, err := d.GetByText("Checkbox").WaitFor(stateEnabled); err != nil {
+	if _, err := d.GetByText("Checkbox").WaitFor(StateEnabled); err != nil {
 		t.Fatalf("WaitFor: %v", err)
 	}
 	var p locatorWaitForParams
@@ -296,18 +299,17 @@ func TestWaitForAcceptsHeldBackEnabledState(t *testing.T) {
 }
 
 func TestStrategyAutoRoundTrips(t *testing.T) {
-	// strategyAuto is unexported and held back until accessibility support
-	// ships, but it still resolves and reaches the wire like any other
-	// strategy value.
+	// StrategyAuto is the server default, but setting it explicitly still
+	// reaches the wire rather than being treated as "unset".
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWith(fc)
-	if _, err := d.Locator(Text("x"), withStrategy(strategyAuto)).Tap(); err != nil {
+	if _, err := d.Locator(Text("x"), Strategy(StrategyAuto)).Tap(); err != nil {
 		t.Fatalf("Tap: %v", err)
 	}
 	var p locatorTapParams
 	_ = json.Unmarshal(fc.sent[0].Params, &p)
-	if p.Strategy != string(strategyAuto) {
-		t.Fatalf("want strategy %q on the wire, got %q", strategyAuto, p.Strategy)
+	if p.Strategy != string(StrategyAuto) {
+		t.Fatalf("want strategy %q on the wire, got %q", StrategyAuto, p.Strategy)
 	}
 }
 
@@ -375,6 +377,8 @@ func TestLocatorErrorMapping(t *testing.T) {
 	}{
 		{"ActionTimeout", kindActionTimeout, -32009, IsActionTimeout},
 		{"StrategyUnavailable", kindStrategyUnavailable, -32010, IsStrategyUnavailable},
+		{"TreeUnavailable", kindTreeUnavailable, -32011, IsTreeUnavailable},
+		{"StaleNode", kindStaleNode, -32012, IsStaleNode},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -385,7 +389,7 @@ func TestLocatorErrorMapping(t *testing.T) {
 				}}
 			}}
 			d := driverWith(fc)
-			_, err := d.getByRole("button").Tap()
+			_, err := d.GetByRole("button").Tap()
 			if !c.is(err) {
 				t.Fatalf("%s: want matching error, got %v", c.name, err)
 			}
@@ -403,9 +407,9 @@ func TestWithinHasInnerLocatorWithoutOptionsStillWorks(t *testing.T) {
 	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
 	d := driverWith(fc)
 
-	within := d.getByID("panel")
+	within := d.GetByID("panel")
 	has := d.GetByText("badge")
-	loc := d.Locator(Text("Continue"), withStrategy(strategyVision), Model("outer-model"), OCREngine("outer-engine")).
+	loc := d.Locator(Text("Continue"), Strategy(StrategyVision), Model("outer-model"), OCREngine("outer-engine")).
 		Within(within).Has(has)
 
 	if _, err := loc.Tap(); err != nil {
@@ -413,7 +417,7 @@ func TestWithinHasInnerLocatorWithoutOptionsStillWorks(t *testing.T) {
 	}
 	var p locatorTapParams
 	_ = json.Unmarshal(fc.sent[0].Params, &p)
-	if p.Strategy != string(strategyVision) || p.Model != "outer-model" || p.OcrEngine != "outer-engine" {
+	if p.Strategy != string(StrategyVision) || p.Model != "outer-model" || p.OcrEngine != "outer-engine" {
 		t.Fatalf("want the outer locator's own options, got %+v", p)
 	}
 }
@@ -435,17 +439,17 @@ func TestWithinHasRejectInnerOptions(t *testing.T) {
 	}{
 		{
 			"Within/Model",
-			d.Locator(Text("Continue")).Within(d.getByID("panel", Model("nested-model"))),
+			d.Locator(Text("Continue")).Within(d.GetByID("panel", Model("nested-model"))),
 			[]string{"Within", "Model"},
 		},
 		{
 			"Within/OCREngine",
-			d.Locator(Text("Continue")).Within(d.getByID("panel", OCREngine("nested-engine"))),
+			d.Locator(Text("Continue")).Within(d.GetByID("panel", OCREngine("nested-engine"))),
 			[]string{"Within", "OCREngine"},
 		},
 		{
 			"Within/Strategy",
-			d.Locator(Text("Continue")).Within(d.getByID("panel", withStrategy(strategyAccessibility))),
+			d.Locator(Text("Continue")).Within(d.GetByID("panel", Strategy(StrategyAccessibility))),
 			[]string{"Within", "Strategy"},
 		},
 		{
@@ -479,7 +483,7 @@ func TestWithinHasRejectInnerOptionsPropagatesThroughRefinements(t *testing.T) {
 	// keeps the field, and it is what every action or query on the result
 	// answers, not just Tap.
 	d := &MobileDriver{}
-	bad := d.Locator(Text("Continue")).Within(d.getByID("panel", Model("nested-model")))
+	bad := d.Locator(Text("Continue")).Within(d.GetByID("panel", Model("nested-model")))
 	refined := bad.Nth(2).Filter("the enabled one").Has(d.GetByText("ok"))
 
 	assertBuildErr := func(t *testing.T, err error) {
@@ -552,5 +556,37 @@ func TestCountTimeoutIsTheWholeDeadline(t *testing.T) {
 	}
 	if took := time.Since(start); took > 5*time.Second {
 		t.Fatalf("count waited %s; want about its 200ms timeout, not the 15s margin", took)
+	}
+}
+
+func TestTreeLocatorFieldsOnTheWire(t *testing.T) {
+	fc := &fakeConn{responder: func(cmd dcpCommand) dcpResponse { return okResp(cmd, map[string]any{}) }}
+	d := driverWithOpts(fc, WithDefaultStrategy(StrategyAccessibility))
+
+	loc := d.GetByRole("textbox", Name("Email"), Value("me@"), WindowID("w1"), NodeID("n7"),
+		AndroidPackageName("com.example.app"), Exact())
+	if _, err := loc.Fill("me@example.com"); err != nil {
+		t.Fatalf("Fill: %v", err)
+	}
+	var p locatorFillParams
+	_ = json.Unmarshal(fc.sent[0].Params, &p)
+	w := p.Locator
+	if w.Role != "textbox" || w.Name != "Email" || w.Value != "me@" || w.WindowId != "w1" || w.NodeId != "n7" || !w.Exact {
+		t.Fatalf("bad locator: %+v", w)
+	}
+	if w.Platform == nil || w.Platform.Android == nil || w.Platform.Android.PackageName != "com.example.app" || w.Platform.Android.ClassName != "" {
+		t.Fatalf("bad platform: %+v", w.Platform)
+	}
+	if p.Strategy != string(StrategyAccessibility) {
+		t.Fatalf("want the driver default strategy, got %q", p.Strategy)
+	}
+
+	var raw map[string]any
+	_ = json.Unmarshal(fc.sent[0].Params, &raw)
+	locRaw, _ := raw["locator"].(map[string]any)
+	for _, k := range []string{"value", "windowId", "nodeId"} {
+		if _, present := locRaw[k]; !present {
+			t.Fatalf("wire locator is missing %q: %s", k, fc.sent[0].Params)
+		}
 	}
 }

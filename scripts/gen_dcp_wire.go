@@ -46,16 +46,27 @@ var paramStructs = []struct{ schema, goName string }{
 	{"LocatorWaitForParams", "locatorWaitForParams"},
 	{"LocatorQueryParams", "locatorQueryParams"},
 	{"LocatorCountParams", "locatorCountParams"},
+	{"AccessibilityToggleParams", "accessibilityToggleParams"},
+	{"GetFullAXTreeParams", "getFullAXTreeParams"},
+	{"GetPartialAXTreeParams", "getPartialAXTreeParams"},
+	{"GetChildAXNodesParams", "getChildAXNodesParams"},
+	{"QueryAXTreeParams", "queryAXTreeParams"},
 }
 
 // pointerFields marks "SchemaName.fieldName" properties that must generate as
 // a pointer even though the property itself isn't a $ref to an object schema:
 // the field's zero value is a meaningful, distinct-from-omitted value on the
-// wire. Locator.nth is the one case in the contract today: nth=0 ("the first
-// match") must round-trip differently from no nth constraint at all, which
-// plain omitempty can't do for a bare int.
+// wire. Locator.nth: nth=0 ("the first match") must round-trip differently
+// from no nth constraint at all, which plain omitempty can't do for a bare
+// int. GetFullAXTreeParams.depth is the same (0 is "the roots only", omitted
+// is "the whole tree"), and the two booleans that default to true on the
+// server (interestingOnly, fetchRelatives) need a pointer so an explicit
+// false is sent rather than dropped.
 var pointerFields = map[string]bool{
-	"Locator.nth": true,
+	"Locator.nth":                           true,
+	"GetFullAXTreeParams.depth":             true,
+	"GetFullAXTreeParams.interestingOnly":   true,
+	"GetPartialAXTreeParams.fetchRelatives": true,
 }
 
 func main() {
@@ -129,7 +140,7 @@ func main() {
 	}
 
 	b.WriteString("// Input param frames (wire casing per contract: snake_case for the pre-locator\n")
-	b.WriteString("// domains, camelCase for Locator), one per contract schema.\n")
+	b.WriteString("// domains, camelCase for Locator and Accessibility), one per contract schema.\n")
 	for _, ps := range paramStructs {
 		schema := schemas[ps.schema].(map[string]any)
 		emitStruct(&b, ps.goName, ps.schema, schema, schemas)
