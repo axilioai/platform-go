@@ -16,6 +16,7 @@
 api:
   specs:
     - openapi: ../../../specs/production/openapi.json
+      overrides: ./openapi-overrides.yml
 default-group: go-sdk
 groups:
   go-sdk:

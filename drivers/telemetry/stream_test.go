@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -108,6 +109,40 @@ func TestStreamReadsEventsAndResumes(t *testing.T) {
 	}
 	if want := []string{"axl_test", "axl_test"}; !equal(srv.keys, want) {
 		t.Fatalf("API key per request = %v, want %v", srv.keys, want)
+	}
+}
+
+// TestStreamSkipsFramesAReplayRepeats: a reopen whose cursor the live window
+// has trimmed past gets the archive replayed (no ids), repeating frames the
+// caller already has; each is returned once.
+func TestStreamSkipsFramesAReplayRepeats(t *testing.T) {
+	otherSpanJSON := strings.Replace(sdkSpanJSON, `"span_id":"s1"`, `"span_id":"s2"`, 1)
+	srv := &sseServer{responses: []sseResponse{
+		{http.StatusOK, "id: 1-1\nevent: span\ndata: " + sdkSpanJSON + "\n\n" +
+			"id: 1-2\nevent: log\ndata: " + logJSON + "\n\n"},
+		{http.StatusOK, "event: span\ndata: " + sdkSpanJSON + "\n\n" +
+			"event: log\ndata: " + logJSON + "\n\n" +
+			"event: span\ndata: " + otherSpanJSON + "\n\n" +
+			"id: 2-1\nevent: span\ndata: " + endFrameJSON + "\n\n"},
+	}}
+	s, err := tailTest(t, srv)
+	if err != nil {
+		t.Fatalf("Tail: %v", err)
+	}
+	frames, err := drain(t, s)
+	if !errors.Is(err, io.EOF) || !s.Ended() {
+		t.Fatalf("end = %v (ended %v), want io.EOF after the session end frame", err, s.Ended())
+	}
+	var got []string
+	for _, f := range frames {
+		if span := f.GetSpan(); span != nil {
+			got = append(got, span.SpanID)
+		} else {
+			got = append(got, f.Kind)
+		}
+	}
+	if want := []string{"s1", "log", "s2", "root"}; !equal(got, want) {
+		t.Fatalf("frames = %v, want %v", got, want)
 	}
 }
 

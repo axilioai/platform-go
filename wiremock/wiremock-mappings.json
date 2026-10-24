@@ -1707,42 +1707,6 @@
       }
     },
     {
-      "id": "b80d4098-ffa6-4cb6-b335-53bf16cf799a",
-      "name": "Stream a session's telemetry - default",
-      "request": {
-        "urlPathTemplate": "/realtime/sessions/{session_id}/events",
-        "method": "GET",
-        "headers": {
-          "X-Axilio-Api-Key": {
-            "matches": ".+"
-          }
-        },
-        "pathParameters": {
-          "session_id": {
-            "equalTo": "session_id"
-          }
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": "event: message\ndata: {\"attributes\":{\"key\":\"value\"},\"body\":\"body\",\"log_type\":\"log_type\",\"severity\":\"severity\",\"span_id\":\"span_id\",\"time_unix_nano\":1000000,\"trace_id\":\"trace_id\",\"kind\":\"log\"}\n",
-        "headers": {
-          "Content-Type": "text/event-stream"
-        }
-      },
-      "uuid": "b80d4098-ffa6-4cb6-b335-53bf16cf799a",
-      "persistent": true,
-      "priority": 3,
-      "metadata": {
-        "mocklab": {
-          "created": {
-            "at": "2020-01-01T00:00:00.000Z",
-            "via": "SYSTEM"
-          }
-        }
-      }
-    },
-    {
       "id": "8a45b16f-6449-4c3b-b1c7-9e93e1534c0b",
       "name": "List a session's telemetry frames - default",
       "request": {
@@ -2934,6 +2898,6 @@
     }
   ],
   "meta": {
-    "total": 85
+    "total": 84
   }
 }

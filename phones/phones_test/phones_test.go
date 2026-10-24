@@ -489,29 +489,3 @@ func TestPhonesAllocateWithWireMock(
 	require.NoError(t, invocationErr, "Client method call should succeed")
 	VerifyRequestCount(t, "TestPhonesAllocateWithWireMock", "POST", "/phones:allocate", nil, 1)
 }
-
-func TestPhonesStreamSessionEventsWithWireMock(
-	t *testing.T,
-) {
-	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
-	if WireMockBaseURL == "" {
-		WireMockBaseURL = "http://localhost:8080"
-	}
-	client := client.NewClient(
-		option.WithBaseURL(WireMockBaseURL),
-		option.WithAPIKey("test-value"),
-	)
-	request := &platformgo.PhonesStreamSessionEventsRequest{
-		SessionID: "session_id",
-	}
-	_, invocationErr := client.Phones.StreamSessionEvents(
-		context.TODO(),
-		request,
-		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestPhonesStreamSessionEventsWithWireMock"}},
-		),
-	)
-
-	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestPhonesStreamSessionEventsWithWireMock", "GET", "/realtime/sessions/session_id/events", nil, 1)
-}

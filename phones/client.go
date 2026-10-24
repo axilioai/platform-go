@@ -4,7 +4,6 @@ package phones
 
 import (
 	context "context"
-	http "net/http"
 
 	platformgo "github.com/axilioai/platform-go"
 	core "github.com/axilioai/platform-go/core"
@@ -305,56 +304,4 @@ func (c *Client) Allocate(
 		return nil, err
 	}
 	return response.Body, nil
-}
-
-// Streams a session's telemetry as Server-Sent Events (text/event-stream): every frame of the canonical envelope GET /phones/sessions/{session_id}/frames returns, live as the session runs. Each event's id is its resume cursor, its event name is the frame kind (span or log), and its data is the frame JSON; live spans arrive as a start frame and then an end frame. A new reader (or one whose cursor is older than the live window) first receives the archived trace and then the live frames, deduplicated on span id and phase, followed by an event with no data that carries the cursor the replay ended at. Reconnect with the Last-Event-ID header (EventSource sends it on its own) to resume with no gap. A comment line is sent every 15 seconds while the stream is idle. After the session ends the stream serves what is left and closes; a reconnect with nothing left after its cursor gets 204, which tells EventSource to stop. Authenticate with the API key header, or open the session's telemetry_url, which carries a read-only token for this one session (for browsers, which cannot set headers on an EventSource). A session started with telemetry off streams nothing (409). Org-scoped: another org's session reads as not found. The stream is served by the realtime service: telemetry_url points at its host, and this path on the API host is routed there too. Each event carries exactly one frame. Readers MUST ignore events with an unknown name, unknown fields, and unknown span_type or log_type values.
-func (c *Client) StreamSessionEvents(
-	ctx context.Context,
-	request *platformgo.PhonesStreamSessionEventsRequest,
-	opts ...option.RequestOption,
-) (*core.Stream[platformgo.PhonesStreamSessionEventsResponse], error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/realtime/sessions/%v/events",
-		request.SessionID,
-	)
-	queryParams, err := internal.QueryValues(request)
-	if err != nil {
-		return nil, err
-	}
-	if len(queryParams) > 0 {
-		endpointURL += "?" + queryParams.Encode()
-	}
-	headers := internal.MergeHeaders(
-		c.options.ToHeader(),
-		options.ToHeader(),
-	)
-	if request.LastEventID != nil {
-		headers.Add("Last-Event-ID", *request.LastEventID)
-	}
-	headers.Add("Accept", "text/event-stream")
-	streamer := internal.NewStreamer[platformgo.PhonesStreamSessionEventsResponse](c.caller)
-	return streamer.Stream(
-		ctx,
-		&internal.StreamParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			DisableRetries:  options.DisableRetries,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			MaxBufSize:      options.MaxBufSize,
-			Prefix:          internal.DefaultSSEDataPrefix,
-			Terminator:      internal.DefaultSSETerminator,
-			Format:          core.StreamFormatSSE,
-			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
-		},
-	)
 }

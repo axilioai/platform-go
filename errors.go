@@ -175,30 +175,6 @@ func (p *PaymentRequiredError) Unwrap() error {
 	return p.APIError
 }
 
-// Service Unavailable
-type ServiceUnavailableError struct {
-	*core.APIError
-	Body *V2ErrorModel
-}
-
-func (s *ServiceUnavailableError) UnmarshalJSON(data []byte) error {
-	var body *V2ErrorModel
-	if err := json.Unmarshal(data, &body); err != nil {
-		return err
-	}
-	s.StatusCode = 503
-	s.Body = body
-	return nil
-}
-
-func (s *ServiceUnavailableError) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.Body)
-}
-
-func (s *ServiceUnavailableError) Unwrap() error {
-	return s.APIError
-}
-
 // Too Many Requests
 type TooManyRequestsError struct {
 	*core.APIError

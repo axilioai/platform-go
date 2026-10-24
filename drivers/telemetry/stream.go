@@ -16,6 +16,7 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -77,7 +78,11 @@ type openFunc func(ctx context.Context, url, cursor string) (eventSource, error)
 // Last-Event-ID, so delivery resumes with no gap) and ends cleanly with
 // io.EOF after the session end frame, or when the server reports the session
 // over with nothing left to send. The server backfills the archive on a fresh
-// stream and deduplicates, so each frame arrives once.
+// stream and deduplicates within it. A reopen whose cursor the server's live
+// window has trimmed past (about 10 minutes or 2,000 frames) replays the
+// archive again, so Next also skips frames it has already returned, on the
+// dashboard viewer's key (a span's id and phase, a log's time and body); each
+// frame arrives once. Unknown kinds have no stable key and are never skipped.
 //
 // Next and Close may be called from different goroutines; Next itself is not
 // safe for concurrent use.
@@ -94,7 +99,8 @@ type Stream struct {
 
 	// The rest belongs to the goroutine calling Next.
 	cursor string
-	ended  bool // the session is over: end frame seen, or 204 from the server
+	seen   map[string]struct{} // frameKey of every frame returned
+	ended  bool                // the session is over: end frame seen, or 204 from the server
 	eof    bool
 	err    error // sticky terminal error
 }
@@ -194,6 +200,15 @@ func (s *Stream) Next(ctx context.Context) (*Frame, error) {
 			// stream over one message; an unknown kind is NOT this case: it
 			// unmarshals into the explicit unknown variant and is delivered.
 			continue
+		}
+		if key, ok := frameKey(frame); ok {
+			if _, dup := s.seen[key]; dup {
+				continue // a replay past the live window repeats it
+			}
+			if s.seen == nil {
+				s.seen = make(map[string]struct{})
+			}
+			s.seen[key] = struct{}{}
 		}
 		if isSessionEndFrame(frame) {
 			s.ended = true
@@ -322,6 +337,22 @@ func (s *Stream) readErr(ctx context.Context, err error) error {
 
 // isSessionEndFrame recognizes the terminal frame: the session-root span
 // (neutral or legacy name) closing.
+// frameKey is the dashboard viewer's frameKey: one per span phase and per log
+// line. False for an unknown kind.
+func frameKey(f *Frame) (string, bool) {
+	if span := f.GetSpan(); span != nil {
+		return "span:" + span.TraceID + ":" + span.SpanID + ":" + span.Phase, true
+	}
+	if log := f.GetLog(); log != nil {
+		spanID := ""
+		if log.SpanID != nil {
+			spanID = *log.SpanID
+		}
+		return "log:" + log.TraceID + ":" + spanID + ":" + strconv.FormatInt(log.TimeUnixNano, 10) + ":" + log.Body, true
+	}
+	return "", false
+}
+
 func isSessionEndFrame(f *Frame) bool {
 	span := f.GetSpan()
 	if span == nil {
