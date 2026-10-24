@@ -601,7 +601,7 @@ func TestSettersOrganizationInvitationSummaryResponse(t *testing.T) {
 
 	t.Run("SetRole", func(t *testing.T) {
 		obj := &OrganizationInvitationSummaryResponse{}
-		var fernTestValueRole string
+		var fernTestValueRole OrganizationInvitationSummaryResponseRole
 		obj.SetRole(fernTestValueRole)
 		assert.Equal(t, fernTestValueRole, obj.Role)
 		assert.NotNil(t, obj.explicitFields)
@@ -703,7 +703,7 @@ func TestGettersOrganizationInvitationSummaryResponse(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &OrganizationInvitationSummaryResponse{}
-		var expected string
+		var expected OrganizationInvitationSummaryResponseRole
 		obj.Role = expected
 
 		// Act & Assert
@@ -822,7 +822,7 @@ func TestSettersMarkExplicitOrganizationInvitationSummaryResponse(t *testing.T) 
 		t.Parallel()
 		// Arrange
 		obj := &OrganizationInvitationSummaryResponse{}
-		var fernTestValueRole string
+		var fernTestValueRole OrganizationInvitationSummaryResponseRole
 
 		// Act
 		obj.SetRole(fernTestValueRole)
@@ -1023,7 +1023,7 @@ func TestSettersOrganizationMemberSummaryResponse(t *testing.T) {
 
 	t.Run("SetRole", func(t *testing.T) {
 		obj := &OrganizationMemberSummaryResponse{}
-		var fernTestValueRole string
+		var fernTestValueRole OrganizationMemberSummaryResponseRole
 		obj.SetRole(fernTestValueRole)
 		assert.Equal(t, fernTestValueRole, obj.Role)
 		assert.NotNil(t, obj.explicitFields)
@@ -1092,7 +1092,7 @@ func TestGettersOrganizationMemberSummaryResponse(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &OrganizationMemberSummaryResponse{}
-		var expected string
+		var expected OrganizationMemberSummaryResponseRole
 		obj.Role = expected
 
 		// Act & Assert
@@ -1180,7 +1180,7 @@ func TestSettersMarkExplicitOrganizationMemberSummaryResponse(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &OrganizationMemberSummaryResponse{}
-		var fernTestValueRole string
+		var fernTestValueRole OrganizationMemberSummaryResponseRole
 
 		// Act
 		obj.SetRole(fernTestValueRole)
@@ -1451,6 +1451,78 @@ func TestStringOrganizationMemberSummaryResponse(t *testing.T) {
 		var obj *OrganizationMemberSummaryResponse
 		result := obj.String()
 		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
+	})
+}
+
+func TestEnumOrganizationInvitationSummaryResponseRole(t *testing.T) {
+	t.Run("NewFromString_admin", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewOrganizationInvitationSummaryResponseRoleFromString("admin")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, OrganizationInvitationSummaryResponseRole("admin"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_member", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewOrganizationInvitationSummaryResponseRoleFromString("member")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, OrganizationInvitationSummaryResponseRole("member"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_viewer", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewOrganizationInvitationSummaryResponseRoleFromString("viewer")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, OrganizationInvitationSummaryResponseRole("viewer"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewOrganizationInvitationSummaryResponseRoleFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewOrganizationInvitationSummaryResponseRoleFromString("admin")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
+func TestEnumOrganizationMemberSummaryResponseRole(t *testing.T) {
+	t.Run("NewFromString_admin", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewOrganizationMemberSummaryResponseRoleFromString("admin")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, OrganizationMemberSummaryResponseRole("admin"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_member", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewOrganizationMemberSummaryResponseRoleFromString("member")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, OrganizationMemberSummaryResponseRole("member"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_viewer", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewOrganizationMemberSummaryResponseRoleFromString("viewer")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, OrganizationMemberSummaryResponseRole("viewer"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewOrganizationMemberSummaryResponseRoleFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewOrganizationMemberSummaryResponseRoleFromString("admin")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
 	})
 }
 

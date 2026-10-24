@@ -11,16 +11,19 @@ import (
 )
 
 var (
-	workflowCreateRequestFieldCapture   = big.NewInt(1 << 0)
-	workflowCreateRequestFieldCode      = big.NewInt(1 << 1)
-	workflowCreateRequestFieldName      = big.NewInt(1 << 2)
-	workflowCreateRequestFieldOcrEngine = big.NewInt(1 << 3)
-	workflowCreateRequestFieldPlatform  = big.NewInt(1 << 4)
-	workflowCreateRequestFieldRecording = big.NewInt(1 << 5)
-	workflowCreateRequestFieldTelemetry = big.NewInt(1 << 6)
+	workflowCreateRequestFieldAccessibility = big.NewInt(1 << 0)
+	workflowCreateRequestFieldCapture       = big.NewInt(1 << 1)
+	workflowCreateRequestFieldCode          = big.NewInt(1 << 2)
+	workflowCreateRequestFieldName          = big.NewInt(1 << 3)
+	workflowCreateRequestFieldOcrEngine     = big.NewInt(1 << 4)
+	workflowCreateRequestFieldPlatform      = big.NewInt(1 << 5)
+	workflowCreateRequestFieldRecording     = big.NewInt(1 << 6)
+	workflowCreateRequestFieldTelemetry     = big.NewInt(1 << 7)
 )
 
 type WorkflowCreateRequest struct {
+	// Accessibility mode for this workflow's runs (default false). true requires a phone that supports it for every run dispatched through the scheduler, and your organization's access to accessibility mode: without it the save is refused with a 403 whose message starts with accessibility_unavailable.
+	Accessibility *bool `json:"accessibility,omitempty" url:"-"`
 	// Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
 	Capture *bool `json:"capture,omitempty" url:"-"`
 	// Optional Python source for the workflow's first revision, saved atomically with the workflow when provided.
@@ -31,9 +34,9 @@ type WorkflowCreateRequest struct {
 	OcrEngine *WorkflowCreateRequestOcrEngine `json:"ocr_engine,omitempty" url:"-"`
 	// Target OS platform.
 	Platform *WorkflowCreateRequestPlatform `json:"platform,omitempty" url:"-"`
-	// Record this workflow's runs (default true). false suppresses video recording and the rolling thumbnail entirely, for every run dispatched through the scheduler.
+	// Record the screen of this workflow's runs (default false). true stores a video of every run dispatched through the scheduler.
 	Recording *bool `json:"recording,omitempty" url:"-"`
-	// Persist telemetry spans for this workflow's runs (default true). false skips the durable trace store; the live telemetry stream still works while a run is active.
+	// Emit telemetry for this workflow's runs (default true). false suppresses both live frames and durable trace storage.
 	Telemetry *bool `json:"telemetry,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -45,6 +48,13 @@ func (w *WorkflowCreateRequest) require(field *big.Int) {
 		w.explicitFields = big.NewInt(0)
 	}
 	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRequest) SetAccessibility(accessibility *bool) {
+	w.Accessibility = accessibility
+	w.require(workflowCreateRequestFieldAccessibility)
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;
@@ -118,6 +128,73 @@ func (w *WorkflowCreateRequest) MarshalJSON() ([]byte, error) {
 }
 
 var (
+	workflowCreateRevisionRequestFieldWorkflowID = big.NewInt(1 << 0)
+	workflowCreateRevisionRequestFieldMessage    = big.NewInt(1 << 1)
+	workflowCreateRevisionRequestFieldSource     = big.NewInt(1 << 2)
+)
+
+type WorkflowCreateRevisionRequest struct {
+	// workflow identifier
+	WorkflowID string `json:"-" url:"-"`
+	// Optional commit-style note.
+	Message *string `json:"message,omitempty" url:"-"`
+	// Python source the user typed.
+	Source string `json:"source" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (w *WorkflowCreateRevisionRequest) require(field *big.Int) {
+	if w.explicitFields == nil {
+		w.explicitFields = big.NewInt(0)
+	}
+	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRevisionRequest) SetWorkflowID(workflowID string) {
+	w.WorkflowID = workflowID
+	w.require(workflowCreateRevisionRequestFieldWorkflowID)
+}
+
+// SetMessage sets the Message field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRevisionRequest) SetMessage(message *string) {
+	w.Message = message
+	w.require(workflowCreateRevisionRequestFieldMessage)
+}
+
+// SetSource sets the Source field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRevisionRequest) SetSource(source string) {
+	w.Source = source
+	w.require(workflowCreateRevisionRequestFieldSource)
+}
+
+func (w *WorkflowCreateRevisionRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler WorkflowCreateRevisionRequest
+	var body unmarshaler
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	*w = WorkflowCreateRevisionRequest(body)
+	return nil
+}
+
+func (w *WorkflowCreateRevisionRequest) MarshalJSON() ([]byte, error) {
+	type embed WorkflowCreateRevisionRequest
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*w),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, w.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+var (
 	workflowsDeleteRequestFieldWorkflowID = big.NewInt(1 << 0)
 )
 
@@ -171,11 +248,14 @@ func (w *WorkflowsGetRequest) SetWorkflowID(workflowID string) {
 
 var (
 	workflowsGetCodeRequestFieldWorkflowID = big.NewInt(1 << 0)
+	workflowsGetCodeRequestFieldRevisionID = big.NewInt(1 << 1)
 )
 
 type WorkflowsGetCodeRequest struct {
 	// workflow identifier
 	WorkflowID string `json:"-" url:"-"`
+	// Revision whose source to return. Defaults to the workflow's current revision.
+	RevisionID *string `json:"-" url:"revision_id,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -193,6 +273,13 @@ func (w *WorkflowsGetCodeRequest) require(field *big.Int) {
 func (w *WorkflowsGetCodeRequest) SetWorkflowID(workflowID string) {
 	w.WorkflowID = workflowID
 	w.require(workflowsGetCodeRequestFieldWorkflowID)
+}
+
+// SetRevisionID sets the RevisionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowsGetCodeRequest) SetRevisionID(revisionID *string) {
+	w.RevisionID = revisionID
+	w.require(workflowsGetCodeRequestFieldRevisionID)
 }
 
 var (
@@ -232,6 +319,32 @@ func (w *WorkflowsGetRevisionRequest) SetRevisionID(revisionID string) {
 }
 
 var (
+	workflowsGetRunStatsRequestFieldWorkflowID = big.NewInt(1 << 0)
+)
+
+type WorkflowsGetRunStatsRequest struct {
+	// workflow identifier
+	WorkflowID string `json:"-" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (w *WorkflowsGetRunStatsRequest) require(field *big.Int) {
+	if w.explicitFields == nil {
+		w.explicitFields = big.NewInt(0)
+	}
+	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowsGetRunStatsRequest) SetWorkflowID(workflowID string) {
+	w.WorkflowID = workflowID
+	w.require(workflowsGetRunStatsRequestFieldWorkflowID)
+}
+
+var (
 	workflowsListRequestFieldLimit         = big.NewInt(1 << 0)
 	workflowsListRequestFieldOffset        = big.NewInt(1 << 1)
 	workflowsListRequestFieldSearch        = big.NewInt(1 << 2)
@@ -241,6 +354,7 @@ var (
 	workflowsListRequestFieldCreatedBefore = big.NewInt(1 << 6)
 	workflowsListRequestFieldLastRunAfter  = big.NewInt(1 << 7)
 	workflowsListRequestFieldLastRunBefore = big.NewInt(1 << 8)
+	workflowsListRequestFieldOrderBy       = big.NewInt(1 << 9)
 )
 
 type WorkflowsListRequest struct {
@@ -248,18 +362,20 @@ type WorkflowsListRequest struct {
 	Offset *int64 `json:"-" url:"offset,omitempty"`
 	// free-text search across workflow name or ID substring
 	Search *string `json:"-" url:"search,omitempty"`
-	// filter by workflow status (lowercase)
-	Status []string `json:"-" url:"status,omitempty"`
-	// filter by device platform (lowercase)
-	Platform []string `json:"-" url:"platform,omitempty"`
-	// only workflows created at/after this RFC3339 time
-	CreatedAfter *string `json:"-" url:"created_after,omitempty"`
-	// only workflows created at/before this RFC3339 time
-	CreatedBefore *string `json:"-" url:"created_before,omitempty"`
-	// only workflows last run at/after this RFC3339 time
-	LastRunAfter *string `json:"-" url:"last_run_after,omitempty"`
-	// only workflows last run at/before this RFC3339 time
-	LastRunBefore *string `json:"-" url:"last_run_before,omitempty"`
+	// only workflows at one of these statuses; repeatable
+	Status []WorkflowsListRequestStatusItem `json:"-" url:"status,omitempty"`
+	// only workflows for one of these platforms; repeatable
+	Platform []WorkflowsListRequestPlatformItem `json:"-" url:"platform,omitempty"`
+	// only workflows created at/after this time (RFC 3339)
+	CreatedAfter *time.Time `json:"-" url:"created_after,omitempty"`
+	// only workflows created at/before this time (RFC 3339)
+	CreatedBefore *time.Time `json:"-" url:"created_before,omitempty"`
+	// only workflows last run at/after this time (RFC 3339)
+	LastRunAfter *time.Time `json:"-" url:"last_run_after,omitempty"`
+	// only workflows last run at/before this time (RFC 3339)
+	LastRunBefore *time.Time `json:"-" url:"last_run_before,omitempty"`
+	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is workflow.id, workflow.name, workflow.platform, workflow.status, workflow.last_run_at, workflow.created_at or workflow.updated_at. Defaults to workflow.created_at desc.
+	OrderBy *string `json:"-" url:"order_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -295,44 +411,51 @@ func (w *WorkflowsListRequest) SetSearch(search *string) {
 
 // SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowsListRequest) SetStatus(status []string) {
+func (w *WorkflowsListRequest) SetStatus(status []WorkflowsListRequestStatusItem) {
 	w.Status = status
 	w.require(workflowsListRequestFieldStatus)
 }
 
 // SetPlatform sets the Platform field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowsListRequest) SetPlatform(platform []string) {
+func (w *WorkflowsListRequest) SetPlatform(platform []WorkflowsListRequestPlatformItem) {
 	w.Platform = platform
 	w.require(workflowsListRequestFieldPlatform)
 }
 
 // SetCreatedAfter sets the CreatedAfter field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowsListRequest) SetCreatedAfter(createdAfter *string) {
+func (w *WorkflowsListRequest) SetCreatedAfter(createdAfter *time.Time) {
 	w.CreatedAfter = createdAfter
 	w.require(workflowsListRequestFieldCreatedAfter)
 }
 
 // SetCreatedBefore sets the CreatedBefore field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowsListRequest) SetCreatedBefore(createdBefore *string) {
+func (w *WorkflowsListRequest) SetCreatedBefore(createdBefore *time.Time) {
 	w.CreatedBefore = createdBefore
 	w.require(workflowsListRequestFieldCreatedBefore)
 }
 
 // SetLastRunAfter sets the LastRunAfter field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowsListRequest) SetLastRunAfter(lastRunAfter *string) {
+func (w *WorkflowsListRequest) SetLastRunAfter(lastRunAfter *time.Time) {
 	w.LastRunAfter = lastRunAfter
 	w.require(workflowsListRequestFieldLastRunAfter)
 }
 
 // SetLastRunBefore sets the LastRunBefore field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowsListRequest) SetLastRunBefore(lastRunBefore *string) {
+func (w *WorkflowsListRequest) SetLastRunBefore(lastRunBefore *time.Time) {
 	w.LastRunBefore = lastRunBefore
 	w.require(workflowsListRequestFieldLastRunBefore)
+}
+
+// SetOrderBy sets the OrderBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowsListRequest) SetOrderBy(orderBy *string) {
+	w.OrderBy = orderBy
+	w.require(workflowsListRequestFieldOrderBy)
 }
 
 var (
@@ -381,21 +504,21 @@ func (w *WorkflowsListRevisionsRequest) SetBefore(before *int64) {
 }
 
 var (
-	workflowRestoreRevisionRequestFieldWorkflowID = big.NewInt(1 << 0)
-	workflowRestoreRevisionRequestFieldRevisionID = big.NewInt(1 << 1)
+	workflowsRestoreRevisionRequestFieldWorkflowID = big.NewInt(1 << 0)
+	workflowsRestoreRevisionRequestFieldRevisionID = big.NewInt(1 << 1)
 )
 
-type WorkflowRestoreRevisionRequest struct {
+type WorkflowsRestoreRevisionRequest struct {
 	// workflow identifier
 	WorkflowID string `json:"-" url:"-"`
-	// Revision to restore.
-	RevisionID string `json:"revision_id" url:"-"`
+	// revision to restore
+	RevisionID string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 }
 
-func (w *WorkflowRestoreRevisionRequest) require(field *big.Int) {
+func (w *WorkflowsRestoreRevisionRequest) require(field *big.Int) {
 	if w.explicitFields == nil {
 		w.explicitFields = big.NewInt(0)
 	}
@@ -404,104 +527,16 @@ func (w *WorkflowRestoreRevisionRequest) require(field *big.Int) {
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowRestoreRevisionRequest) SetWorkflowID(workflowID string) {
+func (w *WorkflowsRestoreRevisionRequest) SetWorkflowID(workflowID string) {
 	w.WorkflowID = workflowID
-	w.require(workflowRestoreRevisionRequestFieldWorkflowID)
+	w.require(workflowsRestoreRevisionRequestFieldWorkflowID)
 }
 
 // SetRevisionID sets the RevisionID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowRestoreRevisionRequest) SetRevisionID(revisionID string) {
+func (w *WorkflowsRestoreRevisionRequest) SetRevisionID(revisionID string) {
 	w.RevisionID = revisionID
-	w.require(workflowRestoreRevisionRequestFieldRevisionID)
-}
-
-func (w *WorkflowRestoreRevisionRequest) UnmarshalJSON(data []byte) error {
-	type unmarshaler WorkflowRestoreRevisionRequest
-	var body unmarshaler
-	if err := json.Unmarshal(data, &body); err != nil {
-		return err
-	}
-	*w = WorkflowRestoreRevisionRequest(body)
-	return nil
-}
-
-func (w *WorkflowRestoreRevisionRequest) MarshalJSON() ([]byte, error) {
-	type embed WorkflowRestoreRevisionRequest
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*w),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, w.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-var (
-	workflowSaveCodeRequestFieldWorkflowID = big.NewInt(1 << 0)
-	workflowSaveCodeRequestFieldMessage    = big.NewInt(1 << 1)
-	workflowSaveCodeRequestFieldSource     = big.NewInt(1 << 2)
-)
-
-type WorkflowSaveCodeRequest struct {
-	// workflow identifier
-	WorkflowID string `json:"-" url:"-"`
-	// Optional commit-style note.
-	Message *string `json:"message,omitempty" url:"-"`
-	// Python source the user typed.
-	Source string `json:"source" url:"-"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-}
-
-func (w *WorkflowSaveCodeRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
-	}
-	w.explicitFields.Or(w.explicitFields, field)
-}
-
-// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowSaveCodeRequest) SetWorkflowID(workflowID string) {
-	w.WorkflowID = workflowID
-	w.require(workflowSaveCodeRequestFieldWorkflowID)
-}
-
-// SetMessage sets the Message field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowSaveCodeRequest) SetMessage(message *string) {
-	w.Message = message
-	w.require(workflowSaveCodeRequestFieldMessage)
-}
-
-// SetSource sets the Source field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowSaveCodeRequest) SetSource(source string) {
-	w.Source = source
-	w.require(workflowSaveCodeRequestFieldSource)
-}
-
-func (w *WorkflowSaveCodeRequest) UnmarshalJSON(data []byte) error {
-	type unmarshaler WorkflowSaveCodeRequest
-	var body unmarshaler
-	if err := json.Unmarshal(data, &body); err != nil {
-		return err
-	}
-	*w = WorkflowSaveCodeRequest(body)
-	return nil
-}
-
-func (w *WorkflowSaveCodeRequest) MarshalJSON() ([]byte, error) {
-	type embed WorkflowSaveCodeRequest
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*w),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, w.explicitFields)
-	return json.Marshal(explicitMarshaler)
+	w.require(workflowsRestoreRevisionRequestFieldRevisionID)
 }
 
 // Simple confirmation message.
@@ -605,6 +640,126 @@ func (m *MessageOutputBody) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", m)
+}
+
+// RunStatsResponse summarizes run statistics for a workflow or organization.
+var (
+	runStatsResponseFieldSchema      = big.NewInt(1 << 0)
+	runStatsResponseFieldSuccessRate = big.NewInt(1 << 1)
+	runStatsResponseFieldTotalRuns   = big.NewInt(1 << 2)
+)
+
+type RunStatsResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Fraction of completed+failed runs that succeeded, from 0.0 to 1.0 (multiply by 100 for a percentage). Note: total_runs counts all states, so it is a larger population than this rate's denominator.
+	SuccessRate float64 `json:"success_rate" url:"success_rate"`
+	// Total number of runs.
+	TotalRuns int64 `json:"total_runs" url:"total_runs"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunStatsResponse) GetSchema() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Schema
+}
+
+func (r *RunStatsResponse) GetSuccessRate() float64 {
+	if r == nil {
+		return 0
+	}
+	return r.SuccessRate
+}
+
+func (r *RunStatsResponse) GetTotalRuns() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.TotalRuns
+}
+
+func (r *RunStatsResponse) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunStatsResponse) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunStatsResponse) SetSchema(schema *string) {
+	r.Schema = schema
+	r.require(runStatsResponseFieldSchema)
+}
+
+// SetSuccessRate sets the SuccessRate field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunStatsResponse) SetSuccessRate(successRate float64) {
+	r.SuccessRate = successRate
+	r.require(runStatsResponseFieldSuccessRate)
+}
+
+// SetTotalRuns sets the TotalRuns field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunStatsResponse) SetTotalRuns(totalRuns int64) {
+	r.TotalRuns = totalRuns
+	r.require(runStatsResponseFieldTotalRuns)
+}
+
+func (r *RunStatsResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunStatsResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunStatsResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunStatsResponse) MarshalJSON() ([]byte, error) {
+	type embed RunStatsResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunStatsResponse) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
 }
 
 // Returned after successfully creating a workflow.
@@ -730,6 +885,143 @@ func (w *WorkflowCreateResponse) MarshalJSON() ([]byte, error) {
 }
 
 func (w *WorkflowCreateResponse) String() string {
+	if w == nil {
+		return "<nil>"
+	}
+	if len(w.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(w.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(w); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", w)
+}
+
+// The workflow's current revision after a save or a restore.
+var (
+	workflowCreateRevisionResponseFieldSchema     = big.NewInt(1 << 0)
+	workflowCreateRevisionResponseFieldNoOp       = big.NewInt(1 << 1)
+	workflowCreateRevisionResponseFieldRevision   = big.NewInt(1 << 2)
+	workflowCreateRevisionResponseFieldRevisionID = big.NewInt(1 << 3)
+)
+
+type WorkflowCreateRevisionResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// True when the submitted source's sha256 matched the prior current revision; no new row was inserted, no pointer was changed.
+	NoOp bool `json:"no_op" url:"no_op"`
+	// Per-workflow monotonic revision number.
+	Revision int64 `json:"revision" url:"revision"`
+	// Workflow_revisions.id of the active revision after the save.
+	RevisionID string `json:"revision_id" url:"revision_id"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (w *WorkflowCreateRevisionResponse) GetSchema() *string {
+	if w == nil {
+		return nil
+	}
+	return w.Schema
+}
+
+func (w *WorkflowCreateRevisionResponse) GetNoOp() bool {
+	if w == nil {
+		return false
+	}
+	return w.NoOp
+}
+
+func (w *WorkflowCreateRevisionResponse) GetRevision() int64 {
+	if w == nil {
+		return 0
+	}
+	return w.Revision
+}
+
+func (w *WorkflowCreateRevisionResponse) GetRevisionID() string {
+	if w == nil {
+		return ""
+	}
+	return w.RevisionID
+}
+
+func (w *WorkflowCreateRevisionResponse) GetExtraProperties() map[string]interface{} {
+	if w == nil {
+		return nil
+	}
+	return w.extraProperties
+}
+
+func (w *WorkflowCreateRevisionResponse) require(field *big.Int) {
+	if w.explicitFields == nil {
+		w.explicitFields = big.NewInt(0)
+	}
+	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRevisionResponse) SetSchema(schema *string) {
+	w.Schema = schema
+	w.require(workflowCreateRevisionResponseFieldSchema)
+}
+
+// SetNoOp sets the NoOp field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRevisionResponse) SetNoOp(noOp bool) {
+	w.NoOp = noOp
+	w.require(workflowCreateRevisionResponseFieldNoOp)
+}
+
+// SetRevision sets the Revision field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRevisionResponse) SetRevision(revision int64) {
+	w.Revision = revision
+	w.require(workflowCreateRevisionResponseFieldRevision)
+}
+
+// SetRevisionID sets the RevisionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowCreateRevisionResponse) SetRevisionID(revisionID string) {
+	w.RevisionID = revisionID
+	w.require(workflowCreateRevisionResponseFieldRevisionID)
+}
+
+func (w *WorkflowCreateRevisionResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler WorkflowCreateRevisionResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*w = WorkflowCreateRevisionResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *w)
+	if err != nil {
+		return err
+	}
+	w.extraProperties = extraProperties
+	w.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (w *WorkflowCreateRevisionResponse) MarshalJSON() ([]byte, error) {
+	type embed WorkflowCreateRevisionResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*w),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, w.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (w *WorkflowCreateRevisionResponse) String() string {
 	if w == nil {
 		return "<nil>"
 	}
@@ -1709,143 +2001,6 @@ func (w *WorkflowRevisionSummary) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// Returned from POST /workflows/:id/code.
-var (
-	workflowSaveCodeResponseFieldSchema     = big.NewInt(1 << 0)
-	workflowSaveCodeResponseFieldNoOp       = big.NewInt(1 << 1)
-	workflowSaveCodeResponseFieldRevision   = big.NewInt(1 << 2)
-	workflowSaveCodeResponseFieldRevisionID = big.NewInt(1 << 3)
-)
-
-type WorkflowSaveCodeResponse struct {
-	// A URL to the JSON Schema for this object.
-	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// True when the submitted source's sha256 matched the prior current revision; no new row was inserted, no pointer was changed.
-	NoOp bool `json:"no_op" url:"no_op"`
-	// Per-workflow monotonic revision number.
-	Revision int64 `json:"revision" url:"revision"`
-	// Workflow_revisions.id of the active revision after the save.
-	RevisionID string `json:"revision_id" url:"revision_id"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (w *WorkflowSaveCodeResponse) GetSchema() *string {
-	if w == nil {
-		return nil
-	}
-	return w.Schema
-}
-
-func (w *WorkflowSaveCodeResponse) GetNoOp() bool {
-	if w == nil {
-		return false
-	}
-	return w.NoOp
-}
-
-func (w *WorkflowSaveCodeResponse) GetRevision() int64 {
-	if w == nil {
-		return 0
-	}
-	return w.Revision
-}
-
-func (w *WorkflowSaveCodeResponse) GetRevisionID() string {
-	if w == nil {
-		return ""
-	}
-	return w.RevisionID
-}
-
-func (w *WorkflowSaveCodeResponse) GetExtraProperties() map[string]interface{} {
-	if w == nil {
-		return nil
-	}
-	return w.extraProperties
-}
-
-func (w *WorkflowSaveCodeResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
-	}
-	w.explicitFields.Or(w.explicitFields, field)
-}
-
-// SetSchema sets the Schema field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowSaveCodeResponse) SetSchema(schema *string) {
-	w.Schema = schema
-	w.require(workflowSaveCodeResponseFieldSchema)
-}
-
-// SetNoOp sets the NoOp field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowSaveCodeResponse) SetNoOp(noOp bool) {
-	w.NoOp = noOp
-	w.require(workflowSaveCodeResponseFieldNoOp)
-}
-
-// SetRevision sets the Revision field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowSaveCodeResponse) SetRevision(revision int64) {
-	w.Revision = revision
-	w.require(workflowSaveCodeResponseFieldRevision)
-}
-
-// SetRevisionID sets the RevisionID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (w *WorkflowSaveCodeResponse) SetRevisionID(revisionID string) {
-	w.RevisionID = revisionID
-	w.require(workflowSaveCodeResponseFieldRevisionID)
-}
-
-func (w *WorkflowSaveCodeResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler WorkflowSaveCodeResponse
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*w = WorkflowSaveCodeResponse(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *w)
-	if err != nil {
-		return err
-	}
-	w.extraProperties = extraProperties
-	w.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (w *WorkflowSaveCodeResponse) MarshalJSON() ([]byte, error) {
-	type embed WorkflowSaveCodeResponse
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*w),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, w.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (w *WorkflowSaveCodeResponse) String() string {
-	if w == nil {
-		return "<nil>"
-	}
-	if len(w.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(w.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(w); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", w)
-}
-
 // WorkflowStats summarizes run statistics for a workflow.
 var (
 	workflowStatsFieldSuccessRate = big.NewInt(1 << 0)
@@ -1951,22 +2106,25 @@ func (w *WorkflowStats) String() string {
 
 // A workflow: a saved automation that runs against a phone.
 var (
-	workflowSummaryFieldCapture        = big.NewInt(1 << 0)
-	workflowSummaryFieldCreatedAt      = big.NewInt(1 << 1)
-	workflowSummaryFieldID             = big.NewInt(1 << 2)
-	workflowSummaryFieldLastRunAt      = big.NewInt(1 << 3)
-	workflowSummaryFieldName           = big.NewInt(1 << 4)
-	workflowSummaryFieldOcrEngine      = big.NewInt(1 << 5)
-	workflowSummaryFieldOrganizationID = big.NewInt(1 << 6)
-	workflowSummaryFieldPlatform       = big.NewInt(1 << 7)
-	workflowSummaryFieldRecording      = big.NewInt(1 << 8)
-	workflowSummaryFieldStatus         = big.NewInt(1 << 9)
-	workflowSummaryFieldTelemetry      = big.NewInt(1 << 10)
-	workflowSummaryFieldUpdatedAt      = big.NewInt(1 << 11)
-	workflowSummaryFieldUserID         = big.NewInt(1 << 12)
+	workflowSummaryFieldAccessibility  = big.NewInt(1 << 0)
+	workflowSummaryFieldCapture        = big.NewInt(1 << 1)
+	workflowSummaryFieldCreatedAt      = big.NewInt(1 << 2)
+	workflowSummaryFieldID             = big.NewInt(1 << 3)
+	workflowSummaryFieldLastRunAt      = big.NewInt(1 << 4)
+	workflowSummaryFieldName           = big.NewInt(1 << 5)
+	workflowSummaryFieldOcrEngine      = big.NewInt(1 << 6)
+	workflowSummaryFieldOrganizationID = big.NewInt(1 << 7)
+	workflowSummaryFieldPlatform       = big.NewInt(1 << 8)
+	workflowSummaryFieldRecording      = big.NewInt(1 << 9)
+	workflowSummaryFieldStatus         = big.NewInt(1 << 10)
+	workflowSummaryFieldTelemetry      = big.NewInt(1 << 11)
+	workflowSummaryFieldUpdatedAt      = big.NewInt(1 << 12)
+	workflowSummaryFieldUserID         = big.NewInt(1 << 13)
 )
 
 type WorkflowSummary struct {
+	// Whether this workflow's runs use accessibility mode (default false), which requires a phone that supports it.
+	Accessibility bool `json:"accessibility" url:"accessibility"`
 	// Whether this workflow's runs capture media into the org's file library (default true).
 	Capture bool `json:"capture" url:"capture"`
 	// When the workflow was created.
@@ -1983,11 +2141,11 @@ type WorkflowSummary struct {
 	OrganizationID *string `json:"organization_id,omitempty" url:"organization_id,omitempty"`
 	// Target platform.
 	Platform WorkflowSummaryPlatform `json:"platform" url:"platform"`
-	// Whether this workflow's runs record their screen (default true).
+	// Whether this workflow's runs record their screen (default false).
 	Recording bool `json:"recording" url:"recording"`
 	// Workflow lifecycle status.
 	Status WorkflowSummaryStatus `json:"status" url:"status"`
-	// Whether this workflow's runs persist telemetry spans (default true).
+	// Whether this workflow's runs emit live and retained telemetry (default true).
 	Telemetry bool `json:"telemetry" url:"telemetry"`
 	// When the workflow was last updated.
 	UpdatedAt time.Time `json:"updated_at" url:"updated_at"`
@@ -1999,6 +2157,13 @@ type WorkflowSummary struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (w *WorkflowSummary) GetAccessibility() bool {
+	if w == nil {
+		return false
+	}
+	return w.Accessibility
 }
 
 func (w *WorkflowSummary) GetCapture() bool {
@@ -2104,6 +2269,13 @@ func (w *WorkflowSummary) require(field *big.Int) {
 		w.explicitFields = big.NewInt(0)
 	}
 	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowSummary) SetAccessibility(accessibility bool) {
+	w.Accessibility = accessibility
+	w.require(workflowSummaryFieldAccessibility)
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;
@@ -2454,20 +2626,73 @@ func (w WorkflowUpdateRequestStatus) Ptr() *WorkflowUpdateRequestStatus {
 	return &w
 }
 
+type WorkflowsListRequestPlatformItem string
+
+const (
+	WorkflowsListRequestPlatformItemAndroid WorkflowsListRequestPlatformItem = "android"
+	WorkflowsListRequestPlatformItemIos     WorkflowsListRequestPlatformItem = "ios"
+	WorkflowsListRequestPlatformItemBoth    WorkflowsListRequestPlatformItem = "both"
+)
+
+func NewWorkflowsListRequestPlatformItemFromString(s string) (WorkflowsListRequestPlatformItem, error) {
+	switch s {
+	case "android":
+		return WorkflowsListRequestPlatformItemAndroid, nil
+	case "ios":
+		return WorkflowsListRequestPlatformItemIos, nil
+	case "both":
+		return WorkflowsListRequestPlatformItemBoth, nil
+	}
+	var t WorkflowsListRequestPlatformItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WorkflowsListRequestPlatformItem) Ptr() *WorkflowsListRequestPlatformItem {
+	return &w
+}
+
+type WorkflowsListRequestStatusItem string
+
+const (
+	WorkflowsListRequestStatusItemReady    WorkflowsListRequestStatusItem = "ready"
+	WorkflowsListRequestStatusItemTraining WorkflowsListRequestStatusItem = "training"
+	WorkflowsListRequestStatusItemRunning  WorkflowsListRequestStatusItem = "running"
+)
+
+func NewWorkflowsListRequestStatusItemFromString(s string) (WorkflowsListRequestStatusItem, error) {
+	switch s {
+	case "ready":
+		return WorkflowsListRequestStatusItemReady, nil
+	case "training":
+		return WorkflowsListRequestStatusItemTraining, nil
+	case "running":
+		return WorkflowsListRequestStatusItemRunning, nil
+	}
+	var t WorkflowsListRequestStatusItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WorkflowsListRequestStatusItem) Ptr() *WorkflowsListRequestStatusItem {
+	return &w
+}
+
 var (
-	workflowUpdateRequestFieldWorkflowID = big.NewInt(1 << 0)
-	workflowUpdateRequestFieldCapture    = big.NewInt(1 << 1)
-	workflowUpdateRequestFieldName       = big.NewInt(1 << 2)
-	workflowUpdateRequestFieldOcrEngine  = big.NewInt(1 << 3)
-	workflowUpdateRequestFieldPlatform   = big.NewInt(1 << 4)
-	workflowUpdateRequestFieldRecording  = big.NewInt(1 << 5)
-	workflowUpdateRequestFieldStatus     = big.NewInt(1 << 6)
-	workflowUpdateRequestFieldTelemetry  = big.NewInt(1 << 7)
+	workflowUpdateRequestFieldWorkflowID    = big.NewInt(1 << 0)
+	workflowUpdateRequestFieldAccessibility = big.NewInt(1 << 1)
+	workflowUpdateRequestFieldCapture       = big.NewInt(1 << 2)
+	workflowUpdateRequestFieldName          = big.NewInt(1 << 3)
+	workflowUpdateRequestFieldOcrEngine     = big.NewInt(1 << 4)
+	workflowUpdateRequestFieldPlatform      = big.NewInt(1 << 5)
+	workflowUpdateRequestFieldRecording     = big.NewInt(1 << 6)
+	workflowUpdateRequestFieldStatus        = big.NewInt(1 << 7)
+	workflowUpdateRequestFieldTelemetry     = big.NewInt(1 << 8)
 )
 
 type WorkflowUpdateRequest struct {
 	// workflow identifier
 	WorkflowID string `json:"-" url:"-"`
+	// Accessibility mode for this workflow's runs. true requires a phone that supports it for every run dispatched through the scheduler, and your organization's access to accessibility mode: without it the update is refused with a 403 whose message starts with accessibility_unavailable. false turns it off. Omit to leave it unchanged.
+	Accessibility *bool `json:"accessibility,omitempty" url:"-"`
 	// Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
 	Capture *bool `json:"capture,omitempty" url:"-"`
 	// Updated workflow name.
@@ -2476,11 +2701,11 @@ type WorkflowUpdateRequest struct {
 	OcrEngine *WorkflowUpdateRequestOcrEngine `json:"ocr_engine,omitempty" url:"-"`
 	// Updated target platform.
 	Platform *WorkflowUpdateRequestPlatform `json:"platform,omitempty" url:"-"`
-	// Record this workflow's runs (default true). false suppresses video recording and the rolling thumbnail entirely, for every run dispatched through the scheduler.
+	// Record the screen of this workflow's runs. true stores a video of every run dispatched through the scheduler; false stops recording. Omit to leave it unchanged. New workflows default to false.
 	Recording *bool `json:"recording,omitempty" url:"-"`
 	// Updated lifecycle status.
 	Status *WorkflowUpdateRequestStatus `json:"status,omitempty" url:"-"`
-	// Persist telemetry spans for this workflow's runs (default true). false skips the durable trace store; the live telemetry stream still works while a run is active.
+	// Emit telemetry for this workflow's runs (default true). false suppresses both live frames and durable trace storage.
 	Telemetry *bool `json:"telemetry,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -2499,6 +2724,13 @@ func (w *WorkflowUpdateRequest) require(field *big.Int) {
 func (w *WorkflowUpdateRequest) SetWorkflowID(workflowID string) {
 	w.WorkflowID = workflowID
 	w.require(workflowUpdateRequestFieldWorkflowID)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowUpdateRequest) SetAccessibility(accessibility *bool) {
+	w.Accessibility = accessibility
+	w.require(workflowUpdateRequestFieldAccessibility)
 }
 
 // SetCapture sets the Capture field and marks it as non-optional;

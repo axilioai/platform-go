@@ -139,10 +139,10 @@ func TestRunsListHistoricWithWireMock(
 		option.WithAPIKey("test-value"),
 	)
 	request := &platformgo.RunsListHistoricRequest{
-		StartDate: platformgo.MustParseDateTime(
+		CompletedAfter: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
-		EndDate: platformgo.MustParseDateTime(
+		CompletedBefore: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
 	}
@@ -155,33 +155,7 @@ func TestRunsListHistoricWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsListHistoricWithWireMock", "GET", "/runs/history", map[string]interface{}{"start_date": "2024-01-15T09:30:00.000Z", "end_date": "2024-01-15T09:30:00.000Z"}, 1)
-}
-
-func TestRunsStatsWithWireMock(
-	t *testing.T,
-) {
-	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
-	if WireMockBaseURL == "" {
-		WireMockBaseURL = "http://localhost:8080"
-	}
-	client := client.NewClient(
-		option.WithBaseURL(WireMockBaseURL),
-		option.WithAPIKey("test-value"),
-	)
-	request := &platformgo.RunsStatsRequest{
-		WorkflowID: "workflow_id",
-	}
-	_, invocationErr := client.Runs.Stats(
-		context.TODO(),
-		request,
-		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestRunsStatsWithWireMock"}},
-		),
-	)
-
-	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsStatsWithWireMock", "GET", "/runs/stats/workflow_id", nil, 1)
+	VerifyRequestCount(t, "TestRunsListHistoricWithWireMock", "GET", "/runs/history", map[string]interface{}{"completed_after": "2024-01-15T09:30:00.000Z", "completed_before": "2024-01-15T09:30:00.000Z"}, 1)
 }
 
 func TestRunsGetWithWireMock(

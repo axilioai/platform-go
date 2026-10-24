@@ -11,21 +11,24 @@ import (
 )
 
 var (
-	usageGetMetricsRequestFieldStartDate   = big.NewInt(1 << 0)
-	usageGetMetricsRequestFieldEndDate     = big.NewInt(1 << 1)
-	usageGetMetricsRequestFieldGranularity = big.NewInt(1 << 2)
-	usageGetMetricsRequestFieldTimezone    = big.NewInt(1 << 3)
+	usageGetMetricsRequestFieldPeriodStartAt = big.NewInt(1 << 0)
+	usageGetMetricsRequestFieldPeriodEndAt   = big.NewInt(1 << 1)
+	usageGetMetricsRequestFieldGranularity   = big.NewInt(1 << 2)
+	usageGetMetricsRequestFieldTimeZone      = big.NewInt(1 << 3)
+	usageGetMetricsRequestFieldGroupBy       = big.NewInt(1 << 4)
 )
 
 type UsageGetMetricsRequest struct {
-	// start of reporting window (RFC3339)
-	StartDate time.Time `json:"-" url:"start_date"`
-	// end of reporting window (RFC3339)
-	EndDate time.Time `json:"-" url:"end_date"`
-	// bucket resolution
+	// Start of the window (RFC 3339). Defaults to 7 days before period_end_at, and may be at most a year before now.
+	PeriodStartAt *time.Time `json:"-" url:"period_start_at,omitempty"`
+	// End of the window (RFC 3339). Defaults to now, and a later time is read as now.
+	PeriodEndAt *time.Time `json:"-" url:"period_end_at,omitempty"`
+	// Bucket size: hour or day. hour is allowed for windows of 7 days or less.
 	Granularity *UsageGetMetricsRequestGranularity `json:"-" url:"granularity,omitempty"`
-	// IANA timezone for bucketing periods (e.g., America/Los_Angeles)
-	Timezone *string `json:"-" url:"timezone,omitempty"`
+	// IANA time zone the buckets follow, such as America/Los_Angeles: a day starts at local midnight and an hour on the local hour. An unknown name is an error.
+	TimeZone *string `json:"-" url:"time_zone,omitempty"`
+	// Split each bucket by product (session or inference). Omit for one point per bucket.
+	GroupBy *UsageGetMetricsRequestGroupBy `json:"-" url:"group_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -38,18 +41,18 @@ func (u *UsageGetMetricsRequest) require(field *big.Int) {
 	u.explicitFields.Or(u.explicitFields, field)
 }
 
-// SetStartDate sets the StartDate field and marks it as non-optional;
+// SetPeriodStartAt sets the PeriodStartAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageGetMetricsRequest) SetStartDate(startDate time.Time) {
-	u.StartDate = startDate
-	u.require(usageGetMetricsRequestFieldStartDate)
+func (u *UsageGetMetricsRequest) SetPeriodStartAt(periodStartAt *time.Time) {
+	u.PeriodStartAt = periodStartAt
+	u.require(usageGetMetricsRequestFieldPeriodStartAt)
 }
 
-// SetEndDate sets the EndDate field and marks it as non-optional;
+// SetPeriodEndAt sets the PeriodEndAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageGetMetricsRequest) SetEndDate(endDate time.Time) {
-	u.EndDate = endDate
-	u.require(usageGetMetricsRequestFieldEndDate)
+func (u *UsageGetMetricsRequest) SetPeriodEndAt(periodEndAt *time.Time) {
+	u.PeriodEndAt = periodEndAt
+	u.require(usageGetMetricsRequestFieldPeriodEndAt)
 }
 
 // SetGranularity sets the Granularity field and marks it as non-optional;
@@ -59,43 +62,50 @@ func (u *UsageGetMetricsRequest) SetGranularity(granularity *UsageGetMetricsRequ
 	u.require(usageGetMetricsRequestFieldGranularity)
 }
 
-// SetTimezone sets the Timezone field and marks it as non-optional;
+// SetTimeZone sets the TimeZone field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageGetMetricsRequest) SetTimezone(timezone *string) {
-	u.Timezone = timezone
-	u.require(usageGetMetricsRequestFieldTimezone)
+func (u *UsageGetMetricsRequest) SetTimeZone(timeZone *string) {
+	u.TimeZone = timeZone
+	u.require(usageGetMetricsRequestFieldTimeZone)
+}
+
+// SetGroupBy sets the GroupBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageGetMetricsRequest) SetGroupBy(groupBy *UsageGetMetricsRequestGroupBy) {
+	u.GroupBy = groupBy
+	u.require(usageGetMetricsRequestFieldGroupBy)
 }
 
 var (
-	usageListInferencesRequestFieldStartDate      = big.NewInt(1 << 0)
-	usageListInferencesRequestFieldEndDate        = big.NewInt(1 << 1)
-	usageListInferencesRequestFieldLimit          = big.NewInt(1 << 2)
-	usageListInferencesRequestFieldOffset         = big.NewInt(1 << 3)
-	usageListInferencesRequestFieldEndpointFilter = big.NewInt(1 << 4)
-	usageListInferencesRequestFieldModel          = big.NewInt(1 << 5)
-	usageListInferencesRequestFieldSearch         = big.NewInt(1 << 6)
-	usageListInferencesRequestFieldSessionID      = big.NewInt(1 << 7)
-	usageListInferencesRequestFieldOrderBy        = big.NewInt(1 << 8)
+	usageListInferencesRequestFieldCreatedAfter  = big.NewInt(1 << 0)
+	usageListInferencesRequestFieldCreatedBefore = big.NewInt(1 << 1)
+	usageListInferencesRequestFieldLimit         = big.NewInt(1 << 2)
+	usageListInferencesRequestFieldOffset        = big.NewInt(1 << 3)
+	usageListInferencesRequestFieldEndpoint      = big.NewInt(1 << 4)
+	usageListInferencesRequestFieldModel         = big.NewInt(1 << 5)
+	usageListInferencesRequestFieldSearch        = big.NewInt(1 << 6)
+	usageListInferencesRequestFieldSessionID     = big.NewInt(1 << 7)
+	usageListInferencesRequestFieldOrderBy       = big.NewInt(1 << 8)
 )
 
 type UsageListInferencesRequest struct {
-	// Beginning of the inferences query window (RFC 3339).
-	StartDate time.Time `json:"-" url:"start_date"`
-	// End of the inferences query window (RFC 3339).
-	EndDate time.Time `json:"-" url:"end_date"`
+	// Only inferences created at or after this time (RFC 3339).
+	CreatedAfter time.Time `json:"-" url:"created_after"`
+	// Only inferences created before this time (RFC 3339).
+	CreatedBefore time.Time `json:"-" url:"created_before"`
 	// Number of inferences per page (1-100).
 	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// Pagination offset.
 	Offset *int64 `json:"-" url:"offset,omitempty"`
-	// Restrict results to the given vision endpoints ('detect'/'locate').
-	EndpointFilter []string `json:"-" url:"endpoint_filter,omitempty"`
+	// Only inferences of one of these operations; repeatable.
+	Endpoint []UsageListInferencesRequestEndpointItem `json:"-" url:"endpoint,omitempty"`
 	// Restrict results to a single model name.
 	Model *string `json:"-" url:"model,omitempty"`
 	// Filter by inference (event) id substring.
 	Search *string `json:"-" url:"search,omitempty"`
 	// Restrict results to inferences that ran under one phone session.
 	SessionID *string `json:"-" url:"session_id,omitempty"`
-	// Sort expression '<field> <asc|desc>'; field one of created_at, cost_microdollars, latency_ms, endpoint, model, inference_id. Defaults to created_at desc.
+	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is created_at, cost_microdollars, latency_ms, endpoint, model or inference_id. Defaults to created_at desc.
 	OrderBy *string `json:"-" url:"order_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -109,18 +119,18 @@ func (u *UsageListInferencesRequest) require(field *big.Int) {
 	u.explicitFields.Or(u.explicitFields, field)
 }
 
-// SetStartDate sets the StartDate field and marks it as non-optional;
+// SetCreatedAfter sets the CreatedAfter field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageListInferencesRequest) SetStartDate(startDate time.Time) {
-	u.StartDate = startDate
-	u.require(usageListInferencesRequestFieldStartDate)
+func (u *UsageListInferencesRequest) SetCreatedAfter(createdAfter time.Time) {
+	u.CreatedAfter = createdAfter
+	u.require(usageListInferencesRequestFieldCreatedAfter)
 }
 
-// SetEndDate sets the EndDate field and marks it as non-optional;
+// SetCreatedBefore sets the CreatedBefore field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageListInferencesRequest) SetEndDate(endDate time.Time) {
-	u.EndDate = endDate
-	u.require(usageListInferencesRequestFieldEndDate)
+func (u *UsageListInferencesRequest) SetCreatedBefore(createdBefore time.Time) {
+	u.CreatedBefore = createdBefore
+	u.require(usageListInferencesRequestFieldCreatedBefore)
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -137,11 +147,11 @@ func (u *UsageListInferencesRequest) SetOffset(offset *int64) {
 	u.require(usageListInferencesRequestFieldOffset)
 }
 
-// SetEndpointFilter sets the EndpointFilter field and marks it as non-optional;
+// SetEndpoint sets the Endpoint field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageListInferencesRequest) SetEndpointFilter(endpointFilter []string) {
-	u.EndpointFilter = endpointFilter
-	u.require(usageListInferencesRequestFieldEndpointFilter)
+func (u *UsageListInferencesRequest) SetEndpoint(endpoint []UsageListInferencesRequestEndpointItem) {
+	u.Endpoint = endpoint
+	u.require(usageListInferencesRequestFieldEndpoint)
 }
 
 // SetModel sets the Model field and marks it as non-optional;
@@ -173,38 +183,38 @@ func (u *UsageListInferencesRequest) SetOrderBy(orderBy *string) {
 }
 
 var (
-	usageListSessionsRequestFieldStartDate             = big.NewInt(1 << 0)
-	usageListSessionsRequestFieldEndDate               = big.NewInt(1 << 1)
-	usageListSessionsRequestFieldLimit                 = big.NewInt(1 << 2)
-	usageListSessionsRequestFieldOffset                = big.NewInt(1 << 3)
-	usageListSessionsRequestFieldSessionStatusFilter   = big.NewInt(1 << 4)
-	usageListSessionsRequestFieldProcessedStatusFilter = big.NewInt(1 << 5)
-	usageListSessionsRequestFieldWorkflowID            = big.NewInt(1 << 6)
-	usageListSessionsRequestFieldAllocatedBy           = big.NewInt(1 << 7)
-	usageListSessionsRequestFieldSearch                = big.NewInt(1 << 8)
-	usageListSessionsRequestFieldOrderBy               = big.NewInt(1 << 9)
+	usageListSessionsRequestFieldAllocatedAfter  = big.NewInt(1 << 0)
+	usageListSessionsRequestFieldAllocatedBefore = big.NewInt(1 << 1)
+	usageListSessionsRequestFieldLimit           = big.NewInt(1 << 2)
+	usageListSessionsRequestFieldOffset          = big.NewInt(1 << 3)
+	usageListSessionsRequestFieldSessionStatus   = big.NewInt(1 << 4)
+	usageListSessionsRequestFieldProcessedStatus = big.NewInt(1 << 5)
+	usageListSessionsRequestFieldWorkflowID      = big.NewInt(1 << 6)
+	usageListSessionsRequestFieldAllocatedBy     = big.NewInt(1 << 7)
+	usageListSessionsRequestFieldSearch          = big.NewInt(1 << 8)
+	usageListSessionsRequestFieldOrderBy         = big.NewInt(1 << 9)
 )
 
 type UsageListSessionsRequest struct {
-	// Beginning of the sessions query window (RFC 3339).
-	StartDate time.Time `json:"-" url:"start_date"`
-	// End of the sessions query window (RFC 3339).
-	EndDate time.Time `json:"-" url:"end_date"`
+	// Only sessions allocated at or after this time (RFC 3339).
+	AllocatedAfter time.Time `json:"-" url:"allocated_after"`
+	// Only sessions allocated before this time (RFC 3339).
+	AllocatedBefore time.Time `json:"-" url:"allocated_before"`
 	// Number of sessions per page (1-100).
 	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// Pagination offset.
 	Offset *int64 `json:"-" url:"offset,omitempty"`
-	// Restrict results to the given session lifecycle statuses.
-	SessionStatusFilter []string `json:"-" url:"session_status_filter,omitempty"`
-	// Restrict results to the given billing processing statuses.
-	ProcessedStatusFilter []string `json:"-" url:"processed_status_filter,omitempty"`
+	// Only sessions at one of these lifecycle statuses; repeatable.
+	SessionStatus []UsageListSessionsRequestSessionStatusItem `json:"-" url:"session_status,omitempty"`
+	// Only sessions at one of these billing processing statuses; repeatable.
+	ProcessedStatus []UsageListSessionsRequestProcessedStatusItem `json:"-" url:"processed_status,omitempty"`
 	// Restrict results to sessions of a single workflow.
 	WorkflowID *string `json:"-" url:"workflow_id,omitempty"`
-	// Restrict results to the given allocation sources.
-	AllocatedBy []string `json:"-" url:"allocated_by,omitempty"`
+	// Restrict results to the given allocation sources; repeatable.
+	AllocatedBy []UsageListSessionsRequestAllocatedByItem `json:"-" url:"allocated_by,omitempty"`
 	// Filter by session, workflow, or phone id substring.
 	Search *string `json:"-" url:"search,omitempty"`
-	// Sort expression '<field> <asc|desc>'; field one of allocated_at, deallocated_at, duration, cost_microdollars, session_status, processed_status, allocated_by, session_id, workflow_id. Defaults to allocated_at desc.
+	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is allocated_at, deallocated_at, duration_seconds, cost_microdollars, session_status, processed_status, allocated_by, session_id or workflow_id. Defaults to allocated_at desc.
 	OrderBy *string `json:"-" url:"order_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -218,18 +228,18 @@ func (u *UsageListSessionsRequest) require(field *big.Int) {
 	u.explicitFields.Or(u.explicitFields, field)
 }
 
-// SetStartDate sets the StartDate field and marks it as non-optional;
+// SetAllocatedAfter sets the AllocatedAfter field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageListSessionsRequest) SetStartDate(startDate time.Time) {
-	u.StartDate = startDate
-	u.require(usageListSessionsRequestFieldStartDate)
+func (u *UsageListSessionsRequest) SetAllocatedAfter(allocatedAfter time.Time) {
+	u.AllocatedAfter = allocatedAfter
+	u.require(usageListSessionsRequestFieldAllocatedAfter)
 }
 
-// SetEndDate sets the EndDate field and marks it as non-optional;
+// SetAllocatedBefore sets the AllocatedBefore field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageListSessionsRequest) SetEndDate(endDate time.Time) {
-	u.EndDate = endDate
-	u.require(usageListSessionsRequestFieldEndDate)
+func (u *UsageListSessionsRequest) SetAllocatedBefore(allocatedBefore time.Time) {
+	u.AllocatedBefore = allocatedBefore
+	u.require(usageListSessionsRequestFieldAllocatedBefore)
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -246,18 +256,18 @@ func (u *UsageListSessionsRequest) SetOffset(offset *int64) {
 	u.require(usageListSessionsRequestFieldOffset)
 }
 
-// SetSessionStatusFilter sets the SessionStatusFilter field and marks it as non-optional;
+// SetSessionStatus sets the SessionStatus field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageListSessionsRequest) SetSessionStatusFilter(sessionStatusFilter []string) {
-	u.SessionStatusFilter = sessionStatusFilter
-	u.require(usageListSessionsRequestFieldSessionStatusFilter)
+func (u *UsageListSessionsRequest) SetSessionStatus(sessionStatus []UsageListSessionsRequestSessionStatusItem) {
+	u.SessionStatus = sessionStatus
+	u.require(usageListSessionsRequestFieldSessionStatus)
 }
 
-// SetProcessedStatusFilter sets the ProcessedStatusFilter field and marks it as non-optional;
+// SetProcessedStatus sets the ProcessedStatus field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageListSessionsRequest) SetProcessedStatusFilter(processedStatusFilter []string) {
-	u.ProcessedStatusFilter = processedStatusFilter
-	u.require(usageListSessionsRequestFieldProcessedStatusFilter)
+func (u *UsageListSessionsRequest) SetProcessedStatus(processedStatus []UsageListSessionsRequestProcessedStatusItem) {
+	u.ProcessedStatus = processedStatus
+	u.require(usageListSessionsRequestFieldProcessedStatus)
 }
 
 // SetWorkflowID sets the WorkflowID field and marks it as non-optional;
@@ -269,7 +279,7 @@ func (u *UsageListSessionsRequest) SetWorkflowID(workflowID *string) {
 
 // SetAllocatedBy sets the AllocatedBy field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageListSessionsRequest) SetAllocatedBy(allocatedBy []string) {
+func (u *UsageListSessionsRequest) SetAllocatedBy(allocatedBy []UsageListSessionsRequestAllocatedByItem) {
 	u.AllocatedBy = allocatedBy
 	u.require(usageListSessionsRequestFieldAllocatedBy)
 }
@@ -286,391 +296,6 @@ func (u *UsageListSessionsRequest) SetSearch(search *string) {
 func (u *UsageListSessionsRequest) SetOrderBy(orderBy *string) {
 	u.OrderBy = orderBy
 	u.require(usageListSessionsRequestFieldOrderBy)
-}
-
-// Single time-series value for usage charts.
-var (
-	usageChartDataPointFieldIsCurrent = big.NewInt(1 << 0)
-	usageChartDataPointFieldPeriod    = big.NewInt(1 << 1)
-	usageChartDataPointFieldTimestamp = big.NewInt(1 << 2)
-	usageChartDataPointFieldValue     = big.NewInt(1 << 3)
-)
-
-type UsageChartDataPoint struct {
-	// Whether this is the current (in-progress) period.
-	IsCurrent bool `json:"is_current" url:"is_current"`
-	// Human-readable time period label (e.g., '9AM', 'Mon').
-	Period string `json:"period" url:"period"`
-	// Exact timestamp for this data point.
-	Timestamp time.Time `json:"timestamp" url:"timestamp"`
-	// Numeric value for this period.
-	Value float64 `json:"value" url:"value"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (u *UsageChartDataPoint) GetIsCurrent() bool {
-	if u == nil {
-		return false
-	}
-	return u.IsCurrent
-}
-
-func (u *UsageChartDataPoint) GetPeriod() string {
-	if u == nil {
-		return ""
-	}
-	return u.Period
-}
-
-func (u *UsageChartDataPoint) GetTimestamp() time.Time {
-	if u == nil {
-		return time.Time{}
-	}
-	return u.Timestamp
-}
-
-func (u *UsageChartDataPoint) GetValue() float64 {
-	if u == nil {
-		return 0
-	}
-	return u.Value
-}
-
-func (u *UsageChartDataPoint) GetExtraProperties() map[string]interface{} {
-	if u == nil {
-		return nil
-	}
-	return u.extraProperties
-}
-
-func (u *UsageChartDataPoint) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
-	}
-	u.explicitFields.Or(u.explicitFields, field)
-}
-
-// SetIsCurrent sets the IsCurrent field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageChartDataPoint) SetIsCurrent(isCurrent bool) {
-	u.IsCurrent = isCurrent
-	u.require(usageChartDataPointFieldIsCurrent)
-}
-
-// SetPeriod sets the Period field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageChartDataPoint) SetPeriod(period string) {
-	u.Period = period
-	u.require(usageChartDataPointFieldPeriod)
-}
-
-// SetTimestamp sets the Timestamp field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageChartDataPoint) SetTimestamp(timestamp time.Time) {
-	u.Timestamp = timestamp
-	u.require(usageChartDataPointFieldTimestamp)
-}
-
-// SetValue sets the Value field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageChartDataPoint) SetValue(value float64) {
-	u.Value = value
-	u.require(usageChartDataPointFieldValue)
-}
-
-func (u *UsageChartDataPoint) UnmarshalJSON(data []byte) error {
-	type embed UsageChartDataPoint
-	var unmarshaler = struct {
-		embed
-		Timestamp *internal.DateTime `json:"timestamp"`
-	}{
-		embed: embed(*u),
-	}
-	if err := json.Unmarshal(data, &unmarshaler); err != nil {
-		return err
-	}
-	*u = UsageChartDataPoint(unmarshaler.embed)
-	u.Timestamp = unmarshaler.Timestamp.Time()
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
-	if err != nil {
-		return err
-	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (u *UsageChartDataPoint) MarshalJSON() ([]byte, error) {
-	type embed UsageChartDataPoint
-	var marshaler = struct {
-		embed
-		Timestamp *internal.DateTime `json:"timestamp"`
-	}{
-		embed:     embed(*u),
-		Timestamp: internal.NewDateTime(u.Timestamp),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (u *UsageChartDataPoint) String() string {
-	if u == nil {
-		return "<nil>"
-	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(u); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", u)
-}
-
-// ComputeMinutes summarizes compute time metrics for a reporting period.
-var (
-	usageComputeMinutesFieldChange       = big.NewInt(1 << 0)
-	usageComputeMinutesFieldChartData    = big.NewInt(1 << 1)
-	usageComputeMinutesFieldTotalMinutes = big.NewInt(1 << 2)
-)
-
-type UsageComputeMinutes struct {
-	// Percentage change from the previous period.
-	Change float64 `json:"change" url:"change"`
-	// Time-series breakdown for chart rendering.
-	ChartData []*UsageChartDataPoint `json:"chart_data,omitempty" url:"chart_data,omitempty"`
-	// Total compute minutes used in the period.
-	TotalMinutes float64 `json:"total_minutes" url:"total_minutes"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (u *UsageComputeMinutes) GetChange() float64 {
-	if u == nil {
-		return 0
-	}
-	return u.Change
-}
-
-func (u *UsageComputeMinutes) GetChartData() []*UsageChartDataPoint {
-	if u == nil {
-		return nil
-	}
-	return u.ChartData
-}
-
-func (u *UsageComputeMinutes) GetTotalMinutes() float64 {
-	if u == nil {
-		return 0
-	}
-	return u.TotalMinutes
-}
-
-func (u *UsageComputeMinutes) GetExtraProperties() map[string]interface{} {
-	if u == nil {
-		return nil
-	}
-	return u.extraProperties
-}
-
-func (u *UsageComputeMinutes) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
-	}
-	u.explicitFields.Or(u.explicitFields, field)
-}
-
-// SetChange sets the Change field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageComputeMinutes) SetChange(change float64) {
-	u.Change = change
-	u.require(usageComputeMinutesFieldChange)
-}
-
-// SetChartData sets the ChartData field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageComputeMinutes) SetChartData(chartData []*UsageChartDataPoint) {
-	u.ChartData = chartData
-	u.require(usageComputeMinutesFieldChartData)
-}
-
-// SetTotalMinutes sets the TotalMinutes field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageComputeMinutes) SetTotalMinutes(totalMinutes float64) {
-	u.TotalMinutes = totalMinutes
-	u.require(usageComputeMinutesFieldTotalMinutes)
-}
-
-func (u *UsageComputeMinutes) UnmarshalJSON(data []byte) error {
-	type unmarshaler UsageComputeMinutes
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*u = UsageComputeMinutes(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
-	if err != nil {
-		return err
-	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (u *UsageComputeMinutes) MarshalJSON() ([]byte, error) {
-	type embed UsageComputeMinutes
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*u),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (u *UsageComputeMinutes) String() string {
-	if u == nil {
-		return "<nil>"
-	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(u); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", u)
-}
-
-// CostByProduct splits the period's usage spend by what was billed (dollars).
-var (
-	usageCostByProductFieldInference = big.NewInt(1 << 0)
-	usageCostByProductFieldOther     = big.NewInt(1 << 1)
-	usageCostByProductFieldSessions  = big.NewInt(1 << 2)
-)
-
-type UsageCostByProduct struct {
-	// Inference spend for the period.
-	Inference float64 `json:"inference" url:"inference"`
-	// Any usage spend not attributable to sessions or inference.
-	Other float64 `json:"other" url:"other"`
-	// Phone-session (compute-time) spend for the period.
-	Sessions float64 `json:"sessions" url:"sessions"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (u *UsageCostByProduct) GetInference() float64 {
-	if u == nil {
-		return 0
-	}
-	return u.Inference
-}
-
-func (u *UsageCostByProduct) GetOther() float64 {
-	if u == nil {
-		return 0
-	}
-	return u.Other
-}
-
-func (u *UsageCostByProduct) GetSessions() float64 {
-	if u == nil {
-		return 0
-	}
-	return u.Sessions
-}
-
-func (u *UsageCostByProduct) GetExtraProperties() map[string]interface{} {
-	if u == nil {
-		return nil
-	}
-	return u.extraProperties
-}
-
-func (u *UsageCostByProduct) require(field *big.Int) {
-	if u.explicitFields == nil {
-		u.explicitFields = big.NewInt(0)
-	}
-	u.explicitFields.Or(u.explicitFields, field)
-}
-
-// SetInference sets the Inference field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageCostByProduct) SetInference(inference float64) {
-	u.Inference = inference
-	u.require(usageCostByProductFieldInference)
-}
-
-// SetOther sets the Other field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageCostByProduct) SetOther(other float64) {
-	u.Other = other
-	u.require(usageCostByProductFieldOther)
-}
-
-// SetSessions sets the Sessions field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageCostByProduct) SetSessions(sessions float64) {
-	u.Sessions = sessions
-	u.require(usageCostByProductFieldSessions)
-}
-
-func (u *UsageCostByProduct) UnmarshalJSON(data []byte) error {
-	type unmarshaler UsageCostByProduct
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*u = UsageCostByProduct(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *u)
-	if err != nil {
-		return err
-	}
-	u.extraProperties = extraProperties
-	u.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (u *UsageCostByProduct) MarshalJSON() ([]byte, error) {
-	type embed UsageCostByProduct
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*u),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (u *UsageCostByProduct) String() string {
-	if u == nil {
-		return "<nil>"
-	}
-	if len(u.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(u); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", u)
 }
 
 // A single billed inference call.
@@ -695,7 +320,7 @@ type UsageInference struct {
 	CostMicrodollars int64 `json:"cost_microdollars" url:"cost_microdollars"`
 	// Time the call completed, in UTC.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
-	// Vision endpoint hit ('detect' or 'locate').
+	// Argus operation billed: 'detect' (screenshots:detect), 'locate' (screenshots:locate) or 'element_locate' (elements:locate).
 	Endpoint UsageInferenceEndpoint `json:"endpoint" url:"endpoint"`
 	// Unique inference-call identifier (inference_id).
 	InferenceID string `json:"inference_id" url:"inference_id"`
@@ -937,12 +562,13 @@ func (u *UsageInference) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Vision endpoint hit ('detect' or 'locate').
+// Argus operation billed: 'detect' (screenshots:detect), 'locate' (screenshots:locate) or 'element_locate' (elements:locate).
 type UsageInferenceEndpoint string
 
 const (
-	UsageInferenceEndpointDetect UsageInferenceEndpoint = "detect"
-	UsageInferenceEndpointLocate UsageInferenceEndpoint = "locate"
+	UsageInferenceEndpointDetect        UsageInferenceEndpoint = "detect"
+	UsageInferenceEndpointLocate        UsageInferenceEndpoint = "locate"
+	UsageInferenceEndpointElementLocate UsageInferenceEndpoint = "element_locate"
 )
 
 func NewUsageInferenceEndpointFromString(s string) (UsageInferenceEndpoint, error) {
@@ -951,6 +577,8 @@ func NewUsageInferenceEndpointFromString(s string) (UsageInferenceEndpoint, erro
 		return UsageInferenceEndpointDetect, nil
 	case "locate":
 		return UsageInferenceEndpointLocate, nil
+	case "element_locate":
+		return UsageInferenceEndpointElementLocate, nil
 	}
 	var t UsageInferenceEndpoint
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -1137,23 +765,26 @@ func (u *UsageInferencesResponse) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// InfrastructureCosts summarizes infrastructure cost metrics for a reporting period.
+// One bucket of usage spend, and one product's when grouped by product.
 var (
-	usageInfrastructureCostsFieldChange     = big.NewInt(1 << 0)
-	usageInfrastructureCostsFieldChartData  = big.NewInt(1 << 1)
-	usageInfrastructureCostsFieldThisPeriod = big.NewInt(1 << 2)
-	usageInfrastructureCostsFieldTotal      = big.NewInt(1 << 3)
+	usageMetricsPointFieldInferenceCostMicrodollars = big.NewInt(1 << 0)
+	usageMetricsPointFieldPeriodStartAt             = big.NewInt(1 << 1)
+	usageMetricsPointFieldProduct                   = big.NewInt(1 << 2)
+	usageMetricsPointFieldSessionCostMicrodollars   = big.NewInt(1 << 3)
+	usageMetricsPointFieldTotalCostMicrodollars     = big.NewInt(1 << 4)
 )
 
-type UsageInfrastructureCosts struct {
-	// Percentage change from the previous period.
-	Change float64 `json:"change" url:"change"`
-	// Time-series breakdown for chart rendering.
-	ChartData []*UsageChartDataPoint `json:"chart_data,omitempty" url:"chart_data,omitempty"`
-	// Cost accrued in the current period.
-	ThisPeriod float64 `json:"this_period" url:"this_period"`
-	// Total infrastructure cost in dollars for the period.
-	Total float64 `json:"total" url:"total"`
+type UsageMetricsPoint struct {
+	// Inference spend in the bucket, in microdollars.
+	InferenceCostMicrodollars int64 `json:"inference_cost_microdollars" url:"inference_cost_microdollars"`
+	// Start of the bucket (RFC 3339, UTC): a local hour or a local midnight in time_zone.
+	PeriodStartAt time.Time `json:"period_start_at" url:"period_start_at"`
+	// What was billed: session (phone time) or inference. Set only with group_by=product.
+	Product *UsageMetricsPointProduct `json:"product,omitempty" url:"product,omitempty"`
+	// Phone-session (phone time) spend in the bucket, in microdollars.
+	SessionCostMicrodollars int64 `json:"session_cost_microdollars" url:"session_cost_microdollars"`
+	// All usage spend in the bucket, in microdollars.
+	TotalCostMicrodollars int64 `json:"total_cost_microdollars" url:"total_cost_microdollars"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -1162,83 +793,103 @@ type UsageInfrastructureCosts struct {
 	rawJSON         json.RawMessage
 }
 
-func (u *UsageInfrastructureCosts) GetChange() float64 {
+func (u *UsageMetricsPoint) GetInferenceCostMicrodollars() int64 {
 	if u == nil {
 		return 0
 	}
-	return u.Change
+	return u.InferenceCostMicrodollars
 }
 
-func (u *UsageInfrastructureCosts) GetChartData() []*UsageChartDataPoint {
+func (u *UsageMetricsPoint) GetPeriodStartAt() time.Time {
+	if u == nil {
+		return time.Time{}
+	}
+	return u.PeriodStartAt
+}
+
+func (u *UsageMetricsPoint) GetProduct() *UsageMetricsPointProduct {
 	if u == nil {
 		return nil
 	}
-	return u.ChartData
+	return u.Product
 }
 
-func (u *UsageInfrastructureCosts) GetThisPeriod() float64 {
+func (u *UsageMetricsPoint) GetSessionCostMicrodollars() int64 {
 	if u == nil {
 		return 0
 	}
-	return u.ThisPeriod
+	return u.SessionCostMicrodollars
 }
 
-func (u *UsageInfrastructureCosts) GetTotal() float64 {
+func (u *UsageMetricsPoint) GetTotalCostMicrodollars() int64 {
 	if u == nil {
 		return 0
 	}
-	return u.Total
+	return u.TotalCostMicrodollars
 }
 
-func (u *UsageInfrastructureCosts) GetExtraProperties() map[string]interface{} {
+func (u *UsageMetricsPoint) GetExtraProperties() map[string]interface{} {
 	if u == nil {
 		return nil
 	}
 	return u.extraProperties
 }
 
-func (u *UsageInfrastructureCosts) require(field *big.Int) {
+func (u *UsageMetricsPoint) require(field *big.Int) {
 	if u.explicitFields == nil {
 		u.explicitFields = big.NewInt(0)
 	}
 	u.explicitFields.Or(u.explicitFields, field)
 }
 
-// SetChange sets the Change field and marks it as non-optional;
+// SetInferenceCostMicrodollars sets the InferenceCostMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInfrastructureCosts) SetChange(change float64) {
-	u.Change = change
-	u.require(usageInfrastructureCostsFieldChange)
+func (u *UsageMetricsPoint) SetInferenceCostMicrodollars(inferenceCostMicrodollars int64) {
+	u.InferenceCostMicrodollars = inferenceCostMicrodollars
+	u.require(usageMetricsPointFieldInferenceCostMicrodollars)
 }
 
-// SetChartData sets the ChartData field and marks it as non-optional;
+// SetPeriodStartAt sets the PeriodStartAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInfrastructureCosts) SetChartData(chartData []*UsageChartDataPoint) {
-	u.ChartData = chartData
-	u.require(usageInfrastructureCostsFieldChartData)
+func (u *UsageMetricsPoint) SetPeriodStartAt(periodStartAt time.Time) {
+	u.PeriodStartAt = periodStartAt
+	u.require(usageMetricsPointFieldPeriodStartAt)
 }
 
-// SetThisPeriod sets the ThisPeriod field and marks it as non-optional;
+// SetProduct sets the Product field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInfrastructureCosts) SetThisPeriod(thisPeriod float64) {
-	u.ThisPeriod = thisPeriod
-	u.require(usageInfrastructureCostsFieldThisPeriod)
+func (u *UsageMetricsPoint) SetProduct(product *UsageMetricsPointProduct) {
+	u.Product = product
+	u.require(usageMetricsPointFieldProduct)
 }
 
-// SetTotal sets the Total field and marks it as non-optional;
+// SetSessionCostMicrodollars sets the SessionCostMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageInfrastructureCosts) SetTotal(total float64) {
-	u.Total = total
-	u.require(usageInfrastructureCostsFieldTotal)
+func (u *UsageMetricsPoint) SetSessionCostMicrodollars(sessionCostMicrodollars int64) {
+	u.SessionCostMicrodollars = sessionCostMicrodollars
+	u.require(usageMetricsPointFieldSessionCostMicrodollars)
 }
 
-func (u *UsageInfrastructureCosts) UnmarshalJSON(data []byte) error {
-	type unmarshaler UsageInfrastructureCosts
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
+// SetTotalCostMicrodollars sets the TotalCostMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageMetricsPoint) SetTotalCostMicrodollars(totalCostMicrodollars int64) {
+	u.TotalCostMicrodollars = totalCostMicrodollars
+	u.require(usageMetricsPointFieldTotalCostMicrodollars)
+}
+
+func (u *UsageMetricsPoint) UnmarshalJSON(data []byte) error {
+	type embed UsageMetricsPoint
+	var unmarshaler = struct {
+		embed
+		PeriodStartAt *internal.DateTime `json:"period_start_at"`
+	}{
+		embed: embed(*u),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*u = UsageInfrastructureCosts(value)
+	*u = UsageMetricsPoint(unmarshaler.embed)
+	u.PeriodStartAt = unmarshaler.PeriodStartAt.Time()
 	extraProperties, err := internal.ExtractExtraProperties(data, *u)
 	if err != nil {
 		return err
@@ -1248,18 +899,20 @@ func (u *UsageInfrastructureCosts) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (u *UsageInfrastructureCosts) MarshalJSON() ([]byte, error) {
-	type embed UsageInfrastructureCosts
+func (u *UsageMetricsPoint) MarshalJSON() ([]byte, error) {
+	type embed UsageMetricsPoint
 	var marshaler = struct {
 		embed
+		PeriodStartAt *internal.DateTime `json:"period_start_at"`
 	}{
-		embed: embed(*u),
+		embed:         embed(*u),
+		PeriodStartAt: internal.NewDateTime(u.PeriodStartAt),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
 	return json.Marshal(explicitMarshaler)
 }
 
-func (u *UsageInfrastructureCosts) String() string {
+func (u *UsageMetricsPoint) String() string {
 	if u == nil {
 		return "<nil>"
 	}
@@ -1274,38 +927,40 @@ func (u *UsageInfrastructureCosts) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Usage metrics summary returned by the metrics endpoint.
+// What was billed: session (phone time) or inference. Set only with group_by=product.
+type UsageMetricsPointProduct string
+
+const (
+	UsageMetricsPointProductSession   UsageMetricsPointProduct = "session"
+	UsageMetricsPointProductInference UsageMetricsPointProduct = "inference"
+)
+
+func NewUsageMetricsPointProductFromString(s string) (UsageMetricsPointProduct, error) {
+	switch s {
+	case "session":
+		return UsageMetricsPointProductSession, nil
+	case "inference":
+		return UsageMetricsPointProductInference, nil
+	}
+	var t UsageMetricsPointProduct
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsageMetricsPointProduct) Ptr() *UsageMetricsPointProduct {
+	return &u
+}
+
+// Usage spend over the window, one point per bucket (and per product with group_by=product).
 var (
-	usageMetricsResponseFieldSchema             = big.NewInt(1 << 0)
-	usageMetricsResponseFieldComputeMinutes     = big.NewInt(1 << 1)
-	usageMetricsResponseFieldCostByProduct      = big.NewInt(1 << 2)
-	usageMetricsResponseFieldGranularity        = big.NewInt(1 << 3)
-	usageMetricsResponseFieldInferenceChartData = big.NewInt(1 << 4)
-	usageMetricsResponseFieldInfraCosts         = big.NewInt(1 << 5)
-	usageMetricsResponseFieldPeriodEnd          = big.NewInt(1 << 6)
-	usageMetricsResponseFieldPeriodStart        = big.NewInt(1 << 7)
-	usageMetricsResponseFieldSessionChartData   = big.NewInt(1 << 8)
+	usageMetricsResponseFieldSchema = big.NewInt(1 << 0)
+	usageMetricsResponseFieldPoints = big.NewInt(1 << 1)
 )
 
 type UsageMetricsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// Compute time metrics.
-	ComputeMinutes *UsageComputeMinutes `json:"compute_minutes" url:"compute_minutes"`
-	// CostByProduct splits the period's usage spend (sessions vs inference).
-	CostByProduct *UsageCostByProduct `json:"cost_by_product" url:"cost_by_product"`
-	// Data resolution (hourly or daily).
-	Granularity UsageMetricsResponseGranularity `json:"granularity" url:"granularity"`
-	// Daily inference spend series.
-	InferenceChartData []*UsageChartDataPoint `json:"inference_chart_data,omitempty" url:"inference_chart_data,omitempty"`
-	// Infrastructure cost metrics.
-	InfraCosts *UsageInfrastructureCosts `json:"infra_costs" url:"infra_costs"`
-	// End of the reporting period.
-	PeriodEnd time.Time `json:"period_end" url:"period_end"`
-	// Beginning of the reporting period.
-	PeriodStart time.Time `json:"period_start" url:"period_start"`
-	// Per-product daily spend series for charting.
-	SessionChartData []*UsageChartDataPoint `json:"session_chart_data,omitempty" url:"session_chart_data,omitempty"`
+	// One point per bucket, oldest first, and per product within a bucket when grouped. The first bucket starts at or before period_start_at.
+	Points []*UsageMetricsPoint `json:"points,omitempty" url:"points,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -1321,60 +976,11 @@ func (u *UsageMetricsResponse) GetSchema() *string {
 	return u.Schema
 }
 
-func (u *UsageMetricsResponse) GetComputeMinutes() *UsageComputeMinutes {
+func (u *UsageMetricsResponse) GetPoints() []*UsageMetricsPoint {
 	if u == nil {
 		return nil
 	}
-	return u.ComputeMinutes
-}
-
-func (u *UsageMetricsResponse) GetCostByProduct() *UsageCostByProduct {
-	if u == nil {
-		return nil
-	}
-	return u.CostByProduct
-}
-
-func (u *UsageMetricsResponse) GetGranularity() UsageMetricsResponseGranularity {
-	if u == nil {
-		return ""
-	}
-	return u.Granularity
-}
-
-func (u *UsageMetricsResponse) GetInferenceChartData() []*UsageChartDataPoint {
-	if u == nil {
-		return nil
-	}
-	return u.InferenceChartData
-}
-
-func (u *UsageMetricsResponse) GetInfraCosts() *UsageInfrastructureCosts {
-	if u == nil {
-		return nil
-	}
-	return u.InfraCosts
-}
-
-func (u *UsageMetricsResponse) GetPeriodEnd() time.Time {
-	if u == nil {
-		return time.Time{}
-	}
-	return u.PeriodEnd
-}
-
-func (u *UsageMetricsResponse) GetPeriodStart() time.Time {
-	if u == nil {
-		return time.Time{}
-	}
-	return u.PeriodStart
-}
-
-func (u *UsageMetricsResponse) GetSessionChartData() []*UsageChartDataPoint {
-	if u == nil {
-		return nil
-	}
-	return u.SessionChartData
+	return u.Points
 }
 
 func (u *UsageMetricsResponse) GetExtraProperties() map[string]interface{} {
@@ -1398,77 +1004,20 @@ func (u *UsageMetricsResponse) SetSchema(schema *string) {
 	u.require(usageMetricsResponseFieldSchema)
 }
 
-// SetComputeMinutes sets the ComputeMinutes field and marks it as non-optional;
+// SetPoints sets the Points field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageMetricsResponse) SetComputeMinutes(computeMinutes *UsageComputeMinutes) {
-	u.ComputeMinutes = computeMinutes
-	u.require(usageMetricsResponseFieldComputeMinutes)
-}
-
-// SetCostByProduct sets the CostByProduct field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageMetricsResponse) SetCostByProduct(costByProduct *UsageCostByProduct) {
-	u.CostByProduct = costByProduct
-	u.require(usageMetricsResponseFieldCostByProduct)
-}
-
-// SetGranularity sets the Granularity field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageMetricsResponse) SetGranularity(granularity UsageMetricsResponseGranularity) {
-	u.Granularity = granularity
-	u.require(usageMetricsResponseFieldGranularity)
-}
-
-// SetInferenceChartData sets the InferenceChartData field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageMetricsResponse) SetInferenceChartData(inferenceChartData []*UsageChartDataPoint) {
-	u.InferenceChartData = inferenceChartData
-	u.require(usageMetricsResponseFieldInferenceChartData)
-}
-
-// SetInfraCosts sets the InfraCosts field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageMetricsResponse) SetInfraCosts(infraCosts *UsageInfrastructureCosts) {
-	u.InfraCosts = infraCosts
-	u.require(usageMetricsResponseFieldInfraCosts)
-}
-
-// SetPeriodEnd sets the PeriodEnd field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageMetricsResponse) SetPeriodEnd(periodEnd time.Time) {
-	u.PeriodEnd = periodEnd
-	u.require(usageMetricsResponseFieldPeriodEnd)
-}
-
-// SetPeriodStart sets the PeriodStart field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageMetricsResponse) SetPeriodStart(periodStart time.Time) {
-	u.PeriodStart = periodStart
-	u.require(usageMetricsResponseFieldPeriodStart)
-}
-
-// SetSessionChartData sets the SessionChartData field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageMetricsResponse) SetSessionChartData(sessionChartData []*UsageChartDataPoint) {
-	u.SessionChartData = sessionChartData
-	u.require(usageMetricsResponseFieldSessionChartData)
+func (u *UsageMetricsResponse) SetPoints(points []*UsageMetricsPoint) {
+	u.Points = points
+	u.require(usageMetricsResponseFieldPoints)
 }
 
 func (u *UsageMetricsResponse) UnmarshalJSON(data []byte) error {
-	type embed UsageMetricsResponse
-	var unmarshaler = struct {
-		embed
-		PeriodEnd   *internal.DateTime `json:"period_end"`
-		PeriodStart *internal.DateTime `json:"period_start"`
-	}{
-		embed: embed(*u),
-	}
-	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+	type unmarshaler UsageMetricsResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*u = UsageMetricsResponse(unmarshaler.embed)
-	u.PeriodEnd = unmarshaler.PeriodEnd.Time()
-	u.PeriodStart = unmarshaler.PeriodStart.Time()
+	*u = UsageMetricsResponse(value)
 	extraProperties, err := internal.ExtractExtraProperties(data, *u)
 	if err != nil {
 		return err
@@ -1482,12 +1031,8 @@ func (u *UsageMetricsResponse) MarshalJSON() ([]byte, error) {
 	type embed UsageMetricsResponse
 	var marshaler = struct {
 		embed
-		PeriodEnd   *internal.DateTime `json:"period_end"`
-		PeriodStart *internal.DateTime `json:"period_start"`
 	}{
-		embed:       embed(*u),
-		PeriodEnd:   internal.NewDateTime(u.PeriodEnd),
-		PeriodStart: internal.NewDateTime(u.PeriodStart),
+		embed: embed(*u),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, u.explicitFields)
 	return json.Marshal(explicitMarshaler)
@@ -1506,29 +1051,6 @@ func (u *UsageMetricsResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", u)
-}
-
-// Data resolution (hourly or daily).
-type UsageMetricsResponseGranularity string
-
-const (
-	UsageMetricsResponseGranularityHourly UsageMetricsResponseGranularity = "hourly"
-	UsageMetricsResponseGranularityDaily  UsageMetricsResponseGranularity = "daily"
-)
-
-func NewUsageMetricsResponseGranularityFromString(s string) (UsageMetricsResponseGranularity, error) {
-	switch s {
-	case "hourly":
-		return UsageMetricsResponseGranularityHourly, nil
-	case "daily":
-		return UsageMetricsResponseGranularityDaily, nil
-	}
-	var t UsageMetricsResponseGranularity
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (u UsageMetricsResponseGranularity) Ptr() *UsageMetricsResponseGranularity {
-	return &u
 }
 
 // Single phone-session record from the usage sessions endpoint.
@@ -1553,8 +1075,8 @@ var (
 type UsageSession struct {
 	// ISO 8601 timestamp when the phone was allocated.
 	AllocatedAt *string `json:"allocated_at,omitempty" url:"allocated_at,omitempty"`
-	// AllocatedBy identifies what triggered the session's allocation.
-	AllocatedBy *string `json:"allocated_by,omitempty" url:"allocated_by,omitempty"`
+	// What started the session.
+	AllocatedBy *UsageSessionAllocatedBy `json:"allocated_by,omitempty" url:"allocated_by,omitempty"`
 	// Billing plan active during the session.
 	BillingPlanID *string `json:"billing_plan_id,omitempty" url:"billing_plan_id,omitempty"`
 	// Phone-time cost charged for this session in microdollars.
@@ -1569,14 +1091,14 @@ type UsageSession struct {
 	IsDedicatedPhone bool `json:"is_dedicated_phone" url:"is_dedicated_phone"`
 	// Phone claimed by the session.
 	PhoneID string `json:"phone_id" url:"phone_id"`
-	// Billing processing status (e.g., 'billed').
-	ProcessedStatus *string `json:"processed_status,omitempty" url:"processed_status,omitempty"`
+	// Billing processing status.
+	ProcessedStatus *UsageSessionProcessedStatus `json:"processed_status,omitempty" url:"processed_status,omitempty"`
 	// Unique session identifier.
 	SessionID string `json:"session_id" url:"session_id"`
 	// Arbitrary metadata attached to the session.
 	SessionMetadata map[string]any `json:"session_metadata,omitempty" url:"session_metadata,omitempty"`
-	// Session lifecycle status (e.g., 'completed').
-	SessionStatus *string `json:"session_status,omitempty" url:"session_status,omitempty"`
+	// Session lifecycle status.
+	SessionStatus *UsageSessionSessionStatus `json:"session_status,omitempty" url:"session_status,omitempty"`
 	// Session's all-in cost: phone time + inference.
 	TotalCostMicrodollars int64 `json:"total_cost_microdollars" url:"total_cost_microdollars"`
 	// Associated workflow identifier.
@@ -1596,7 +1118,7 @@ func (u *UsageSession) GetAllocatedAt() *string {
 	return u.AllocatedAt
 }
 
-func (u *UsageSession) GetAllocatedBy() *string {
+func (u *UsageSession) GetAllocatedBy() *UsageSessionAllocatedBy {
 	if u == nil {
 		return nil
 	}
@@ -1652,7 +1174,7 @@ func (u *UsageSession) GetPhoneID() string {
 	return u.PhoneID
 }
 
-func (u *UsageSession) GetProcessedStatus() *string {
+func (u *UsageSession) GetProcessedStatus() *UsageSessionProcessedStatus {
 	if u == nil {
 		return nil
 	}
@@ -1673,7 +1195,7 @@ func (u *UsageSession) GetSessionMetadata() map[string]any {
 	return u.SessionMetadata
 }
 
-func (u *UsageSession) GetSessionStatus() *string {
+func (u *UsageSession) GetSessionStatus() *UsageSessionSessionStatus {
 	if u == nil {
 		return nil
 	}
@@ -1717,7 +1239,7 @@ func (u *UsageSession) SetAllocatedAt(allocatedAt *string) {
 
 // SetAllocatedBy sets the AllocatedBy field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageSession) SetAllocatedBy(allocatedBy *string) {
+func (u *UsageSession) SetAllocatedBy(allocatedBy *UsageSessionAllocatedBy) {
 	u.AllocatedBy = allocatedBy
 	u.require(usageSessionFieldAllocatedBy)
 }
@@ -1773,7 +1295,7 @@ func (u *UsageSession) SetPhoneID(phoneID string) {
 
 // SetProcessedStatus sets the ProcessedStatus field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageSession) SetProcessedStatus(processedStatus *string) {
+func (u *UsageSession) SetProcessedStatus(processedStatus *UsageSessionProcessedStatus) {
 	u.ProcessedStatus = processedStatus
 	u.require(usageSessionFieldProcessedStatus)
 }
@@ -1794,7 +1316,7 @@ func (u *UsageSession) SetSessionMetadata(sessionMetadata map[string]any) {
 
 // SetSessionStatus sets the SessionStatus field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageSession) SetSessionStatus(sessionStatus *string) {
+func (u *UsageSession) SetSessionStatus(sessionStatus *UsageSessionSessionStatus) {
 	u.SessionStatus = sessionStatus
 	u.require(usageSessionFieldSessionStatus)
 }
@@ -1853,6 +1375,90 @@ func (u *UsageSession) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", u)
+}
+
+// What started the session.
+type UsageSessionAllocatedBy string
+
+const (
+	UsageSessionAllocatedByWorkflowEditor UsageSessionAllocatedBy = "workflow_editor"
+	UsageSessionAllocatedByDashboardRun   UsageSessionAllocatedBy = "dashboard_run"
+	UsageSessionAllocatedByAPIRun         UsageSessionAllocatedBy = "api_run"
+	UsageSessionAllocatedByInteractive    UsageSessionAllocatedBy = "interactive"
+)
+
+func NewUsageSessionAllocatedByFromString(s string) (UsageSessionAllocatedBy, error) {
+	switch s {
+	case "workflow_editor":
+		return UsageSessionAllocatedByWorkflowEditor, nil
+	case "dashboard_run":
+		return UsageSessionAllocatedByDashboardRun, nil
+	case "api_run":
+		return UsageSessionAllocatedByAPIRun, nil
+	case "interactive":
+		return UsageSessionAllocatedByInteractive, nil
+	}
+	var t UsageSessionAllocatedBy
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsageSessionAllocatedBy) Ptr() *UsageSessionAllocatedBy {
+	return &u
+}
+
+// Billing processing status.
+type UsageSessionProcessedStatus string
+
+const (
+	UsageSessionProcessedStatusPending UsageSessionProcessedStatus = "pending"
+	UsageSessionProcessedStatusBilled  UsageSessionProcessedStatus = "billed"
+	UsageSessionProcessedStatusFailed  UsageSessionProcessedStatus = "failed"
+)
+
+func NewUsageSessionProcessedStatusFromString(s string) (UsageSessionProcessedStatus, error) {
+	switch s {
+	case "pending":
+		return UsageSessionProcessedStatusPending, nil
+	case "billed":
+		return UsageSessionProcessedStatusBilled, nil
+	case "failed":
+		return UsageSessionProcessedStatusFailed, nil
+	}
+	var t UsageSessionProcessedStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsageSessionProcessedStatus) Ptr() *UsageSessionProcessedStatus {
+	return &u
+}
+
+// Session lifecycle status.
+type UsageSessionSessionStatus string
+
+const (
+	UsageSessionSessionStatusActive    UsageSessionSessionStatus = "active"
+	UsageSessionSessionStatusCompleted UsageSessionSessionStatus = "completed"
+	UsageSessionSessionStatusCancelled UsageSessionSessionStatus = "cancelled"
+	UsageSessionSessionStatusExpired   UsageSessionSessionStatus = "expired"
+)
+
+func NewUsageSessionSessionStatusFromString(s string) (UsageSessionSessionStatus, error) {
+	switch s {
+	case "active":
+		return UsageSessionSessionStatusActive, nil
+	case "completed":
+		return UsageSessionSessionStatusCompleted, nil
+	case "cancelled":
+		return UsageSessionSessionStatusCancelled, nil
+	case "expired":
+		return UsageSessionSessionStatusExpired, nil
+	}
+	var t UsageSessionSessionStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsageSessionSessionStatus) Ptr() *UsageSessionSessionStatus {
+	return &u
 }
 
 // Paginated list of phone sessions.
@@ -2009,25 +1615,151 @@ func (u *UsageSessionsResponse) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// bucket resolution
+// Bucket size: hour or day. hour is allowed for windows of 7 days or less.
 type UsageGetMetricsRequestGranularity string
 
 const (
-	UsageGetMetricsRequestGranularityHourly UsageGetMetricsRequestGranularity = "hourly"
-	UsageGetMetricsRequestGranularityDaily  UsageGetMetricsRequestGranularity = "daily"
+	UsageGetMetricsRequestGranularityHour UsageGetMetricsRequestGranularity = "hour"
+	UsageGetMetricsRequestGranularityDay  UsageGetMetricsRequestGranularity = "day"
 )
 
 func NewUsageGetMetricsRequestGranularityFromString(s string) (UsageGetMetricsRequestGranularity, error) {
 	switch s {
-	case "hourly":
-		return UsageGetMetricsRequestGranularityHourly, nil
-	case "daily":
-		return UsageGetMetricsRequestGranularityDaily, nil
+	case "hour":
+		return UsageGetMetricsRequestGranularityHour, nil
+	case "day":
+		return UsageGetMetricsRequestGranularityDay, nil
 	}
 	var t UsageGetMetricsRequestGranularity
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
 }
 
 func (u UsageGetMetricsRequestGranularity) Ptr() *UsageGetMetricsRequestGranularity {
+	return &u
+}
+
+// Split each bucket by product (session or inference). Omit for one point per bucket.
+type UsageGetMetricsRequestGroupBy string
+
+const (
+	UsageGetMetricsRequestGroupByProduct UsageGetMetricsRequestGroupBy = "product"
+)
+
+func NewUsageGetMetricsRequestGroupByFromString(s string) (UsageGetMetricsRequestGroupBy, error) {
+	switch s {
+	case "product":
+		return UsageGetMetricsRequestGroupByProduct, nil
+	}
+	var t UsageGetMetricsRequestGroupBy
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsageGetMetricsRequestGroupBy) Ptr() *UsageGetMetricsRequestGroupBy {
+	return &u
+}
+
+type UsageListInferencesRequestEndpointItem string
+
+const (
+	UsageListInferencesRequestEndpointItemDetect        UsageListInferencesRequestEndpointItem = "detect"
+	UsageListInferencesRequestEndpointItemLocate        UsageListInferencesRequestEndpointItem = "locate"
+	UsageListInferencesRequestEndpointItemElementLocate UsageListInferencesRequestEndpointItem = "element_locate"
+)
+
+func NewUsageListInferencesRequestEndpointItemFromString(s string) (UsageListInferencesRequestEndpointItem, error) {
+	switch s {
+	case "detect":
+		return UsageListInferencesRequestEndpointItemDetect, nil
+	case "locate":
+		return UsageListInferencesRequestEndpointItemLocate, nil
+	case "element_locate":
+		return UsageListInferencesRequestEndpointItemElementLocate, nil
+	}
+	var t UsageListInferencesRequestEndpointItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsageListInferencesRequestEndpointItem) Ptr() *UsageListInferencesRequestEndpointItem {
+	return &u
+}
+
+type UsageListSessionsRequestAllocatedByItem string
+
+const (
+	UsageListSessionsRequestAllocatedByItemWorkflowEditor UsageListSessionsRequestAllocatedByItem = "workflow_editor"
+	UsageListSessionsRequestAllocatedByItemDashboardRun   UsageListSessionsRequestAllocatedByItem = "dashboard_run"
+	UsageListSessionsRequestAllocatedByItemAPIRun         UsageListSessionsRequestAllocatedByItem = "api_run"
+	UsageListSessionsRequestAllocatedByItemInteractive    UsageListSessionsRequestAllocatedByItem = "interactive"
+)
+
+func NewUsageListSessionsRequestAllocatedByItemFromString(s string) (UsageListSessionsRequestAllocatedByItem, error) {
+	switch s {
+	case "workflow_editor":
+		return UsageListSessionsRequestAllocatedByItemWorkflowEditor, nil
+	case "dashboard_run":
+		return UsageListSessionsRequestAllocatedByItemDashboardRun, nil
+	case "api_run":
+		return UsageListSessionsRequestAllocatedByItemAPIRun, nil
+	case "interactive":
+		return UsageListSessionsRequestAllocatedByItemInteractive, nil
+	}
+	var t UsageListSessionsRequestAllocatedByItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsageListSessionsRequestAllocatedByItem) Ptr() *UsageListSessionsRequestAllocatedByItem {
+	return &u
+}
+
+type UsageListSessionsRequestProcessedStatusItem string
+
+const (
+	UsageListSessionsRequestProcessedStatusItemPending UsageListSessionsRequestProcessedStatusItem = "pending"
+	UsageListSessionsRequestProcessedStatusItemBilled  UsageListSessionsRequestProcessedStatusItem = "billed"
+	UsageListSessionsRequestProcessedStatusItemFailed  UsageListSessionsRequestProcessedStatusItem = "failed"
+)
+
+func NewUsageListSessionsRequestProcessedStatusItemFromString(s string) (UsageListSessionsRequestProcessedStatusItem, error) {
+	switch s {
+	case "pending":
+		return UsageListSessionsRequestProcessedStatusItemPending, nil
+	case "billed":
+		return UsageListSessionsRequestProcessedStatusItemBilled, nil
+	case "failed":
+		return UsageListSessionsRequestProcessedStatusItemFailed, nil
+	}
+	var t UsageListSessionsRequestProcessedStatusItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsageListSessionsRequestProcessedStatusItem) Ptr() *UsageListSessionsRequestProcessedStatusItem {
+	return &u
+}
+
+type UsageListSessionsRequestSessionStatusItem string
+
+const (
+	UsageListSessionsRequestSessionStatusItemActive    UsageListSessionsRequestSessionStatusItem = "active"
+	UsageListSessionsRequestSessionStatusItemCompleted UsageListSessionsRequestSessionStatusItem = "completed"
+	UsageListSessionsRequestSessionStatusItemCancelled UsageListSessionsRequestSessionStatusItem = "cancelled"
+	UsageListSessionsRequestSessionStatusItemExpired   UsageListSessionsRequestSessionStatusItem = "expired"
+)
+
+func NewUsageListSessionsRequestSessionStatusItemFromString(s string) (UsageListSessionsRequestSessionStatusItem, error) {
+	switch s {
+	case "active":
+		return UsageListSessionsRequestSessionStatusItemActive, nil
+	case "completed":
+		return UsageListSessionsRequestSessionStatusItemCompleted, nil
+	case "cancelled":
+		return UsageListSessionsRequestSessionStatusItemCancelled, nil
+	case "expired":
+		return UsageListSessionsRequestSessionStatusItemExpired, nil
+	}
+	var t UsageListSessionsRequestSessionStatusItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsageListSessionsRequestSessionStatusItem) Ptr() *UsageListSessionsRequestSessionStatusItem {
 	return &u
 }

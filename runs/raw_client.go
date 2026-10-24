@@ -71,6 +71,7 @@ func (r *RawClient) SessionsListFrames(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -119,6 +120,7 @@ func (r *RawClient) List(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -167,56 +169,13 @@ func (r *RawClient) ListHistoric(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
 	return &core.Response[*platformgo.RunHistoryResponse]{
-		StatusCode: raw.StatusCode,
-		Header:     raw.Header,
-		Body:       response,
-	}, nil
-}
-
-func (r *RawClient) Stats(
-	ctx context.Context,
-	request *platformgo.RunsStatsRequest,
-	opts ...option.RequestOption,
-) (*core.Response[*platformgo.RunStatsResponse], error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		r.baseURL,
-		"/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/runs/stats/%v",
-		request.WorkflowID,
-	)
-	headers := internal.MergeHeaders(
-		r.options.ToHeader(),
-		options.ToHeader(),
-	)
-	var response *platformgo.RunStatsResponse
-	raw, err := r.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			DisableRetries:  options.DisableRetries,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &core.Response[*platformgo.RunStatsResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,

@@ -68,6 +68,7 @@ func (r *RawClient) ListInferences(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -116,6 +117,7 @@ func (r *RawClient) GetMetrics(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -164,6 +166,7 @@ func (r *RawClient) ListSessions(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {

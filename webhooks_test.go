@@ -347,11 +347,43 @@ func TestSettersMarkExplicitWebhooksGetEndpointRequest(t *testing.T) {
 }
 
 func TestSettersWebhooksGetMetricsRequest(t *testing.T) {
-	t.Run("SetRange", func(t *testing.T) {
+	t.Run("SetPeriodStartAt", func(t *testing.T) {
 		obj := &WebhooksGetMetricsRequest{}
-		var fernTestValueRange *WebhooksGetMetricsRequestRange
-		obj.SetRange(fernTestValueRange)
-		assert.Equal(t, fernTestValueRange, obj.Range)
+		var fernTestValuePeriodStartAt *time.Time
+		obj.SetPeriodStartAt(fernTestValuePeriodStartAt)
+		assert.Equal(t, fernTestValuePeriodStartAt, obj.PeriodStartAt)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+	t.Run("SetPeriodEndAt", func(t *testing.T) {
+		obj := &WebhooksGetMetricsRequest{}
+		var fernTestValuePeriodEndAt *time.Time
+		obj.SetPeriodEndAt(fernTestValuePeriodEndAt)
+		assert.Equal(t, fernTestValuePeriodEndAt, obj.PeriodEndAt)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+	t.Run("SetGranularity", func(t *testing.T) {
+		obj := &WebhooksGetMetricsRequest{}
+		var fernTestValueGranularity *WebhooksGetMetricsRequestGranularity
+		obj.SetGranularity(fernTestValueGranularity)
+		assert.Equal(t, fernTestValueGranularity, obj.Granularity)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+	t.Run("SetTimeZone", func(t *testing.T) {
+		obj := &WebhooksGetMetricsRequest{}
+		var fernTestValueTimeZone *string
+		obj.SetTimeZone(fernTestValueTimeZone)
+		assert.Equal(t, fernTestValueTimeZone, obj.TimeZone)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+	t.Run("SetGroupBy", func(t *testing.T) {
+		obj := &WebhooksGetMetricsRequest{}
+		var fernTestValueGroupBy *WebhooksGetMetricsRequestGroupBy
+		obj.SetGroupBy(fernTestValueGroupBy)
+		assert.Equal(t, fernTestValueGroupBy, obj.GroupBy)
 		assert.NotNil(t, obj.explicitFields)
 	})
 
@@ -366,14 +398,138 @@ func TestSettersWebhooksGetMetricsRequest(t *testing.T) {
 }
 
 func TestSettersMarkExplicitWebhooksGetMetricsRequest(t *testing.T) {
-	t.Run("SetRange_MarksExplicit", func(t *testing.T) {
+	t.Run("SetPeriodStartAt_MarksExplicit", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &WebhooksGetMetricsRequest{}
-		var fernTestValueRange *WebhooksGetMetricsRequestRange
+		var fernTestValuePeriodStartAt *time.Time
 
 		// Act
-		obj.SetRange(fernTestValueRange)
+		obj.SetPeriodStartAt(fernTestValuePeriodStartAt)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetPeriodEndAt_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WebhooksGetMetricsRequest{}
+		var fernTestValuePeriodEndAt *time.Time
+
+		// Act
+		obj.SetPeriodEndAt(fernTestValuePeriodEndAt)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetGranularity_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WebhooksGetMetricsRequest{}
+		var fernTestValueGranularity *WebhooksGetMetricsRequestGranularity
+
+		// Act
+		obj.SetGranularity(fernTestValueGranularity)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetTimeZone_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WebhooksGetMetricsRequest{}
+		var fernTestValueTimeZone *string
+
+		// Act
+		obj.SetTimeZone(fernTestValueTimeZone)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetGroupBy_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WebhooksGetMetricsRequest{}
+		var fernTestValueGroupBy *WebhooksGetMetricsRequestGroupBy
+
+		// Act
+		obj.SetGroupBy(fernTestValueGroupBy)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -586,6 +742,14 @@ func TestSettersWebhooksListDeliveriesRequest(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetMessageID", func(t *testing.T) {
+		obj := &WebhooksListDeliveriesRequest{}
+		var fernTestValueMessageID *string
+		obj.SetMessageID(fernTestValueMessageID)
+		assert.Equal(t, fernTestValueMessageID, obj.MessageID)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 }
 
 func TestSettersMarkExplicitWebhooksListDeliveriesRequest(t *testing.T) {
@@ -690,6 +854,37 @@ func TestSettersMarkExplicitWebhooksListDeliveriesRequest(t *testing.T) {
 
 		// Act
 		obj.SetEndpointID(fernTestValueEndpointID)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetMessageID_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WebhooksListDeliveriesRequest{}
+		var fernTestValueMessageID *string
+
+		// Act
+		obj.SetMessageID(fernTestValueMessageID)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -2874,11 +3069,11 @@ func TestSettersWebhookDeliveryMetricPoint(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
-	t.Run("SetTimeBucket", func(t *testing.T) {
+	t.Run("SetPeriodStartAt", func(t *testing.T) {
 		obj := &WebhookDeliveryMetricPoint{}
-		var fernTestValueTimeBucket *time.Time
-		obj.SetTimeBucket(fernTestValueTimeBucket)
-		assert.Equal(t, fernTestValueTimeBucket, obj.TimeBucket)
+		var fernTestValuePeriodStartAt time.Time
+		obj.SetPeriodStartAt(fernTestValuePeriodStartAt)
+		assert.Equal(t, fernTestValuePeriodStartAt, obj.PeriodStartAt)
 		assert.NotNil(t, obj.explicitFields)
 	})
 
@@ -3104,28 +3299,18 @@ func TestGettersWebhookDeliveryMetricPoint(t *testing.T) {
 		_ = obj.GetP99LatencyMs() // Should return zero value
 	})
 
-	t.Run("GetTimeBucket", func(t *testing.T) {
+	t.Run("GetPeriodStartAt", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &WebhookDeliveryMetricPoint{}
-		var expected *time.Time
-		obj.TimeBucket = expected
+		var expected time.Time
+		obj.PeriodStartAt = expected
 
 		// Act & Assert
-		assert.Equal(t, expected, obj.GetTimeBucket(), "getter should return the property value")
+		assert.Equal(t, expected, obj.GetPeriodStartAt(), "getter should return the property value")
 	})
 
-	t.Run("GetTimeBucket_NilValue", func(t *testing.T) {
-		t.Parallel()
-		// Arrange
-		obj := &WebhookDeliveryMetricPoint{}
-		obj.TimeBucket = nil
-
-		// Act & Assert
-		assert.Nil(t, obj.GetTimeBucket(), "getter should return nil when property is nil")
-	})
-
-	t.Run("GetTimeBucket_NilReceiver", func(t *testing.T) {
+	t.Run("GetPeriodStartAt_NilReceiver", func(t *testing.T) {
 		t.Parallel()
 		var obj *WebhookDeliveryMetricPoint
 		// Should not panic - getters should handle nil receiver gracefully
@@ -3134,7 +3319,7 @@ func TestGettersWebhookDeliveryMetricPoint(t *testing.T) {
 				t.Errorf("Getter panicked on nil receiver: %v", r)
 			}
 		}()
-		_ = obj.GetTimeBucket() // Should return zero value
+		_ = obj.GetPeriodStartAt() // Should return zero value
 	})
 
 	t.Run("GetTotal", func(t *testing.T) {
@@ -3380,14 +3565,14 @@ func TestSettersMarkExplicitWebhookDeliveryMetricPoint(t *testing.T) {
 		// It verifies that setting a field via setter allows successful JSON round-trip
 	})
 
-	t.Run("SetTimeBucket_MarksExplicit", func(t *testing.T) {
+	t.Run("SetPeriodStartAt_MarksExplicit", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &WebhookDeliveryMetricPoint{}
-		var fernTestValueTimeBucket *time.Time
+		var fernTestValuePeriodStartAt time.Time
 
 		// Act
-		obj.SetTimeBucket(fernTestValueTimeBucket)
+		obj.SetPeriodStartAt(fernTestValuePeriodStartAt)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -7894,6 +8079,13 @@ func TestEnumWebhookEventTypeDescriptorDomain(t *testing.T) {
 		assert.Equal(t, WebhookEventTypeDescriptorDomain("phones"), val, "enum value should match expected wire value")
 	})
 
+	t.Run("NewFromString_messages", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWebhookEventTypeDescriptorDomainFromString("messages")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WebhookEventTypeDescriptorDomain("messages"), val, "enum value should match expected wire value")
+	})
+
 	t.Run("NewFromString_Invalid", func(t *testing.T) {
 		_, err := NewWebhookEventTypeDescriptorDomainFromString("invalid_value_that_does_not_exist")
 		assert.Error(t, err)
@@ -7937,35 +8129,50 @@ func TestEnumWebhookRotateSecretRequestMode(t *testing.T) {
 	})
 }
 
-func TestEnumWebhooksGetMetricsRequestRange(t *testing.T) {
-	t.Run("NewFromString_24h", func(t *testing.T) {
+func TestEnumWebhooksGetMetricsRequestGranularity(t *testing.T) {
+	t.Run("NewFromString_hour", func(t *testing.T) {
 		t.Parallel()
-		val, err := NewWebhooksGetMetricsRequestRangeFromString("24h")
+		val, err := NewWebhooksGetMetricsRequestGranularityFromString("hour")
 		assert.NoError(t, err, "valid enum value should not return error")
-		assert.Equal(t, WebhooksGetMetricsRequestRange("24h"), val, "enum value should match expected wire value")
+		assert.Equal(t, WebhooksGetMetricsRequestGranularity("hour"), val, "enum value should match expected wire value")
 	})
 
-	t.Run("NewFromString_7d", func(t *testing.T) {
+	t.Run("NewFromString_day", func(t *testing.T) {
 		t.Parallel()
-		val, err := NewWebhooksGetMetricsRequestRangeFromString("7d")
+		val, err := NewWebhooksGetMetricsRequestGranularityFromString("day")
 		assert.NoError(t, err, "valid enum value should not return error")
-		assert.Equal(t, WebhooksGetMetricsRequestRange("7d"), val, "enum value should match expected wire value")
-	})
-
-	t.Run("NewFromString_30d", func(t *testing.T) {
-		t.Parallel()
-		val, err := NewWebhooksGetMetricsRequestRangeFromString("30d")
-		assert.NoError(t, err, "valid enum value should not return error")
-		assert.Equal(t, WebhooksGetMetricsRequestRange("30d"), val, "enum value should match expected wire value")
+		assert.Equal(t, WebhooksGetMetricsRequestGranularity("day"), val, "enum value should match expected wire value")
 	})
 
 	t.Run("NewFromString_Invalid", func(t *testing.T) {
-		_, err := NewWebhooksGetMetricsRequestRangeFromString("invalid_value_that_does_not_exist")
+		_, err := NewWebhooksGetMetricsRequestGranularityFromString("invalid_value_that_does_not_exist")
 		assert.Error(t, err)
 	})
 
 	t.Run("Ptr", func(t *testing.T) {
-		val, err := NewWebhooksGetMetricsRequestRangeFromString("24h")
+		val, err := NewWebhooksGetMetricsRequestGranularityFromString("hour")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
+func TestEnumWebhooksGetMetricsRequestGroupBy(t *testing.T) {
+	t.Run("NewFromString_endpoint_id", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWebhooksGetMetricsRequestGroupByFromString("endpoint_id")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WebhooksGetMetricsRequestGroupBy("endpoint_id"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewWebhooksGetMetricsRequestGroupByFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewWebhooksGetMetricsRequestGroupByFromString("endpoint_id")
 		assert.NoError(t, err)
 		ptr := val.Ptr()
 		assert.NotNil(t, ptr)

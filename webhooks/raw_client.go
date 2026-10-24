@@ -68,6 +68,7 @@ func (r *RawClient) ListDeliveries(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -339,6 +340,7 @@ func (r *RawClient) CreateEndpoint(
 			Client:          options.HTTPClient,
 			Request:         request,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -614,6 +616,7 @@ func (r *RawClient) GetMetrics(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {

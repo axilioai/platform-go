@@ -68,60 +68,13 @@ func (r *RawClient) List(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
 	return &core.Response[*platformgo.PhonePrivateListResponse]{
-		StatusCode: raw.StatusCode,
-		Header:     raw.Header,
-		Body:       response,
-	}, nil
-}
-
-func (r *RawClient) SupportedApps(
-	ctx context.Context,
-	request *platformgo.PhonesSupportedAppsRequest,
-	opts ...option.RequestOption,
-) (*core.Response[*platformgo.PhoneSupportedAppsResponse], error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		r.baseURL,
-		"/api/v1",
-	)
-	endpointURL := baseURL + "/phones/apps/supported"
-	queryParams, err := internal.QueryValues(request)
-	if err != nil {
-		return nil, err
-	}
-	if len(queryParams) > 0 {
-		endpointURL += "?" + queryParams.Encode()
-	}
-	headers := internal.MergeHeaders(
-		r.options.ToHeader(),
-		options.ToHeader(),
-	)
-	var response *platformgo.PhoneSupportedAppsResponse
-	raw, err := r.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			DisableRetries:  options.DisableRetries,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &core.Response[*platformgo.PhoneSupportedAppsResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
@@ -164,6 +117,7 @@ func (r *RawClient) Availability(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -212,60 +166,13 @@ func (r *RawClient) ListSessions(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
 	return &core.Response[*platformgo.PhoneSessionListResponse]{
-		StatusCode: raw.StatusCode,
-		Header:     raw.Header,
-		Body:       response,
-	}, nil
-}
-
-func (r *RawClient) ActiveSessions(
-	ctx context.Context,
-	request *platformgo.PhonesActiveSessionsRequest,
-	opts ...option.RequestOption,
-) (*core.Response[*platformgo.PhoneActiveSessionsResponse], error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		r.baseURL,
-		"/api/v1",
-	)
-	endpointURL := baseURL + "/phones/sessions/active"
-	queryParams, err := internal.QueryValues(request)
-	if err != nil {
-		return nil, err
-	}
-	if len(queryParams) > 0 {
-		endpointURL += "?" + queryParams.Encode()
-	}
-	headers := internal.MergeHeaders(
-		r.options.ToHeader(),
-		options.ToHeader(),
-	)
-	var response *platformgo.PhoneActiveSessionsResponse
-	raw, err := r.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			DisableRetries:  options.DisableRetries,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &core.Response[*platformgo.PhoneActiveSessionsResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
@@ -304,56 +211,13 @@ func (r *RawClient) GetSession(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
 	return &core.Response[*platformgo.PhoneSessionDetailResponse]{
-		StatusCode: raw.StatusCode,
-		Header:     raw.Header,
-		Body:       response,
-	}, nil
-}
-
-func (r *RawClient) SessionLiveViewToken(
-	ctx context.Context,
-	request *platformgo.PhonesSessionLiveViewTokenRequest,
-	opts ...option.RequestOption,
-) (*core.Response[*platformgo.PhoneLiveViewTokenResponse], error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		r.baseURL,
-		"/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/phones/sessions/%v/live-view-token",
-		request.SessionID,
-	)
-	headers := internal.MergeHeaders(
-		r.options.ToHeader(),
-		options.ToHeader(),
-	)
-	var response *platformgo.PhoneLiveViewTokenResponse
-	raw, err := r.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodPost,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			DisableRetries:  options.DisableRetries,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &core.Response[*platformgo.PhoneLiveViewTokenResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
@@ -392,6 +256,7 @@ func (r *RawClient) SessionRecording(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -404,11 +269,11 @@ func (r *RawClient) SessionRecording(
 	}, nil
 }
 
-func (r *RawClient) SessionTelemetryToken(
+func (r *RawClient) SessionLiveViewToken(
 	ctx context.Context,
-	request *platformgo.PhonesSessionTelemetryTokenRequest,
+	request *platformgo.PhonesSessionLiveViewTokenRequest,
 	opts ...option.RequestOption,
-) (*core.Response[*platformgo.PhoneTelemetryTokenResponse], error) {
+) (*core.Response[*platformgo.PhoneLiveViewTokenResponse], error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -416,14 +281,14 @@ func (r *RawClient) SessionTelemetryToken(
 		"/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
-		baseURL+"/phones/sessions/%v/telemetry-token",
+		baseURL+"/phones/sessions/%v:createLiveViewToken",
 		request.SessionID,
 	)
 	headers := internal.MergeHeaders(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
-	var response *platformgo.PhoneTelemetryTokenResponse
+	var response *platformgo.PhoneLiveViewTokenResponse
 	raw, err := r.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -436,38 +301,43 @@ func (r *RawClient) SessionTelemetryToken(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &core.Response[*platformgo.PhoneTelemetryTokenResponse]{
+	return &core.Response[*platformgo.PhoneLiveViewTokenResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
 	}, nil
 }
 
-func (r *RawClient) SessionThumbnail(
+func (r *RawClient) SupportedApps(
 	ctx context.Context,
-	request *platformgo.PhonesSessionThumbnailRequest,
+	request *platformgo.PhonesSupportedAppsRequest,
 	opts ...option.RequestOption,
-) (*core.Response[*platformgo.PhoneSessionThumbnailResponse], error) {
+) (*core.Response[*platformgo.PhoneSupportedAppsResponse], error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
 		"/api/v1",
 	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/phones/sessions/%v/thumbnail",
-		request.SessionID,
-	)
+	endpointURL := baseURL + "/phones/supported-apps"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
 	headers := internal.MergeHeaders(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
-	var response *platformgo.PhoneSessionThumbnailResponse
+	var response *platformgo.PhoneSupportedAppsResponse
 	raw, err := r.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -480,12 +350,13 @@ func (r *RawClient) SessionThumbnail(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &core.Response[*platformgo.PhoneSessionThumbnailResponse]{
+	return &core.Response[*platformgo.PhoneSupportedAppsResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
@@ -524,6 +395,54 @@ func (r *RawClient) Get(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.PhoneSummary]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) Update(
+	ctx context.Context,
+	request *platformgo.PhoneUpdatePhoneRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.PhoneSummary], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/phones/%v",
+		request.PhoneID,
+	)
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	headers.Add("Content-Type", "application/json")
+	var response *platformgo.PhoneSummary
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPatch,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -575,6 +494,7 @@ func (r *RawClient) ListDeliveries(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -621,6 +541,7 @@ func (r *RawClient) CreateDelivery(
 			Client:          options.HTTPClient,
 			Request:         request,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -666,58 +587,13 @@ func (r *RawClient) GetDelivery(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
 	return &core.Response[*platformgo.FileDeliverySummary]{
-		StatusCode: raw.StatusCode,
-		Header:     raw.Header,
-		Body:       response,
-	}, nil
-}
-
-func (r *RawClient) Nickname(
-	ctx context.Context,
-	request *platformgo.PhoneUpdateNicknameRequest,
-	opts ...option.RequestOption,
-) (*core.Response[*platformgo.PhoneSummary], error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		r.baseURL,
-		"/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/phones/%v/nickname",
-		request.PhoneID,
-	)
-	headers := internal.MergeHeaders(
-		r.options.ToHeader(),
-		options.ToHeader(),
-	)
-	headers.Add("Content-Type", "application/json")
-	var response *platformgo.PhoneSummary
-	raw, err := r.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodPatch,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			DisableRetries:  options.DisableRetries,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Request:         request,
-			Response:        &response,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &core.Response[*platformgo.PhoneSummary]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
@@ -756,6 +632,7 @@ func (r *RawClient) Preview(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -770,7 +647,7 @@ func (r *RawClient) Preview(
 
 func (r *RawClient) Deallocate(
 	ctx context.Context,
-	request *platformgo.PhonesDeallocateRequest,
+	request *platformgo.PhoneDeallocateRequest,
 	opts ...option.RequestOption,
 ) (*core.Response[*platformgo.PhoneDeallocateResponse], error) {
 	options := core.NewRequestOptions(opts...)
@@ -787,6 +664,7 @@ func (r *RawClient) Deallocate(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
+	headers.Add("Content-Type", "application/json")
 	var response *platformgo.PhoneDeallocateResponse
 	raw, err := r.caller.Call(
 		ctx,
@@ -799,7 +677,9 @@ func (r *RawClient) Deallocate(
 			BodyProperties:  options.BodyProperties,
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
+			Request:         request,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -844,6 +724,7 @@ func (r *RawClient) Wipe(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {
@@ -887,6 +768,7 @@ func (r *RawClient) Allocate(
 			Client:          options.HTTPClient,
 			Request:         request,
 			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
 		},
 	)
 	if err != nil {

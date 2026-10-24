@@ -5,9 +5,11 @@ package client
 import (
 	apikeys "github.com/axilioai/platform-go/apikeys"
 	billing "github.com/axilioai/platform-go/billing"
+	conversations "github.com/axilioai/platform-go/conversations"
 	core "github.com/axilioai/platform-go/core"
 	files "github.com/axilioai/platform-go/files"
 	internal "github.com/axilioai/platform-go/internal"
+	messages "github.com/axilioai/platform-go/messages"
 	option "github.com/axilioai/platform-go/option"
 	organization "github.com/axilioai/platform-go/organization"
 	phones "github.com/axilioai/platform-go/phones"
@@ -19,16 +21,18 @@ import (
 )
 
 type Client struct {
-	APIKeys      *apikeys.Client
-	Billing      *billing.Client
-	Files        *files.Client
-	Organization *organization.Client
-	Phones       *phones.Client
-	Runs         *runs.Client
-	Skill        *skill.Client
-	Usage        *usage.Client
-	Webhooks     *webhooks.Client
-	Workflows    *workflows.Client
+	APIKeys       *apikeys.Client
+	Billing       *billing.Client
+	Conversations *conversations.Client
+	Files         *files.Client
+	Messages      *messages.Client
+	Organization  *organization.Client
+	Phones        *phones.Client
+	Runs          *runs.Client
+	Skill         *skill.Client
+	Usage         *usage.Client
+	Webhooks      *webhooks.Client
+	Workflows     *workflows.Client
 
 	options *core.RequestOptions
 	baseURL string
@@ -38,18 +42,20 @@ type Client struct {
 func NewClient(opts ...option.RequestOption) *Client {
 	options := core.NewRequestOptions(opts...)
 	return &Client{
-		APIKeys:      apikeys.NewClient(options),
-		Billing:      billing.NewClient(options),
-		Files:        files.NewClient(options),
-		Organization: organization.NewClient(options),
-		Phones:       phones.NewClient(options),
-		Runs:         runs.NewClient(options),
-		Skill:        skill.NewClient(options),
-		Usage:        usage.NewClient(options),
-		Webhooks:     webhooks.NewClient(options),
-		Workflows:    workflows.NewClient(options),
-		options:      options,
-		baseURL:      options.BaseURL,
+		APIKeys:       apikeys.NewClient(options),
+		Billing:       billing.NewClient(options),
+		Conversations: conversations.NewClient(options),
+		Files:         files.NewClient(options),
+		Messages:      messages.NewClient(options),
+		Organization:  organization.NewClient(options),
+		Phones:        phones.NewClient(options),
+		Runs:          runs.NewClient(options),
+		Skill:         skill.NewClient(options),
+		Usage:         usage.NewClient(options),
+		Webhooks:      webhooks.NewClient(options),
+		Workflows:     workflows.NewClient(options),
+		options:       options,
+		baseURL:       options.BaseURL,
 		caller: internal.NewCaller(
 			&internal.CallerParams{
 				Client:         options.HTTPClient,

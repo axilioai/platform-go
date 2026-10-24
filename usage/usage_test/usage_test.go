@@ -89,10 +89,10 @@ func TestUsageListInferencesWithWireMock(
 		option.WithAPIKey("test-value"),
 	)
 	request := &platformgo.UsageListInferencesRequest{
-		StartDate: platformgo.MustParseDateTime(
+		CreatedAfter: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
-		EndDate: platformgo.MustParseDateTime(
+		CreatedBefore: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
 	}
@@ -105,7 +105,7 @@ func TestUsageListInferencesWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestUsageListInferencesWithWireMock", "GET", "/usage/inferences", map[string]interface{}{"start_date": "2024-01-15T09:30:00.000Z", "end_date": "2024-01-15T09:30:00.000Z"}, 1)
+	VerifyRequestCount(t, "TestUsageListInferencesWithWireMock", "GET", "/usage/inferences", map[string]interface{}{"created_after": "2024-01-15T09:30:00.000Z", "created_before": "2024-01-15T09:30:00.000Z"}, 1)
 }
 
 func TestUsageGetMetricsWithWireMock(
@@ -119,14 +119,7 @@ func TestUsageGetMetricsWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.UsageGetMetricsRequest{
-		StartDate: platformgo.MustParseDateTime(
-			"2024-01-15T09:30:00Z",
-		),
-		EndDate: platformgo.MustParseDateTime(
-			"2024-01-15T09:30:00Z",
-		),
-	}
+	request := &platformgo.UsageGetMetricsRequest{}
 	_, invocationErr := client.Usage.GetMetrics(
 		context.TODO(),
 		request,
@@ -136,7 +129,7 @@ func TestUsageGetMetricsWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestUsageGetMetricsWithWireMock", "GET", "/usage/metrics", map[string]interface{}{"start_date": "2024-01-15T09:30:00.000Z", "end_date": "2024-01-15T09:30:00.000Z"}, 1)
+	VerifyRequestCount(t, "TestUsageGetMetricsWithWireMock", "GET", "/usage/metrics", nil, 1)
 }
 
 func TestUsageListSessionsWithWireMock(
@@ -151,10 +144,10 @@ func TestUsageListSessionsWithWireMock(
 		option.WithAPIKey("test-value"),
 	)
 	request := &platformgo.UsageListSessionsRequest{
-		StartDate: platformgo.MustParseDateTime(
+		AllocatedAfter: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
-		EndDate: platformgo.MustParseDateTime(
+		AllocatedBefore: platformgo.MustParseDateTime(
 			"2024-01-15T09:30:00Z",
 		),
 	}
@@ -167,5 +160,5 @@ func TestUsageListSessionsWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestUsageListSessionsWithWireMock", "GET", "/usage/sessions", map[string]interface{}{"start_date": "2024-01-15T09:30:00.000Z", "end_date": "2024-01-15T09:30:00.000Z"}, 1)
+	VerifyRequestCount(t, "TestUsageListSessionsWithWireMock", "GET", "/usage/sessions", map[string]interface{}{"allocated_after": "2024-01-15T09:30:00.000Z", "allocated_before": "2024-01-15T09:30:00.000Z"}, 1)
 }

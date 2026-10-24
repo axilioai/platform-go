@@ -7,6 +7,102 @@ import (
 	core "github.com/axilioai/platform-go/core"
 )
 
+// Bad Gateway
+type BadGatewayError struct {
+	*core.APIError
+	Body *V2ErrorModel
+}
+
+func (b *BadGatewayError) UnmarshalJSON(data []byte) error {
+	var body *V2ErrorModel
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	b.StatusCode = 502
+	b.Body = body
+	return nil
+}
+
+func (b *BadGatewayError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b.Body)
+}
+
+func (b *BadGatewayError) Unwrap() error {
+	return b.APIError
+}
+
+// Bad Request
+type BadRequestError struct {
+	*core.APIError
+	Body *V2ErrorModel
+}
+
+func (b *BadRequestError) UnmarshalJSON(data []byte) error {
+	var body *V2ErrorModel
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	b.StatusCode = 400
+	b.Body = body
+	return nil
+}
+
+func (b *BadRequestError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b.Body)
+}
+
+func (b *BadRequestError) Unwrap() error {
+	return b.APIError
+}
+
+// Conflict
+type ConflictError struct {
+	*core.APIError
+	Body *V2ErrorModel
+}
+
+func (c *ConflictError) UnmarshalJSON(data []byte) error {
+	var body *V2ErrorModel
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.StatusCode = 409
+	c.Body = body
+	return nil
+}
+
+func (c *ConflictError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+func (c *ConflictError) Unwrap() error {
+	return c.APIError
+}
+
+// Forbidden
+type ForbiddenError struct {
+	*core.APIError
+	Body *V2ErrorModel
+}
+
+func (f *ForbiddenError) UnmarshalJSON(data []byte) error {
+	var body *V2ErrorModel
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	f.StatusCode = 403
+	f.Body = body
+	return nil
+}
+
+func (f *ForbiddenError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(f.Body)
+}
+
+func (f *ForbiddenError) Unwrap() error {
+	return f.APIError
+}
+
 // Internal Server Error
 type InternalServerError struct {
 	*core.APIError
@@ -77,6 +173,54 @@ func (p *PaymentRequiredError) MarshalJSON() ([]byte, error) {
 
 func (p *PaymentRequiredError) Unwrap() error {
 	return p.APIError
+}
+
+// Service Unavailable
+type ServiceUnavailableError struct {
+	*core.APIError
+	Body *V2ErrorModel
+}
+
+func (s *ServiceUnavailableError) UnmarshalJSON(data []byte) error {
+	var body *V2ErrorModel
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	s.StatusCode = 503
+	s.Body = body
+	return nil
+}
+
+func (s *ServiceUnavailableError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Body)
+}
+
+func (s *ServiceUnavailableError) Unwrap() error {
+	return s.APIError
+}
+
+// Too Many Requests
+type TooManyRequestsError struct {
+	*core.APIError
+	Body *V2ErrorModel
+}
+
+func (t *TooManyRequestsError) UnmarshalJSON(data []byte) error {
+	var body *V2ErrorModel
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	t.StatusCode = 429
+	t.Body = body
+	return nil
+}
+
+func (t *TooManyRequestsError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.Body)
+}
+
+func (t *TooManyRequestsError) Unwrap() error {
+	return t.APIError
 }
 
 // Unprocessable Entity

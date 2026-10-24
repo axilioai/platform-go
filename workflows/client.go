@@ -34,7 +34,7 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Paginated list of workflows in the caller's org, with optional search, status, platform, and created/last-run date filters via query params.
+// Paginated list of workflows in the caller's org, with optional search, status, platform, and created/last-run date filters via query params. Order with order_by ('<field> <asc|desc>'), field a path into the listed item such as workflow.name.
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.WorkflowsListRequest,
@@ -119,47 +119,13 @@ func (c *Client) Update(
 	return response.Body, nil
 }
 
-// Returns the source code of the workflow's current revision, scoped to the caller's org.
+// Returns the source code of the workflow's current revision, or of revision_id when given, scoped to the caller's org. A revision_id that is not one of this workflow's revisions reads as not found.
 func (c *Client) GetCode(
 	ctx context.Context,
 	request *platformgo.WorkflowsGetCodeRequest,
 	opts ...option.RequestOption,
 ) (*platformgo.WorkflowGetCodeResponse, error) {
 	response, err := c.WithRawResponse.GetCode(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
-// Persists a new revision of the workflow's code. Hash-deduplicates against the current revision (no-op if unchanged). Source is capped at 256KB.
-func (c *Client) SaveCode(
-	ctx context.Context,
-	request *platformgo.WorkflowSaveCodeRequest,
-	opts ...option.RequestOption,
-) (*platformgo.WorkflowSaveCodeResponse, error) {
-	response, err := c.WithRawResponse.SaveCode(
-		ctx,
-		request,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return response.Body, nil
-}
-
-// Creates a new revision with the source of the named revision. Does NOT dedup against the current revision so the action is auditable in the revision history.
-func (c *Client) RestoreRevision(
-	ctx context.Context,
-	request *platformgo.WorkflowRestoreRevisionRequest,
-	opts ...option.RequestOption,
-) (*platformgo.WorkflowSaveCodeResponse, error) {
-	response, err := c.WithRawResponse.RestoreRevision(
 		ctx,
 		request,
 		opts...,
@@ -187,6 +153,23 @@ func (c *Client) ListRevisions(
 	return response.Body, nil
 }
 
+// Saves source as the workflow's new current revision. Hash-deduplicates against the current revision (no_op is true and nothing changes when the source is unchanged). Source is capped at 256KB.
+func (c *Client) CreateRevision(
+	ctx context.Context,
+	request *platformgo.WorkflowCreateRevisionRequest,
+	opts ...option.RequestOption,
+) (*platformgo.WorkflowCreateRevisionResponse, error) {
+	response, err := c.WithRawResponse.CreateRevision(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Returns a single revision including its full source. Defense-in-depth: the revision must belong to the named workflow or it's treated as missing.
 func (c *Client) GetRevision(
 	ctx context.Context,
@@ -194,6 +177,40 @@ func (c *Client) GetRevision(
 	opts ...option.RequestOption,
 ) (*platformgo.WorkflowRevisionDetail, error) {
 	response, err := c.WithRawResponse.GetRevision(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Creates a new revision with the source of the named revision. Does NOT dedup against the current revision so the action is auditable in the revision history.
+func (c *Client) RestoreRevision(
+	ctx context.Context,
+	request *platformgo.WorkflowsRestoreRevisionRequest,
+	opts ...option.RequestOption,
+) (*platformgo.WorkflowCreateRevisionResponse, error) {
+	response, err := c.WithRawResponse.RestoreRevision(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Returns the total run count and success rate of the caller's own runs of the given workflow. A workflow outside the caller's organization reads as not found.
+func (c *Client) GetRunStats(
+	ctx context.Context,
+	request *platformgo.WorkflowsGetRunStatsRequest,
+	opts ...option.RequestOption,
+) (*platformgo.RunStatsResponse, error) {
+	response, err := c.WithRawResponse.GetRunStats(
 		ctx,
 		request,
 		opts...,

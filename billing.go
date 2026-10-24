@@ -37,17 +37,52 @@ func (b *BillingDownloadInvoiceRequest) SetInvoiceID(invoiceID string) {
 }
 
 var (
-	billingGetHistoryRequestFieldLimit        = big.NewInt(1 << 0)
-	billingGetHistoryRequestFieldOffset       = big.NewInt(1 << 1)
-	billingGetHistoryRequestFieldSearch       = big.NewInt(1 << 2)
-	billingGetHistoryRequestFieldBillingCycle = big.NewInt(1 << 3)
-	billingGetHistoryRequestFieldSortBy       = big.NewInt(1 << 4)
-	billingGetHistoryRequestFieldSortOrder    = big.NewInt(1 << 5)
-	billingGetHistoryRequestFieldStatus       = big.NewInt(1 << 6)
-	billingGetHistoryRequestFieldDateFrom     = big.NewInt(1 << 7)
-	billingGetHistoryRequestFieldDateTo       = big.NewInt(1 << 8)
-	billingGetHistoryRequestFieldPlanName     = big.NewInt(1 << 9)
-	billingGetHistoryRequestFieldPhoneID      = big.NewInt(1 << 10)
+	billingGetBalanceStatementRequestFieldPeriodStartAt = big.NewInt(1 << 0)
+	billingGetBalanceStatementRequestFieldPeriodEndAt   = big.NewInt(1 << 1)
+)
+
+type BillingGetBalanceStatementRequest struct {
+	// start of the period (RFC 3339)
+	PeriodStartAt time.Time `json:"-" url:"period_start_at"`
+	// end of the period, exclusive (RFC 3339)
+	PeriodEndAt time.Time `json:"-" url:"period_end_at"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (b *BillingGetBalanceStatementRequest) require(field *big.Int) {
+	if b.explicitFields == nil {
+		b.explicitFields = big.NewInt(0)
+	}
+	b.explicitFields.Or(b.explicitFields, field)
+}
+
+// SetPeriodStartAt sets the PeriodStartAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetBalanceStatementRequest) SetPeriodStartAt(periodStartAt time.Time) {
+	b.PeriodStartAt = periodStartAt
+	b.require(billingGetBalanceStatementRequestFieldPeriodStartAt)
+}
+
+// SetPeriodEndAt sets the PeriodEndAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetBalanceStatementRequest) SetPeriodEndAt(periodEndAt time.Time) {
+	b.PeriodEndAt = periodEndAt
+	b.require(billingGetBalanceStatementRequestFieldPeriodEndAt)
+}
+
+var (
+	billingGetHistoryRequestFieldLimit          = big.NewInt(1 << 0)
+	billingGetHistoryRequestFieldOffset         = big.NewInt(1 << 1)
+	billingGetHistoryRequestFieldSearch         = big.NewInt(1 << 2)
+	billingGetHistoryRequestFieldBillingCycle   = big.NewInt(1 << 3)
+	billingGetHistoryRequestFieldStatus         = big.NewInt(1 << 4)
+	billingGetHistoryRequestFieldInvoicedAfter  = big.NewInt(1 << 5)
+	billingGetHistoryRequestFieldInvoicedBefore = big.NewInt(1 << 6)
+	billingGetHistoryRequestFieldPlanName       = big.NewInt(1 << 7)
+	billingGetHistoryRequestFieldPhoneID        = big.NewInt(1 << 8)
+	billingGetHistoryRequestFieldOrderBy        = big.NewInt(1 << 9)
 )
 
 type BillingGetHistoryRequest struct {
@@ -58,21 +93,19 @@ type BillingGetHistoryRequest struct {
 	// free-text search across invoice number/description
 	Search *string `json:"-" url:"search,omitempty"`
 	// filter by billing cycle
-	BillingCycle *string `json:"-" url:"billing_cycle,omitempty"`
-	// column to sort by
-	SortBy *string `json:"-" url:"sort_by,omitempty"`
-	// asc or desc
-	SortOrder *string `json:"-" url:"sort_order,omitempty"`
-	// invoice status filter (lowercase)
-	Status *string `json:"-" url:"status,omitempty"`
-	// RFC3339 lower bound for invoice_date
-	DateFrom *string `json:"-" url:"date_from,omitempty"`
-	// RFC3339 upper bound for invoice_date (with date_from = an exact calendar month)
-	DateTo *string `json:"-" url:"date_to,omitempty"`
+	BillingCycle *BillingGetHistoryRequestBillingCycle `json:"-" url:"billing_cycle,omitempty"`
+	// only invoices at this status
+	Status *BillingGetHistoryRequestStatus `json:"-" url:"status,omitempty"`
+	// only invoices created at/after this time (RFC 3339)
+	InvoicedAfter *time.Time `json:"-" url:"invoiced_after,omitempty"`
+	// only invoices created at/before this time (RFC 3339; with invoiced_after, an exact calendar month)
+	InvoicedBefore *time.Time `json:"-" url:"invoiced_before,omitempty"`
 	// filter by plan name
 	PlanName *string `json:"-" url:"plan_name,omitempty"`
 	// filter to invoices for a dedicated phone
 	PhoneID *string `json:"-" url:"phone_id,omitempty"`
+	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is invoiced_at, amount_microdollars, status, plan_name, invoice_number or paid_at.
+	OrderBy *string `json:"-" url:"order_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -108,44 +141,30 @@ func (b *BillingGetHistoryRequest) SetSearch(search *string) {
 
 // SetBillingCycle sets the BillingCycle field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingGetHistoryRequest) SetBillingCycle(billingCycle *string) {
+func (b *BillingGetHistoryRequest) SetBillingCycle(billingCycle *BillingGetHistoryRequestBillingCycle) {
 	b.BillingCycle = billingCycle
 	b.require(billingGetHistoryRequestFieldBillingCycle)
 }
 
-// SetSortBy sets the SortBy field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingGetHistoryRequest) SetSortBy(sortBy *string) {
-	b.SortBy = sortBy
-	b.require(billingGetHistoryRequestFieldSortBy)
-}
-
-// SetSortOrder sets the SortOrder field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingGetHistoryRequest) SetSortOrder(sortOrder *string) {
-	b.SortOrder = sortOrder
-	b.require(billingGetHistoryRequestFieldSortOrder)
-}
-
 // SetStatus sets the Status field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingGetHistoryRequest) SetStatus(status *string) {
+func (b *BillingGetHistoryRequest) SetStatus(status *BillingGetHistoryRequestStatus) {
 	b.Status = status
 	b.require(billingGetHistoryRequestFieldStatus)
 }
 
-// SetDateFrom sets the DateFrom field and marks it as non-optional;
+// SetInvoicedAfter sets the InvoicedAfter field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingGetHistoryRequest) SetDateFrom(dateFrom *string) {
-	b.DateFrom = dateFrom
-	b.require(billingGetHistoryRequestFieldDateFrom)
+func (b *BillingGetHistoryRequest) SetInvoicedAfter(invoicedAfter *time.Time) {
+	b.InvoicedAfter = invoicedAfter
+	b.require(billingGetHistoryRequestFieldInvoicedAfter)
 }
 
-// SetDateTo sets the DateTo field and marks it as non-optional;
+// SetInvoicedBefore sets the InvoicedBefore field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingGetHistoryRequest) SetDateTo(dateTo *string) {
-	b.DateTo = dateTo
-	b.require(billingGetHistoryRequestFieldDateTo)
+func (b *BillingGetHistoryRequest) SetInvoicedBefore(invoicedBefore *time.Time) {
+	b.InvoicedBefore = invoicedBefore
+	b.require(billingGetHistoryRequestFieldInvoicedBefore)
 }
 
 // SetPlanName sets the PlanName field and marks it as non-optional;
@@ -160,6 +179,205 @@ func (b *BillingGetHistoryRequest) SetPlanName(planName *string) {
 func (b *BillingGetHistoryRequest) SetPhoneID(phoneID *string) {
 	b.PhoneID = phoneID
 	b.require(billingGetHistoryRequestFieldPhoneID)
+}
+
+// SetOrderBy sets the OrderBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetHistoryRequest) SetOrderBy(orderBy *string) {
+	b.OrderBy = orderBy
+	b.require(billingGetHistoryRequestFieldOrderBy)
+}
+
+var (
+	billingGetRentalSubscriptionsRequestFieldLimit                  = big.NewInt(1 << 0)
+	billingGetRentalSubscriptionsRequestFieldOffset                 = big.NewInt(1 << 1)
+	billingGetRentalSubscriptionsRequestFieldSearch                 = big.NewInt(1 << 2)
+	billingGetRentalSubscriptionsRequestFieldStatus                 = big.NewInt(1 << 3)
+	billingGetRentalSubscriptionsRequestFieldPlanInterval           = big.NewInt(1 << 4)
+	billingGetRentalSubscriptionsRequestFieldCancelAtPeriodEnd      = big.NewInt(1 << 5)
+	billingGetRentalSubscriptionsRequestFieldPaymentStatus          = big.NewInt(1 << 6)
+	billingGetRentalSubscriptionsRequestFieldCurrentPeriodEndAfter  = big.NewInt(1 << 7)
+	billingGetRentalSubscriptionsRequestFieldCurrentPeriodEndBefore = big.NewInt(1 << 8)
+	billingGetRentalSubscriptionsRequestFieldOrderBy                = big.NewInt(1 << 9)
+)
+
+type BillingGetRentalSubscriptionsRequest struct {
+	// max items per page
+	Limit *int64 `json:"-" url:"limit,omitempty"`
+	// pagination offset
+	Offset *int64 `json:"-" url:"offset,omitempty"`
+	// only rentals whose phone name or nickname contains this text
+	Search *string `json:"-" url:"search,omitempty"`
+	// only rentals at one of these lifecycle statuses; repeatable. Omit for every status.
+	Status []BillingGetRentalSubscriptionsRequestStatusItem `json:"-" url:"status,omitempty"`
+	// only rentals on one of these plan intervals; repeatable
+	PlanInterval []BillingGetRentalSubscriptionsRequestPlanIntervalItem `json:"-" url:"plan_interval,omitempty"`
+	// true for rentals set to cancel at period end, false for renewing ones
+	CancelAtPeriodEnd *BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd `json:"-" url:"cancel_at_period_end,omitempty"`
+	// only rentals in one of these billing states; repeatable
+	PaymentStatus []BillingGetRentalSubscriptionsRequestPaymentStatusItem `json:"-" url:"payment_status,omitempty"`
+	// only rentals whose current period ends at or after this time (RFC 3339)
+	CurrentPeriodEndAfter *time.Time `json:"-" url:"current_period_end_after,omitempty"`
+	// only rentals whose current period ends at or before this time (RFC 3339)
+	CurrentPeriodEndBefore *time.Time `json:"-" url:"current_period_end_before,omitempty"`
+	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is phone_name, current_period_end_at, plan_interval or plan_price_microdollars. Defaults to current_period_end_at asc.
+	OrderBy *string `json:"-" url:"order_by,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (b *BillingGetRentalSubscriptionsRequest) require(field *big.Int) {
+	if b.explicitFields == nil {
+		b.explicitFields = big.NewInt(0)
+	}
+	b.explicitFields.Or(b.explicitFields, field)
+}
+
+// SetLimit sets the Limit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetLimit(limit *int64) {
+	b.Limit = limit
+	b.require(billingGetRentalSubscriptionsRequestFieldLimit)
+}
+
+// SetOffset sets the Offset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetOffset(offset *int64) {
+	b.Offset = offset
+	b.require(billingGetRentalSubscriptionsRequestFieldOffset)
+}
+
+// SetSearch sets the Search field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetSearch(search *string) {
+	b.Search = search
+	b.require(billingGetRentalSubscriptionsRequestFieldSearch)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetStatus(status []BillingGetRentalSubscriptionsRequestStatusItem) {
+	b.Status = status
+	b.require(billingGetRentalSubscriptionsRequestFieldStatus)
+}
+
+// SetPlanInterval sets the PlanInterval field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetPlanInterval(planInterval []BillingGetRentalSubscriptionsRequestPlanIntervalItem) {
+	b.PlanInterval = planInterval
+	b.require(billingGetRentalSubscriptionsRequestFieldPlanInterval)
+}
+
+// SetCancelAtPeriodEnd sets the CancelAtPeriodEnd field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetCancelAtPeriodEnd(cancelAtPeriodEnd *BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd) {
+	b.CancelAtPeriodEnd = cancelAtPeriodEnd
+	b.require(billingGetRentalSubscriptionsRequestFieldCancelAtPeriodEnd)
+}
+
+// SetPaymentStatus sets the PaymentStatus field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetPaymentStatus(paymentStatus []BillingGetRentalSubscriptionsRequestPaymentStatusItem) {
+	b.PaymentStatus = paymentStatus
+	b.require(billingGetRentalSubscriptionsRequestFieldPaymentStatus)
+}
+
+// SetCurrentPeriodEndAfter sets the CurrentPeriodEndAfter field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetCurrentPeriodEndAfter(currentPeriodEndAfter *time.Time) {
+	b.CurrentPeriodEndAfter = currentPeriodEndAfter
+	b.require(billingGetRentalSubscriptionsRequestFieldCurrentPeriodEndAfter)
+}
+
+// SetCurrentPeriodEndBefore sets the CurrentPeriodEndBefore field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetCurrentPeriodEndBefore(currentPeriodEndBefore *time.Time) {
+	b.CurrentPeriodEndBefore = currentPeriodEndBefore
+	b.require(billingGetRentalSubscriptionsRequestFieldCurrentPeriodEndBefore)
+}
+
+// SetOrderBy sets the OrderBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingGetRentalSubscriptionsRequest) SetOrderBy(orderBy *string) {
+	b.OrderBy = orderBy
+	b.require(billingGetRentalSubscriptionsRequestFieldOrderBy)
+}
+
+var (
+	billingListBalanceTransactionsRequestFieldLimit         = big.NewInt(1 << 0)
+	billingListBalanceTransactionsRequestFieldOffset        = big.NewInt(1 << 1)
+	billingListBalanceTransactionsRequestFieldType          = big.NewInt(1 << 2)
+	billingListBalanceTransactionsRequestFieldCreatedAfter  = big.NewInt(1 << 3)
+	billingListBalanceTransactionsRequestFieldCreatedBefore = big.NewInt(1 << 4)
+	billingListBalanceTransactionsRequestFieldOrderBy       = big.NewInt(1 << 5)
+)
+
+type BillingListBalanceTransactionsRequest struct {
+	// max items per page
+	Limit *int64 `json:"-" url:"limit,omitempty"`
+	// pagination offset
+	Offset *int64 `json:"-" url:"offset,omitempty"`
+	// Only transactions of one of these types; repeatable.
+	Type []BillingListBalanceTransactionsRequestTypeItem `json:"-" url:"type,omitempty"`
+	// only transactions at/after this time (RFC 3339)
+	CreatedAfter *time.Time `json:"-" url:"created_after,omitempty"`
+	// only transactions at/before this time (RFC 3339)
+	CreatedBefore *time.Time `json:"-" url:"created_before,omitempty"`
+	// Sort expression 'created_at [asc|desc]', direction defaulting to desc.
+	OrderBy *string `json:"-" url:"order_by,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (b *BillingListBalanceTransactionsRequest) require(field *big.Int) {
+	if b.explicitFields == nil {
+		b.explicitFields = big.NewInt(0)
+	}
+	b.explicitFields.Or(b.explicitFields, field)
+}
+
+// SetLimit sets the Limit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingListBalanceTransactionsRequest) SetLimit(limit *int64) {
+	b.Limit = limit
+	b.require(billingListBalanceTransactionsRequestFieldLimit)
+}
+
+// SetOffset sets the Offset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingListBalanceTransactionsRequest) SetOffset(offset *int64) {
+	b.Offset = offset
+	b.require(billingListBalanceTransactionsRequestFieldOffset)
+}
+
+// SetType sets the Type field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingListBalanceTransactionsRequest) SetType(type_ []BillingListBalanceTransactionsRequestTypeItem) {
+	b.Type = type_
+	b.require(billingListBalanceTransactionsRequestFieldType)
+}
+
+// SetCreatedAfter sets the CreatedAfter field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingListBalanceTransactionsRequest) SetCreatedAfter(createdAfter *time.Time) {
+	b.CreatedAfter = createdAfter
+	b.require(billingListBalanceTransactionsRequestFieldCreatedAfter)
+}
+
+// SetCreatedBefore sets the CreatedBefore field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingListBalanceTransactionsRequest) SetCreatedBefore(createdBefore *time.Time) {
+	b.CreatedBefore = createdBefore
+	b.require(billingListBalanceTransactionsRequestFieldCreatedBefore)
+}
+
+// SetOrderBy sets the OrderBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingListBalanceTransactionsRequest) SetOrderBy(orderBy *string) {
+	b.OrderBy = orderBy
+	b.require(billingListBalanceTransactionsRequestFieldOrderBy)
 }
 
 // Response containing a temporary invoice download URL.
@@ -292,48 +510,45 @@ func (b *BillingHistoryInvoiceDownloadResponse) String() string {
 
 // Single invoice record in the billing history.
 var (
-	billingHistoryItemFieldAmountCents      = big.NewInt(1 << 0)
-	billingHistoryItemFieldAmountDollars    = big.NewInt(1 << 1)
-	billingHistoryItemFieldBillingCycle     = big.NewInt(1 << 2)
-	billingHistoryItemFieldCurrency         = big.NewInt(1 << 3)
-	billingHistoryItemFieldDescription      = big.NewInt(1 << 4)
-	billingHistoryItemFieldDueDate          = big.NewInt(1 << 5)
-	billingHistoryItemFieldFormattedAmount  = big.NewInt(1 << 6)
-	billingHistoryItemFieldHostedInvoiceURL = big.NewInt(1 << 7)
-	billingHistoryItemFieldID               = big.NewInt(1 << 8)
-	billingHistoryItemFieldInvoiceDate      = big.NewInt(1 << 9)
-	billingHistoryItemFieldInvoiceNumber    = big.NewInt(1 << 10)
-	billingHistoryItemFieldInvoicePdfURL    = big.NewInt(1 << 11)
-	billingHistoryItemFieldPaidAt           = big.NewInt(1 << 12)
-	billingHistoryItemFieldPlanName         = big.NewInt(1 << 13)
-	billingHistoryItemFieldStatus           = big.NewInt(1 << 14)
+	billingHistoryItemFieldAmountDisplay      = big.NewInt(1 << 0)
+	billingHistoryItemFieldAmountMicrodollars = big.NewInt(1 << 1)
+	billingHistoryItemFieldBillingCycle       = big.NewInt(1 << 2)
+	billingHistoryItemFieldCurrency           = big.NewInt(1 << 3)
+	billingHistoryItemFieldDescription        = big.NewInt(1 << 4)
+	billingHistoryItemFieldDueAt              = big.NewInt(1 << 5)
+	billingHistoryItemFieldHostedInvoiceURL   = big.NewInt(1 << 6)
+	billingHistoryItemFieldID                 = big.NewInt(1 << 7)
+	billingHistoryItemFieldInvoiceNumber      = big.NewInt(1 << 8)
+	billingHistoryItemFieldInvoicePdfURL      = big.NewInt(1 << 9)
+	billingHistoryItemFieldInvoicedAt         = big.NewInt(1 << 10)
+	billingHistoryItemFieldPaidAt             = big.NewInt(1 << 11)
+	billingHistoryItemFieldPlanName           = big.NewInt(1 << 12)
+	billingHistoryItemFieldStatus             = big.NewInt(1 << 13)
 )
 
 type BillingHistoryItem struct {
-	// Invoice amount in cents.
-	AmountCents int64 `json:"amount_cents" url:"amount_cents"`
-	// Invoice amount expressed in dollars.
-	AmountDollars float64 `json:"amount_dollars" url:"amount_dollars"`
+	// The amount formatted for display (e.g., '$12.50').
+	AmountDisplay string `json:"amount_display" url:"amount_display"`
+	// Invoice amount in microdollars (1_000_000 = $1.00).
+	AmountMicrodollars int64 `json:"amount_microdollars" url:"amount_microdollars"`
 	// Billing frequency for this invoice period.
-	BillingCycle string `json:"billing_cycle" url:"billing_cycle"`
+	BillingCycle BillingHistoryItemBillingCycle `json:"billing_cycle" url:"billing_cycle"`
 	// ISO 4217 currency code (e.g., 'usd').
 	Currency string `json:"currency" url:"currency"`
 	// Human-readable invoice description.
 	Description string `json:"description" url:"description"`
 	// Payment due date, if set.
-	DueDate *time.Time `json:"due_date,omitempty" url:"due_date,omitempty"`
-	// Formatted display string (e.g., '$12.50').
-	FormattedAmount string `json:"formatted_amount" url:"formatted_amount"`
+	DueAt *time.Time `json:"due_at,omitempty" url:"due_at,omitempty"`
 	// Hosted invoice page URL, if available.
 	HostedInvoiceURL *string `json:"hosted_invoice_url,omitempty" url:"hosted_invoice_url,omitempty"`
 	// Billing history record identifier.
 	ID string `json:"id" url:"id"`
-	// Timestamp when the invoice was created.
-	InvoiceDate time.Time `json:"invoice_date" url:"invoice_date"`
 	// Human-readable invoice number.
 	InvoiceNumber string `json:"invoice_number" url:"invoice_number"`
 	// Direct URL to the invoice PDF, if available.
 	InvoicePdfURL *string `json:"invoice_pdf_url,omitempty" url:"invoice_pdf_url,omitempty"`
+	// Timestamp when the invoice was created.
+	InvoicedAt time.Time `json:"invoiced_at" url:"invoiced_at"`
 	// Timestamp when the invoice was paid.
 	PaidAt *time.Time `json:"paid_at,omitempty" url:"paid_at,omitempty"`
 	// Billing plan associated with this invoice.
@@ -348,21 +563,21 @@ type BillingHistoryItem struct {
 	rawJSON         json.RawMessage
 }
 
-func (b *BillingHistoryItem) GetAmountCents() int64 {
+func (b *BillingHistoryItem) GetAmountDisplay() string {
+	if b == nil {
+		return ""
+	}
+	return b.AmountDisplay
+}
+
+func (b *BillingHistoryItem) GetAmountMicrodollars() int64 {
 	if b == nil {
 		return 0
 	}
-	return b.AmountCents
+	return b.AmountMicrodollars
 }
 
-func (b *BillingHistoryItem) GetAmountDollars() float64 {
-	if b == nil {
-		return 0
-	}
-	return b.AmountDollars
-}
-
-func (b *BillingHistoryItem) GetBillingCycle() string {
+func (b *BillingHistoryItem) GetBillingCycle() BillingHistoryItemBillingCycle {
 	if b == nil {
 		return ""
 	}
@@ -383,18 +598,11 @@ func (b *BillingHistoryItem) GetDescription() string {
 	return b.Description
 }
 
-func (b *BillingHistoryItem) GetDueDate() *time.Time {
+func (b *BillingHistoryItem) GetDueAt() *time.Time {
 	if b == nil {
 		return nil
 	}
-	return b.DueDate
-}
-
-func (b *BillingHistoryItem) GetFormattedAmount() string {
-	if b == nil {
-		return ""
-	}
-	return b.FormattedAmount
+	return b.DueAt
 }
 
 func (b *BillingHistoryItem) GetHostedInvoiceURL() *string {
@@ -411,13 +619,6 @@ func (b *BillingHistoryItem) GetID() string {
 	return b.ID
 }
 
-func (b *BillingHistoryItem) GetInvoiceDate() time.Time {
-	if b == nil {
-		return time.Time{}
-	}
-	return b.InvoiceDate
-}
-
 func (b *BillingHistoryItem) GetInvoiceNumber() string {
 	if b == nil {
 		return ""
@@ -430,6 +631,13 @@ func (b *BillingHistoryItem) GetInvoicePdfURL() *string {
 		return nil
 	}
 	return b.InvoicePdfURL
+}
+
+func (b *BillingHistoryItem) GetInvoicedAt() time.Time {
+	if b == nil {
+		return time.Time{}
+	}
+	return b.InvoicedAt
 }
 
 func (b *BillingHistoryItem) GetPaidAt() *time.Time {
@@ -467,23 +675,23 @@ func (b *BillingHistoryItem) require(field *big.Int) {
 	b.explicitFields.Or(b.explicitFields, field)
 }
 
-// SetAmountCents sets the AmountCents field and marks it as non-optional;
+// SetAmountDisplay sets the AmountDisplay field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingHistoryItem) SetAmountCents(amountCents int64) {
-	b.AmountCents = amountCents
-	b.require(billingHistoryItemFieldAmountCents)
+func (b *BillingHistoryItem) SetAmountDisplay(amountDisplay string) {
+	b.AmountDisplay = amountDisplay
+	b.require(billingHistoryItemFieldAmountDisplay)
 }
 
-// SetAmountDollars sets the AmountDollars field and marks it as non-optional;
+// SetAmountMicrodollars sets the AmountMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingHistoryItem) SetAmountDollars(amountDollars float64) {
-	b.AmountDollars = amountDollars
-	b.require(billingHistoryItemFieldAmountDollars)
+func (b *BillingHistoryItem) SetAmountMicrodollars(amountMicrodollars int64) {
+	b.AmountMicrodollars = amountMicrodollars
+	b.require(billingHistoryItemFieldAmountMicrodollars)
 }
 
 // SetBillingCycle sets the BillingCycle field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingHistoryItem) SetBillingCycle(billingCycle string) {
+func (b *BillingHistoryItem) SetBillingCycle(billingCycle BillingHistoryItemBillingCycle) {
 	b.BillingCycle = billingCycle
 	b.require(billingHistoryItemFieldBillingCycle)
 }
@@ -502,18 +710,11 @@ func (b *BillingHistoryItem) SetDescription(description string) {
 	b.require(billingHistoryItemFieldDescription)
 }
 
-// SetDueDate sets the DueDate field and marks it as non-optional;
+// SetDueAt sets the DueAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingHistoryItem) SetDueDate(dueDate *time.Time) {
-	b.DueDate = dueDate
-	b.require(billingHistoryItemFieldDueDate)
-}
-
-// SetFormattedAmount sets the FormattedAmount field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingHistoryItem) SetFormattedAmount(formattedAmount string) {
-	b.FormattedAmount = formattedAmount
-	b.require(billingHistoryItemFieldFormattedAmount)
+func (b *BillingHistoryItem) SetDueAt(dueAt *time.Time) {
+	b.DueAt = dueAt
+	b.require(billingHistoryItemFieldDueAt)
 }
 
 // SetHostedInvoiceURL sets the HostedInvoiceURL field and marks it as non-optional;
@@ -530,13 +731,6 @@ func (b *BillingHistoryItem) SetID(id string) {
 	b.require(billingHistoryItemFieldID)
 }
 
-// SetInvoiceDate sets the InvoiceDate field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BillingHistoryItem) SetInvoiceDate(invoiceDate time.Time) {
-	b.InvoiceDate = invoiceDate
-	b.require(billingHistoryItemFieldInvoiceDate)
-}
-
 // SetInvoiceNumber sets the InvoiceNumber field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (b *BillingHistoryItem) SetInvoiceNumber(invoiceNumber string) {
@@ -549,6 +743,13 @@ func (b *BillingHistoryItem) SetInvoiceNumber(invoiceNumber string) {
 func (b *BillingHistoryItem) SetInvoicePdfURL(invoicePdfURL *string) {
 	b.InvoicePdfURL = invoicePdfURL
 	b.require(billingHistoryItemFieldInvoicePdfURL)
+}
+
+// SetInvoicedAt sets the InvoicedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BillingHistoryItem) SetInvoicedAt(invoicedAt time.Time) {
+	b.InvoicedAt = invoicedAt
+	b.require(billingHistoryItemFieldInvoicedAt)
 }
 
 // SetPaidAt sets the PaidAt field and marks it as non-optional;
@@ -576,9 +777,9 @@ func (b *BillingHistoryItem) UnmarshalJSON(data []byte) error {
 	type embed BillingHistoryItem
 	var unmarshaler = struct {
 		embed
-		DueDate     *internal.DateTime `json:"due_date,omitempty"`
-		InvoiceDate *internal.DateTime `json:"invoice_date"`
-		PaidAt      *internal.DateTime `json:"paid_at,omitempty"`
+		DueAt      *internal.DateTime `json:"due_at,omitempty"`
+		InvoicedAt *internal.DateTime `json:"invoiced_at"`
+		PaidAt     *internal.DateTime `json:"paid_at,omitempty"`
 	}{
 		embed: embed(*b),
 	}
@@ -586,8 +787,8 @@ func (b *BillingHistoryItem) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*b = BillingHistoryItem(unmarshaler.embed)
-	b.DueDate = unmarshaler.DueDate.TimePtr()
-	b.InvoiceDate = unmarshaler.InvoiceDate.Time()
+	b.DueAt = unmarshaler.DueAt.TimePtr()
+	b.InvoicedAt = unmarshaler.InvoicedAt.Time()
 	b.PaidAt = unmarshaler.PaidAt.TimePtr()
 	extraProperties, err := internal.ExtractExtraProperties(data, *b)
 	if err != nil {
@@ -602,14 +803,14 @@ func (b *BillingHistoryItem) MarshalJSON() ([]byte, error) {
 	type embed BillingHistoryItem
 	var marshaler = struct {
 		embed
-		DueDate     *internal.DateTime `json:"due_date,omitempty"`
-		InvoiceDate *internal.DateTime `json:"invoice_date"`
-		PaidAt      *internal.DateTime `json:"paid_at,omitempty"`
+		DueAt      *internal.DateTime `json:"due_at,omitempty"`
+		InvoicedAt *internal.DateTime `json:"invoiced_at"`
+		PaidAt     *internal.DateTime `json:"paid_at,omitempty"`
 	}{
-		embed:       embed(*b),
-		DueDate:     internal.NewOptionalDateTime(b.DueDate),
-		InvoiceDate: internal.NewDateTime(b.InvoiceDate),
-		PaidAt:      internal.NewOptionalDateTime(b.PaidAt),
+		embed:      embed(*b),
+		DueAt:      internal.NewOptionalDateTime(b.DueAt),
+		InvoicedAt: internal.NewDateTime(b.InvoicedAt),
+		PaidAt:     internal.NewOptionalDateTime(b.PaidAt),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, b.explicitFields)
 	return json.Marshal(explicitMarshaler)
@@ -628,6 +829,35 @@ func (b *BillingHistoryItem) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", b)
+}
+
+// Billing frequency for this invoice period.
+type BillingHistoryItemBillingCycle string
+
+const (
+	BillingHistoryItemBillingCycleDaily   BillingHistoryItemBillingCycle = "daily"
+	BillingHistoryItemBillingCycleWeekly  BillingHistoryItemBillingCycle = "weekly"
+	BillingHistoryItemBillingCycleMonthly BillingHistoryItemBillingCycle = "monthly"
+	BillingHistoryItemBillingCycleYearly  BillingHistoryItemBillingCycle = "yearly"
+)
+
+func NewBillingHistoryItemBillingCycleFromString(s string) (BillingHistoryItemBillingCycle, error) {
+	switch s {
+	case "daily":
+		return BillingHistoryItemBillingCycleDaily, nil
+	case "weekly":
+		return BillingHistoryItemBillingCycleWeekly, nil
+	case "monthly":
+		return BillingHistoryItemBillingCycleMonthly, nil
+	case "yearly":
+		return BillingHistoryItemBillingCycleYearly, nil
+	}
+	var t BillingHistoryItemBillingCycle
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (b BillingHistoryItemBillingCycle) Ptr() *BillingHistoryItemBillingCycle {
+	return &b
 }
 
 // Current payment status of the invoice.
@@ -815,18 +1045,18 @@ func (b *BillingHistoryResponse) String() string {
 
 // Per-interval slice of the rollup.
 var (
-	phoneRentalIntervalSummaryFieldCount        = big.NewInt(1 << 0)
-	phoneRentalIntervalSummaryFieldInterval     = big.NewInt(1 << 1)
-	phoneRentalIntervalSummaryFieldMonthlyCents = big.NewInt(1 << 2)
+	phoneRentalIntervalSummaryFieldCount               = big.NewInt(1 << 0)
+	phoneRentalIntervalSummaryFieldInterval            = big.NewInt(1 << 1)
+	phoneRentalIntervalSummaryFieldMonthlyMicrodollars = big.NewInt(1 << 2)
 )
 
 type PhoneRentalIntervalSummary struct {
 	// Number of active rentals on this interval.
 	Count int64 `json:"count" url:"count"`
-	// Plan interval ('day' | 'week' | 'month').
-	Interval string `json:"interval" url:"interval"`
-	// Monthly-equivalent spend for this interval's rentals.
-	MonthlyCents int64 `json:"monthly_cents" url:"monthly_cents"`
+	// Plan interval.
+	Interval PhoneRentalIntervalSummaryInterval `json:"interval" url:"interval"`
+	// Monthly-equivalent spend for this interval's rentals, in microdollars.
+	MonthlyMicrodollars int64 `json:"monthly_microdollars" url:"monthly_microdollars"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -842,18 +1072,18 @@ func (p *PhoneRentalIntervalSummary) GetCount() int64 {
 	return p.Count
 }
 
-func (p *PhoneRentalIntervalSummary) GetInterval() string {
+func (p *PhoneRentalIntervalSummary) GetInterval() PhoneRentalIntervalSummaryInterval {
 	if p == nil {
 		return ""
 	}
 	return p.Interval
 }
 
-func (p *PhoneRentalIntervalSummary) GetMonthlyCents() int64 {
+func (p *PhoneRentalIntervalSummary) GetMonthlyMicrodollars() int64 {
 	if p == nil {
 		return 0
 	}
-	return p.MonthlyCents
+	return p.MonthlyMicrodollars
 }
 
 func (p *PhoneRentalIntervalSummary) GetExtraProperties() map[string]interface{} {
@@ -879,16 +1109,16 @@ func (p *PhoneRentalIntervalSummary) SetCount(count int64) {
 
 // SetInterval sets the Interval field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalIntervalSummary) SetInterval(interval string) {
+func (p *PhoneRentalIntervalSummary) SetInterval(interval PhoneRentalIntervalSummaryInterval) {
 	p.Interval = interval
 	p.require(phoneRentalIntervalSummaryFieldInterval)
 }
 
-// SetMonthlyCents sets the MonthlyCents field and marks it as non-optional;
+// SetMonthlyMicrodollars sets the MonthlyMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalIntervalSummary) SetMonthlyCents(monthlyCents int64) {
-	p.MonthlyCents = monthlyCents
-	p.require(phoneRentalIntervalSummaryFieldMonthlyCents)
+func (p *PhoneRentalIntervalSummary) SetMonthlyMicrodollars(monthlyMicrodollars int64) {
+	p.MonthlyMicrodollars = monthlyMicrodollars
+	p.require(phoneRentalIntervalSummaryFieldMonthlyMicrodollars)
 }
 
 func (p *PhoneRentalIntervalSummary) UnmarshalJSON(data []byte) error {
@@ -931,6 +1161,35 @@ func (p *PhoneRentalIntervalSummary) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", p)
+}
+
+// Plan interval.
+type PhoneRentalIntervalSummaryInterval string
+
+const (
+	PhoneRentalIntervalSummaryIntervalDay   PhoneRentalIntervalSummaryInterval = "day"
+	PhoneRentalIntervalSummaryIntervalWeek  PhoneRentalIntervalSummaryInterval = "week"
+	PhoneRentalIntervalSummaryIntervalMonth PhoneRentalIntervalSummaryInterval = "month"
+	PhoneRentalIntervalSummaryIntervalYear  PhoneRentalIntervalSummaryInterval = "year"
+)
+
+func NewPhoneRentalIntervalSummaryIntervalFromString(s string) (PhoneRentalIntervalSummaryInterval, error) {
+	switch s {
+	case "day":
+		return PhoneRentalIntervalSummaryIntervalDay, nil
+	case "week":
+		return PhoneRentalIntervalSummaryIntervalWeek, nil
+	case "month":
+		return PhoneRentalIntervalSummaryIntervalMonth, nil
+	case "year":
+		return PhoneRentalIntervalSummaryIntervalYear, nil
+	}
+	var t PhoneRentalIntervalSummaryInterval
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneRentalIntervalSummaryInterval) Ptr() *PhoneRentalIntervalSummaryInterval {
+	return &p
 }
 
 // An org's device rental subscriptions, plus an org-wide summary. The summary counts only active rentals regardless of which statuses the subscriptions list contains.
@@ -1072,21 +1331,21 @@ func (p *PhoneRentalSubscriptionListResponse) String() string {
 
 // Single device rental subscription record.
 var (
-	phoneRentalSubscriptionResponseFieldCancelAtPeriodEnd  = big.NewInt(1 << 0)
-	phoneRentalSubscriptionResponseFieldCanceledAt         = big.NewInt(1 << 1)
-	phoneRentalSubscriptionResponseFieldCurrentPeriodEnd   = big.NewInt(1 << 2)
-	phoneRentalSubscriptionResponseFieldCurrentPeriodStart = big.NewInt(1 << 3)
-	phoneRentalSubscriptionResponseFieldID                 = big.NewInt(1 << 4)
-	phoneRentalSubscriptionResponseFieldOrganizationID     = big.NewInt(1 << 5)
-	phoneRentalSubscriptionResponseFieldPaymentStatus      = big.NewInt(1 << 6)
-	phoneRentalSubscriptionResponseFieldPhoneID            = big.NewInt(1 << 7)
-	phoneRentalSubscriptionResponseFieldPhoneName          = big.NewInt(1 << 8)
-	phoneRentalSubscriptionResponseFieldPhoneNickname      = big.NewInt(1 << 9)
-	phoneRentalSubscriptionResponseFieldPlanID             = big.NewInt(1 << 10)
-	phoneRentalSubscriptionResponseFieldPlanInterval       = big.NewInt(1 << 11)
-	phoneRentalSubscriptionResponseFieldPlanName           = big.NewInt(1 << 12)
-	phoneRentalSubscriptionResponseFieldPlanPriceCents     = big.NewInt(1 << 13)
-	phoneRentalSubscriptionResponseFieldStatus             = big.NewInt(1 << 14)
+	phoneRentalSubscriptionResponseFieldCancelAtPeriodEnd     = big.NewInt(1 << 0)
+	phoneRentalSubscriptionResponseFieldCanceledAt            = big.NewInt(1 << 1)
+	phoneRentalSubscriptionResponseFieldCurrentPeriodEndAt    = big.NewInt(1 << 2)
+	phoneRentalSubscriptionResponseFieldCurrentPeriodStartAt  = big.NewInt(1 << 3)
+	phoneRentalSubscriptionResponseFieldID                    = big.NewInt(1 << 4)
+	phoneRentalSubscriptionResponseFieldOrganizationID        = big.NewInt(1 << 5)
+	phoneRentalSubscriptionResponseFieldPaymentStatus         = big.NewInt(1 << 6)
+	phoneRentalSubscriptionResponseFieldPhoneID               = big.NewInt(1 << 7)
+	phoneRentalSubscriptionResponseFieldPhoneName             = big.NewInt(1 << 8)
+	phoneRentalSubscriptionResponseFieldPhoneNickname         = big.NewInt(1 << 9)
+	phoneRentalSubscriptionResponseFieldPlanID                = big.NewInt(1 << 10)
+	phoneRentalSubscriptionResponseFieldPlanInterval          = big.NewInt(1 << 11)
+	phoneRentalSubscriptionResponseFieldPlanName              = big.NewInt(1 << 12)
+	phoneRentalSubscriptionResponseFieldPlanPriceMicrodollars = big.NewInt(1 << 13)
+	phoneRentalSubscriptionResponseFieldStatus                = big.NewInt(1 << 14)
 )
 
 type PhoneRentalSubscriptionResponse struct {
@@ -1095,9 +1354,9 @@ type PhoneRentalSubscriptionResponse struct {
 	// Timestamp when the subscription was canceled.
 	CanceledAt *time.Time `json:"canceled_at,omitempty" url:"canceled_at,omitempty"`
 	// End of the current billing period.
-	CurrentPeriodEnd time.Time `json:"current_period_end" url:"current_period_end"`
+	CurrentPeriodEndAt time.Time `json:"current_period_end_at" url:"current_period_end_at"`
 	// Start of the current billing period.
-	CurrentPeriodStart time.Time `json:"current_period_start" url:"current_period_start"`
+	CurrentPeriodStartAt time.Time `json:"current_period_start_at" url:"current_period_start_at"`
 	// Subscription identifier.
 	ID string `json:"id" url:"id"`
 	// Subscribing organization's identifier.
@@ -1113,11 +1372,11 @@ type PhoneRentalSubscriptionResponse struct {
 	// Rented plan's identifier.
 	PlanID string `json:"plan_id" url:"plan_id"`
 	// Billing interval of the plan.
-	PlanInterval string `json:"plan_interval" url:"plan_interval"`
+	PlanInterval PhoneRentalSubscriptionResponsePlanInterval `json:"plan_interval" url:"plan_interval"`
 	// Human-readable name of the plan.
 	PlanName string `json:"plan_name" url:"plan_name"`
-	// Plan price in cents per interval.
-	PlanPriceCents int64 `json:"plan_price_cents" url:"plan_price_cents"`
+	// Plan price per interval, in microdollars.
+	PlanPriceMicrodollars int64 `json:"plan_price_microdollars" url:"plan_price_microdollars"`
 	// Current subscription lifecycle state.
 	Status PhoneRentalSubscriptionResponseStatus `json:"status" url:"status"`
 
@@ -1142,18 +1401,18 @@ func (p *PhoneRentalSubscriptionResponse) GetCanceledAt() *time.Time {
 	return p.CanceledAt
 }
 
-func (p *PhoneRentalSubscriptionResponse) GetCurrentPeriodEnd() time.Time {
+func (p *PhoneRentalSubscriptionResponse) GetCurrentPeriodEndAt() time.Time {
 	if p == nil {
 		return time.Time{}
 	}
-	return p.CurrentPeriodEnd
+	return p.CurrentPeriodEndAt
 }
 
-func (p *PhoneRentalSubscriptionResponse) GetCurrentPeriodStart() time.Time {
+func (p *PhoneRentalSubscriptionResponse) GetCurrentPeriodStartAt() time.Time {
 	if p == nil {
 		return time.Time{}
 	}
-	return p.CurrentPeriodStart
+	return p.CurrentPeriodStartAt
 }
 
 func (p *PhoneRentalSubscriptionResponse) GetID() string {
@@ -1205,7 +1464,7 @@ func (p *PhoneRentalSubscriptionResponse) GetPlanID() string {
 	return p.PlanID
 }
 
-func (p *PhoneRentalSubscriptionResponse) GetPlanInterval() string {
+func (p *PhoneRentalSubscriptionResponse) GetPlanInterval() PhoneRentalSubscriptionResponsePlanInterval {
 	if p == nil {
 		return ""
 	}
@@ -1219,11 +1478,11 @@ func (p *PhoneRentalSubscriptionResponse) GetPlanName() string {
 	return p.PlanName
 }
 
-func (p *PhoneRentalSubscriptionResponse) GetPlanPriceCents() int64 {
+func (p *PhoneRentalSubscriptionResponse) GetPlanPriceMicrodollars() int64 {
 	if p == nil {
 		return 0
 	}
-	return p.PlanPriceCents
+	return p.PlanPriceMicrodollars
 }
 
 func (p *PhoneRentalSubscriptionResponse) GetStatus() PhoneRentalSubscriptionResponseStatus {
@@ -1261,18 +1520,18 @@ func (p *PhoneRentalSubscriptionResponse) SetCanceledAt(canceledAt *time.Time) {
 	p.require(phoneRentalSubscriptionResponseFieldCanceledAt)
 }
 
-// SetCurrentPeriodEnd sets the CurrentPeriodEnd field and marks it as non-optional;
+// SetCurrentPeriodEndAt sets the CurrentPeriodEndAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalSubscriptionResponse) SetCurrentPeriodEnd(currentPeriodEnd time.Time) {
-	p.CurrentPeriodEnd = currentPeriodEnd
-	p.require(phoneRentalSubscriptionResponseFieldCurrentPeriodEnd)
+func (p *PhoneRentalSubscriptionResponse) SetCurrentPeriodEndAt(currentPeriodEndAt time.Time) {
+	p.CurrentPeriodEndAt = currentPeriodEndAt
+	p.require(phoneRentalSubscriptionResponseFieldCurrentPeriodEndAt)
 }
 
-// SetCurrentPeriodStart sets the CurrentPeriodStart field and marks it as non-optional;
+// SetCurrentPeriodStartAt sets the CurrentPeriodStartAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalSubscriptionResponse) SetCurrentPeriodStart(currentPeriodStart time.Time) {
-	p.CurrentPeriodStart = currentPeriodStart
-	p.require(phoneRentalSubscriptionResponseFieldCurrentPeriodStart)
+func (p *PhoneRentalSubscriptionResponse) SetCurrentPeriodStartAt(currentPeriodStartAt time.Time) {
+	p.CurrentPeriodStartAt = currentPeriodStartAt
+	p.require(phoneRentalSubscriptionResponseFieldCurrentPeriodStartAt)
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1326,7 +1585,7 @@ func (p *PhoneRentalSubscriptionResponse) SetPlanID(planID string) {
 
 // SetPlanInterval sets the PlanInterval field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalSubscriptionResponse) SetPlanInterval(planInterval string) {
+func (p *PhoneRentalSubscriptionResponse) SetPlanInterval(planInterval PhoneRentalSubscriptionResponsePlanInterval) {
 	p.PlanInterval = planInterval
 	p.require(phoneRentalSubscriptionResponseFieldPlanInterval)
 }
@@ -1338,11 +1597,11 @@ func (p *PhoneRentalSubscriptionResponse) SetPlanName(planName string) {
 	p.require(phoneRentalSubscriptionResponseFieldPlanName)
 }
 
-// SetPlanPriceCents sets the PlanPriceCents field and marks it as non-optional;
+// SetPlanPriceMicrodollars sets the PlanPriceMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalSubscriptionResponse) SetPlanPriceCents(planPriceCents int64) {
-	p.PlanPriceCents = planPriceCents
-	p.require(phoneRentalSubscriptionResponseFieldPlanPriceCents)
+func (p *PhoneRentalSubscriptionResponse) SetPlanPriceMicrodollars(planPriceMicrodollars int64) {
+	p.PlanPriceMicrodollars = planPriceMicrodollars
+	p.require(phoneRentalSubscriptionResponseFieldPlanPriceMicrodollars)
 }
 
 // SetStatus sets the Status field and marks it as non-optional;
@@ -1356,9 +1615,9 @@ func (p *PhoneRentalSubscriptionResponse) UnmarshalJSON(data []byte) error {
 	type embed PhoneRentalSubscriptionResponse
 	var unmarshaler = struct {
 		embed
-		CanceledAt         *internal.DateTime `json:"canceled_at,omitempty"`
-		CurrentPeriodEnd   *internal.DateTime `json:"current_period_end"`
-		CurrentPeriodStart *internal.DateTime `json:"current_period_start"`
+		CanceledAt           *internal.DateTime `json:"canceled_at,omitempty"`
+		CurrentPeriodEndAt   *internal.DateTime `json:"current_period_end_at"`
+		CurrentPeriodStartAt *internal.DateTime `json:"current_period_start_at"`
 	}{
 		embed: embed(*p),
 	}
@@ -1367,8 +1626,8 @@ func (p *PhoneRentalSubscriptionResponse) UnmarshalJSON(data []byte) error {
 	}
 	*p = PhoneRentalSubscriptionResponse(unmarshaler.embed)
 	p.CanceledAt = unmarshaler.CanceledAt.TimePtr()
-	p.CurrentPeriodEnd = unmarshaler.CurrentPeriodEnd.Time()
-	p.CurrentPeriodStart = unmarshaler.CurrentPeriodStart.Time()
+	p.CurrentPeriodEndAt = unmarshaler.CurrentPeriodEndAt.Time()
+	p.CurrentPeriodStartAt = unmarshaler.CurrentPeriodStartAt.Time()
 	extraProperties, err := internal.ExtractExtraProperties(data, *p)
 	if err != nil {
 		return err
@@ -1382,14 +1641,14 @@ func (p *PhoneRentalSubscriptionResponse) MarshalJSON() ([]byte, error) {
 	type embed PhoneRentalSubscriptionResponse
 	var marshaler = struct {
 		embed
-		CanceledAt         *internal.DateTime `json:"canceled_at,omitempty"`
-		CurrentPeriodEnd   *internal.DateTime `json:"current_period_end"`
-		CurrentPeriodStart *internal.DateTime `json:"current_period_start"`
+		CanceledAt           *internal.DateTime `json:"canceled_at,omitempty"`
+		CurrentPeriodEndAt   *internal.DateTime `json:"current_period_end_at"`
+		CurrentPeriodStartAt *internal.DateTime `json:"current_period_start_at"`
 	}{
-		embed:              embed(*p),
-		CanceledAt:         internal.NewOptionalDateTime(p.CanceledAt),
-		CurrentPeriodEnd:   internal.NewDateTime(p.CurrentPeriodEnd),
-		CurrentPeriodStart: internal.NewDateTime(p.CurrentPeriodStart),
+		embed:                embed(*p),
+		CanceledAt:           internal.NewOptionalDateTime(p.CanceledAt),
+		CurrentPeriodEndAt:   internal.NewDateTime(p.CurrentPeriodEndAt),
+		CurrentPeriodStartAt: internal.NewDateTime(p.CurrentPeriodStartAt),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
 	return json.Marshal(explicitMarshaler)
@@ -1433,6 +1692,35 @@ func (p PhoneRentalSubscriptionResponsePaymentStatus) Ptr() *PhoneRentalSubscrip
 	return &p
 }
 
+// Billing interval of the plan.
+type PhoneRentalSubscriptionResponsePlanInterval string
+
+const (
+	PhoneRentalSubscriptionResponsePlanIntervalDay   PhoneRentalSubscriptionResponsePlanInterval = "day"
+	PhoneRentalSubscriptionResponsePlanIntervalWeek  PhoneRentalSubscriptionResponsePlanInterval = "week"
+	PhoneRentalSubscriptionResponsePlanIntervalMonth PhoneRentalSubscriptionResponsePlanInterval = "month"
+	PhoneRentalSubscriptionResponsePlanIntervalYear  PhoneRentalSubscriptionResponsePlanInterval = "year"
+)
+
+func NewPhoneRentalSubscriptionResponsePlanIntervalFromString(s string) (PhoneRentalSubscriptionResponsePlanInterval, error) {
+	switch s {
+	case "day":
+		return PhoneRentalSubscriptionResponsePlanIntervalDay, nil
+	case "week":
+		return PhoneRentalSubscriptionResponsePlanIntervalWeek, nil
+	case "month":
+		return PhoneRentalSubscriptionResponsePlanIntervalMonth, nil
+	case "year":
+		return PhoneRentalSubscriptionResponsePlanIntervalYear, nil
+	}
+	var t PhoneRentalSubscriptionResponsePlanInterval
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PhoneRentalSubscriptionResponsePlanInterval) Ptr() *PhoneRentalSubscriptionResponsePlanInterval {
+	return &p
+}
+
 // Current subscription lifecycle state.
 type PhoneRentalSubscriptionResponseStatus string
 
@@ -1458,17 +1746,17 @@ func (p PhoneRentalSubscriptionResponseStatus) Ptr() *PhoneRentalSubscriptionRes
 
 // Org-wide rollup shown above the rentals table.
 var (
-	phoneRentalSummaryFieldActiveCount          = big.NewInt(1 << 0)
-	phoneRentalSummaryFieldCombinedMonthlyCents = big.NewInt(1 << 1)
-	phoneRentalSummaryFieldPerInterval          = big.NewInt(1 << 2)
-	phoneRentalSummaryFieldUpcomingCharges      = big.NewInt(1 << 3)
+	phoneRentalSummaryFieldActiveCount                 = big.NewInt(1 << 0)
+	phoneRentalSummaryFieldCombinedMonthlyMicrodollars = big.NewInt(1 << 1)
+	phoneRentalSummaryFieldPerInterval                 = big.NewInt(1 << 2)
+	phoneRentalSummaryFieldUpcomingCharges             = big.NewInt(1 << 3)
 )
 
 type PhoneRentalSummary struct {
 	// Number of active rentals for the org.
 	ActiveCount int64 `json:"active_count" url:"active_count"`
-	// Total monthly-equivalent spend across all active rentals (daily/weekly prices normalised to a monthly figure).
-	CombinedMonthlyCents int64 `json:"combined_monthly_cents" url:"combined_monthly_cents"`
+	// Total monthly-equivalent spend, in microdollars, across all active rentals (daily/weekly prices normalised to a monthly figure).
+	CombinedMonthlyMicrodollars int64 `json:"combined_monthly_microdollars" url:"combined_monthly_microdollars"`
 	// Count + monthly-equivalent spend grouped by plan interval.
 	PerInterval []*PhoneRentalIntervalSummary `json:"per_interval,omitempty" url:"per_interval,omitempty"`
 	// Next 30 days of renewals bucketed by day.
@@ -1488,11 +1776,11 @@ func (p *PhoneRentalSummary) GetActiveCount() int64 {
 	return p.ActiveCount
 }
 
-func (p *PhoneRentalSummary) GetCombinedMonthlyCents() int64 {
+func (p *PhoneRentalSummary) GetCombinedMonthlyMicrodollars() int64 {
 	if p == nil {
 		return 0
 	}
-	return p.CombinedMonthlyCents
+	return p.CombinedMonthlyMicrodollars
 }
 
 func (p *PhoneRentalSummary) GetPerInterval() []*PhoneRentalIntervalSummary {
@@ -1530,11 +1818,11 @@ func (p *PhoneRentalSummary) SetActiveCount(activeCount int64) {
 	p.require(phoneRentalSummaryFieldActiveCount)
 }
 
-// SetCombinedMonthlyCents sets the CombinedMonthlyCents field and marks it as non-optional;
+// SetCombinedMonthlyMicrodollars sets the CombinedMonthlyMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalSummary) SetCombinedMonthlyCents(combinedMonthlyCents int64) {
-	p.CombinedMonthlyCents = combinedMonthlyCents
-	p.require(phoneRentalSummaryFieldCombinedMonthlyCents)
+func (p *PhoneRentalSummary) SetCombinedMonthlyMicrodollars(combinedMonthlyMicrodollars int64) {
+	p.CombinedMonthlyMicrodollars = combinedMonthlyMicrodollars
+	p.require(phoneRentalSummaryFieldCombinedMonthlyMicrodollars)
 }
 
 // SetPerInterval sets the PerInterval field and marks it as non-optional;
@@ -1595,18 +1883,18 @@ func (p *PhoneRentalSummary) String() string {
 
 // One day's bucket of upcoming rental renewals.
 var (
-	phoneRentalUpcomingChargeFieldAmountCents = big.NewInt(1 << 0)
-	phoneRentalUpcomingChargeFieldCount       = big.NewInt(1 << 1)
-	phoneRentalUpcomingChargeFieldDate        = big.NewInt(1 << 2)
+	phoneRentalUpcomingChargeFieldAmountMicrodollars = big.NewInt(1 << 0)
+	phoneRentalUpcomingChargeFieldCount              = big.NewInt(1 << 1)
+	phoneRentalUpcomingChargeFieldDueAt              = big.NewInt(1 << 2)
 )
 
 type PhoneRentalUpcomingCharge struct {
-	// Summed unit price of the renewals on this day.
-	AmountCents int64 `json:"amount_cents" url:"amount_cents"`
+	// Summed unit price of the renewals on this day, in microdollars.
+	AmountMicrodollars int64 `json:"amount_microdollars" url:"amount_microdollars"`
 	// Number of rentals renewing on this day.
 	Count int64 `json:"count" url:"count"`
 	// UTC day the renewals fall on; the client formats it locally.
-	Date time.Time `json:"date" url:"date"`
+	DueAt time.Time `json:"due_at" url:"due_at"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -1615,11 +1903,11 @@ type PhoneRentalUpcomingCharge struct {
 	rawJSON         json.RawMessage
 }
 
-func (p *PhoneRentalUpcomingCharge) GetAmountCents() int64 {
+func (p *PhoneRentalUpcomingCharge) GetAmountMicrodollars() int64 {
 	if p == nil {
 		return 0
 	}
-	return p.AmountCents
+	return p.AmountMicrodollars
 }
 
 func (p *PhoneRentalUpcomingCharge) GetCount() int64 {
@@ -1629,11 +1917,11 @@ func (p *PhoneRentalUpcomingCharge) GetCount() int64 {
 	return p.Count
 }
 
-func (p *PhoneRentalUpcomingCharge) GetDate() time.Time {
+func (p *PhoneRentalUpcomingCharge) GetDueAt() time.Time {
 	if p == nil {
 		return time.Time{}
 	}
-	return p.Date
+	return p.DueAt
 }
 
 func (p *PhoneRentalUpcomingCharge) GetExtraProperties() map[string]interface{} {
@@ -1650,11 +1938,11 @@ func (p *PhoneRentalUpcomingCharge) require(field *big.Int) {
 	p.explicitFields.Or(p.explicitFields, field)
 }
 
-// SetAmountCents sets the AmountCents field and marks it as non-optional;
+// SetAmountMicrodollars sets the AmountMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalUpcomingCharge) SetAmountCents(amountCents int64) {
-	p.AmountCents = amountCents
-	p.require(phoneRentalUpcomingChargeFieldAmountCents)
+func (p *PhoneRentalUpcomingCharge) SetAmountMicrodollars(amountMicrodollars int64) {
+	p.AmountMicrodollars = amountMicrodollars
+	p.require(phoneRentalUpcomingChargeFieldAmountMicrodollars)
 }
 
 // SetCount sets the Count field and marks it as non-optional;
@@ -1664,18 +1952,18 @@ func (p *PhoneRentalUpcomingCharge) SetCount(count int64) {
 	p.require(phoneRentalUpcomingChargeFieldCount)
 }
 
-// SetDate sets the Date field and marks it as non-optional;
+// SetDueAt sets the DueAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneRentalUpcomingCharge) SetDate(date time.Time) {
-	p.Date = date
-	p.require(phoneRentalUpcomingChargeFieldDate)
+func (p *PhoneRentalUpcomingCharge) SetDueAt(dueAt time.Time) {
+	p.DueAt = dueAt
+	p.require(phoneRentalUpcomingChargeFieldDueAt)
 }
 
 func (p *PhoneRentalUpcomingCharge) UnmarshalJSON(data []byte) error {
 	type embed PhoneRentalUpcomingCharge
 	var unmarshaler = struct {
 		embed
-		Date *internal.DateTime `json:"date"`
+		DueAt *internal.DateTime `json:"due_at"`
 	}{
 		embed: embed(*p),
 	}
@@ -1683,7 +1971,7 @@ func (p *PhoneRentalUpcomingCharge) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*p = PhoneRentalUpcomingCharge(unmarshaler.embed)
-	p.Date = unmarshaler.Date.Time()
+	p.DueAt = unmarshaler.DueAt.Time()
 	extraProperties, err := internal.ExtractExtraProperties(data, *p)
 	if err != nil {
 		return err
@@ -1697,10 +1985,10 @@ func (p *PhoneRentalUpcomingCharge) MarshalJSON() ([]byte, error) {
 	type embed PhoneRentalUpcomingCharge
 	var marshaler = struct {
 		embed
-		Date *internal.DateTime `json:"date"`
+		DueAt *internal.DateTime `json:"due_at"`
 	}{
 		embed: embed(*p),
-		Date:  internal.NewDateTime(p.Date),
+		DueAt: internal.NewDateTime(p.DueAt),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
 	return json.Marshal(explicitMarshaler)
@@ -1723,19 +2011,19 @@ func (p *PhoneRentalUpcomingCharge) String() string {
 
 // An open balance alert.
 var (
-	subscriptionActiveUsageAlertFieldBalanceCents   = big.NewInt(1 << 0)
-	subscriptionActiveUsageAlertFieldKind           = big.NewInt(1 << 1)
-	subscriptionActiveUsageAlertFieldThresholdCents = big.NewInt(1 << 2)
-	subscriptionActiveUsageAlertFieldTriggeredAt    = big.NewInt(1 << 3)
+	subscriptionActiveUsageAlertFieldBalanceMicrodollars   = big.NewInt(1 << 0)
+	subscriptionActiveUsageAlertFieldKind                  = big.NewInt(1 << 1)
+	subscriptionActiveUsageAlertFieldThresholdMicrodollars = big.NewInt(1 << 2)
+	subscriptionActiveUsageAlertFieldTriggeredAt           = big.NewInt(1 << 3)
 )
 
 type SubscriptionActiveUsageAlert struct {
-	// The balance when the alert opened, in cents. May be negative.
-	BalanceCents int64 `json:"balance_cents" url:"balance_cents"`
+	// The balance when the alert opened, in microdollars. May be negative.
+	BalanceMicrodollars int64 `json:"balance_microdollars" url:"balance_microdollars"`
 	// Which rule fired: the configurable low-balance threshold, or the balance going negative.
 	Kind SubscriptionActiveUsageAlertKind `json:"kind" url:"kind"`
-	// The threshold in effect when the alert opened, in cents (0 for negative_balance).
-	ThresholdCents int64 `json:"threshold_cents" url:"threshold_cents"`
+	// The threshold in effect when the alert opened, in microdollars (0 for negative_balance).
+	ThresholdMicrodollars int64 `json:"threshold_microdollars" url:"threshold_microdollars"`
 	// When the alert opened.
 	TriggeredAt time.Time `json:"triggered_at" url:"triggered_at"`
 
@@ -1746,11 +2034,11 @@ type SubscriptionActiveUsageAlert struct {
 	rawJSON         json.RawMessage
 }
 
-func (s *SubscriptionActiveUsageAlert) GetBalanceCents() int64 {
+func (s *SubscriptionActiveUsageAlert) GetBalanceMicrodollars() int64 {
 	if s == nil {
 		return 0
 	}
-	return s.BalanceCents
+	return s.BalanceMicrodollars
 }
 
 func (s *SubscriptionActiveUsageAlert) GetKind() SubscriptionActiveUsageAlertKind {
@@ -1760,11 +2048,11 @@ func (s *SubscriptionActiveUsageAlert) GetKind() SubscriptionActiveUsageAlertKin
 	return s.Kind
 }
 
-func (s *SubscriptionActiveUsageAlert) GetThresholdCents() int64 {
+func (s *SubscriptionActiveUsageAlert) GetThresholdMicrodollars() int64 {
 	if s == nil {
 		return 0
 	}
-	return s.ThresholdCents
+	return s.ThresholdMicrodollars
 }
 
 func (s *SubscriptionActiveUsageAlert) GetTriggeredAt() time.Time {
@@ -1788,11 +2076,11 @@ func (s *SubscriptionActiveUsageAlert) require(field *big.Int) {
 	s.explicitFields.Or(s.explicitFields, field)
 }
 
-// SetBalanceCents sets the BalanceCents field and marks it as non-optional;
+// SetBalanceMicrodollars sets the BalanceMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionActiveUsageAlert) SetBalanceCents(balanceCents int64) {
-	s.BalanceCents = balanceCents
-	s.require(subscriptionActiveUsageAlertFieldBalanceCents)
+func (s *SubscriptionActiveUsageAlert) SetBalanceMicrodollars(balanceMicrodollars int64) {
+	s.BalanceMicrodollars = balanceMicrodollars
+	s.require(subscriptionActiveUsageAlertFieldBalanceMicrodollars)
 }
 
 // SetKind sets the Kind field and marks it as non-optional;
@@ -1802,11 +2090,11 @@ func (s *SubscriptionActiveUsageAlert) SetKind(kind SubscriptionActiveUsageAlert
 	s.require(subscriptionActiveUsageAlertFieldKind)
 }
 
-// SetThresholdCents sets the ThresholdCents field and marks it as non-optional;
+// SetThresholdMicrodollars sets the ThresholdMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionActiveUsageAlert) SetThresholdCents(thresholdCents int64) {
-	s.ThresholdCents = thresholdCents
-	s.require(subscriptionActiveUsageAlertFieldThresholdCents)
+func (s *SubscriptionActiveUsageAlert) SetThresholdMicrodollars(thresholdMicrodollars int64) {
+	s.ThresholdMicrodollars = thresholdMicrodollars
+	s.require(subscriptionActiveUsageAlertFieldThresholdMicrodollars)
 }
 
 // SetTriggeredAt sets the TriggeredAt field and marks it as non-optional;
@@ -1889,26 +2177,235 @@ func (s SubscriptionActiveUsageAlertKind) Ptr() *SubscriptionActiveUsageAlertKin
 	return &s
 }
 
+// A recharge being collected: pending payment, or declined and retrying.
+var (
+	subscriptionAutoRechargeAttemptFieldAmountMicrodollars = big.NewInt(1 << 0)
+	subscriptionAutoRechargeAttemptFieldFailedAttempts     = big.NewInt(1 << 1)
+	subscriptionAutoRechargeAttemptFieldLastError          = big.NewInt(1 << 2)
+	subscriptionAutoRechargeAttemptFieldNextAttemptAt      = big.NewInt(1 << 3)
+	subscriptionAutoRechargeAttemptFieldStartedAt          = big.NewInt(1 << 4)
+	subscriptionAutoRechargeAttemptFieldState              = big.NewInt(1 << 5)
+)
+
+type SubscriptionAutoRechargeAttempt struct {
+	// Credit the recharge adds once paid, in microdollars.
+	AmountMicrodollars int64 `json:"amount_microdollars" url:"amount_microdollars"`
+	// How many payment attempts failed so far.
+	FailedAttempts int64 `json:"failed_attempts" url:"failed_attempts"`
+	// Why the last payment attempt failed (for example, the card was declined), when known.
+	LastError *string `json:"last_error,omitempty" url:"last_error,omitempty"`
+	// When Stripe will try the payment again, while retrying.
+	NextAttemptAt *time.Time `json:"next_attempt_at,omitempty" url:"next_attempt_at,omitempty"`
+	// When the recharge was started.
+	StartedAt time.Time `json:"started_at" url:"started_at"`
+	// pending: the recharge invoice is waiting to be paid. retrying: a payment attempt failed and Stripe will try again.
+	State SubscriptionAutoRechargeAttemptState `json:"state" url:"state"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SubscriptionAutoRechargeAttempt) GetAmountMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.AmountMicrodollars
+}
+
+func (s *SubscriptionAutoRechargeAttempt) GetFailedAttempts() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.FailedAttempts
+}
+
+func (s *SubscriptionAutoRechargeAttempt) GetLastError() *string {
+	if s == nil {
+		return nil
+	}
+	return s.LastError
+}
+
+func (s *SubscriptionAutoRechargeAttempt) GetNextAttemptAt() *time.Time {
+	if s == nil {
+		return nil
+	}
+	return s.NextAttemptAt
+}
+
+func (s *SubscriptionAutoRechargeAttempt) GetStartedAt() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.StartedAt
+}
+
+func (s *SubscriptionAutoRechargeAttempt) GetState() SubscriptionAutoRechargeAttemptState {
+	if s == nil {
+		return ""
+	}
+	return s.State
+}
+
+func (s *SubscriptionAutoRechargeAttempt) GetExtraProperties() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.extraProperties
+}
+
+func (s *SubscriptionAutoRechargeAttempt) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetAmountMicrodollars sets the AmountMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeAttempt) SetAmountMicrodollars(amountMicrodollars int64) {
+	s.AmountMicrodollars = amountMicrodollars
+	s.require(subscriptionAutoRechargeAttemptFieldAmountMicrodollars)
+}
+
+// SetFailedAttempts sets the FailedAttempts field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeAttempt) SetFailedAttempts(failedAttempts int64) {
+	s.FailedAttempts = failedAttempts
+	s.require(subscriptionAutoRechargeAttemptFieldFailedAttempts)
+}
+
+// SetLastError sets the LastError field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeAttempt) SetLastError(lastError *string) {
+	s.LastError = lastError
+	s.require(subscriptionAutoRechargeAttemptFieldLastError)
+}
+
+// SetNextAttemptAt sets the NextAttemptAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeAttempt) SetNextAttemptAt(nextAttemptAt *time.Time) {
+	s.NextAttemptAt = nextAttemptAt
+	s.require(subscriptionAutoRechargeAttemptFieldNextAttemptAt)
+}
+
+// SetStartedAt sets the StartedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeAttempt) SetStartedAt(startedAt time.Time) {
+	s.StartedAt = startedAt
+	s.require(subscriptionAutoRechargeAttemptFieldStartedAt)
+}
+
+// SetState sets the State field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeAttempt) SetState(state SubscriptionAutoRechargeAttemptState) {
+	s.State = state
+	s.require(subscriptionAutoRechargeAttemptFieldState)
+}
+
+func (s *SubscriptionAutoRechargeAttempt) UnmarshalJSON(data []byte) error {
+	type embed SubscriptionAutoRechargeAttempt
+	var unmarshaler = struct {
+		embed
+		NextAttemptAt *internal.DateTime `json:"next_attempt_at,omitempty"`
+		StartedAt     *internal.DateTime `json:"started_at"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SubscriptionAutoRechargeAttempt(unmarshaler.embed)
+	s.NextAttemptAt = unmarshaler.NextAttemptAt.TimePtr()
+	s.StartedAt = unmarshaler.StartedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SubscriptionAutoRechargeAttempt) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionAutoRechargeAttempt
+	var marshaler = struct {
+		embed
+		NextAttemptAt *internal.DateTime `json:"next_attempt_at,omitempty"`
+		StartedAt     *internal.DateTime `json:"started_at"`
+	}{
+		embed:         embed(*s),
+		NextAttemptAt: internal.NewOptionalDateTime(s.NextAttemptAt),
+		StartedAt:     internal.NewDateTime(s.StartedAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (s *SubscriptionAutoRechargeAttempt) String() string {
+	if s == nil {
+		return "<nil>"
+	}
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// pending: the recharge invoice is waiting to be paid. retrying: a payment attempt failed and Stripe will try again.
+type SubscriptionAutoRechargeAttemptState string
+
+const (
+	SubscriptionAutoRechargeAttemptStatePending  SubscriptionAutoRechargeAttemptState = "pending"
+	SubscriptionAutoRechargeAttemptStateRetrying SubscriptionAutoRechargeAttemptState = "retrying"
+)
+
+func NewSubscriptionAutoRechargeAttemptStateFromString(s string) (SubscriptionAutoRechargeAttemptState, error) {
+	switch s {
+	case "pending":
+		return SubscriptionAutoRechargeAttemptStatePending, nil
+	case "retrying":
+		return SubscriptionAutoRechargeAttemptStateRetrying, nil
+	}
+	var t SubscriptionAutoRechargeAttemptState
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SubscriptionAutoRechargeAttemptState) Ptr() *SubscriptionAutoRechargeAttemptState {
+	return &s
+}
+
 // The org's auto-recharge configuration and status.
 var (
-	subscriptionAutoRechargeSettingsResponseFieldSchema         = big.NewInt(1 << 0)
-	subscriptionAutoRechargeSettingsResponseFieldDisabledReason = big.NewInt(1 << 1)
-	subscriptionAutoRechargeSettingsResponseFieldEnabled        = big.NewInt(1 << 2)
-	subscriptionAutoRechargeSettingsResponseFieldTargetCents    = big.NewInt(1 << 3)
-	subscriptionAutoRechargeSettingsResponseFieldThresholdCents = big.NewInt(1 << 4)
+	subscriptionAutoRechargeSettingsResponseFieldSchema                = big.NewInt(1 << 0)
+	subscriptionAutoRechargeSettingsResponseFieldDisabledReason        = big.NewInt(1 << 1)
+	subscriptionAutoRechargeSettingsResponseFieldEnabled               = big.NewInt(1 << 2)
+	subscriptionAutoRechargeSettingsResponseFieldInFlight              = big.NewInt(1 << 3)
+	subscriptionAutoRechargeSettingsResponseFieldTargetMicrodollars    = big.NewInt(1 << 4)
+	subscriptionAutoRechargeSettingsResponseFieldThresholdMicrodollars = big.NewInt(1 << 5)
 )
 
 type SubscriptionAutoRechargeSettingsResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// Why auto-recharge turned itself off (payment_failed), if it did. Re-enabling clears it.
+	// Why auto-recharge turned itself off, if it did: payment_failed (a recharge payment failed for good) or disputed (a payment was disputed). Re-enabling clears it.
 	DisabledReason *SubscriptionAutoRechargeSettingsResponseDisabledReason `json:"disabled_reason,omitempty" url:"disabled_reason,omitempty"`
 	// Whether auto-recharge is active.
 	Enabled bool `json:"enabled" url:"enabled"`
-	// Balance the recharge restores to, in cents (minimum 500 = $5.00). The charge is target minus current balance.
-	TargetCents int64 `json:"target_cents" url:"target_cents"`
-	// Recharge when the balance drops below this amount, in cents.
-	ThresholdCents int64 `json:"threshold_cents" url:"threshold_cents"`
+	// The recharge being collected now, if one is. Absent when no recharge is in flight.
+	InFlight *SubscriptionAutoRechargeAttempt `json:"in_flight,omitempty" url:"in_flight,omitempty"`
+	// Balance the recharge restores to, in microdollars (minimum 5_000_000 = $5.00). The charge is target minus current balance.
+	TargetMicrodollars int64 `json:"target_microdollars" url:"target_microdollars"`
+	// Recharge when the balance drops below this amount, in microdollars.
+	ThresholdMicrodollars int64 `json:"threshold_microdollars" url:"threshold_microdollars"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -1938,18 +2435,25 @@ func (s *SubscriptionAutoRechargeSettingsResponse) GetEnabled() bool {
 	return s.Enabled
 }
 
-func (s *SubscriptionAutoRechargeSettingsResponse) GetTargetCents() int64 {
+func (s *SubscriptionAutoRechargeSettingsResponse) GetInFlight() *SubscriptionAutoRechargeAttempt {
 	if s == nil {
-		return 0
+		return nil
 	}
-	return s.TargetCents
+	return s.InFlight
 }
 
-func (s *SubscriptionAutoRechargeSettingsResponse) GetThresholdCents() int64 {
+func (s *SubscriptionAutoRechargeSettingsResponse) GetTargetMicrodollars() int64 {
 	if s == nil {
 		return 0
 	}
-	return s.ThresholdCents
+	return s.TargetMicrodollars
+}
+
+func (s *SubscriptionAutoRechargeSettingsResponse) GetThresholdMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.ThresholdMicrodollars
 }
 
 func (s *SubscriptionAutoRechargeSettingsResponse) GetExtraProperties() map[string]interface{} {
@@ -1987,18 +2491,25 @@ func (s *SubscriptionAutoRechargeSettingsResponse) SetEnabled(enabled bool) {
 	s.require(subscriptionAutoRechargeSettingsResponseFieldEnabled)
 }
 
-// SetTargetCents sets the TargetCents field and marks it as non-optional;
+// SetInFlight sets the InFlight field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionAutoRechargeSettingsResponse) SetTargetCents(targetCents int64) {
-	s.TargetCents = targetCents
-	s.require(subscriptionAutoRechargeSettingsResponseFieldTargetCents)
+func (s *SubscriptionAutoRechargeSettingsResponse) SetInFlight(inFlight *SubscriptionAutoRechargeAttempt) {
+	s.InFlight = inFlight
+	s.require(subscriptionAutoRechargeSettingsResponseFieldInFlight)
 }
 
-// SetThresholdCents sets the ThresholdCents field and marks it as non-optional;
+// SetTargetMicrodollars sets the TargetMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionAutoRechargeSettingsResponse) SetThresholdCents(thresholdCents int64) {
-	s.ThresholdCents = thresholdCents
-	s.require(subscriptionAutoRechargeSettingsResponseFieldThresholdCents)
+func (s *SubscriptionAutoRechargeSettingsResponse) SetTargetMicrodollars(targetMicrodollars int64) {
+	s.TargetMicrodollars = targetMicrodollars
+	s.require(subscriptionAutoRechargeSettingsResponseFieldTargetMicrodollars)
+}
+
+// SetThresholdMicrodollars sets the ThresholdMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionAutoRechargeSettingsResponse) SetThresholdMicrodollars(thresholdMicrodollars int64) {
+	s.ThresholdMicrodollars = thresholdMicrodollars
+	s.require(subscriptionAutoRechargeSettingsResponseFieldThresholdMicrodollars)
 }
 
 func (s *SubscriptionAutoRechargeSettingsResponse) UnmarshalJSON(data []byte) error {
@@ -2043,17 +2554,20 @@ func (s *SubscriptionAutoRechargeSettingsResponse) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
-// Why auto-recharge turned itself off (payment_failed), if it did. Re-enabling clears it.
+// Why auto-recharge turned itself off, if it did: payment_failed (a recharge payment failed for good) or disputed (a payment was disputed). Re-enabling clears it.
 type SubscriptionAutoRechargeSettingsResponseDisabledReason string
 
 const (
 	SubscriptionAutoRechargeSettingsResponseDisabledReasonPaymentFailed SubscriptionAutoRechargeSettingsResponseDisabledReason = "payment_failed"
+	SubscriptionAutoRechargeSettingsResponseDisabledReasonDisputed      SubscriptionAutoRechargeSettingsResponseDisabledReason = "disputed"
 )
 
 func NewSubscriptionAutoRechargeSettingsResponseDisabledReasonFromString(s string) (SubscriptionAutoRechargeSettingsResponseDisabledReason, error) {
 	switch s {
 	case "payment_failed":
 		return SubscriptionAutoRechargeSettingsResponseDisabledReasonPaymentFailed, nil
+	case "disputed":
+		return SubscriptionAutoRechargeSettingsResponseDisabledReasonDisputed, nil
 	}
 	var t SubscriptionAutoRechargeSettingsResponseDisabledReason
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -2069,8 +2583,8 @@ var (
 	subscriptionBalanceResponseFieldBalanceDisplay        = big.NewInt(1 << 1)
 	subscriptionBalanceResponseFieldBalanceMicrodollars   = big.NewInt(1 << 2)
 	subscriptionBalanceResponseFieldIncludedMicrodollars  = big.NewInt(1 << 3)
-	subscriptionBalanceResponseFieldPurchasedMicrodollars = big.NewInt(1 << 4)
-	subscriptionBalanceResponseFieldPurchasedNextExpiry   = big.NewInt(1 << 5)
+	subscriptionBalanceResponseFieldPurchasedExpiresAt    = big.NewInt(1 << 4)
+	subscriptionBalanceResponseFieldPurchasedMicrodollars = big.NewInt(1 << 5)
 )
 
 type SubscriptionBalanceResponse struct {
@@ -2082,10 +2596,10 @@ type SubscriptionBalanceResponse struct {
 	BalanceMicrodollars int64 `json:"balance_microdollars" url:"balance_microdollars"`
 	// Remaining plan-included credit in microdollars. Spent first; resets to the plan allowance at each renewal.
 	IncludedMicrodollars int64 `json:"included_microdollars" url:"included_microdollars"`
+	// When the soonest-expiring purchased credit stops being usable.
+	PurchasedExpiresAt *time.Time `json:"purchased_expires_at,omitempty" url:"purchased_expires_at,omitempty"`
 	// Remaining purchased credit in microdollars. Spent after included credit; each purchase expires one year after Stripe settled it.
 	PurchasedMicrodollars int64 `json:"purchased_microdollars" url:"purchased_microdollars"`
-	// When the soonest-expiring purchased credit stops being usable.
-	PurchasedNextExpiry *time.Time `json:"purchased_next_expiry,omitempty" url:"purchased_next_expiry,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -2122,18 +2636,18 @@ func (s *SubscriptionBalanceResponse) GetIncludedMicrodollars() int64 {
 	return s.IncludedMicrodollars
 }
 
+func (s *SubscriptionBalanceResponse) GetPurchasedExpiresAt() *time.Time {
+	if s == nil {
+		return nil
+	}
+	return s.PurchasedExpiresAt
+}
+
 func (s *SubscriptionBalanceResponse) GetPurchasedMicrodollars() int64 {
 	if s == nil {
 		return 0
 	}
 	return s.PurchasedMicrodollars
-}
-
-func (s *SubscriptionBalanceResponse) GetPurchasedNextExpiry() *time.Time {
-	if s == nil {
-		return nil
-	}
-	return s.PurchasedNextExpiry
 }
 
 func (s *SubscriptionBalanceResponse) GetExtraProperties() map[string]interface{} {
@@ -2178,6 +2692,13 @@ func (s *SubscriptionBalanceResponse) SetIncludedMicrodollars(includedMicrodolla
 	s.require(subscriptionBalanceResponseFieldIncludedMicrodollars)
 }
 
+// SetPurchasedExpiresAt sets the PurchasedExpiresAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceResponse) SetPurchasedExpiresAt(purchasedExpiresAt *time.Time) {
+	s.PurchasedExpiresAt = purchasedExpiresAt
+	s.require(subscriptionBalanceResponseFieldPurchasedExpiresAt)
+}
+
 // SetPurchasedMicrodollars sets the PurchasedMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (s *SubscriptionBalanceResponse) SetPurchasedMicrodollars(purchasedMicrodollars int64) {
@@ -2185,18 +2706,11 @@ func (s *SubscriptionBalanceResponse) SetPurchasedMicrodollars(purchasedMicrodol
 	s.require(subscriptionBalanceResponseFieldPurchasedMicrodollars)
 }
 
-// SetPurchasedNextExpiry sets the PurchasedNextExpiry field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionBalanceResponse) SetPurchasedNextExpiry(purchasedNextExpiry *time.Time) {
-	s.PurchasedNextExpiry = purchasedNextExpiry
-	s.require(subscriptionBalanceResponseFieldPurchasedNextExpiry)
-}
-
 func (s *SubscriptionBalanceResponse) UnmarshalJSON(data []byte) error {
 	type embed SubscriptionBalanceResponse
 	var unmarshaler = struct {
 		embed
-		PurchasedNextExpiry *internal.DateTime `json:"purchased_next_expiry,omitempty"`
+		PurchasedExpiresAt *internal.DateTime `json:"purchased_expires_at,omitempty"`
 	}{
 		embed: embed(*s),
 	}
@@ -2204,7 +2718,7 @@ func (s *SubscriptionBalanceResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*s = SubscriptionBalanceResponse(unmarshaler.embed)
-	s.PurchasedNextExpiry = unmarshaler.PurchasedNextExpiry.TimePtr()
+	s.PurchasedExpiresAt = unmarshaler.PurchasedExpiresAt.TimePtr()
 	extraProperties, err := internal.ExtractExtraProperties(data, *s)
 	if err != nil {
 		return err
@@ -2218,10 +2732,10 @@ func (s *SubscriptionBalanceResponse) MarshalJSON() ([]byte, error) {
 	type embed SubscriptionBalanceResponse
 	var marshaler = struct {
 		embed
-		PurchasedNextExpiry *internal.DateTime `json:"purchased_next_expiry,omitempty"`
+		PurchasedExpiresAt *internal.DateTime `json:"purchased_expires_at,omitempty"`
 	}{
-		embed:               embed(*s),
-		PurchasedNextExpiry: internal.NewOptionalDateTime(s.PurchasedNextExpiry),
+		embed:              embed(*s),
+		PurchasedExpiresAt: internal.NewOptionalDateTime(s.PurchasedExpiresAt),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
 	return json.Marshal(explicitMarshaler)
@@ -2242,29 +2756,860 @@ func (s *SubscriptionBalanceResponse) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
+// The organization's balance over a period, like a bank statement: where it started, what moved it, and where it ended. The lines add up: starting + added + each usage amount + refunded + expired + other = ending.
+var (
+	subscriptionBalanceStatementFieldSchema                      = big.NewInt(1 << 0)
+	subscriptionBalanceStatementFieldAddedMicrodollars           = big.NewInt(1 << 1)
+	subscriptionBalanceStatementFieldEndingBalanceMicrodollars   = big.NewInt(1 << 2)
+	subscriptionBalanceStatementFieldExpiredMicrodollars         = big.NewInt(1 << 3)
+	subscriptionBalanceStatementFieldOtherMicrodollars           = big.NewInt(1 << 4)
+	subscriptionBalanceStatementFieldPeriodEndAt                 = big.NewInt(1 << 5)
+	subscriptionBalanceStatementFieldPeriodStartAt               = big.NewInt(1 << 6)
+	subscriptionBalanceStatementFieldRefundedMicrodollars        = big.NewInt(1 << 7)
+	subscriptionBalanceStatementFieldStartingBalanceMicrodollars = big.NewInt(1 << 8)
+	subscriptionBalanceStatementFieldUsage                       = big.NewInt(1 << 9)
+)
+
+type SubscriptionBalanceStatement struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Credit added in microdollars: top-ups, auto-recharge, plan credit and adjustments.
+	AddedMicrodollars int64 `json:"added_microdollars" url:"added_microdollars"`
+	// Balance in microdollars at the end of the period.
+	EndingBalanceMicrodollars int64 `json:"ending_balance_microdollars" url:"ending_balance_microdollars"`
+	// Purchased credit that expired and plan credit that lapsed, in microdollars (zero or negative).
+	ExpiredMicrodollars int64 `json:"expired_microdollars" url:"expired_microdollars"`
+	// Negative adjustments and balance corrections, in microdollars.
+	OtherMicrodollars int64 `json:"other_microdollars" url:"other_microdollars"`
+	// End of the period (exclusive).
+	PeriodEndAt time.Time `json:"period_end_at" url:"period_end_at"`
+	// Start of the period.
+	PeriodStartAt time.Time `json:"period_start_at" url:"period_start_at"`
+	// Credit taken back by refunds and chargebacks, net of chargebacks won, in microdollars. Usually negative; positive when chargebacks won in the period exceed what was taken back.
+	RefundedMicrodollars int64 `json:"refunded_microdollars" url:"refunded_microdollars"`
+	// Balance in microdollars at the start of the period.
+	StartingBalanceMicrodollars int64 `json:"starting_balance_microdollars" url:"starting_balance_microdollars"`
+	// What each product used in the period, costliest first.
+	Usage []*SubscriptionBalanceStatementUsage `json:"usage,omitempty" url:"usage,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SubscriptionBalanceStatement) GetSchema() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Schema
+}
+
+func (s *SubscriptionBalanceStatement) GetAddedMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.AddedMicrodollars
+}
+
+func (s *SubscriptionBalanceStatement) GetEndingBalanceMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.EndingBalanceMicrodollars
+}
+
+func (s *SubscriptionBalanceStatement) GetExpiredMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.ExpiredMicrodollars
+}
+
+func (s *SubscriptionBalanceStatement) GetOtherMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.OtherMicrodollars
+}
+
+func (s *SubscriptionBalanceStatement) GetPeriodEndAt() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.PeriodEndAt
+}
+
+func (s *SubscriptionBalanceStatement) GetPeriodStartAt() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.PeriodStartAt
+}
+
+func (s *SubscriptionBalanceStatement) GetRefundedMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.RefundedMicrodollars
+}
+
+func (s *SubscriptionBalanceStatement) GetStartingBalanceMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.StartingBalanceMicrodollars
+}
+
+func (s *SubscriptionBalanceStatement) GetUsage() []*SubscriptionBalanceStatementUsage {
+	if s == nil {
+		return nil
+	}
+	return s.Usage
+}
+
+func (s *SubscriptionBalanceStatement) GetExtraProperties() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.extraProperties
+}
+
+func (s *SubscriptionBalanceStatement) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetSchema(schema *string) {
+	s.Schema = schema
+	s.require(subscriptionBalanceStatementFieldSchema)
+}
+
+// SetAddedMicrodollars sets the AddedMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetAddedMicrodollars(addedMicrodollars int64) {
+	s.AddedMicrodollars = addedMicrodollars
+	s.require(subscriptionBalanceStatementFieldAddedMicrodollars)
+}
+
+// SetEndingBalanceMicrodollars sets the EndingBalanceMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetEndingBalanceMicrodollars(endingBalanceMicrodollars int64) {
+	s.EndingBalanceMicrodollars = endingBalanceMicrodollars
+	s.require(subscriptionBalanceStatementFieldEndingBalanceMicrodollars)
+}
+
+// SetExpiredMicrodollars sets the ExpiredMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetExpiredMicrodollars(expiredMicrodollars int64) {
+	s.ExpiredMicrodollars = expiredMicrodollars
+	s.require(subscriptionBalanceStatementFieldExpiredMicrodollars)
+}
+
+// SetOtherMicrodollars sets the OtherMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetOtherMicrodollars(otherMicrodollars int64) {
+	s.OtherMicrodollars = otherMicrodollars
+	s.require(subscriptionBalanceStatementFieldOtherMicrodollars)
+}
+
+// SetPeriodEndAt sets the PeriodEndAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetPeriodEndAt(periodEndAt time.Time) {
+	s.PeriodEndAt = periodEndAt
+	s.require(subscriptionBalanceStatementFieldPeriodEndAt)
+}
+
+// SetPeriodStartAt sets the PeriodStartAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetPeriodStartAt(periodStartAt time.Time) {
+	s.PeriodStartAt = periodStartAt
+	s.require(subscriptionBalanceStatementFieldPeriodStartAt)
+}
+
+// SetRefundedMicrodollars sets the RefundedMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetRefundedMicrodollars(refundedMicrodollars int64) {
+	s.RefundedMicrodollars = refundedMicrodollars
+	s.require(subscriptionBalanceStatementFieldRefundedMicrodollars)
+}
+
+// SetStartingBalanceMicrodollars sets the StartingBalanceMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetStartingBalanceMicrodollars(startingBalanceMicrodollars int64) {
+	s.StartingBalanceMicrodollars = startingBalanceMicrodollars
+	s.require(subscriptionBalanceStatementFieldStartingBalanceMicrodollars)
+}
+
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatement) SetUsage(usage []*SubscriptionBalanceStatementUsage) {
+	s.Usage = usage
+	s.require(subscriptionBalanceStatementFieldUsage)
+}
+
+func (s *SubscriptionBalanceStatement) UnmarshalJSON(data []byte) error {
+	type embed SubscriptionBalanceStatement
+	var unmarshaler = struct {
+		embed
+		PeriodEndAt   *internal.DateTime `json:"period_end_at"`
+		PeriodStartAt *internal.DateTime `json:"period_start_at"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SubscriptionBalanceStatement(unmarshaler.embed)
+	s.PeriodEndAt = unmarshaler.PeriodEndAt.Time()
+	s.PeriodStartAt = unmarshaler.PeriodStartAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SubscriptionBalanceStatement) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionBalanceStatement
+	var marshaler = struct {
+		embed
+		PeriodEndAt   *internal.DateTime `json:"period_end_at"`
+		PeriodStartAt *internal.DateTime `json:"period_start_at"`
+	}{
+		embed:         embed(*s),
+		PeriodEndAt:   internal.NewDateTime(s.PeriodEndAt),
+		PeriodStartAt: internal.NewDateTime(s.PeriodStartAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (s *SubscriptionBalanceStatement) String() string {
+	if s == nil {
+		return "<nil>"
+	}
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// One product's usage in a balance statement.
+var (
+	subscriptionBalanceStatementUsageFieldAmountMicrodollars = big.NewInt(1 << 0)
+	subscriptionBalanceStatementUsageFieldCount              = big.NewInt(1 << 1)
+	subscriptionBalanceStatementUsageFieldProduct            = big.NewInt(1 << 2)
+)
+
+type SubscriptionBalanceStatementUsage struct {
+	// What they cost in microdollars (negative).
+	AmountMicrodollars int64 `json:"amount_microdollars" url:"amount_microdollars"`
+	// How many were billed (sessions or inference calls).
+	Count int64 `json:"count" url:"count"`
+	// The product: session or inference.
+	Product string `json:"product" url:"product"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SubscriptionBalanceStatementUsage) GetAmountMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.AmountMicrodollars
+}
+
+func (s *SubscriptionBalanceStatementUsage) GetCount() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.Count
+}
+
+func (s *SubscriptionBalanceStatementUsage) GetProduct() string {
+	if s == nil {
+		return ""
+	}
+	return s.Product
+}
+
+func (s *SubscriptionBalanceStatementUsage) GetExtraProperties() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.extraProperties
+}
+
+func (s *SubscriptionBalanceStatementUsage) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetAmountMicrodollars sets the AmountMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatementUsage) SetAmountMicrodollars(amountMicrodollars int64) {
+	s.AmountMicrodollars = amountMicrodollars
+	s.require(subscriptionBalanceStatementUsageFieldAmountMicrodollars)
+}
+
+// SetCount sets the Count field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatementUsage) SetCount(count int64) {
+	s.Count = count
+	s.require(subscriptionBalanceStatementUsageFieldCount)
+}
+
+// SetProduct sets the Product field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceStatementUsage) SetProduct(product string) {
+	s.Product = product
+	s.require(subscriptionBalanceStatementUsageFieldProduct)
+}
+
+func (s *SubscriptionBalanceStatementUsage) UnmarshalJSON(data []byte) error {
+	type unmarshaler SubscriptionBalanceStatementUsage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SubscriptionBalanceStatementUsage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SubscriptionBalanceStatementUsage) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionBalanceStatementUsage
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*s),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (s *SubscriptionBalanceStatementUsage) String() string {
+	if s == nil {
+		return "<nil>"
+	}
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// One movement of the organization's balance.
+var (
+	subscriptionBalanceTransactionFieldAmountDisplay            = big.NewInt(1 << 0)
+	subscriptionBalanceTransactionFieldAmountMicrodollars       = big.NewInt(1 << 1)
+	subscriptionBalanceTransactionFieldBalanceAfterMicrodollars = big.NewInt(1 << 2)
+	subscriptionBalanceTransactionFieldCreatedAt                = big.NewInt(1 << 3)
+	subscriptionBalanceTransactionFieldDescription              = big.NewInt(1 << 4)
+	subscriptionBalanceTransactionFieldID                       = big.NewInt(1 << 5)
+	subscriptionBalanceTransactionFieldSourceID                 = big.NewInt(1 << 6)
+	subscriptionBalanceTransactionFieldSourceType               = big.NewInt(1 << 7)
+	subscriptionBalanceTransactionFieldType                     = big.NewInt(1 << 8)
+)
+
+type SubscriptionBalanceTransaction struct {
+	// Formatted change (e.g., '-$1.50').
+	AmountDisplay string `json:"amount_display" url:"amount_display"`
+	// Signed change in microdollars (1_000_000 = $1.00); negative takes from the balance.
+	AmountMicrodollars int64 `json:"amount_microdollars" url:"amount_microdollars"`
+	// Balance in microdollars right after this transaction.
+	BalanceAfterMicrodollars int64 `json:"balance_after_microdollars" url:"balance_after_microdollars"`
+	// When the balance moved.
+	CreatedAt time.Time `json:"created_at" url:"created_at"`
+	// Plain-English description of the transaction.
+	Description string `json:"description" url:"description"`
+	// Transaction id.
+	ID string `json:"id" url:"id"`
+	// The session or inference id a usage charge billed.
+	SourceID *string `json:"source_id,omitempty" url:"source_id,omitempty"`
+	// What a usage charge billed: a session or an inference.
+	SourceType *SubscriptionBalanceTransactionSourceType `json:"source_type,omitempty" url:"source_type,omitempty"`
+	// What moved the balance: opening_balance (the balance when the history began), unrecorded (a correction), deposit (purchased credit added), usage (a session or inference charge), plan_grant (plan credit granted), plan_lapse (unused plan credit lapsed at renewal), expiry (purchased credit expired), adjustment (a manual adjustment), refund_reversal (credit taken back after a refund), dispute_reversal (credit taken back after a dispute), dispute_reinstated (credit restored after a won dispute), refund_failed (credit restored after a refund failed).
+	Type SubscriptionBalanceTransactionType `json:"type" url:"type"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SubscriptionBalanceTransaction) GetAmountDisplay() string {
+	if s == nil {
+		return ""
+	}
+	return s.AmountDisplay
+}
+
+func (s *SubscriptionBalanceTransaction) GetAmountMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.AmountMicrodollars
+}
+
+func (s *SubscriptionBalanceTransaction) GetBalanceAfterMicrodollars() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.BalanceAfterMicrodollars
+}
+
+func (s *SubscriptionBalanceTransaction) GetCreatedAt() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.CreatedAt
+}
+
+func (s *SubscriptionBalanceTransaction) GetDescription() string {
+	if s == nil {
+		return ""
+	}
+	return s.Description
+}
+
+func (s *SubscriptionBalanceTransaction) GetID() string {
+	if s == nil {
+		return ""
+	}
+	return s.ID
+}
+
+func (s *SubscriptionBalanceTransaction) GetSourceID() *string {
+	if s == nil {
+		return nil
+	}
+	return s.SourceID
+}
+
+func (s *SubscriptionBalanceTransaction) GetSourceType() *SubscriptionBalanceTransactionSourceType {
+	if s == nil {
+		return nil
+	}
+	return s.SourceType
+}
+
+func (s *SubscriptionBalanceTransaction) GetType() SubscriptionBalanceTransactionType {
+	if s == nil {
+		return ""
+	}
+	return s.Type
+}
+
+func (s *SubscriptionBalanceTransaction) GetExtraProperties() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.extraProperties
+}
+
+func (s *SubscriptionBalanceTransaction) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetAmountDisplay sets the AmountDisplay field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransaction) SetAmountDisplay(amountDisplay string) {
+	s.AmountDisplay = amountDisplay
+	s.require(subscriptionBalanceTransactionFieldAmountDisplay)
+}
+
+// SetAmountMicrodollars sets the AmountMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransaction) SetAmountMicrodollars(amountMicrodollars int64) {
+	s.AmountMicrodollars = amountMicrodollars
+	s.require(subscriptionBalanceTransactionFieldAmountMicrodollars)
+}
+
+// SetBalanceAfterMicrodollars sets the BalanceAfterMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransaction) SetBalanceAfterMicrodollars(balanceAfterMicrodollars int64) {
+	s.BalanceAfterMicrodollars = balanceAfterMicrodollars
+	s.require(subscriptionBalanceTransactionFieldBalanceAfterMicrodollars)
+}
+
+// SetCreatedAt sets the CreatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransaction) SetCreatedAt(createdAt time.Time) {
+	s.CreatedAt = createdAt
+	s.require(subscriptionBalanceTransactionFieldCreatedAt)
+}
+
+// SetDescription sets the Description field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransaction) SetDescription(description string) {
+	s.Description = description
+	s.require(subscriptionBalanceTransactionFieldDescription)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransaction) SetID(id string) {
+	s.ID = id
+	s.require(subscriptionBalanceTransactionFieldID)
+}
+
+// SetSourceID sets the SourceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransaction) SetSourceID(sourceID *string) {
+	s.SourceID = sourceID
+	s.require(subscriptionBalanceTransactionFieldSourceID)
+}
+
+// SetSourceType sets the SourceType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransaction) SetSourceType(sourceType *SubscriptionBalanceTransactionSourceType) {
+	s.SourceType = sourceType
+	s.require(subscriptionBalanceTransactionFieldSourceType)
+}
+
+// SetType sets the Type field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransaction) SetType(type_ SubscriptionBalanceTransactionType) {
+	s.Type = type_
+	s.require(subscriptionBalanceTransactionFieldType)
+}
+
+func (s *SubscriptionBalanceTransaction) UnmarshalJSON(data []byte) error {
+	type embed SubscriptionBalanceTransaction
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"created_at"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SubscriptionBalanceTransaction(unmarshaler.embed)
+	s.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SubscriptionBalanceTransaction) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionBalanceTransaction
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"created_at"`
+	}{
+		embed:     embed(*s),
+		CreatedAt: internal.NewDateTime(s.CreatedAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (s *SubscriptionBalanceTransaction) String() string {
+	if s == nil {
+		return "<nil>"
+	}
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// What a usage charge billed: a session or an inference.
+type SubscriptionBalanceTransactionSourceType string
+
+const (
+	SubscriptionBalanceTransactionSourceTypeSession   SubscriptionBalanceTransactionSourceType = "session"
+	SubscriptionBalanceTransactionSourceTypeInference SubscriptionBalanceTransactionSourceType = "inference"
+)
+
+func NewSubscriptionBalanceTransactionSourceTypeFromString(s string) (SubscriptionBalanceTransactionSourceType, error) {
+	switch s {
+	case "session":
+		return SubscriptionBalanceTransactionSourceTypeSession, nil
+	case "inference":
+		return SubscriptionBalanceTransactionSourceTypeInference, nil
+	}
+	var t SubscriptionBalanceTransactionSourceType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SubscriptionBalanceTransactionSourceType) Ptr() *SubscriptionBalanceTransactionSourceType {
+	return &s
+}
+
+// What moved the balance: opening_balance (the balance when the history began), unrecorded (a correction), deposit (purchased credit added), usage (a session or inference charge), plan_grant (plan credit granted), plan_lapse (unused plan credit lapsed at renewal), expiry (purchased credit expired), adjustment (a manual adjustment), refund_reversal (credit taken back after a refund), dispute_reversal (credit taken back after a dispute), dispute_reinstated (credit restored after a won dispute), refund_failed (credit restored after a refund failed).
+type SubscriptionBalanceTransactionType string
+
+const (
+	SubscriptionBalanceTransactionTypeOpeningBalance    SubscriptionBalanceTransactionType = "opening_balance"
+	SubscriptionBalanceTransactionTypeUnrecorded        SubscriptionBalanceTransactionType = "unrecorded"
+	SubscriptionBalanceTransactionTypeDeposit           SubscriptionBalanceTransactionType = "deposit"
+	SubscriptionBalanceTransactionTypeUsage             SubscriptionBalanceTransactionType = "usage"
+	SubscriptionBalanceTransactionTypePlanGrant         SubscriptionBalanceTransactionType = "plan_grant"
+	SubscriptionBalanceTransactionTypePlanLapse         SubscriptionBalanceTransactionType = "plan_lapse"
+	SubscriptionBalanceTransactionTypeExpiry            SubscriptionBalanceTransactionType = "expiry"
+	SubscriptionBalanceTransactionTypeAdjustment        SubscriptionBalanceTransactionType = "adjustment"
+	SubscriptionBalanceTransactionTypeRefundReversal    SubscriptionBalanceTransactionType = "refund_reversal"
+	SubscriptionBalanceTransactionTypeDisputeReversal   SubscriptionBalanceTransactionType = "dispute_reversal"
+	SubscriptionBalanceTransactionTypeDisputeReinstated SubscriptionBalanceTransactionType = "dispute_reinstated"
+	SubscriptionBalanceTransactionTypeRefundFailed      SubscriptionBalanceTransactionType = "refund_failed"
+)
+
+func NewSubscriptionBalanceTransactionTypeFromString(s string) (SubscriptionBalanceTransactionType, error) {
+	switch s {
+	case "opening_balance":
+		return SubscriptionBalanceTransactionTypeOpeningBalance, nil
+	case "unrecorded":
+		return SubscriptionBalanceTransactionTypeUnrecorded, nil
+	case "deposit":
+		return SubscriptionBalanceTransactionTypeDeposit, nil
+	case "usage":
+		return SubscriptionBalanceTransactionTypeUsage, nil
+	case "plan_grant":
+		return SubscriptionBalanceTransactionTypePlanGrant, nil
+	case "plan_lapse":
+		return SubscriptionBalanceTransactionTypePlanLapse, nil
+	case "expiry":
+		return SubscriptionBalanceTransactionTypeExpiry, nil
+	case "adjustment":
+		return SubscriptionBalanceTransactionTypeAdjustment, nil
+	case "refund_reversal":
+		return SubscriptionBalanceTransactionTypeRefundReversal, nil
+	case "dispute_reversal":
+		return SubscriptionBalanceTransactionTypeDisputeReversal, nil
+	case "dispute_reinstated":
+		return SubscriptionBalanceTransactionTypeDisputeReinstated, nil
+	case "refund_failed":
+		return SubscriptionBalanceTransactionTypeRefundFailed, nil
+	}
+	var t SubscriptionBalanceTransactionType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SubscriptionBalanceTransactionType) Ptr() *SubscriptionBalanceTransactionType {
+	return &s
+}
+
+// One page of balance transactions, using the API's standard list envelope (items, total, limit, offset).
+var (
+	subscriptionBalanceTransactionsResponseFieldSchema = big.NewInt(1 << 0)
+	subscriptionBalanceTransactionsResponseFieldItems  = big.NewInt(1 << 1)
+	subscriptionBalanceTransactionsResponseFieldLimit  = big.NewInt(1 << 2)
+	subscriptionBalanceTransactionsResponseFieldOffset = big.NewInt(1 << 3)
+	subscriptionBalanceTransactionsResponseFieldTotal  = big.NewInt(1 << 4)
+)
+
+type SubscriptionBalanceTransactionsResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// Page of balance transactions.
+	Items []*SubscriptionBalanceTransaction `json:"items,omitempty" url:"items,omitempty"`
+	// Page size used for this response.
+	Limit int64 `json:"limit" url:"limit"`
+	// Pagination offset used for this response.
+	Offset int64 `json:"offset" url:"offset"`
+	// Total number of transactions matching the query.
+	Total int64 `json:"total" url:"total"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) GetSchema() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Schema
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) GetItems() []*SubscriptionBalanceTransaction {
+	if s == nil {
+		return nil
+	}
+	return s.Items
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) GetLimit() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.Limit
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) GetOffset() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.Offset
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) GetTotal() int64 {
+	if s == nil {
+		return 0
+	}
+	return s.Total
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) GetExtraProperties() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.extraProperties
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransactionsResponse) SetSchema(schema *string) {
+	s.Schema = schema
+	s.require(subscriptionBalanceTransactionsResponseFieldSchema)
+}
+
+// SetItems sets the Items field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransactionsResponse) SetItems(items []*SubscriptionBalanceTransaction) {
+	s.Items = items
+	s.require(subscriptionBalanceTransactionsResponseFieldItems)
+}
+
+// SetLimit sets the Limit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransactionsResponse) SetLimit(limit int64) {
+	s.Limit = limit
+	s.require(subscriptionBalanceTransactionsResponseFieldLimit)
+}
+
+// SetOffset sets the Offset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransactionsResponse) SetOffset(offset int64) {
+	s.Offset = offset
+	s.require(subscriptionBalanceTransactionsResponseFieldOffset)
+}
+
+// SetTotal sets the Total field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SubscriptionBalanceTransactionsResponse) SetTotal(total int64) {
+	s.Total = total
+	s.require(subscriptionBalanceTransactionsResponseFieldTotal)
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler SubscriptionBalanceTransactionsResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SubscriptionBalanceTransactionsResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionBalanceTransactionsResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*s),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (s *SubscriptionBalanceTransactionsResponse) String() string {
+	if s == nil {
+		return "<nil>"
+	}
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
 // Full subscription record returned by subscription endpoints.
 var (
-	subscriptionResponseFieldSchema                        = big.NewInt(1 << 0)
-	subscriptionResponseFieldBalanceDisplay                = big.NewInt(1 << 1)
-	subscriptionResponseFieldBalanceMicrodollars           = big.NewInt(1 << 2)
-	subscriptionResponseFieldBillingCycle                  = big.NewInt(1 << 3)
-	subscriptionResponseFieldCancelAtPeriodEnd             = big.NewInt(1 << 4)
-	subscriptionResponseFieldCanceledAt                    = big.NewInt(1 << 5)
-	subscriptionResponseFieldCurrentPeriodEnd              = big.NewInt(1 << 6)
-	subscriptionResponseFieldCurrentPeriodStart            = big.NewInt(1 << 7)
-	subscriptionResponseFieldID                            = big.NewInt(1 << 8)
-	subscriptionResponseFieldIncludedBalanceDisplay        = big.NewInt(1 << 9)
-	subscriptionResponseFieldIncludedBalanceMicrodollars   = big.NewInt(1 << 10)
-	subscriptionResponseFieldMaxConcurrentRuns             = big.NewInt(1 << 11)
-	subscriptionResponseFieldMonthlyPrice                  = big.NewInt(1 << 12)
-	subscriptionResponseFieldPendingDowngradeEffectiveDate = big.NewInt(1 << 13)
-	subscriptionResponseFieldPendingDowngradePlanID        = big.NewInt(1 << 14)
-	subscriptionResponseFieldPlanID                        = big.NewInt(1 << 15)
-	subscriptionResponseFieldPlanName                      = big.NewInt(1 << 16)
-	subscriptionResponseFieldPricePerSecondMicrodollars    = big.NewInt(1 << 17)
-	subscriptionResponseFieldStatus                        = big.NewInt(1 << 18)
-	subscriptionResponseFieldTrialEnd                      = big.NewInt(1 << 19)
-	subscriptionResponseFieldYearlyPrice                   = big.NewInt(1 << 20)
+	subscriptionResponseFieldSchema                      = big.NewInt(1 << 0)
+	subscriptionResponseFieldBalanceDisplay              = big.NewInt(1 << 1)
+	subscriptionResponseFieldBalanceMicrodollars         = big.NewInt(1 << 2)
+	subscriptionResponseFieldBillingCycle                = big.NewInt(1 << 3)
+	subscriptionResponseFieldCancelAtPeriodEnd           = big.NewInt(1 << 4)
+	subscriptionResponseFieldCanceledAt                  = big.NewInt(1 << 5)
+	subscriptionResponseFieldCurrentPeriodEndAt          = big.NewInt(1 << 6)
+	subscriptionResponseFieldCurrentPeriodStartAt        = big.NewInt(1 << 7)
+	subscriptionResponseFieldID                          = big.NewInt(1 << 8)
+	subscriptionResponseFieldIncludedBalanceDisplay      = big.NewInt(1 << 9)
+	subscriptionResponseFieldIncludedBalanceMicrodollars = big.NewInt(1 << 10)
+	subscriptionResponseFieldMaxConcurrentRuns           = big.NewInt(1 << 11)
+	subscriptionResponseFieldMonthlyPriceMicrodollars    = big.NewInt(1 << 12)
+	subscriptionResponseFieldPendingDowngradeAt          = big.NewInt(1 << 13)
+	subscriptionResponseFieldPendingDowngradePlanID      = big.NewInt(1 << 14)
+	subscriptionResponseFieldPlanID                      = big.NewInt(1 << 15)
+	subscriptionResponseFieldPlanName                    = big.NewInt(1 << 16)
+	subscriptionResponseFieldPricePerSecondMicrodollars  = big.NewInt(1 << 17)
+	subscriptionResponseFieldStatus                      = big.NewInt(1 << 18)
+	subscriptionResponseFieldTrialEndAt                  = big.NewInt(1 << 19)
+	subscriptionResponseFieldYearlyPriceMicrodollars     = big.NewInt(1 << 20)
 )
 
 type SubscriptionResponse struct {
@@ -2281,9 +3626,9 @@ type SubscriptionResponse struct {
 	// Timestamp when the subscription was canceled.
 	CanceledAt *time.Time `json:"canceled_at,omitempty" url:"canceled_at,omitempty"`
 	// End of the current billing period.
-	CurrentPeriodEnd time.Time `json:"current_period_end" url:"current_period_end"`
+	CurrentPeriodEndAt time.Time `json:"current_period_end_at" url:"current_period_end_at"`
 	// Start of the current billing period.
-	CurrentPeriodStart time.Time `json:"current_period_start" url:"current_period_start"`
+	CurrentPeriodStartAt time.Time `json:"current_period_start_at" url:"current_period_start_at"`
 	// Subscription identifier.
 	ID string `json:"id" url:"id"`
 	// Formatted included balance (e.g., '$10.00').
@@ -2292,10 +3637,10 @@ type SubscriptionResponse struct {
 	IncludedBalanceMicrodollars int64 `json:"included_balance_microdollars" url:"included_balance_microdollars"`
 	// Maximum simultaneous runs allowed on this plan.
 	MaxConcurrentRuns int64 `json:"max_concurrent_runs" url:"max_concurrent_runs"`
-	// Monthly plan price in dollars.
-	MonthlyPrice float64 `json:"monthly_price" url:"monthly_price"`
+	// Monthly plan price in microdollars (1_000_000 = $1.00).
+	MonthlyPriceMicrodollars int64 `json:"monthly_price_microdollars" url:"monthly_price_microdollars"`
 	// When the pending downgrade takes effect.
-	PendingDowngradeEffectiveDate *time.Time `json:"pending_downgrade_effective_date,omitempty" url:"pending_downgrade_effective_date,omitempty"`
+	PendingDowngradeAt *time.Time `json:"pending_downgrade_at,omitempty" url:"pending_downgrade_at,omitempty"`
 	// Plan ID of a scheduled future downgrade.
 	PendingDowngradePlanID *string `json:"pending_downgrade_plan_id,omitempty" url:"pending_downgrade_plan_id,omitempty"`
 	// Billing plan's identifier.
@@ -2307,9 +3652,9 @@ type SubscriptionResponse struct {
 	// Current lifecycle state of the subscription.
 	Status SubscriptionResponseStatus `json:"status" url:"status"`
 	// Timestamp when the free trial ends.
-	TrialEnd *time.Time `json:"trial_end,omitempty" url:"trial_end,omitempty"`
-	// Annual plan price in dollars.
-	YearlyPrice float64 `json:"yearly_price" url:"yearly_price"`
+	TrialEndAt *time.Time `json:"trial_end_at,omitempty" url:"trial_end_at,omitempty"`
+	// Annual plan price in microdollars.
+	YearlyPriceMicrodollars int64 `json:"yearly_price_microdollars" url:"yearly_price_microdollars"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -2360,18 +3705,18 @@ func (s *SubscriptionResponse) GetCanceledAt() *time.Time {
 	return s.CanceledAt
 }
 
-func (s *SubscriptionResponse) GetCurrentPeriodEnd() time.Time {
+func (s *SubscriptionResponse) GetCurrentPeriodEndAt() time.Time {
 	if s == nil {
 		return time.Time{}
 	}
-	return s.CurrentPeriodEnd
+	return s.CurrentPeriodEndAt
 }
 
-func (s *SubscriptionResponse) GetCurrentPeriodStart() time.Time {
+func (s *SubscriptionResponse) GetCurrentPeriodStartAt() time.Time {
 	if s == nil {
 		return time.Time{}
 	}
-	return s.CurrentPeriodStart
+	return s.CurrentPeriodStartAt
 }
 
 func (s *SubscriptionResponse) GetID() string {
@@ -2402,18 +3747,18 @@ func (s *SubscriptionResponse) GetMaxConcurrentRuns() int64 {
 	return s.MaxConcurrentRuns
 }
 
-func (s *SubscriptionResponse) GetMonthlyPrice() float64 {
+func (s *SubscriptionResponse) GetMonthlyPriceMicrodollars() int64 {
 	if s == nil {
 		return 0
 	}
-	return s.MonthlyPrice
+	return s.MonthlyPriceMicrodollars
 }
 
-func (s *SubscriptionResponse) GetPendingDowngradeEffectiveDate() *time.Time {
+func (s *SubscriptionResponse) GetPendingDowngradeAt() *time.Time {
 	if s == nil {
 		return nil
 	}
-	return s.PendingDowngradeEffectiveDate
+	return s.PendingDowngradeAt
 }
 
 func (s *SubscriptionResponse) GetPendingDowngradePlanID() *string {
@@ -2451,18 +3796,18 @@ func (s *SubscriptionResponse) GetStatus() SubscriptionResponseStatus {
 	return s.Status
 }
 
-func (s *SubscriptionResponse) GetTrialEnd() *time.Time {
+func (s *SubscriptionResponse) GetTrialEndAt() *time.Time {
 	if s == nil {
 		return nil
 	}
-	return s.TrialEnd
+	return s.TrialEndAt
 }
 
-func (s *SubscriptionResponse) GetYearlyPrice() float64 {
+func (s *SubscriptionResponse) GetYearlyPriceMicrodollars() int64 {
 	if s == nil {
 		return 0
 	}
-	return s.YearlyPrice
+	return s.YearlyPriceMicrodollars
 }
 
 func (s *SubscriptionResponse) GetExtraProperties() map[string]interface{} {
@@ -2521,18 +3866,18 @@ func (s *SubscriptionResponse) SetCanceledAt(canceledAt *time.Time) {
 	s.require(subscriptionResponseFieldCanceledAt)
 }
 
-// SetCurrentPeriodEnd sets the CurrentPeriodEnd field and marks it as non-optional;
+// SetCurrentPeriodEndAt sets the CurrentPeriodEndAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionResponse) SetCurrentPeriodEnd(currentPeriodEnd time.Time) {
-	s.CurrentPeriodEnd = currentPeriodEnd
-	s.require(subscriptionResponseFieldCurrentPeriodEnd)
+func (s *SubscriptionResponse) SetCurrentPeriodEndAt(currentPeriodEndAt time.Time) {
+	s.CurrentPeriodEndAt = currentPeriodEndAt
+	s.require(subscriptionResponseFieldCurrentPeriodEndAt)
 }
 
-// SetCurrentPeriodStart sets the CurrentPeriodStart field and marks it as non-optional;
+// SetCurrentPeriodStartAt sets the CurrentPeriodStartAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionResponse) SetCurrentPeriodStart(currentPeriodStart time.Time) {
-	s.CurrentPeriodStart = currentPeriodStart
-	s.require(subscriptionResponseFieldCurrentPeriodStart)
+func (s *SubscriptionResponse) SetCurrentPeriodStartAt(currentPeriodStartAt time.Time) {
+	s.CurrentPeriodStartAt = currentPeriodStartAt
+	s.require(subscriptionResponseFieldCurrentPeriodStartAt)
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -2563,18 +3908,18 @@ func (s *SubscriptionResponse) SetMaxConcurrentRuns(maxConcurrentRuns int64) {
 	s.require(subscriptionResponseFieldMaxConcurrentRuns)
 }
 
-// SetMonthlyPrice sets the MonthlyPrice field and marks it as non-optional;
+// SetMonthlyPriceMicrodollars sets the MonthlyPriceMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionResponse) SetMonthlyPrice(monthlyPrice float64) {
-	s.MonthlyPrice = monthlyPrice
-	s.require(subscriptionResponseFieldMonthlyPrice)
+func (s *SubscriptionResponse) SetMonthlyPriceMicrodollars(monthlyPriceMicrodollars int64) {
+	s.MonthlyPriceMicrodollars = monthlyPriceMicrodollars
+	s.require(subscriptionResponseFieldMonthlyPriceMicrodollars)
 }
 
-// SetPendingDowngradeEffectiveDate sets the PendingDowngradeEffectiveDate field and marks it as non-optional;
+// SetPendingDowngradeAt sets the PendingDowngradeAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionResponse) SetPendingDowngradeEffectiveDate(pendingDowngradeEffectiveDate *time.Time) {
-	s.PendingDowngradeEffectiveDate = pendingDowngradeEffectiveDate
-	s.require(subscriptionResponseFieldPendingDowngradeEffectiveDate)
+func (s *SubscriptionResponse) SetPendingDowngradeAt(pendingDowngradeAt *time.Time) {
+	s.PendingDowngradeAt = pendingDowngradeAt
+	s.require(subscriptionResponseFieldPendingDowngradeAt)
 }
 
 // SetPendingDowngradePlanID sets the PendingDowngradePlanID field and marks it as non-optional;
@@ -2612,29 +3957,29 @@ func (s *SubscriptionResponse) SetStatus(status SubscriptionResponseStatus) {
 	s.require(subscriptionResponseFieldStatus)
 }
 
-// SetTrialEnd sets the TrialEnd field and marks it as non-optional;
+// SetTrialEndAt sets the TrialEndAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionResponse) SetTrialEnd(trialEnd *time.Time) {
-	s.TrialEnd = trialEnd
-	s.require(subscriptionResponseFieldTrialEnd)
+func (s *SubscriptionResponse) SetTrialEndAt(trialEndAt *time.Time) {
+	s.TrialEndAt = trialEndAt
+	s.require(subscriptionResponseFieldTrialEndAt)
 }
 
-// SetYearlyPrice sets the YearlyPrice field and marks it as non-optional;
+// SetYearlyPriceMicrodollars sets the YearlyPriceMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionResponse) SetYearlyPrice(yearlyPrice float64) {
-	s.YearlyPrice = yearlyPrice
-	s.require(subscriptionResponseFieldYearlyPrice)
+func (s *SubscriptionResponse) SetYearlyPriceMicrodollars(yearlyPriceMicrodollars int64) {
+	s.YearlyPriceMicrodollars = yearlyPriceMicrodollars
+	s.require(subscriptionResponseFieldYearlyPriceMicrodollars)
 }
 
 func (s *SubscriptionResponse) UnmarshalJSON(data []byte) error {
 	type embed SubscriptionResponse
 	var unmarshaler = struct {
 		embed
-		CanceledAt                    *internal.DateTime `json:"canceled_at,omitempty"`
-		CurrentPeriodEnd              *internal.DateTime `json:"current_period_end"`
-		CurrentPeriodStart            *internal.DateTime `json:"current_period_start"`
-		PendingDowngradeEffectiveDate *internal.DateTime `json:"pending_downgrade_effective_date,omitempty"`
-		TrialEnd                      *internal.DateTime `json:"trial_end,omitempty"`
+		CanceledAt           *internal.DateTime `json:"canceled_at,omitempty"`
+		CurrentPeriodEndAt   *internal.DateTime `json:"current_period_end_at"`
+		CurrentPeriodStartAt *internal.DateTime `json:"current_period_start_at"`
+		PendingDowngradeAt   *internal.DateTime `json:"pending_downgrade_at,omitempty"`
+		TrialEndAt           *internal.DateTime `json:"trial_end_at,omitempty"`
 	}{
 		embed: embed(*s),
 	}
@@ -2643,10 +3988,10 @@ func (s *SubscriptionResponse) UnmarshalJSON(data []byte) error {
 	}
 	*s = SubscriptionResponse(unmarshaler.embed)
 	s.CanceledAt = unmarshaler.CanceledAt.TimePtr()
-	s.CurrentPeriodEnd = unmarshaler.CurrentPeriodEnd.Time()
-	s.CurrentPeriodStart = unmarshaler.CurrentPeriodStart.Time()
-	s.PendingDowngradeEffectiveDate = unmarshaler.PendingDowngradeEffectiveDate.TimePtr()
-	s.TrialEnd = unmarshaler.TrialEnd.TimePtr()
+	s.CurrentPeriodEndAt = unmarshaler.CurrentPeriodEndAt.Time()
+	s.CurrentPeriodStartAt = unmarshaler.CurrentPeriodStartAt.Time()
+	s.PendingDowngradeAt = unmarshaler.PendingDowngradeAt.TimePtr()
+	s.TrialEndAt = unmarshaler.TrialEndAt.TimePtr()
 	extraProperties, err := internal.ExtractExtraProperties(data, *s)
 	if err != nil {
 		return err
@@ -2660,18 +4005,18 @@ func (s *SubscriptionResponse) MarshalJSON() ([]byte, error) {
 	type embed SubscriptionResponse
 	var marshaler = struct {
 		embed
-		CanceledAt                    *internal.DateTime `json:"canceled_at,omitempty"`
-		CurrentPeriodEnd              *internal.DateTime `json:"current_period_end"`
-		CurrentPeriodStart            *internal.DateTime `json:"current_period_start"`
-		PendingDowngradeEffectiveDate *internal.DateTime `json:"pending_downgrade_effective_date,omitempty"`
-		TrialEnd                      *internal.DateTime `json:"trial_end,omitempty"`
+		CanceledAt           *internal.DateTime `json:"canceled_at,omitempty"`
+		CurrentPeriodEndAt   *internal.DateTime `json:"current_period_end_at"`
+		CurrentPeriodStartAt *internal.DateTime `json:"current_period_start_at"`
+		PendingDowngradeAt   *internal.DateTime `json:"pending_downgrade_at,omitempty"`
+		TrialEndAt           *internal.DateTime `json:"trial_end_at,omitempty"`
 	}{
-		embed:                         embed(*s),
-		CanceledAt:                    internal.NewOptionalDateTime(s.CanceledAt),
-		CurrentPeriodEnd:              internal.NewDateTime(s.CurrentPeriodEnd),
-		CurrentPeriodStart:            internal.NewDateTime(s.CurrentPeriodStart),
-		PendingDowngradeEffectiveDate: internal.NewOptionalDateTime(s.PendingDowngradeEffectiveDate),
-		TrialEnd:                      internal.NewOptionalDateTime(s.TrialEnd),
+		embed:                embed(*s),
+		CanceledAt:           internal.NewOptionalDateTime(s.CanceledAt),
+		CurrentPeriodEndAt:   internal.NewDateTime(s.CurrentPeriodEndAt),
+		CurrentPeriodStartAt: internal.NewDateTime(s.CurrentPeriodStartAt),
+		PendingDowngradeAt:   internal.NewOptionalDateTime(s.PendingDowngradeAt),
+		TrialEndAt:           internal.NewOptionalDateTime(s.TrialEndAt),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
 	return json.Marshal(explicitMarshaler)
@@ -2755,10 +4100,10 @@ func (s SubscriptionResponseStatus) Ptr() *SubscriptionResponseStatus {
 
 // The org's usage-alert configuration and any open alerts.
 var (
-	subscriptionUsageAlertSettingsResponseFieldSchema         = big.NewInt(1 << 0)
-	subscriptionUsageAlertSettingsResponseFieldActiveAlerts   = big.NewInt(1 << 1)
-	subscriptionUsageAlertSettingsResponseFieldEnabled        = big.NewInt(1 << 2)
-	subscriptionUsageAlertSettingsResponseFieldThresholdCents = big.NewInt(1 << 3)
+	subscriptionUsageAlertSettingsResponseFieldSchema                = big.NewInt(1 << 0)
+	subscriptionUsageAlertSettingsResponseFieldActiveAlerts          = big.NewInt(1 << 1)
+	subscriptionUsageAlertSettingsResponseFieldEnabled               = big.NewInt(1 << 2)
+	subscriptionUsageAlertSettingsResponseFieldThresholdMicrodollars = big.NewInt(1 << 3)
 )
 
 type SubscriptionUsageAlertSettingsResponse struct {
@@ -2768,8 +4113,8 @@ type SubscriptionUsageAlertSettingsResponse struct {
 	ActiveAlerts []*SubscriptionActiveUsageAlert `json:"active_alerts,omitempty" url:"active_alerts,omitempty"`
 	// Whether low-balance alerts are active. Negative-balance alerts are always on.
 	Enabled bool `json:"enabled" url:"enabled"`
-	// Alert while the balance sits below this amount, in cents. Must be positive.
-	ThresholdCents int64 `json:"threshold_cents" url:"threshold_cents"`
+	// Alert while the balance sits below this amount, in microdollars. Must be positive while enabled.
+	ThresholdMicrodollars int64 `json:"threshold_microdollars" url:"threshold_microdollars"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -2799,11 +4144,11 @@ func (s *SubscriptionUsageAlertSettingsResponse) GetEnabled() bool {
 	return s.Enabled
 }
 
-func (s *SubscriptionUsageAlertSettingsResponse) GetThresholdCents() int64 {
+func (s *SubscriptionUsageAlertSettingsResponse) GetThresholdMicrodollars() int64 {
 	if s == nil {
 		return 0
 	}
-	return s.ThresholdCents
+	return s.ThresholdMicrodollars
 }
 
 func (s *SubscriptionUsageAlertSettingsResponse) GetExtraProperties() map[string]interface{} {
@@ -2841,11 +4186,11 @@ func (s *SubscriptionUsageAlertSettingsResponse) SetEnabled(enabled bool) {
 	s.require(subscriptionUsageAlertSettingsResponseFieldEnabled)
 }
 
-// SetThresholdCents sets the ThresholdCents field and marks it as non-optional;
+// SetThresholdMicrodollars sets the ThresholdMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionUsageAlertSettingsResponse) SetThresholdCents(thresholdCents int64) {
-	s.ThresholdCents = thresholdCents
-	s.require(subscriptionUsageAlertSettingsResponseFieldThresholdCents)
+func (s *SubscriptionUsageAlertSettingsResponse) SetThresholdMicrodollars(thresholdMicrodollars int64) {
+	s.ThresholdMicrodollars = thresholdMicrodollars
+	s.require(subscriptionUsageAlertSettingsResponseFieldThresholdMicrodollars)
 }
 
 func (s *SubscriptionUsageAlertSettingsResponse) UnmarshalJSON(data []byte) error {
@@ -2890,25 +4235,230 @@ func (s *SubscriptionUsageAlertSettingsResponse) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
-var (
-	subscriptionAutoRechargeSettingsFieldEnabled        = big.NewInt(1 << 0)
-	subscriptionAutoRechargeSettingsFieldTargetCents    = big.NewInt(1 << 1)
-	subscriptionAutoRechargeSettingsFieldThresholdCents = big.NewInt(1 << 2)
+// filter by billing cycle
+type BillingGetHistoryRequestBillingCycle string
+
+const (
+	BillingGetHistoryRequestBillingCycleDaily   BillingGetHistoryRequestBillingCycle = "daily"
+	BillingGetHistoryRequestBillingCycleWeekly  BillingGetHistoryRequestBillingCycle = "weekly"
+	BillingGetHistoryRequestBillingCycleMonthly BillingGetHistoryRequestBillingCycle = "monthly"
+	BillingGetHistoryRequestBillingCycleYearly  BillingGetHistoryRequestBillingCycle = "yearly"
 )
 
-type SubscriptionAutoRechargeSettings struct {
-	// Whether auto-recharge is active.
-	Enabled bool `json:"enabled" url:"-"`
-	// Balance the recharge restores to, in cents (minimum 500 = $5.00). The charge is target minus current balance.
-	TargetCents int64 `json:"target_cents" url:"-"`
-	// Recharge when the balance drops below this amount, in cents.
-	ThresholdCents int64 `json:"threshold_cents" url:"-"`
+func NewBillingGetHistoryRequestBillingCycleFromString(s string) (BillingGetHistoryRequestBillingCycle, error) {
+	switch s {
+	case "daily":
+		return BillingGetHistoryRequestBillingCycleDaily, nil
+	case "weekly":
+		return BillingGetHistoryRequestBillingCycleWeekly, nil
+	case "monthly":
+		return BillingGetHistoryRequestBillingCycleMonthly, nil
+	case "yearly":
+		return BillingGetHistoryRequestBillingCycleYearly, nil
+	}
+	var t BillingGetHistoryRequestBillingCycle
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (b BillingGetHistoryRequestBillingCycle) Ptr() *BillingGetHistoryRequestBillingCycle {
+	return &b
+}
+
+// only invoices at this status
+type BillingGetHistoryRequestStatus string
+
+const (
+	BillingGetHistoryRequestStatusPaid    BillingGetHistoryRequestStatus = "paid"
+	BillingGetHistoryRequestStatusPending BillingGetHistoryRequestStatus = "pending"
+	BillingGetHistoryRequestStatusFailed  BillingGetHistoryRequestStatus = "failed"
+	BillingGetHistoryRequestStatusVoid    BillingGetHistoryRequestStatus = "void"
+)
+
+func NewBillingGetHistoryRequestStatusFromString(s string) (BillingGetHistoryRequestStatus, error) {
+	switch s {
+	case "paid":
+		return BillingGetHistoryRequestStatusPaid, nil
+	case "pending":
+		return BillingGetHistoryRequestStatusPending, nil
+	case "failed":
+		return BillingGetHistoryRequestStatusFailed, nil
+	case "void":
+		return BillingGetHistoryRequestStatusVoid, nil
+	}
+	var t BillingGetHistoryRequestStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (b BillingGetHistoryRequestStatus) Ptr() *BillingGetHistoryRequestStatus {
+	return &b
+}
+
+// true for rentals set to cancel at period end, false for renewing ones
+type BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd string
+
+const (
+	BillingGetRentalSubscriptionsRequestCancelAtPeriodEndTrue  BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd = "true"
+	BillingGetRentalSubscriptionsRequestCancelAtPeriodEndFalse BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd = "false"
+)
+
+func NewBillingGetRentalSubscriptionsRequestCancelAtPeriodEndFromString(s string) (BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd, error) {
+	switch s {
+	case "true":
+		return BillingGetRentalSubscriptionsRequestCancelAtPeriodEndTrue, nil
+	case "false":
+		return BillingGetRentalSubscriptionsRequestCancelAtPeriodEndFalse, nil
+	}
+	var t BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (b BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd) Ptr() *BillingGetRentalSubscriptionsRequestCancelAtPeriodEnd {
+	return &b
+}
+
+type BillingGetRentalSubscriptionsRequestPaymentStatusItem string
+
+const (
+	BillingGetRentalSubscriptionsRequestPaymentStatusItemHealthy BillingGetRentalSubscriptionsRequestPaymentStatusItem = "healthy"
+	BillingGetRentalSubscriptionsRequestPaymentStatusItemPastDue BillingGetRentalSubscriptionsRequestPaymentStatusItem = "past_due"
+)
+
+func NewBillingGetRentalSubscriptionsRequestPaymentStatusItemFromString(s string) (BillingGetRentalSubscriptionsRequestPaymentStatusItem, error) {
+	switch s {
+	case "healthy":
+		return BillingGetRentalSubscriptionsRequestPaymentStatusItemHealthy, nil
+	case "past_due":
+		return BillingGetRentalSubscriptionsRequestPaymentStatusItemPastDue, nil
+	}
+	var t BillingGetRentalSubscriptionsRequestPaymentStatusItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (b BillingGetRentalSubscriptionsRequestPaymentStatusItem) Ptr() *BillingGetRentalSubscriptionsRequestPaymentStatusItem {
+	return &b
+}
+
+type BillingGetRentalSubscriptionsRequestPlanIntervalItem string
+
+const (
+	BillingGetRentalSubscriptionsRequestPlanIntervalItemDay   BillingGetRentalSubscriptionsRequestPlanIntervalItem = "day"
+	BillingGetRentalSubscriptionsRequestPlanIntervalItemWeek  BillingGetRentalSubscriptionsRequestPlanIntervalItem = "week"
+	BillingGetRentalSubscriptionsRequestPlanIntervalItemMonth BillingGetRentalSubscriptionsRequestPlanIntervalItem = "month"
+	BillingGetRentalSubscriptionsRequestPlanIntervalItemYear  BillingGetRentalSubscriptionsRequestPlanIntervalItem = "year"
+)
+
+func NewBillingGetRentalSubscriptionsRequestPlanIntervalItemFromString(s string) (BillingGetRentalSubscriptionsRequestPlanIntervalItem, error) {
+	switch s {
+	case "day":
+		return BillingGetRentalSubscriptionsRequestPlanIntervalItemDay, nil
+	case "week":
+		return BillingGetRentalSubscriptionsRequestPlanIntervalItemWeek, nil
+	case "month":
+		return BillingGetRentalSubscriptionsRequestPlanIntervalItemMonth, nil
+	case "year":
+		return BillingGetRentalSubscriptionsRequestPlanIntervalItemYear, nil
+	}
+	var t BillingGetRentalSubscriptionsRequestPlanIntervalItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (b BillingGetRentalSubscriptionsRequestPlanIntervalItem) Ptr() *BillingGetRentalSubscriptionsRequestPlanIntervalItem {
+	return &b
+}
+
+type BillingGetRentalSubscriptionsRequestStatusItem string
+
+const (
+	BillingGetRentalSubscriptionsRequestStatusItemActive   BillingGetRentalSubscriptionsRequestStatusItem = "active"
+	BillingGetRentalSubscriptionsRequestStatusItemCanceled BillingGetRentalSubscriptionsRequestStatusItem = "canceled"
+)
+
+func NewBillingGetRentalSubscriptionsRequestStatusItemFromString(s string) (BillingGetRentalSubscriptionsRequestStatusItem, error) {
+	switch s {
+	case "active":
+		return BillingGetRentalSubscriptionsRequestStatusItemActive, nil
+	case "canceled":
+		return BillingGetRentalSubscriptionsRequestStatusItemCanceled, nil
+	}
+	var t BillingGetRentalSubscriptionsRequestStatusItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (b BillingGetRentalSubscriptionsRequestStatusItem) Ptr() *BillingGetRentalSubscriptionsRequestStatusItem {
+	return &b
+}
+
+type BillingListBalanceTransactionsRequestTypeItem string
+
+const (
+	BillingListBalanceTransactionsRequestTypeItemOpeningBalance    BillingListBalanceTransactionsRequestTypeItem = "opening_balance"
+	BillingListBalanceTransactionsRequestTypeItemUnrecorded        BillingListBalanceTransactionsRequestTypeItem = "unrecorded"
+	BillingListBalanceTransactionsRequestTypeItemDeposit           BillingListBalanceTransactionsRequestTypeItem = "deposit"
+	BillingListBalanceTransactionsRequestTypeItemUsage             BillingListBalanceTransactionsRequestTypeItem = "usage"
+	BillingListBalanceTransactionsRequestTypeItemPlanGrant         BillingListBalanceTransactionsRequestTypeItem = "plan_grant"
+	BillingListBalanceTransactionsRequestTypeItemPlanLapse         BillingListBalanceTransactionsRequestTypeItem = "plan_lapse"
+	BillingListBalanceTransactionsRequestTypeItemExpiry            BillingListBalanceTransactionsRequestTypeItem = "expiry"
+	BillingListBalanceTransactionsRequestTypeItemAdjustment        BillingListBalanceTransactionsRequestTypeItem = "adjustment"
+	BillingListBalanceTransactionsRequestTypeItemRefundReversal    BillingListBalanceTransactionsRequestTypeItem = "refund_reversal"
+	BillingListBalanceTransactionsRequestTypeItemDisputeReversal   BillingListBalanceTransactionsRequestTypeItem = "dispute_reversal"
+	BillingListBalanceTransactionsRequestTypeItemDisputeReinstated BillingListBalanceTransactionsRequestTypeItem = "dispute_reinstated"
+	BillingListBalanceTransactionsRequestTypeItemRefundFailed      BillingListBalanceTransactionsRequestTypeItem = "refund_failed"
+)
+
+func NewBillingListBalanceTransactionsRequestTypeItemFromString(s string) (BillingListBalanceTransactionsRequestTypeItem, error) {
+	switch s {
+	case "opening_balance":
+		return BillingListBalanceTransactionsRequestTypeItemOpeningBalance, nil
+	case "unrecorded":
+		return BillingListBalanceTransactionsRequestTypeItemUnrecorded, nil
+	case "deposit":
+		return BillingListBalanceTransactionsRequestTypeItemDeposit, nil
+	case "usage":
+		return BillingListBalanceTransactionsRequestTypeItemUsage, nil
+	case "plan_grant":
+		return BillingListBalanceTransactionsRequestTypeItemPlanGrant, nil
+	case "plan_lapse":
+		return BillingListBalanceTransactionsRequestTypeItemPlanLapse, nil
+	case "expiry":
+		return BillingListBalanceTransactionsRequestTypeItemExpiry, nil
+	case "adjustment":
+		return BillingListBalanceTransactionsRequestTypeItemAdjustment, nil
+	case "refund_reversal":
+		return BillingListBalanceTransactionsRequestTypeItemRefundReversal, nil
+	case "dispute_reversal":
+		return BillingListBalanceTransactionsRequestTypeItemDisputeReversal, nil
+	case "dispute_reinstated":
+		return BillingListBalanceTransactionsRequestTypeItemDisputeReinstated, nil
+	case "refund_failed":
+		return BillingListBalanceTransactionsRequestTypeItemRefundFailed, nil
+	}
+	var t BillingListBalanceTransactionsRequestTypeItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (b BillingListBalanceTransactionsRequestTypeItem) Ptr() *BillingListBalanceTransactionsRequestTypeItem {
+	return &b
+}
+
+var (
+	subscriptionAutoRechargeSettingsUpdateFieldEnabled               = big.NewInt(1 << 0)
+	subscriptionAutoRechargeSettingsUpdateFieldTargetMicrodollars    = big.NewInt(1 << 1)
+	subscriptionAutoRechargeSettingsUpdateFieldThresholdMicrodollars = big.NewInt(1 << 2)
+)
+
+type SubscriptionAutoRechargeSettingsUpdate struct {
+	// Whether auto-recharge is active. Enabling clears any prior payment-failure auto-disable.
+	Enabled *bool `json:"enabled,omitempty" url:"-"`
+	// Balance the recharge restores to, in microdollars (minimum 5_000_000 = $5.00 while enabled).
+	TargetMicrodollars *int64 `json:"target_microdollars,omitempty" url:"-"`
+	// Recharge when the balance drops below this amount, in microdollars.
+	ThresholdMicrodollars *int64 `json:"threshold_microdollars,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 }
 
-func (s *SubscriptionAutoRechargeSettings) require(field *big.Int) {
+func (s *SubscriptionAutoRechargeSettingsUpdate) require(field *big.Int) {
 	if s.explicitFields == nil {
 		s.explicitFields = big.NewInt(0)
 	}
@@ -2917,37 +4467,37 @@ func (s *SubscriptionAutoRechargeSettings) require(field *big.Int) {
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionAutoRechargeSettings) SetEnabled(enabled bool) {
+func (s *SubscriptionAutoRechargeSettingsUpdate) SetEnabled(enabled *bool) {
 	s.Enabled = enabled
-	s.require(subscriptionAutoRechargeSettingsFieldEnabled)
+	s.require(subscriptionAutoRechargeSettingsUpdateFieldEnabled)
 }
 
-// SetTargetCents sets the TargetCents field and marks it as non-optional;
+// SetTargetMicrodollars sets the TargetMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionAutoRechargeSettings) SetTargetCents(targetCents int64) {
-	s.TargetCents = targetCents
-	s.require(subscriptionAutoRechargeSettingsFieldTargetCents)
+func (s *SubscriptionAutoRechargeSettingsUpdate) SetTargetMicrodollars(targetMicrodollars *int64) {
+	s.TargetMicrodollars = targetMicrodollars
+	s.require(subscriptionAutoRechargeSettingsUpdateFieldTargetMicrodollars)
 }
 
-// SetThresholdCents sets the ThresholdCents field and marks it as non-optional;
+// SetThresholdMicrodollars sets the ThresholdMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionAutoRechargeSettings) SetThresholdCents(thresholdCents int64) {
-	s.ThresholdCents = thresholdCents
-	s.require(subscriptionAutoRechargeSettingsFieldThresholdCents)
+func (s *SubscriptionAutoRechargeSettingsUpdate) SetThresholdMicrodollars(thresholdMicrodollars *int64) {
+	s.ThresholdMicrodollars = thresholdMicrodollars
+	s.require(subscriptionAutoRechargeSettingsUpdateFieldThresholdMicrodollars)
 }
 
-func (s *SubscriptionAutoRechargeSettings) UnmarshalJSON(data []byte) error {
-	type unmarshaler SubscriptionAutoRechargeSettings
+func (s *SubscriptionAutoRechargeSettingsUpdate) UnmarshalJSON(data []byte) error {
+	type unmarshaler SubscriptionAutoRechargeSettingsUpdate
 	var body unmarshaler
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
-	*s = SubscriptionAutoRechargeSettings(body)
+	*s = SubscriptionAutoRechargeSettingsUpdate(body)
 	return nil
 }
 
-func (s *SubscriptionAutoRechargeSettings) MarshalJSON() ([]byte, error) {
-	type embed SubscriptionAutoRechargeSettings
+func (s *SubscriptionAutoRechargeSettingsUpdate) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionAutoRechargeSettingsUpdate
 	var marshaler = struct {
 		embed
 	}{
@@ -2958,21 +4508,21 @@ func (s *SubscriptionAutoRechargeSettings) MarshalJSON() ([]byte, error) {
 }
 
 var (
-	subscriptionUsageAlertSettingsFieldEnabled        = big.NewInt(1 << 0)
-	subscriptionUsageAlertSettingsFieldThresholdCents = big.NewInt(1 << 1)
+	subscriptionUsageAlertSettingsUpdateFieldEnabled               = big.NewInt(1 << 0)
+	subscriptionUsageAlertSettingsUpdateFieldThresholdMicrodollars = big.NewInt(1 << 1)
 )
 
-type SubscriptionUsageAlertSettings struct {
-	// Whether low-balance alerts are active. Negative-balance alerts are always on.
-	Enabled bool `json:"enabled" url:"-"`
-	// Alert while the balance sits below this amount, in cents. Must be positive.
-	ThresholdCents int64 `json:"threshold_cents" url:"-"`
+type SubscriptionUsageAlertSettingsUpdate struct {
+	// Whether low-balance alerts are active.
+	Enabled *bool `json:"enabled,omitempty" url:"-"`
+	// Alert while the balance sits below this amount, in microdollars. Must be positive while enabled.
+	ThresholdMicrodollars *int64 `json:"threshold_microdollars,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 }
 
-func (s *SubscriptionUsageAlertSettings) require(field *big.Int) {
+func (s *SubscriptionUsageAlertSettingsUpdate) require(field *big.Int) {
 	if s.explicitFields == nil {
 		s.explicitFields = big.NewInt(0)
 	}
@@ -2981,30 +4531,30 @@ func (s *SubscriptionUsageAlertSettings) require(field *big.Int) {
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionUsageAlertSettings) SetEnabled(enabled bool) {
+func (s *SubscriptionUsageAlertSettingsUpdate) SetEnabled(enabled *bool) {
 	s.Enabled = enabled
-	s.require(subscriptionUsageAlertSettingsFieldEnabled)
+	s.require(subscriptionUsageAlertSettingsUpdateFieldEnabled)
 }
 
-// SetThresholdCents sets the ThresholdCents field and marks it as non-optional;
+// SetThresholdMicrodollars sets the ThresholdMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (s *SubscriptionUsageAlertSettings) SetThresholdCents(thresholdCents int64) {
-	s.ThresholdCents = thresholdCents
-	s.require(subscriptionUsageAlertSettingsFieldThresholdCents)
+func (s *SubscriptionUsageAlertSettingsUpdate) SetThresholdMicrodollars(thresholdMicrodollars *int64) {
+	s.ThresholdMicrodollars = thresholdMicrodollars
+	s.require(subscriptionUsageAlertSettingsUpdateFieldThresholdMicrodollars)
 }
 
-func (s *SubscriptionUsageAlertSettings) UnmarshalJSON(data []byte) error {
-	type unmarshaler SubscriptionUsageAlertSettings
+func (s *SubscriptionUsageAlertSettingsUpdate) UnmarshalJSON(data []byte) error {
+	type unmarshaler SubscriptionUsageAlertSettingsUpdate
 	var body unmarshaler
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
-	*s = SubscriptionUsageAlertSettings(body)
+	*s = SubscriptionUsageAlertSettingsUpdate(body)
 	return nil
 }
 
-func (s *SubscriptionUsageAlertSettings) MarshalJSON() ([]byte, error) {
-	type embed SubscriptionUsageAlertSettings
+func (s *SubscriptionUsageAlertSettingsUpdate) MarshalJSON() ([]byte, error) {
+	type embed SubscriptionUsageAlertSettingsUpdate
 	var marshaler = struct {
 		embed
 	}{
