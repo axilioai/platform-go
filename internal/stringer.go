@@ -11,8 +11,8 @@ import (
 
 // secretKeys are the JSON keys whose values String() never prints: values the
 // API returns once and that grant access on their own (webhook signing
-// secrets, API keys, sign-in tokens, and the session URLs that carry a token:
-// live view, control, telemetry). The fields stay readable on the struct; only
+// secrets, API keys, sign-in tokens, and the URLs that carry a token: live
+// view, control, telemetry, run stream). The fields stay readable on the struct; only
 // the printed form hides them.
 var secretKeys = map[string]bool{
 	"secret":        true,
@@ -21,6 +21,7 @@ var secretKeys = map[string]bool{
 	"live_view_url": true,
 	"control_url":   true,
 	"telemetry_url": true,
+	"stream_url":    true,
 }
 
 // StringifyJSON returns a pretty JSON string representation of

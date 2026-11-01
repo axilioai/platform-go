@@ -21,23 +21,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRunCreateRequestSetterKeepsRuns(t *testing.T) {
+func TestRunCreateRequestSetterKeepsFields(t *testing.T) {
 	start := time.Date(2026, 10, 12, 9, 0, 0, 0, time.UTC)
-	request := &api.RunCreateRequest{WorkflowID: "wf_123", Runs: []*api.RunConfig{{}}}
+	task := "open settings"
+	request := &api.AgentRunCreateRequest{Task: &task}
 	request.SetStartAt(&start)
 
 	body, err := json.Marshal(request)
 	require.NoError(t, err)
-	assert.JSONEq(t, `{"runs":[{}],"start_at":"2026-10-12T09:00:00Z"}`, string(body))
+	assert.JSONEq(t, `{"task":"open settings","start_at":"2026-10-12T09:00:00Z"}`, string(body))
 }
 
 func TestRunCreateRequestExplicitNilStartAt(t *testing.T) {
-	request := &api.RunCreateRequest{Runs: []*api.RunConfig{{}}}
+	task := "open settings"
+	request := &api.AgentRunCreateRequest{Task: &task}
 	request.SetStartAt(nil)
 
 	body, err := json.Marshal(request)
 	require.NoError(t, err)
-	assert.JSONEq(t, `{"runs":[{}],"start_at":null}`, string(body))
+	assert.JSONEq(t, `{"task":"open settings","start_at":null}`, string(body))
 }
 
 func TestWebhookEndpointSetterKeepsFields(t *testing.T) {

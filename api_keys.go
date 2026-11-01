@@ -336,10 +336,11 @@ var (
 	aPIKeyListItemFieldCreatedAt   = big.NewInt(1 << 0)
 	aPIKeyListItemFieldCreatedBy   = big.NewInt(1 << 1)
 	aPIKeyListItemFieldCreatedByID = big.NewInt(1 << 2)
-	aPIKeyListItemFieldID          = big.NewInt(1 << 3)
-	aPIKeyListItemFieldKeyPreview  = big.NewInt(1 << 4)
-	aPIKeyListItemFieldLastUsedAt  = big.NewInt(1 << 5)
-	aPIKeyListItemFieldName        = big.NewInt(1 << 6)
+	aPIKeyListItemFieldHealth      = big.NewInt(1 << 3)
+	aPIKeyListItemFieldID          = big.NewInt(1 << 4)
+	aPIKeyListItemFieldKeyPreview  = big.NewInt(1 << 5)
+	aPIKeyListItemFieldLastUsedAt  = big.NewInt(1 << 6)
+	aPIKeyListItemFieldName        = big.NewInt(1 << 7)
 )
 
 type APIKeyListItem struct {
@@ -349,6 +350,8 @@ type APIKeyListItem struct {
 	CreatedBy *string `json:"created_by,omitempty" url:"created_by,omitempty"`
 	// User ID of the creator (used for the creator filter).
 	CreatedByID *string `json:"created_by_id,omitempty" url:"created_by_id,omitempty"`
+	// What the key can do now. A key acts as its creator: 'read_only' when the creator is now a viewer, 'creator_removed' when they left the organization, in which case its calls are refused wherever a role is required.
+	Health APIKeyListItemHealth `json:"health" url:"health"`
 	// API key identifier.
 	ID string `json:"id" url:"id"`
 	// Redacted version of the key (e.g., last 4 chars).
@@ -384,6 +387,13 @@ func (a *APIKeyListItem) GetCreatedByID() *string {
 		return nil
 	}
 	return a.CreatedByID
+}
+
+func (a *APIKeyListItem) GetHealth() APIKeyListItemHealth {
+	if a == nil {
+		return ""
+	}
+	return a.Health
 }
 
 func (a *APIKeyListItem) GetID() string {
@@ -447,6 +457,13 @@ func (a *APIKeyListItem) SetCreatedBy(createdBy *string) {
 func (a *APIKeyListItem) SetCreatedByID(createdByID *string) {
 	a.CreatedByID = createdByID
 	a.require(aPIKeyListItemFieldCreatedByID)
+}
+
+// SetHealth sets the Health field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (a *APIKeyListItem) SetHealth(health APIKeyListItemHealth) {
+	a.Health = health
+	a.require(aPIKeyListItemFieldHealth)
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -529,6 +546,32 @@ func (a *APIKeyListItem) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", a)
+}
+
+// What the key can do now. A key acts as its creator: 'read_only' when the creator is now a viewer, 'creator_removed' when they left the organization, in which case its calls are refused wherever a role is required.
+type APIKeyListItemHealth string
+
+const (
+	APIKeyListItemHealthOk             APIKeyListItemHealth = "ok"
+	APIKeyListItemHealthReadOnly       APIKeyListItemHealth = "read_only"
+	APIKeyListItemHealthCreatorRemoved APIKeyListItemHealth = "creator_removed"
+)
+
+func NewAPIKeyListItemHealthFromString(s string) (APIKeyListItemHealth, error) {
+	switch s {
+	case "ok":
+		return APIKeyListItemHealthOk, nil
+	case "read_only":
+		return APIKeyListItemHealthReadOnly, nil
+	case "creator_removed":
+		return APIKeyListItemHealthCreatorRemoved, nil
+	}
+	var t APIKeyListItemHealth
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (a APIKeyListItemHealth) Ptr() *APIKeyListItemHealth {
+	return &a
 }
 
 // Paginated list of API keys.

@@ -27,7 +27,7 @@ type UsageGetMetricsRequest struct {
 	Granularity *UsageGetMetricsRequestGranularity `json:"-" url:"granularity,omitempty"`
 	// IANA time zone the buckets follow, such as America/Los_Angeles: a day starts at local midnight and an hour on the local hour. An unknown name is an error.
 	TimeZone *string `json:"-" url:"time_zone,omitempty"`
-	// Split each bucket by product (session or inference). Omit for one point per bucket.
+	// Split each bucket by product (session or inference), agent, model, api_key, schedule or device_class. Omit for one point per bucket.
 	GroupBy *UsageGetMetricsRequestGroupBy `json:"-" url:"group_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -97,7 +97,7 @@ type UsageListInferencesRequest struct {
 	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// Pagination offset.
 	Offset *int64 `json:"-" url:"offset,omitempty"`
-	// Only inferences of one of these operations; repeatable.
+	// Only inferences of one of these operations; repeatable. agent_chat is an agent run's model step.
 	Endpoint []UsageListInferencesRequestEndpointItem `json:"-" url:"endpoint,omitempty"`
 	// Restrict results to a single model name.
 	Model *string `json:"-" url:"model,omitempty"`
@@ -189,7 +189,7 @@ var (
 	usageListSessionsRequestFieldOffset          = big.NewInt(1 << 3)
 	usageListSessionsRequestFieldSessionStatus   = big.NewInt(1 << 4)
 	usageListSessionsRequestFieldProcessedStatus = big.NewInt(1 << 5)
-	usageListSessionsRequestFieldWorkflowID      = big.NewInt(1 << 6)
+	usageListSessionsRequestFieldAgentID         = big.NewInt(1 << 6)
 	usageListSessionsRequestFieldAllocatedBy     = big.NewInt(1 << 7)
 	usageListSessionsRequestFieldSearch          = big.NewInt(1 << 8)
 	usageListSessionsRequestFieldOrderBy         = big.NewInt(1 << 9)
@@ -208,13 +208,13 @@ type UsageListSessionsRequest struct {
 	SessionStatus []UsageListSessionsRequestSessionStatusItem `json:"-" url:"session_status,omitempty"`
 	// Only sessions at one of these billing processing statuses; repeatable.
 	ProcessedStatus []UsageListSessionsRequestProcessedStatusItem `json:"-" url:"processed_status,omitempty"`
-	// Restrict results to sessions of a single workflow.
-	WorkflowID *string `json:"-" url:"workflow_id,omitempty"`
+	// Restrict results to sessions of a single agent's runs.
+	AgentID *string `json:"-" url:"agent_id,omitempty"`
 	// Restrict results to the given allocation sources; repeatable.
 	AllocatedBy []UsageListSessionsRequestAllocatedByItem `json:"-" url:"allocated_by,omitempty"`
-	// Filter by session, workflow, or phone id substring.
+	// Filter by session, agent, or phone id substring.
 	Search *string `json:"-" url:"search,omitempty"`
-	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is allocated_at, deallocated_at, duration_seconds, cost_microdollars, session_status, processed_status, allocated_by, session_id or workflow_id. Defaults to allocated_at desc.
+	// Sort expression '<field> [asc|desc]', direction defaulting to desc; field is allocated_at, deallocated_at, duration_seconds, cost_microdollars, session_status, processed_status, allocated_by, session_id or agent_id. Defaults to allocated_at desc.
 	OrderBy *string `json:"-" url:"order_by,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -270,11 +270,11 @@ func (u *UsageListSessionsRequest) SetProcessedStatus(processedStatus []UsageLis
 	u.require(usageListSessionsRequestFieldProcessedStatus)
 }
 
-// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
+// SetAgentID sets the AgentID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageListSessionsRequest) SetWorkflowID(workflowID *string) {
-	u.WorkflowID = workflowID
-	u.require(usageListSessionsRequestFieldWorkflowID)
+func (u *UsageListSessionsRequest) SetAgentID(agentID *string) {
+	u.AgentID = agentID
+	u.require(usageListSessionsRequestFieldAgentID)
 }
 
 // SetAllocatedBy sets the AllocatedBy field and marks it as non-optional;
@@ -320,7 +320,7 @@ type UsageInference struct {
 	CostMicrodollars int64 `json:"cost_microdollars" url:"cost_microdollars"`
 	// Time the call completed, in UTC.
 	CreatedAt time.Time `json:"created_at" url:"created_at"`
-	// Argus operation billed: 'detect' (screenshots:detect), 'locate' (screenshots:locate) or 'element_locate' (elements:locate).
+	// Operation billed: 'detect' (screenshots:detect), 'locate' (screenshots:locate), 'element_locate' (elements:locate) or 'agent_chat' (one model step of an agent run).
 	Endpoint UsageInferenceEndpoint `json:"endpoint" url:"endpoint"`
 	// Unique inference-call identifier (inference_id).
 	InferenceID string `json:"inference_id" url:"inference_id"`
@@ -562,13 +562,14 @@ func (u *UsageInference) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
-// Argus operation billed: 'detect' (screenshots:detect), 'locate' (screenshots:locate) or 'element_locate' (elements:locate).
+// Operation billed: 'detect' (screenshots:detect), 'locate' (screenshots:locate), 'element_locate' (elements:locate) or 'agent_chat' (one model step of an agent run).
 type UsageInferenceEndpoint string
 
 const (
 	UsageInferenceEndpointDetect        UsageInferenceEndpoint = "detect"
 	UsageInferenceEndpointLocate        UsageInferenceEndpoint = "locate"
 	UsageInferenceEndpointElementLocate UsageInferenceEndpoint = "element_locate"
+	UsageInferenceEndpointAgentChat     UsageInferenceEndpoint = "agent_chat"
 )
 
 func NewUsageInferenceEndpointFromString(s string) (UsageInferenceEndpoint, error) {
@@ -579,6 +580,8 @@ func NewUsageInferenceEndpointFromString(s string) (UsageInferenceEndpoint, erro
 		return UsageInferenceEndpointLocate, nil
 	case "element_locate":
 		return UsageInferenceEndpointElementLocate, nil
+	case "agent_chat":
+		return UsageInferenceEndpointAgentChat, nil
 	}
 	var t UsageInferenceEndpoint
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -767,22 +770,46 @@ func (u *UsageInferencesResponse) String() string {
 
 // One bucket of usage spend, and one product's when grouped by product.
 var (
-	usageMetricsPointFieldInferenceCostMicrodollars = big.NewInt(1 << 0)
-	usageMetricsPointFieldPeriodStartAt             = big.NewInt(1 << 1)
-	usageMetricsPointFieldProduct                   = big.NewInt(1 << 2)
-	usageMetricsPointFieldSessionCostMicrodollars   = big.NewInt(1 << 3)
-	usageMetricsPointFieldTotalCostMicrodollars     = big.NewInt(1 << 4)
+	usageMetricsPointFieldAgent                     = big.NewInt(1 << 0)
+	usageMetricsPointFieldAPIKey                    = big.NewInt(1 << 1)
+	usageMetricsPointFieldDeviceClass               = big.NewInt(1 << 2)
+	usageMetricsPointFieldInferenceCostMicrodollars = big.NewInt(1 << 3)
+	usageMetricsPointFieldInputTokens               = big.NewInt(1 << 4)
+	usageMetricsPointFieldModel                     = big.NewInt(1 << 5)
+	usageMetricsPointFieldOutputTokens              = big.NewInt(1 << 6)
+	usageMetricsPointFieldPeriodStartAt             = big.NewInt(1 << 7)
+	usageMetricsPointFieldProduct                   = big.NewInt(1 << 8)
+	usageMetricsPointFieldSchedule                  = big.NewInt(1 << 9)
+	usageMetricsPointFieldSessionCostMicrodollars   = big.NewInt(1 << 10)
+	usageMetricsPointFieldSessionSeconds            = big.NewInt(1 << 11)
+	usageMetricsPointFieldTotalCostMicrodollars     = big.NewInt(1 << 12)
 )
 
 type UsageMetricsPoint struct {
+	// The agent's id; empty for spend outside an agent. Set only with group_by=agent.
+	Agent *string `json:"agent,omitempty" url:"agent,omitempty"`
+	// The API key's id; empty for spend no key started. Set only with group_by=api_key.
+	APIKey *string `json:"api_key,omitempty" url:"api_key,omitempty"`
+	// What the spend drove. Set only with group_by=device_class.
+	DeviceClass *string `json:"device_class,omitempty" url:"device_class,omitempty"`
 	// Inference spend in the bucket, in microdollars.
 	InferenceCostMicrodollars int64 `json:"inference_cost_microdollars" url:"inference_cost_microdollars"`
+	// Input tokens of the inference billed in the bucket.
+	InputTokens int64 `json:"input_tokens" url:"input_tokens"`
+	// The model that served the inference; empty for phone time. Set only with group_by=model.
+	Model *string `json:"model,omitempty" url:"model,omitempty"`
+	// Output tokens of the inference billed in the bucket.
+	OutputTokens int64 `json:"output_tokens" url:"output_tokens"`
 	// Start of the bucket (RFC 3339, UTC): a local hour or a local midnight in time_zone.
 	PeriodStartAt time.Time `json:"period_start_at" url:"period_start_at"`
 	// What was billed: session (phone time) or inference. Set only with group_by=product.
 	Product *UsageMetricsPointProduct `json:"product,omitempty" url:"product,omitempty"`
+	// The schedule's id; empty for spend no schedule started. Set only with group_by=schedule.
+	Schedule *string `json:"schedule,omitempty" url:"schedule,omitempty"`
 	// Phone-session (phone time) spend in the bucket, in microdollars.
 	SessionCostMicrodollars int64 `json:"session_cost_microdollars" url:"session_cost_microdollars"`
+	// Phone time billed in the bucket, in seconds. A dedicated phone's sessions bill nothing, so they are not counted here.
+	SessionSeconds int64 `json:"session_seconds" url:"session_seconds"`
 	// All usage spend in the bucket, in microdollars.
 	TotalCostMicrodollars int64 `json:"total_cost_microdollars" url:"total_cost_microdollars"`
 
@@ -793,11 +820,53 @@ type UsageMetricsPoint struct {
 	rawJSON         json.RawMessage
 }
 
+func (u *UsageMetricsPoint) GetAgent() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Agent
+}
+
+func (u *UsageMetricsPoint) GetAPIKey() *string {
+	if u == nil {
+		return nil
+	}
+	return u.APIKey
+}
+
+func (u *UsageMetricsPoint) GetDeviceClass() *string {
+	if u == nil {
+		return nil
+	}
+	return u.DeviceClass
+}
+
 func (u *UsageMetricsPoint) GetInferenceCostMicrodollars() int64 {
 	if u == nil {
 		return 0
 	}
 	return u.InferenceCostMicrodollars
+}
+
+func (u *UsageMetricsPoint) GetInputTokens() int64 {
+	if u == nil {
+		return 0
+	}
+	return u.InputTokens
+}
+
+func (u *UsageMetricsPoint) GetModel() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Model
+}
+
+func (u *UsageMetricsPoint) GetOutputTokens() int64 {
+	if u == nil {
+		return 0
+	}
+	return u.OutputTokens
 }
 
 func (u *UsageMetricsPoint) GetPeriodStartAt() time.Time {
@@ -814,11 +883,25 @@ func (u *UsageMetricsPoint) GetProduct() *UsageMetricsPointProduct {
 	return u.Product
 }
 
+func (u *UsageMetricsPoint) GetSchedule() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Schedule
+}
+
 func (u *UsageMetricsPoint) GetSessionCostMicrodollars() int64 {
 	if u == nil {
 		return 0
 	}
 	return u.SessionCostMicrodollars
+}
+
+func (u *UsageMetricsPoint) GetSessionSeconds() int64 {
+	if u == nil {
+		return 0
+	}
+	return u.SessionSeconds
 }
 
 func (u *UsageMetricsPoint) GetTotalCostMicrodollars() int64 {
@@ -842,11 +925,53 @@ func (u *UsageMetricsPoint) require(field *big.Int) {
 	u.explicitFields.Or(u.explicitFields, field)
 }
 
+// SetAgent sets the Agent field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageMetricsPoint) SetAgent(agent *string) {
+	u.Agent = agent
+	u.require(usageMetricsPointFieldAgent)
+}
+
+// SetAPIKey sets the APIKey field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageMetricsPoint) SetAPIKey(apiKey *string) {
+	u.APIKey = apiKey
+	u.require(usageMetricsPointFieldAPIKey)
+}
+
+// SetDeviceClass sets the DeviceClass field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageMetricsPoint) SetDeviceClass(deviceClass *string) {
+	u.DeviceClass = deviceClass
+	u.require(usageMetricsPointFieldDeviceClass)
+}
+
 // SetInferenceCostMicrodollars sets the InferenceCostMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (u *UsageMetricsPoint) SetInferenceCostMicrodollars(inferenceCostMicrodollars int64) {
 	u.InferenceCostMicrodollars = inferenceCostMicrodollars
 	u.require(usageMetricsPointFieldInferenceCostMicrodollars)
+}
+
+// SetInputTokens sets the InputTokens field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageMetricsPoint) SetInputTokens(inputTokens int64) {
+	u.InputTokens = inputTokens
+	u.require(usageMetricsPointFieldInputTokens)
+}
+
+// SetModel sets the Model field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageMetricsPoint) SetModel(model *string) {
+	u.Model = model
+	u.require(usageMetricsPointFieldModel)
+}
+
+// SetOutputTokens sets the OutputTokens field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageMetricsPoint) SetOutputTokens(outputTokens int64) {
+	u.OutputTokens = outputTokens
+	u.require(usageMetricsPointFieldOutputTokens)
 }
 
 // SetPeriodStartAt sets the PeriodStartAt field and marks it as non-optional;
@@ -863,11 +988,25 @@ func (u *UsageMetricsPoint) SetProduct(product *UsageMetricsPointProduct) {
 	u.require(usageMetricsPointFieldProduct)
 }
 
+// SetSchedule sets the Schedule field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageMetricsPoint) SetSchedule(schedule *string) {
+	u.Schedule = schedule
+	u.require(usageMetricsPointFieldSchedule)
+}
+
 // SetSessionCostMicrodollars sets the SessionCostMicrodollars field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (u *UsageMetricsPoint) SetSessionCostMicrodollars(sessionCostMicrodollars int64) {
 	u.SessionCostMicrodollars = sessionCostMicrodollars
 	u.require(usageMetricsPointFieldSessionCostMicrodollars)
+}
+
+// SetSessionSeconds sets the SessionSeconds field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageMetricsPoint) SetSessionSeconds(sessionSeconds int64) {
+	u.SessionSeconds = sessionSeconds
+	u.require(usageMetricsPointFieldSessionSeconds)
 }
 
 // SetTotalCostMicrodollars sets the TotalCostMicrodollars field and marks it as non-optional;
@@ -1055,24 +1194,26 @@ func (u *UsageMetricsResponse) String() string {
 
 // Single phone-session record from the usage sessions endpoint.
 var (
-	usageSessionFieldAllocatedAt               = big.NewInt(1 << 0)
-	usageSessionFieldAllocatedBy               = big.NewInt(1 << 1)
-	usageSessionFieldBillingPlanID             = big.NewInt(1 << 2)
-	usageSessionFieldCostMicrodollars          = big.NewInt(1 << 3)
-	usageSessionFieldDeallocatedAt             = big.NewInt(1 << 4)
-	usageSessionFieldDurationSeconds           = big.NewInt(1 << 5)
-	usageSessionFieldInferenceCostMicrodollars = big.NewInt(1 << 6)
-	usageSessionFieldIsDedicatedPhone          = big.NewInt(1 << 7)
-	usageSessionFieldPhoneID                   = big.NewInt(1 << 8)
-	usageSessionFieldProcessedStatus           = big.NewInt(1 << 9)
-	usageSessionFieldSessionID                 = big.NewInt(1 << 10)
-	usageSessionFieldSessionMetadata           = big.NewInt(1 << 11)
-	usageSessionFieldSessionStatus             = big.NewInt(1 << 12)
-	usageSessionFieldTotalCostMicrodollars     = big.NewInt(1 << 13)
-	usageSessionFieldWorkflowID                = big.NewInt(1 << 14)
+	usageSessionFieldAgentID                   = big.NewInt(1 << 0)
+	usageSessionFieldAllocatedAt               = big.NewInt(1 << 1)
+	usageSessionFieldAllocatedBy               = big.NewInt(1 << 2)
+	usageSessionFieldBillingPlanID             = big.NewInt(1 << 3)
+	usageSessionFieldCostMicrodollars          = big.NewInt(1 << 4)
+	usageSessionFieldDeallocatedAt             = big.NewInt(1 << 5)
+	usageSessionFieldDurationSeconds           = big.NewInt(1 << 6)
+	usageSessionFieldInferenceCostMicrodollars = big.NewInt(1 << 7)
+	usageSessionFieldIsDedicatedPhone          = big.NewInt(1 << 8)
+	usageSessionFieldPhoneID                   = big.NewInt(1 << 9)
+	usageSessionFieldProcessedStatus           = big.NewInt(1 << 10)
+	usageSessionFieldSessionID                 = big.NewInt(1 << 11)
+	usageSessionFieldSessionMetadata           = big.NewInt(1 << 12)
+	usageSessionFieldSessionStatus             = big.NewInt(1 << 13)
+	usageSessionFieldTotalCostMicrodollars     = big.NewInt(1 << 14)
 )
 
 type UsageSession struct {
+	// The agent whose run the session ran; empty for an interactive session.
+	AgentID string `json:"agent_id" url:"agent_id"`
 	// ISO 8601 timestamp when the phone was allocated.
 	AllocatedAt *string `json:"allocated_at,omitempty" url:"allocated_at,omitempty"`
 	// What started the session.
@@ -1101,14 +1242,19 @@ type UsageSession struct {
 	SessionStatus *UsageSessionSessionStatus `json:"session_status,omitempty" url:"session_status,omitempty"`
 	// Session's all-in cost: phone time + inference.
 	TotalCostMicrodollars int64 `json:"total_cost_microdollars" url:"total_cost_microdollars"`
-	// Associated workflow identifier.
-	WorkflowID string `json:"workflow_id" url:"workflow_id"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (u *UsageSession) GetAgentID() string {
+	if u == nil {
+		return ""
+	}
+	return u.AgentID
 }
 
 func (u *UsageSession) GetAllocatedAt() *string {
@@ -1209,13 +1355,6 @@ func (u *UsageSession) GetTotalCostMicrodollars() int64 {
 	return u.TotalCostMicrodollars
 }
 
-func (u *UsageSession) GetWorkflowID() string {
-	if u == nil {
-		return ""
-	}
-	return u.WorkflowID
-}
-
 func (u *UsageSession) GetExtraProperties() map[string]interface{} {
 	if u == nil {
 		return nil
@@ -1228,6 +1367,13 @@ func (u *UsageSession) require(field *big.Int) {
 		u.explicitFields = big.NewInt(0)
 	}
 	u.explicitFields.Or(u.explicitFields, field)
+}
+
+// SetAgentID sets the AgentID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (u *UsageSession) SetAgentID(agentID string) {
+	u.AgentID = agentID
+	u.require(usageSessionFieldAgentID)
 }
 
 // SetAllocatedAt sets the AllocatedAt field and marks it as non-optional;
@@ -1328,13 +1474,6 @@ func (u *UsageSession) SetTotalCostMicrodollars(totalCostMicrodollars int64) {
 	u.require(usageSessionFieldTotalCostMicrodollars)
 }
 
-// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (u *UsageSession) SetWorkflowID(workflowID string) {
-	u.WorkflowID = workflowID
-	u.require(usageSessionFieldWorkflowID)
-}
-
 func (u *UsageSession) UnmarshalJSON(data []byte) error {
 	type unmarshaler UsageSession
 	var value unmarshaler
@@ -1381,16 +1520,13 @@ func (u *UsageSession) String() string {
 type UsageSessionAllocatedBy string
 
 const (
-	UsageSessionAllocatedByWorkflowEditor UsageSessionAllocatedBy = "workflow_editor"
-	UsageSessionAllocatedByDashboardRun   UsageSessionAllocatedBy = "dashboard_run"
-	UsageSessionAllocatedByAPIRun         UsageSessionAllocatedBy = "api_run"
-	UsageSessionAllocatedByInteractive    UsageSessionAllocatedBy = "interactive"
+	UsageSessionAllocatedByDashboardRun UsageSessionAllocatedBy = "dashboard_run"
+	UsageSessionAllocatedByAPIRun       UsageSessionAllocatedBy = "api_run"
+	UsageSessionAllocatedByInteractive  UsageSessionAllocatedBy = "interactive"
 )
 
 func NewUsageSessionAllocatedByFromString(s string) (UsageSessionAllocatedBy, error) {
 	switch s {
-	case "workflow_editor":
-		return UsageSessionAllocatedByWorkflowEditor, nil
 	case "dashboard_run":
 		return UsageSessionAllocatedByDashboardRun, nil
 	case "api_run":
@@ -1638,17 +1774,32 @@ func (u UsageGetMetricsRequestGranularity) Ptr() *UsageGetMetricsRequestGranular
 	return &u
 }
 
-// Split each bucket by product (session or inference). Omit for one point per bucket.
+// Split each bucket by product (session or inference), agent, model, api_key, schedule or device_class. Omit for one point per bucket.
 type UsageGetMetricsRequestGroupBy string
 
 const (
-	UsageGetMetricsRequestGroupByProduct UsageGetMetricsRequestGroupBy = "product"
+	UsageGetMetricsRequestGroupByProduct     UsageGetMetricsRequestGroupBy = "product"
+	UsageGetMetricsRequestGroupByAgent       UsageGetMetricsRequestGroupBy = "agent"
+	UsageGetMetricsRequestGroupByModel       UsageGetMetricsRequestGroupBy = "model"
+	UsageGetMetricsRequestGroupByAPIKey      UsageGetMetricsRequestGroupBy = "api_key"
+	UsageGetMetricsRequestGroupBySchedule    UsageGetMetricsRequestGroupBy = "schedule"
+	UsageGetMetricsRequestGroupByDeviceClass UsageGetMetricsRequestGroupBy = "device_class"
 )
 
 func NewUsageGetMetricsRequestGroupByFromString(s string) (UsageGetMetricsRequestGroupBy, error) {
 	switch s {
 	case "product":
 		return UsageGetMetricsRequestGroupByProduct, nil
+	case "agent":
+		return UsageGetMetricsRequestGroupByAgent, nil
+	case "model":
+		return UsageGetMetricsRequestGroupByModel, nil
+	case "api_key":
+		return UsageGetMetricsRequestGroupByAPIKey, nil
+	case "schedule":
+		return UsageGetMetricsRequestGroupBySchedule, nil
+	case "device_class":
+		return UsageGetMetricsRequestGroupByDeviceClass, nil
 	}
 	var t UsageGetMetricsRequestGroupBy
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -1664,6 +1815,7 @@ const (
 	UsageListInferencesRequestEndpointItemDetect        UsageListInferencesRequestEndpointItem = "detect"
 	UsageListInferencesRequestEndpointItemLocate        UsageListInferencesRequestEndpointItem = "locate"
 	UsageListInferencesRequestEndpointItemElementLocate UsageListInferencesRequestEndpointItem = "element_locate"
+	UsageListInferencesRequestEndpointItemAgentChat     UsageListInferencesRequestEndpointItem = "agent_chat"
 )
 
 func NewUsageListInferencesRequestEndpointItemFromString(s string) (UsageListInferencesRequestEndpointItem, error) {
@@ -1674,6 +1826,8 @@ func NewUsageListInferencesRequestEndpointItemFromString(s string) (UsageListInf
 		return UsageListInferencesRequestEndpointItemLocate, nil
 	case "element_locate":
 		return UsageListInferencesRequestEndpointItemElementLocate, nil
+	case "agent_chat":
+		return UsageListInferencesRequestEndpointItemAgentChat, nil
 	}
 	var t UsageListInferencesRequestEndpointItem
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -1686,16 +1840,13 @@ func (u UsageListInferencesRequestEndpointItem) Ptr() *UsageListInferencesReques
 type UsageListSessionsRequestAllocatedByItem string
 
 const (
-	UsageListSessionsRequestAllocatedByItemWorkflowEditor UsageListSessionsRequestAllocatedByItem = "workflow_editor"
-	UsageListSessionsRequestAllocatedByItemDashboardRun   UsageListSessionsRequestAllocatedByItem = "dashboard_run"
-	UsageListSessionsRequestAllocatedByItemAPIRun         UsageListSessionsRequestAllocatedByItem = "api_run"
-	UsageListSessionsRequestAllocatedByItemInteractive    UsageListSessionsRequestAllocatedByItem = "interactive"
+	UsageListSessionsRequestAllocatedByItemDashboardRun UsageListSessionsRequestAllocatedByItem = "dashboard_run"
+	UsageListSessionsRequestAllocatedByItemAPIRun       UsageListSessionsRequestAllocatedByItem = "api_run"
+	UsageListSessionsRequestAllocatedByItemInteractive  UsageListSessionsRequestAllocatedByItem = "interactive"
 )
 
 func NewUsageListSessionsRequestAllocatedByItemFromString(s string) (UsageListSessionsRequestAllocatedByItem, error) {
 	switch s {
-	case "workflow_editor":
-		return UsageListSessionsRequestAllocatedByItemWorkflowEditor, nil
 	case "dashboard_run":
 		return UsageListSessionsRequestAllocatedByItemDashboardRun, nil
 	case "api_run":

@@ -103,6 +103,32 @@ func TestRunsSessionsListFramesWithWireMock(
 	VerifyRequestCount(t, "TestRunsSessionsListFramesWithWireMock", "GET", "/phones/sessions/session_id/frames", nil, 1)
 }
 
+func TestRunsStreamEventsWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.RunsStreamEventsRequest{
+		RunID: "run_id",
+	}
+	_, invocationErr := client.Runs.StreamEvents(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestRunsStreamEventsWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestRunsStreamEventsWithWireMock", "GET", "/realtime/runs/run_id/events", nil, 1)
+}
+
 func TestRunsListWithWireMock(
 	t *testing.T,
 ) {
@@ -127,7 +153,7 @@ func TestRunsListWithWireMock(
 	VerifyRequestCount(t, "TestRunsListWithWireMock", "GET", "/runs", nil, 1)
 }
 
-func TestRunsListHistoricWithWireMock(
+func TestRunsStartWithWireMock(
 	t *testing.T,
 ) {
 	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
@@ -138,24 +164,41 @@ func TestRunsListHistoricWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.RunsListHistoricRequest{
-		CompletedAfter: platformgo.MustParseDateTime(
-			"2024-01-15T09:30:00Z",
-		),
-		CompletedBefore: platformgo.MustParseDateTime(
-			"2024-01-15T09:30:00Z",
-		),
-	}
-	_, invocationErr := client.Runs.ListHistoric(
+	request := &platformgo.AgentRunCreateRequest{}
+	_, invocationErr := client.Runs.Start(
 		context.TODO(),
 		request,
 		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestRunsListHistoricWithWireMock"}},
+			http.Header{"X-Test-Id": []string{"TestRunsStartWithWireMock"}},
 		),
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsListHistoricWithWireMock", "GET", "/runs/history", map[string]interface{}{"completed_after": "2024-01-15T09:30:00.000Z", "completed_before": "2024-01-15T09:30:00.000Z"}, 1)
+	VerifyRequestCount(t, "TestRunsStartWithWireMock", "POST", "/runs", nil, 1)
+}
+
+func TestRunsGetMetricsWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.RunsGetMetricsRequest{}
+	_, invocationErr := client.Runs.GetMetrics(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestRunsGetMetricsWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestRunsGetMetricsWithWireMock", "GET", "/runs/metrics", nil, 1)
 }
 
 func TestRunsGetWithWireMock(
@@ -184,6 +227,84 @@ func TestRunsGetWithWireMock(
 	VerifyRequestCount(t, "TestRunsGetWithWireMock", "GET", "/runs/run_id", nil, 1)
 }
 
+func TestRunsListEventsWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.RunsListEventsRequest{
+		RunID: "run_id",
+	}
+	_, invocationErr := client.Runs.ListEvents(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestRunsListEventsWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestRunsListEventsWithWireMock", "GET", "/runs/run_id/events", nil, 1)
+}
+
+func TestRunsGetScriptWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.RunsGetScriptRequest{
+		RunID: "run_id",
+	}
+	_, invocationErr := client.Runs.GetScript(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestRunsGetScriptWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestRunsGetScriptWithWireMock", "GET", "/runs/run_id/script", nil, 1)
+}
+
+func TestRunsListStepsWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.RunsListStepsRequest{
+		RunID: "run_id",
+	}
+	_, invocationErr := client.Runs.ListSteps(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestRunsListStepsWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestRunsListStepsWithWireMock", "GET", "/runs/run_id/steps", nil, 1)
+}
+
 func TestRunsCancelWithWireMock(
 	t *testing.T,
 ) {
@@ -210,7 +331,7 @@ func TestRunsCancelWithWireMock(
 	VerifyRequestCount(t, "TestRunsCancelWithWireMock", "POST", "/runs/run_id:cancel", nil, 1)
 }
 
-func TestRunsCreateWithWireMock(
+func TestRunsPauseWithWireMock(
 	t *testing.T,
 ) {
 	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
@@ -221,20 +342,95 @@ func TestRunsCreateWithWireMock(
 		option.WithBaseURL(WireMockBaseURL),
 		option.WithAPIKey("test-value"),
 	)
-	request := &platformgo.RunCreateRequest{
-		WorkflowID: "workflow_id",
-		Runs: []*platformgo.RunConfig{
-			&platformgo.RunConfig{},
-		},
+	request := &platformgo.RunsPauseRequest{
+		RunID: "run_id",
 	}
-	_, invocationErr := client.Runs.Create(
+	_, invocationErr := client.Runs.Pause(
 		context.TODO(),
 		request,
 		option.WithHTTPHeader(
-			http.Header{"X-Test-Id": []string{"TestRunsCreateWithWireMock"}},
+			http.Header{"X-Test-Id": []string{"TestRunsPauseWithWireMock"}},
 		),
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestRunsCreateWithWireMock", "POST", "/workflows/workflow_id/runs", nil, 1)
+	VerifyRequestCount(t, "TestRunsPauseWithWireMock", "POST", "/runs/run_id:pause", nil, 1)
+}
+
+func TestRunsResumeWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.AgentRunResumeRequest{
+		RunID:          "run_id",
+		InputRequestID: "input_request_id",
+	}
+	_, invocationErr := client.Runs.Resume(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestRunsResumeWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestRunsResumeWithWireMock", "POST", "/runs/run_id:resume", nil, 1)
+}
+
+func TestRunsSendMessageWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.AgentRunSendMessageRequest{
+		RunID:   "run_id",
+		Message: "message",
+	}
+	_, invocationErr := client.Runs.SendMessage(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestRunsSendMessageWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestRunsSendMessageWithWireMock", "POST", "/runs/run_id:sendMessage", nil, 1)
+}
+
+func TestRunsBatchCreateWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithAPIKey("test-value"),
+	)
+	request := &platformgo.AgentRunBatchCreateRequest{}
+	_, invocationErr := client.Runs.BatchCreate(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestRunsBatchCreateWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestRunsBatchCreateWithWireMock", "POST", "/runs:batchCreate", nil, 1)
 }

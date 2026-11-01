@@ -133,18 +133,61 @@ func (r *RawClient) List(
 	}, nil
 }
 
-func (r *RawClient) ListHistoric(
+func (r *RawClient) Start(
 	ctx context.Context,
-	request *platformgo.RunsListHistoricRequest,
+	request *platformgo.AgentRunCreateRequest,
 	opts ...option.RequestOption,
-) (*core.Response[*platformgo.RunHistoryResponse], error) {
+) (*core.Response[*platformgo.RunResponse], error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
 		"/api/v1",
 	)
-	endpointURL := baseURL + "/runs/history"
+	endpointURL := baseURL + "/runs"
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.RunResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.RunResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) GetMetrics(
+	ctx context.Context,
+	request *platformgo.RunsGetMetricsRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.RunMetricsResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := baseURL + "/runs/metrics"
 	queryParams, err := internal.QueryValues(request)
 	if err != nil {
 		return nil, err
@@ -156,7 +199,7 @@ func (r *RawClient) ListHistoric(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
-	var response *platformgo.RunHistoryResponse
+	var response *platformgo.RunMetricsResponse
 	raw, err := r.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -175,7 +218,7 @@ func (r *RawClient) ListHistoric(
 	if err != nil {
 		return nil, err
 	}
-	return &core.Response[*platformgo.RunHistoryResponse]{
+	return &core.Response[*platformgo.RunMetricsResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,
@@ -227,6 +270,155 @@ func (r *RawClient) Get(
 	}, nil
 }
 
+func (r *RawClient) ListEvents(
+	ctx context.Context,
+	request *platformgo.RunsListEventsRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.AgentRunEventList], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/runs/%v/events",
+		request.RunID,
+	)
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.AgentRunEventList
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.AgentRunEventList]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) GetScript(
+	ctx context.Context,
+	request *platformgo.RunsGetScriptRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.AgentRunScript], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/runs/%v/script",
+		request.RunID,
+	)
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.AgentRunScript
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.AgentRunScript]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) ListSteps(
+	ctx context.Context,
+	request *platformgo.RunsListStepsRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.AgentRunStepList], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/runs/%v/steps",
+		request.RunID,
+	)
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.AgentRunStepList
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.AgentRunStepList]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
 func (r *RawClient) Cancel(
 	ctx context.Context,
 	request *platformgo.RunsCancelRequest,
@@ -272,11 +464,11 @@ func (r *RawClient) Cancel(
 	}, nil
 }
 
-func (r *RawClient) Create(
+func (r *RawClient) Pause(
 	ctx context.Context,
-	request *platformgo.RunCreateRequest,
+	request *platformgo.RunsPauseRequest,
 	opts ...option.RequestOption,
-) (*core.Response[*platformgo.RunCreateResponse], error) {
+) (*core.Response[*platformgo.RunResponse], error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -284,15 +476,60 @@ func (r *RawClient) Create(
 		"/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
-		baseURL+"/workflows/%v/runs",
-		request.WorkflowID,
+		baseURL+"/runs/%v:pause",
+		request.RunID,
+	)
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	var response *platformgo.RunResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.RunResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) Resume(
+	ctx context.Context,
+	request *platformgo.AgentRunResumeRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.RunResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/runs/%v:resume",
+		request.RunID,
 	)
 	headers := internal.MergeHeaders(
 		r.options.ToHeader(),
 		options.ToHeader(),
 	)
 	headers.Add("Content-Type", "application/json")
-	var response *platformgo.RunCreateResponse
+	var response *platformgo.RunResponse
 	raw, err := r.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -312,7 +549,98 @@ func (r *RawClient) Create(
 	if err != nil {
 		return nil, err
 	}
-	return &core.Response[*platformgo.RunCreateResponse]{
+	return &core.Response[*platformgo.RunResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) SendMessage(
+	ctx context.Context,
+	request *platformgo.AgentRunSendMessageRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.RunResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/runs/%v:sendMessage",
+		request.RunID,
+	)
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	headers.Add("Content-Type", "application/json")
+	var response *platformgo.RunResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.RunResponse]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
+func (r *RawClient) BatchCreate(
+	ctx context.Context,
+	request *platformgo.AgentRunBatchCreateRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*platformgo.AgentRunBatchCreateResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"/api/v1",
+	)
+	endpointURL := baseURL + "/runs:batchCreate"
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	headers.Add("Content-Type", "application/json")
+	var response *platformgo.AgentRunBatchCreateResponse
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*platformgo.AgentRunBatchCreateResponse]{
 		StatusCode: raw.StatusCode,
 		Header:     raw.Header,
 		Body:       response,

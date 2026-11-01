@@ -3,6 +3,7 @@
 package client
 
 import (
+	agents "github.com/axilioai/platform-go/agents"
 	apikeys "github.com/axilioai/platform-go/apikeys"
 	billing "github.com/axilioai/platform-go/billing"
 	conversations "github.com/axilioai/platform-go/conversations"
@@ -10,29 +11,32 @@ import (
 	files "github.com/axilioai/platform-go/files"
 	internal "github.com/axilioai/platform-go/internal"
 	messages "github.com/axilioai/platform-go/messages"
+	models "github.com/axilioai/platform-go/models"
 	option "github.com/axilioai/platform-go/option"
 	organization "github.com/axilioai/platform-go/organization"
 	phones "github.com/axilioai/platform-go/phones"
 	runs "github.com/axilioai/platform-go/runs"
+	sessions "github.com/axilioai/platform-go/sessions"
 	skill "github.com/axilioai/platform-go/skill"
 	usage "github.com/axilioai/platform-go/usage"
 	webhooks "github.com/axilioai/platform-go/webhooks"
-	workflows "github.com/axilioai/platform-go/workflows"
 )
 
 type Client struct {
+	Agents        *agents.Client
 	APIKeys       *apikeys.Client
 	Billing       *billing.Client
 	Conversations *conversations.Client
 	Files         *files.Client
 	Messages      *messages.Client
+	Models        *models.Client
 	Organization  *organization.Client
 	Phones        *phones.Client
 	Runs          *runs.Client
+	Sessions      *sessions.Client
 	Skill         *skill.Client
 	Usage         *usage.Client
 	Webhooks      *webhooks.Client
-	Workflows     *workflows.Client
 
 	options *core.RequestOptions
 	baseURL string
@@ -42,18 +46,20 @@ type Client struct {
 func NewClient(opts ...option.RequestOption) *Client {
 	options := core.NewRequestOptions(opts...)
 	return &Client{
+		Agents:        agents.NewClient(options),
 		APIKeys:       apikeys.NewClient(options),
 		Billing:       billing.NewClient(options),
 		Conversations: conversations.NewClient(options),
 		Files:         files.NewClient(options),
 		Messages:      messages.NewClient(options),
+		Models:        models.NewClient(options),
 		Organization:  organization.NewClient(options),
 		Phones:        phones.NewClient(options),
 		Runs:          runs.NewClient(options),
+		Sessions:      sessions.NewClient(options),
 		Skill:         skill.NewClient(options),
 		Usage:         usage.NewClient(options),
 		Webhooks:      webhooks.NewClient(options),
-		Workflows:     workflows.NewClient(options),
 		options:       options,
 		baseURL:       options.BaseURL,
 		caller: internal.NewCaller(

@@ -733,6 +733,14 @@ func TestSettersAPIKeyListItem(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetHealth", func(t *testing.T) {
+		obj := &APIKeyListItem{}
+		var fernTestValueHealth APIKeyListItemHealth
+		obj.SetHealth(fernTestValueHealth)
+		assert.Equal(t, fernTestValueHealth, obj.Health)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetID", func(t *testing.T) {
 		obj := &APIKeyListItem{}
 		var fernTestValueID string
@@ -855,6 +863,29 @@ func TestGettersAPIKeyListItem(t *testing.T) {
 			}
 		}()
 		_ = obj.GetCreatedByID() // Should return zero value
+	})
+
+	t.Run("GetHealth", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &APIKeyListItem{}
+		var expected APIKeyListItemHealth
+		obj.Health = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetHealth(), "getter should return the property value")
+	})
+
+	t.Run("GetHealth_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *APIKeyListItem
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetHealth() // Should return zero value
 	})
 
 	t.Run("GetID", func(t *testing.T) {
@@ -1032,6 +1063,37 @@ func TestSettersMarkExplicitAPIKeyListItem(t *testing.T) {
 
 		// Act
 		obj.SetCreatedByID(fernTestValueCreatedByID)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetHealth_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &APIKeyListItem{}
+		var fernTestValueHealth APIKeyListItemHealth
+
+		// Act
+		obj.SetHealth(fernTestValueHealth)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -1856,6 +1918,42 @@ func TestStringDeleteAPIKeyOutputBody(t *testing.T) {
 		var obj *DeleteAPIKeyOutputBody
 		result := obj.String()
 		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
+	})
+}
+
+func TestEnumAPIKeyListItemHealth(t *testing.T) {
+	t.Run("NewFromString_ok", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewAPIKeyListItemHealthFromString("ok")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, APIKeyListItemHealth("ok"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_read_only", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewAPIKeyListItemHealthFromString("read_only")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, APIKeyListItemHealth("read_only"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_creator_removed", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewAPIKeyListItemHealthFromString("creator_removed")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, APIKeyListItemHealth("creator_removed"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewAPIKeyListItemHealthFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewAPIKeyListItemHealthFromString("ok")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
 	})
 }
 

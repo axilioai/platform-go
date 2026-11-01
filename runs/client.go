@@ -4,6 +4,7 @@ package runs
 
 import (
 	context "context"
+	http "net/http"
 
 	platformgo "github.com/axilioai/platform-go"
 	core "github.com/axilioai/platform-go/core"
@@ -51,7 +52,59 @@ func (c *Client) SessionsListFrames(
 	return response.Body, nil
 }
 
-// Returns paginated recent (non-archived) runs across the caller's organization, every member's runs included. Filters: workflow_id, search (run ID substring), status, trigger. Order with order_by ('<field> <asc|desc>'), field one of status, started_at, completed_at, created_at.
+// Streams an agent run as Server-Sent Events (text/event-stream): the frames of its session's telemetry that belong to the run, the model's text as it streams (model_delta logs), and the run's own events, live as the run runs. Each event's id is its resume cursor, its event name is the frame kind (span or log), and its data is the frame JSON. The run's events are logs: run_status (attribute axilio.run.status: running when the run starts on its phone or goes back to running), run_input_required (it paused for a person; the body is the question, with the input request's id, reason, requested_by, response_schema and expires_at as attributes), run_resumed (a person answered; the body is the action), run_result (how it ended on the phone: axilio.ok, axilio.run.output or axilio.run.error, and the summary as the body), and user_message (a person's message reached the run; the body is the message). The stream's last event is a run_status with the run's final status as the run itself has it (completed, failed or cancelled), so a run the caller cancelled ends cancelled. These events are not archived; the run itself has the result. A session started with telemetry off still streams its run's events and the model's text, and nothing else. A new reader (or one whose cursor is older than the live window) first receives the run's archived frames and then the live ones, deduplicated on span id and phase, followed by an event with no data that carries the cursor the replay ended at. Reconnect with the Last-Event-ID header to resume. The model's text is not archived: a reader that reconnects after it left the live window gets the step's answer from the run's steps instead. A comment line is sent every 15 seconds while the stream is idle. The stream closes after the run's final status; a reconnect after the end with nothing left gets 204. A run that has not reached a phone yet streams only comments until it does. Authenticate with the API key header, or open the run's stream_url, which carries a read-only token for the run's session. Org-scoped: another org's run reads as not found. Readers MUST ignore events with an unknown name, unknown fields, and unknown span_type or log_type values.
+func (c *Client) StreamEvents(
+	ctx context.Context,
+	request *platformgo.RunsStreamEventsRequest,
+	opts ...option.RequestOption,
+) (*core.Stream[platformgo.RunsStreamEventsResponse], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/realtime/runs/%v/events",
+		request.RunID,
+	)
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		c.options.ToHeader(),
+		options.ToHeader(),
+	)
+	if request.LastEventID != nil {
+		headers.Add("Last-Event-ID", *request.LastEventID)
+	}
+	headers.Add("Accept", "text/event-stream")
+	streamer := internal.NewStreamer[platformgo.RunsStreamEventsResponse](c.caller)
+	return streamer.Stream(
+		ctx,
+		&internal.StreamParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			MaxBufSize:      options.MaxBufSize,
+			Prefix:          internal.DefaultSSEDataPrefix,
+			Terminator:      internal.DefaultSSETerminator,
+			Format:          core.StreamFormatSSE,
+			ErrorDecoder:    internal.NewErrorDecoder(platformgo.ErrorCodes),
+		},
+	)
+}
+
+// Returns paginated recent (non-archived) runs across the caller's organization, every member's runs included. Filters: agent_id, search (run ID substring), status, trigger. Order with order_by ('<field> <asc|desc>'), field one of status, started_at, completed_at, created_at.
 func (c *Client) List(
 	ctx context.Context,
 	request *platformgo.RunsListRequest,
@@ -68,13 +121,30 @@ func (c *Client) List(
 	return response.Body, nil
 }
 
-// Returns paginated historic runs across the caller's organization over a required time window (completed_after/completed_before). Use GET /runs for recent (non-archived) runs.
-func (c *Client) ListHistoric(
+// Starts a run of a saved agent (agent_id, its current revision and settings) or an ad hoc run (task, with the model, output schema, limits, recording and telemetry given here). A phone_id target must be one of your organization's dedicated phones. While your organization is at its concurrency limit, a run that starts now is refused with 409. Booked with start_at, the run is scheduled instead.
+func (c *Client) Start(
 	ctx context.Context,
-	request *platformgo.RunsListHistoricRequest,
+	request *platformgo.AgentRunCreateRequest,
 	opts ...option.RequestOption,
-) (*platformgo.RunHistoryResponse, error) {
-	response, err := c.WithRawResponse.ListHistoric(
+) (*platformgo.RunResponse, error) {
+	response, err := c.WithRawResponse.Start(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Returns your organization's finished runs over a window as points: one per hour or day in time_zone (and per group with group_by), each with the runs by how they ended, the success rate, the median and 95th percentile duration, what they cost and the model steps they took. A run counts in the bucket it finished in; runs still going are not counted. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
+func (c *Client) GetMetrics(
+	ctx context.Context,
+	request *platformgo.RunsGetMetricsRequest,
+	opts ...option.RequestOption,
+) (*platformgo.RunMetricsResponse, error) {
+	response, err := c.WithRawResponse.GetMetrics(
 		ctx,
 		request,
 		opts...,
@@ -102,7 +172,58 @@ func (c *Client) Get(
 	return response.Body, nil
 }
 
-// Cancels a run that is scheduled, queued or running, scoped to the caller's org. A scheduled run is cancelled before it starts and never runs. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
+// Lists an agent run's events as pages, oldest first: the frames its stream sends (its spans, the model's text and the run's own run_status, run_input_required, run_resumed, run_result and user_message logs) in time order, for a caller that polls rather than holds the stream open. A live run's page always has a next_cursor to poll from; an ended run's last page closes with its final run_status, as the run itself has it, and has none. Pages never repeat a frame, except that a cursor older than the stream's 10-minute window starts again from the run's first event, so a reader that keeps one deduplicates on span_id and phase, as a stream reader does across reconnects. A page keeps a stream entry's frames together, so it can hold a few more than limit. The run's own events and the model's text are live only: past the stream's 10-minute window a page has the archived spans and the closing run_status but no run_result, and a run with telemetry off has only its events while they are live. The run itself always has its result.
+func (c *Client) ListEvents(
+	ctx context.Context,
+	request *platformgo.RunsListEventsRequest,
+	opts ...option.RequestOption,
+) (*platformgo.AgentRunEventList, error) {
+	response, err := c.WithRawResponse.ListEvents(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Returns every cell the run executed, in order, as one Python file and one by one, failed and exploratory cells included. A code run's first cell is its revision's script. The script is kept with the run's data, so it outlives the transcript; when that record is missing, the cells are rebuilt from what remains of the transcript and partial is true. 404 when there is nothing to build it from.
+func (c *Client) GetScript(
+	ctx context.Context,
+	request *platformgo.RunsGetScriptRequest,
+	opts ...option.RequestOption,
+) (*platformgo.AgentRunScript, error) {
+	response, err := c.WithRawResponse.GetScript(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Lists a run's model steps from its transcript, oldest first: the messages each step sent, the model's answer, links to its screenshots and its cost. Empty once the transcript has passed its retention, or when your organization keeps none.
+func (c *Client) ListSteps(
+	ctx context.Context,
+	request *platformgo.RunsListStepsRequest,
+	opts ...option.RequestOption,
+) (*platformgo.AgentRunStepList, error) {
+	response, err := c.WithRawResponse.ListSteps(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Cancels a run that is scheduled, queued, running or paused, scoped to the caller's org. A scheduled or queued run is cancelled before it starts and never runs. A running or paused run is stopped on its phone; an agent-mode run then keeps its phone for keep_alive_seconds, as when a turn ends, so :sendMessage can follow up on the same phone until keep_alive_expires_at. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
 func (c *Client) Cancel(
 	ctx context.Context,
 	request *platformgo.RunsCancelRequest,
@@ -119,13 +240,64 @@ func (c *Client) Cancel(
 	return response.Body, nil
 }
 
-// Creates one or more runs against the given workflow and queues them for execution. Pre-flight checks: balance sufficient, concurrency limit, workflow exists. Runs that fail to queue are marked FAILED immediately so they stop counting toward the concurrency limit.
-func (c *Client) Create(
+// Asks a running run to pause for a person, with reason caller_requested. An agent-mode run pauses at its next model step: a cell already running finishes first, and a run about to finish takes that step instead. A code run pauses at its script's next phone action. Returns the run as it is: it reads paused, with its input_request, once the pause lands, and run.paused fires then. A run that is not running is 409.
+func (c *Client) Pause(
 	ctx context.Context,
-	request *platformgo.RunCreateRequest,
+	request *platformgo.RunsPauseRequest,
 	opts ...option.RequestOption,
-) (*platformgo.RunCreateResponse, error) {
-	response, err := c.WithRawResponse.Create(
+) (*platformgo.RunResponse, error) {
+	response, err := c.WithRawResponse.Pause(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Resumes a paused run. action answer (the default) answers its input request with response, which must satisfy the request's response_schema (422 when it does not). action retry runs a code run's failed script again (only for reason step_check_failed). action complete ends the run as completed with output, which must satisfy the run's output schema (422). Returns the run as it is. With answer or retry it reads running once the edge has the input, and run.resumed fires then; with complete it reads completed once the edge ends it, and run.completed fires then. A run that is not paused, a different input_request_id, or a request that has expired is 409.
+func (c *Client) Resume(
+	ctx context.Context,
+	request *platformgo.AgentRunResumeRequest,
+	opts ...option.RequestOption,
+) (*platformgo.RunResponse, error) {
+	response, err := c.WithRawResponse.Resume(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Sends a person's message to an agent-mode run. To a run that is running or paused, the run's model reads it before its next step, as a turn from the person running the task, and the run's stream carries it as a user_message event, its body the message, once the run's phone has it. A message never resumes a paused run: answer the pause with :resume. A run holds at most 20 unread messages, and the edge refuses one past that, or one that arrives as the run finishes, which may then never be read or shown. To a run that ended (completed, failed or cancelled) while it still holds its phone (keep_alive_expires_at is in the future), the message starts the run's next turn on the same phone, and the run goes back to queued. Returns the run as it is. A code run, a queued or scheduled run, a run whose hold has ended, or a run whose phone cannot take messages yet is 409; an empty message, or one over 64 KiB, is 400.
+func (c *Client) SendMessage(
+	ctx context.Context,
+	request *platformgo.AgentRunSendMessageRequest,
+	opts ...option.RequestOption,
+) (*platformgo.RunResponse, error) {
+	response, err := c.WithRawResponse.SendMessage(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Starts up to 1000 runs, each as POST /runs would. All are created or none is; an error names the request it is for. A batch may not name the same dedicated phone twice. The batch is refused with 409 while your organization is at its concurrency limit; its runs beyond the limit wait in the queue for a free slot.
+func (c *Client) BatchCreate(
+	ctx context.Context,
+	request *platformgo.AgentRunBatchCreateRequest,
+	opts ...option.RequestOption,
+) (*platformgo.AgentRunBatchCreateResponse, error) {
+	response, err := c.WithRawResponse.BatchCreate(
 		ctx,
 		request,
 		opts...,

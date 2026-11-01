@@ -1,4 +1,1633 @@
 # Reference
+## Agents
+<details><summary><code>client.Agents.List() -> *platformgo.AgentList</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists the organization's agents, newest first, one page at a time.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsListRequest{}
+client.Agents.List(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Page size.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — Where the page starts.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**search:** `*string` — Narrow to agents whose name or id contains this, case-insensitively.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**kind:** `*platformgo.AgentsListRequestKind` — Narrow to agents whose current revision is instructions or code. Omit for both.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdAfter:** `*time.Time` — Only agents created at or after this time (RFC 3339).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**createdBefore:** `*time.Time` — Only agents created at or before this time (RFC 3339).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**lastRunAfter:** `*time.Time` — Only agents last run at or after this time (RFC 3339).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**lastRunBefore:** `*time.Time` — Only agents last run at or before this time (RFC 3339).
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.Create(request) -> *platformgo.Agent</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Creates an agent: a task for a phone, as instructions an agent works through a model or as code, with the model, output schema and limits its runs use. Sending instructions or code creates the agent's first revision with it; sending source_run_id saves one of your agent runs as the agent, its task or its script as the first revision. A name already used in the organization is 409; an unsupported model, an invalid output schema, both instructions and code, or a run with no task or script to save is 400; another organization's run is 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentCreateRequest{
+        Name: "name",
+    }
+client.Agents.Create(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**accessibilityEnabled:** `*bool` — Use accessibility mode for runs (default false). Needs your organization's access to accessibility mode: without it the create is refused with a 403 whose message starts with accessibility_unavailable.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**captureEnabled:** `*bool` — Capture the media runs produce into the file library (default true).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**code:** `*string` — Python the agent runs. Creates a code revision. Leave out to add a revision later, or send instructions instead.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**from:** `*platformgo.AgentCreateRequestFrom` — With source_run_id, what the first revision is. task (default): the run's task, as an instructions revision. script: the script the run left (GET /runs/{run_id}/script), as a code revision. A run with no task, or no script, is 400.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**instructions:** `*string` — The task for the agent to work through a model. Creates an instructions revision. Leave out to add a revision later, or send code instead.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxCostMicrodollars:** `*int64` — Most a run's model steps may cost, in microdollars (default 10000000).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxSteps:** `*int64` — Most model steps a run may take (default 500).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**model:** `*string` — The model instruction runs call, one of GET /models. Defaults to the platform default.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `string` — The agent's name: letters, numbers, hyphens and underscores, unique within the organization.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**onFailure:** `*platformgo.AgentCreateRequestOnFailure` — With code: what a run does when a step fails. fail (default) fails the run. ask pauses the run for a person (reason step_check_failed), who retries the step or completes the run with its output. repair hands the run to the agent, which finishes the task from the live screen and proposes a fixed revision for a person to promote.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**outputSchema:** `map[string]any` — The JSON Schema a run's result must satisfy. Leave out to take any result.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**pauseTimeoutSeconds:** `*int64` — Longest a run waits paused for an answer, in seconds (default 600, 60 to 3600).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**recordingEnabled:** `*bool` — Record the screen of runs (default false).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sourceRunID:** `*string` — Save one of your agent runs as the agent: its first revision comes from the run (see from), and the run's model, output schema and limits stand in for any left out here. Send it without instructions or code. Another organization's run is 404.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**telemetryEnabled:** `*bool` — Emit telemetry for runs (default true).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**timeoutSeconds:** `*int64` — Longest a run may take, in seconds (default 3600, at most 3600).
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.Get(AgentID) -> *platformgo.Agent</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Fetches one agent. A missing or other-organization id is 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsGetRequest{
+        AgentID: "agent_id",
+    }
+client.Agents.Get(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.Delete(AgentID) -> error</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Deletes an agent and its revisions. Its runs and sessions keep their history.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsDeleteRequest{
+        AgentID: "agent_id",
+    }
+client.Agents.Delete(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.Update(AgentID, request) -> *platformgo.Agent</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Changes an agent's name, model, output schema, limits or data toggles; omitted fields are left unchanged. Its revisions change through POST /agents/{agent_id}/revisions.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentUpdateRequest{
+        AgentID: "agent_id",
+    }
+client.Agents.Update(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**accessibilityEnabled:** `*bool` — Use accessibility mode for runs. true needs your organization's access to accessibility mode (a 403 whose message starts with accessibility_unavailable without it).
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**captureEnabled:** `*bool` — Capture the media runs produce into the file library.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxCostMicrodollars:** `*int64` — Most a run's model steps may cost, in microdollars.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxSteps:** `*int64` — Most model steps a run may take.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**model:** `*string` — The model instruction runs call, one of GET /models.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `*string` — The agent's new name.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**outputSchema:** `map[string]any` — The JSON Schema a run's result must satisfy. null clears it, so runs take any result.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**pauseTimeoutSeconds:** `*int64` — Longest a run waits paused for an answer, in seconds, 60 to 3600.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**recordingEnabled:** `*bool` — Record the screen of runs.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**telemetryEnabled:** `*bool` — Emit telemetry for runs.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**timeoutSeconds:** `*int64` — Longest a run may take, in seconds, at most 3600.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.ListRevisions(AgentID) -> *platformgo.AgentRevisionList</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists an agent's revisions, newest first, one page at a time.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsListRevisionsRequest{
+        AgentID: "agent_id",
+    }
+client.Agents.ListRevisions(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Page size.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — Where the page starts.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.CreateRevision(AgentID, request) -> *platformgo.AgentRevision</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Appends a revision to an agent, instructions or code, and makes it the one runs use. Revisions are never changed or removed.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentRevisionCreateRequest{
+        AgentID: "agent_id",
+        Kind: platformgo.AgentRevisionCreateRequestKindCode,
+    }
+client.Agents.CreateRevision(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**code:** `*string` — The script, for a code revision.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**instructions:** `*string` — The task, for an instructions revision.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**kind:** `*platformgo.AgentRevisionCreateRequestKind` — code needs code; instructions needs instructions.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**message:** `*string` — A note on the revision.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**onFailure:** `*platformgo.AgentRevisionCreateRequestOnFailure` — For a code revision, what a run does when a step fails. fail fails the run. ask pauses the run for a person (reason step_check_failed), who retries the step or completes the run with its output. repair hands the run to the agent, which finishes the task and proposes a fixed revision for a person to promote. Defaults to the current revision's, or fail.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.GetRevision(AgentID, RevisionID) -> *platformgo.AgentRevision</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Fetches one of an agent's revisions with its instructions or code. A revision of another agent is 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsGetRevisionRequest{
+        AgentID: "agent_id",
+        RevisionID: "revision_id",
+    }
+client.Agents.GetRevision(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**revisionID:** `string` — The revision's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.PromoteRevision(AgentID, RevisionID) -> *platformgo.AgentRevision</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Makes a fix a repair proposed the agent's current revision. 409 when the revision is not a proposed fix waiting to be promoted, or when the agent has moved on from the revision the repaired run ran.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsPromoteRevisionRequest{
+        AgentID: "agent_id",
+        RevisionID: "revision_id",
+    }
+client.Agents.PromoteRevision(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**revisionID:** `string` — The revision's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.ListSchedules(AgentID) -> *platformgo.AgentScheduleList</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists an agent's schedules, or with agent_id - the schedules of every agent, newest first, one page at a time.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsListSchedulesRequest{
+        AgentID: "agent_id",
+    }
+client.Agents.ListSchedules(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id, or - for the schedules of every agent.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Page size.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `*int64` — Where the page starts.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.CreateSchedule(AgentID, request) -> *platformgo.AgentSchedule</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Creates a schedule of an agent: each occurrence of cron_expression, read in time_zone, starts a run of the agent with trigger scheduled and the schedule's id, built from run_template as POST /runs builds a saved agent's run. A cron expression or time zone that doesn't parse, an expression that never fires, a revision of another agent, an agent with no revision, or a schedule with no occurrence before its end_at is 400.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentScheduleCreateRequest{
+        AgentID: "agent_id",
+        CronExpression: "cron_expression",
+        TimeZone: "time_zone",
+    }
+client.Agents.CreateSchedule(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**cronExpression:** `string` — Five-field cron: minute, hour, day of month, month, day of week. For example 0 9 * * 1-5 is 09:00 on weekdays.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**endAt:** `*time.Time` — No occurrence at or after this time. Leave out to run until deleted.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `*string` — A label for the schedule.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**overlapPolicy:** `*platformgo.AgentScheduleCreateRequestOverlapPolicy` — skip (default) drops an occurrence while the previous run is unfinished; queue starts it anyway.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**runTemplate:** `*platformgo.AgentScheduleRunTemplate` — What each run starts with.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**startAt:** `*time.Time` — No occurrence before this time. Leave out to start now.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**timeZone:** `string` — The IANA time zone cron_expression is read in, for example America/Los_Angeles or UTC.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.GetSchedule(AgentID, ScheduleID) -> *platformgo.AgentSchedule</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Fetches one of an agent's schedules. Another agent's is 404.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsGetScheduleRequest{
+        AgentID: "agent_id",
+        ScheduleID: "schedule_id",
+    }
+client.Agents.GetSchedule(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**scheduleID:** `string` — The schedule's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.DeleteSchedule(AgentID, ScheduleID) -> error</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Deletes a schedule and cancels its runs that have not started. Its other runs keep their schedule_id.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsDeleteScheduleRequest{
+        AgentID: "agent_id",
+        ScheduleID: "schedule_id",
+    }
+client.Agents.DeleteSchedule(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**scheduleID:** `string` — The schedule's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.UpdateSchedule(AgentID, ScheduleID, request) -> *platformgo.AgentSchedule</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Changes a schedule's name, timing, run template or overlap policy; omitted fields are left unchanged. An active schedule whose timing changed takes its next occurrence from now. Its state changes through :pause and :resume.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentScheduleUpdateRequest{
+        AgentID: "agent_id",
+        ScheduleID: "schedule_id",
+    }
+client.Agents.UpdateSchedule(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**scheduleID:** `string` — The schedule's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**cronExpression:** `*string` — Five-field cron.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**endAt:** `*time.Time` — No occurrence at or after this time. null clears it, so the schedule runs until deleted.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `*string` — The schedule's new label.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**overlapPolicy:** `*platformgo.AgentScheduleUpdateRequestOverlapPolicy` — skip or queue.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**runTemplate:** `*platformgo.AgentScheduleRunTemplate` — What each run starts with, replaced whole.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**startAt:** `*time.Time` — No occurrence before this time. null clears it.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**timeZone:** `*string` — The IANA time zone cron_expression is read in.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.PauseSchedule(AgentID, ScheduleID) -> *platformgo.AgentSchedule</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Stops a schedule's occurrences and cancels its runs that have not started. A run already running goes on. A schedule that is not active is 409.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsPauseScheduleRequest{
+        AgentID: "agent_id",
+        ScheduleID: "schedule_id",
+    }
+client.Agents.PauseSchedule(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**scheduleID:** `string` — The schedule's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.ResumeSchedule(AgentID, ScheduleID) -> *platformgo.AgentSchedule</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Makes a paused schedule active again from its next occurrence after now; occurrences missed while paused do not run. A schedule that is not paused, or has no occurrence left before its end_at, is 409.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsResumeScheduleRequest{
+        AgentID: "agent_id",
+        ScheduleID: "schedule_id",
+    }
+client.Agents.ResumeSchedule(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**scheduleID:** `string` — The schedule's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.RunSchedule(AgentID, ScheduleID) -> *platformgo.RunResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Starts one run of the schedule's template now, whatever the schedule's state and overlap policy, as POST /runs starts a saved agent's run. The run carries the schedule's id; the schedule's occurrences are unchanged. While your organization is at its concurrency limit, the run is refused with 409.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentsRunScheduleRequest{
+        AgentID: "agent_id",
+        ScheduleID: "schedule_id",
+    }
+client.Agents.RunSchedule(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**scheduleID:** `string` — The schedule's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Agents.Rollback(AgentID, request) -> *platformgo.AgentRevision</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Copies an earlier revision forward as the agent's newest revision, which becomes the one runs use. History only grows: nothing is removed.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentRollbackRequest{
+        AgentID: "agent_id",
+        RevisionID: "revision_id",
+    }
+client.Agents.Rollback(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**agentID:** `string` — The agent's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**revisionID:** `string` — The earlier revision to roll back to. It is copied forward as a new revision, which becomes current.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 ## APIKeys
 <details><summary><code>client.APIKeys.List() -> *platformgo.APIKeyListResponse</code></summary>
 <dl>
@@ -2489,6 +4118,49 @@ client.Messages.Delete(
 </dl>
 </details>
 
+## Models
+<details><summary><code>client.Models.List() -> *platformgo.AgentModelList</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists the models an agent's runs can call: supported models that see the screen and call tools, by display name. An agent's model field takes one of their slugs.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+client.Models.List(
+        context.TODO(),
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 ## Organization
 <details><summary><code>client.Organization.Get() -> *platformgo.OrganizationDescriptorResponse</code></summary>
 <dl>
@@ -2845,7 +4517,7 @@ client.Phones.Availability(
 <dl>
 <dd>
 
-Returns one page of the org's phone sessions for the Session Inspector table: active/unbilled sessions pinned on top, terminal history paginated beneath. Covers workflow runs and workflow-less interactive leases; each row links to a session. Filters: search, workflow_id, status.
+Returns one page of the org's phone sessions for the Session Inspector table: active/unbilled sessions pinned on top, terminal history paginated beneath. Covers agents' runs and interactive leases; each row links to a session. Filters: search, agent_id, status.
 </dd>
 </dl>
 </dd>
@@ -2896,7 +4568,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**search:** `*string` — case-insensitive match on phone/session/workflow
+**search:** `*string` — case-insensitive match on phone/session/agent
     
 </dd>
 </dl>
@@ -2904,7 +4576,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-**workflowID:** `*string` — only sessions for this workflow
+**agentID:** `*string` — only sessions of this agent's runs
     
 </dd>
 </dl>
@@ -2992,7 +4664,7 @@ client.Phones.ListSessions(
 <dl>
 <dd>
 
-Returns one session for the Session Inspector: session lifecycle + phone display fields + workflow name (when tied to one) + an inlined presigned recording URL. Works for active and terminal sessions, and for workflow runs and workflow-less interactive leases. Org-scoped: another org's session reads as not found.
+Returns one session for the Session Inspector: session lifecycle, phone display fields, the agent's name (for an agent's run) and an inlined presigned recording URL. Works for active and terminal sessions, and for agents' runs and interactive leases. Org-scoped: another org's session reads as not found.
 </dd>
 </dl>
 </dd>
@@ -3053,7 +4725,7 @@ client.Phones.GetSession(
 <dl>
 <dd>
 
-Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for workflow runs and workflow-less interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet, and "off" when the session was not recorded. Org-scoped: another org's session reads as not found.
+Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for agents' runs and interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet, and "off" when the session was not recorded. Org-scoped: another org's session reads as not found.
 </dd>
 </dl>
 </dd>
@@ -3728,7 +5400,7 @@ client.Phones.Deallocate(
 <dl>
 <dd>
 
-Requests an on-demand factory reset of a private phone the caller's org owns. Requires the phone to be ACTIVE and not currently allocated. Sets the phone to MAINTENANCE while the wipe is carried out.
+Not available right now: always answers 409 and leaves the phone unchanged.
 </dd>
 </dl>
 </dd>
@@ -3789,7 +5461,7 @@ client.Phones.Wipe(
 <dl>
 <dd>
 
-Allocates an Android phone and opens a session. Omit workflow_id for an interactive lease (drive the phone directly); set it to allocate for a workflow. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
+Allocates an Android phone and opens a session you drive directly. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
 </dd>
 </dl>
 </dd>
@@ -3910,14 +5582,6 @@ client.Phones.Allocate(
     
 </dd>
 </dl>
-
-<dl>
-<dd>
-
-**workflowID:** `*string` — Workflow requesting allocation; nil for an interactive lease.
-    
-</dd>
-</dl>
 </dd>
 </dl>
 
@@ -4004,6 +5668,83 @@ client.Runs.SessionsListFrames(
 </dl>
 </details>
 
+<details><summary><code>client.Runs.StreamEvents(RunID) -> platformgo.RunsStreamEventsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Streams an agent run as Server-Sent Events (text/event-stream): the frames of its session's telemetry that belong to the run, the model's text as it streams (model_delta logs), and the run's own events, live as the run runs. Each event's id is its resume cursor, its event name is the frame kind (span or log), and its data is the frame JSON. The run's events are logs: run_status (attribute axilio.run.status: running when the run starts on its phone or goes back to running), run_input_required (it paused for a person; the body is the question, with the input request's id, reason, requested_by, response_schema and expires_at as attributes), run_resumed (a person answered; the body is the action), run_result (how it ended on the phone: axilio.ok, axilio.run.output or axilio.run.error, and the summary as the body), and user_message (a person's message reached the run; the body is the message). The stream's last event is a run_status with the run's final status as the run itself has it (completed, failed or cancelled), so a run the caller cancelled ends cancelled. These events are not archived; the run itself has the result. A session started with telemetry off still streams its run's events and the model's text, and nothing else. A new reader (or one whose cursor is older than the live window) first receives the run's archived frames and then the live ones, deduplicated on span id and phase, followed by an event with no data that carries the cursor the replay ended at. Reconnect with the Last-Event-ID header to resume. The model's text is not archived: a reader that reconnects after it left the live window gets the step's answer from the run's steps instead. A comment line is sent every 15 seconds while the stream is idle. The stream closes after the run's final status; a reconnect after the end with nothing left gets 204. A run that has not reached a phone yet streams only comments until it does. Authenticate with the API key header, or open the run's stream_url, which carries a read-only token for the run's session. Org-scoped: another org's run reads as not found. Readers MUST ignore events with an unknown name, unknown fields, and unknown span_type or log_type values.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.RunsStreamEventsRequest{
+        RunID: "run_id",
+    }
+client.Runs.StreamEvents(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**runID:** `string` — Run whose events to stream.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**token:** `*string` — Read-only token for the run's session, as carried by stream_url. Not needed with the API key header.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**lastEventID:** `*string` — Resume after this cursor (the id of the last event received).
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Runs.List() -> *platformgo.RunListResponse</code></summary>
 <dl>
 <dd>
@@ -4016,7 +5757,7 @@ client.Runs.SessionsListFrames(
 <dl>
 <dd>
 
-Returns paginated recent (non-archived) runs across the caller's organization, every member's runs included. Filters: workflow_id, search (run ID substring), status, trigger. Order with order_by ('<field> <asc|desc>'), field one of status, started_at, completed_at, created_at.
+Returns paginated recent (non-archived) runs across the caller's organization, every member's runs included. Filters: agent_id, search (run ID substring), status, trigger. Order with order_by ('<field> <asc|desc>'), field one of status, started_at, completed_at, created_at.
 </dd>
 </dl>
 </dd>
@@ -4051,7 +5792,31 @@ client.Runs.List(
 <dl>
 <dd>
 
-**workflowID:** `*string` — Filter results to a single workflow.
+**agentID:** `*string` — Only runs of this agent.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**scheduleID:** `*string` — Only runs this schedule started.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**mode:** `*platformgo.RunsListRequestMode` — Only runs of this mode.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**deviceClass:** `*platformgo.RunsListRequestDeviceClass` — Only runs that drove this kind of device.
     
 </dd>
 </dl>
@@ -4111,7 +5876,7 @@ client.Runs.List(
 </dl>
 </details>
 
-<details><summary><code>client.Runs.ListHistoric() -> *platformgo.RunHistoryResponse</code></summary>
+<details><summary><code>client.Runs.Start(request) -> *platformgo.RunResponse</code></summary>
 <dl>
 <dd>
 
@@ -4123,7 +5888,7 @@ client.Runs.List(
 <dl>
 <dd>
 
-Returns paginated historic runs across the caller's organization over a required time window (completed_after/completed_before). Use GET /runs for recent (non-archived) runs.
+Starts a run of a saved agent (agent_id, its current revision and settings) or an ad hoc run (task, with the model, output schema, limits, recording and telemetry given here). A phone_id target must be one of your organization's dedicated phones. While your organization is at its concurrency limit, a run that starts now is refused with 409. Booked with start_at, the run is scheduled instead.
 </dd>
 </dl>
 </dd>
@@ -4138,15 +5903,8 @@ Returns paginated historic runs across the caller's organization over a required
 <dd>
 
 ```go
-request := &platformgo.RunsListHistoricRequest{
-        CompletedAfter: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-        CompletedBefore: platformgo.MustParseDateTime(
-            "2024-01-15T09:30:00Z",
-        ),
-    }
-client.Runs.ListHistoric(
+request := &platformgo.AgentRunCreateRequest{}
+client.Runs.Start(
         context.TODO(),
         request,
     )
@@ -4165,7 +5923,66 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**completedAfter:** `time.Time` — Only runs that finished (completed, failed or were cancelled) at or after this time (RFC 3339).
+**request:** `*platformgo.AgentRunCreateRequest` 
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Runs.GetMetrics() -> *platformgo.RunMetricsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns your organization's finished runs over a window as points: one per hour or day in time_zone (and per group with group_by), each with the runs by how they ended, the success rate, the median and 95th percentile duration, what they cost and the model steps they took. A run counts in the bucket it finished in; runs still going are not counted. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.RunsGetMetricsRequest{}
+client.Runs.GetMetrics(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**periodStartAt:** `*time.Time` — Start of the window (RFC 3339). Defaults to 7 days before period_end_at, and may be at most a year before now.
     
 </dd>
 </dl>
@@ -4173,7 +5990,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**completedBefore:** `time.Time` — Only runs that finished before this time (RFC 3339).
+**periodEndAt:** `*time.Time` — End of the window (RFC 3339). Defaults to now, and a later time is read as now.
     
 </dd>
 </dl>
@@ -4181,7 +5998,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**workflowID:** `*string` — Filter results to a single workflow.
+**granularity:** `*platformgo.RunsGetMetricsRequestGranularity` — Bucket size: hour or day. hour is allowed for windows of 7 days or less.
     
 </dd>
 </dl>
@@ -4189,7 +6006,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**limit:** `*int64` — Maximum number of runs to return (1-500).
+**timeZone:** `*string` — IANA time zone the buckets follow, such as America/Los_Angeles: a day starts at local midnight and an hour on the local hour. An unknown name is an error.
     
 </dd>
 </dl>
@@ -4197,23 +6014,7 @@ client.Runs.ListHistoric(
 <dl>
 <dd>
 
-**offset:** `*int64` — Pagination offset.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**status:** `[]*platformgo.RunsListHistoricRequestStatusItem` — Only runs at one of these statuses; repeatable.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**search:** `*string` — Filter by run id or workflow id substring.
+**groupBy:** `*platformgo.RunsGetMetricsRequestGroupBy` — Split each bucket by agent, revision, status, trigger, mode, schedule or device_class. Omit for one point per bucket.
     
 </dd>
 </dl>
@@ -4286,6 +6087,221 @@ client.Runs.Get(
 </dl>
 </details>
 
+<details><summary><code>client.Runs.ListEvents(RunID) -> *platformgo.AgentRunEventList</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists an agent run's events as pages, oldest first: the frames its stream sends (its spans, the model's text and the run's own run_status, run_input_required, run_resumed, run_result and user_message logs) in time order, for a caller that polls rather than holds the stream open. A live run's page always has a next_cursor to poll from; an ended run's last page closes with its final run_status, as the run itself has it, and has none. Pages never repeat a frame, except that a cursor older than the stream's 10-minute window starts again from the run's first event, so a reader that keeps one deduplicates on span_id and phase, as a stream reader does across reconnects. A page keeps a stream entry's frames together, so it can hold a few more than limit. The run's own events and the model's text are live only: past the stream's 10-minute window a page has the archived spans and the closing run_status but no run_result, and a run with telemetry off has only its events while they are live. The run itself always has its result.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.RunsListEventsRequest{
+        RunID: "run_id",
+    }
+client.Runs.ListEvents(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**runID:** `string` — The run's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**cursor:** `*string` — The next_cursor of the page before; leave out for the first page.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Page size.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Runs.GetScript(RunID) -> *platformgo.AgentRunScript</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns every cell the run executed, in order, as one Python file and one by one, failed and exploratory cells included. A code run's first cell is its revision's script. The script is kept with the run's data, so it outlives the transcript; when that record is missing, the cells are rebuilt from what remains of the transcript and partial is true. 404 when there is nothing to build it from.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.RunsGetScriptRequest{
+        RunID: "run_id",
+    }
+client.Runs.GetScript(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**runID:** `string` — The run's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Runs.ListSteps(RunID) -> *platformgo.AgentRunStepList</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Lists a run's model steps from its transcript, oldest first: the messages each step sent, the model's answer, links to its screenshots and its cost. Empty once the transcript has passed its retention, or when your organization keeps none.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.RunsListStepsRequest{
+        RunID: "run_id",
+    }
+client.Runs.ListSteps(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**runID:** `string` — The run's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**cursor:** `*string` — The next_cursor of the page before; leave out for the first page.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `*int64` — Page size.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.Runs.Cancel(RunID) -> *platformgo.RunResponse</code></summary>
 <dl>
 <dd>
@@ -4298,7 +6314,7 @@ client.Runs.Get(
 <dl>
 <dd>
 
-Cancels a run that is scheduled, queued or running, scoped to the caller's org. A scheduled run is cancelled before it starts and never runs. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
+Cancels a run that is scheduled, queued, running or paused, scoped to the caller's org. A scheduled or queued run is cancelled before it starts and never runs. A running or paused run is stopped on its phone; an agent-mode run then keeps its phone for keep_alive_seconds, as when a turn ends, so :sendMessage can follow up on the same phone until keep_alive_expires_at. A run that has already reached a terminal state (completed/failed/cancelled) cannot be cancelled and reads as not found. Returns the updated run.
 </dd>
 </dl>
 </dd>
@@ -4347,7 +6363,7 @@ client.Runs.Cancel(
 </dl>
 </details>
 
-<details><summary><code>client.Runs.Create(WorkflowID, request) -> *platformgo.RunCreateResponse</code></summary>
+<details><summary><code>client.Runs.Pause(RunID) -> *platformgo.RunResponse</code></summary>
 <dl>
 <dd>
 
@@ -4359,7 +6375,7 @@ client.Runs.Cancel(
 <dl>
 <dd>
 
-Creates one or more runs against the given workflow and queues them for execution. Pre-flight checks: balance sufficient, concurrency limit, workflow exists. Runs that fail to queue are marked FAILED immediately so they stop counting toward the concurrency limit.
+Asks a running run to pause for a person, with reason caller_requested. An agent-mode run pauses at its next model step: a cell already running finishes first, and a run about to finish takes that step instead. A code run pauses at its script's next phone action. Returns the run as it is: it reads paused, with its input_request, once the pause lands, and run.paused fires then. A run that is not running is 409.
 </dd>
 </dl>
 </dd>
@@ -4374,13 +6390,10 @@ Creates one or more runs against the given workflow and queues them for executio
 <dd>
 
 ```go
-request := &platformgo.RunCreateRequest{
-        WorkflowID: "workflow_id",
-        Runs: []*platformgo.RunConfig{
-            &platformgo.RunConfig{},
-        },
+request := &platformgo.RunsPauseRequest{
+        RunID: "run_id",
     }
-client.Runs.Create(
+client.Runs.Pause(
         context.TODO(),
         request,
     )
@@ -4399,7 +6412,69 @@ client.Runs.Create(
 <dl>
 <dd>
 
-**workflowID:** `string` — workflow to create runs for
+**runID:** `string` — The run's id.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Runs.Resume(RunID, request) -> *platformgo.RunResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Resumes a paused run. action answer (the default) answers its input request with response, which must satisfy the request's response_schema (422 when it does not). action retry runs a code run's failed script again (only for reason step_check_failed). action complete ends the run as completed with output, which must satisfy the run's output schema (422). Returns the run as it is. With answer or retry it reads running once the edge has the input, and run.resumed fires then; with complete it reads completed once the edge ends it, and run.completed fires then. A run that is not paused, a different input_request_id, or a request that has expired is 409.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentRunResumeRequest{
+        RunID: "run_id",
+        InputRequestID: "input_request_id",
+    }
+client.Runs.Resume(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**runID:** `string` — The run's id.
     
 </dd>
 </dl>
@@ -4407,7 +6482,7 @@ client.Runs.Create(
 <dl>
 <dd>
 
-**runs:** `[]*platformgo.RunConfig` — Per-run variable configurations. One run is created per entry; 1-1000 entries per request.
+**action:** `*platformgo.AgentRunResumeRequestAction` — answer (the default) hands the run response; not for reason step_check_failed. retry runs the code run's script again in the same session, from where the phone is now; only for a pause with reason step_check_failed. complete ends the run as completed with output, as if it had returned it.
     
 </dd>
 </dl>
@@ -4415,7 +6490,7 @@ client.Runs.Create(
 <dl>
 <dd>
 
-**startAt:** `*time.Time` — Start the runs at this time (RFC 3339) instead of now. Must be at least 60 seconds and at most 30 days ahead. The runs are listed as scheduled until then, can be cancelled, and start within about 15 seconds of this time plus the usual wait for a phone. Omit to start now.
+**inputRequestID:** `string` — The input request answered: the run's input_request.id.
     
 </dd>
 </dl>
@@ -4423,7 +6498,268 @@ client.Runs.Create(
 <dl>
 <dd>
 
-**startTimeoutSeconds:** `*int64` — How long a queued run may wait for a phone before it is auto-cancelled (60-86400). Defaults to 300. For a scheduled run the wait counts from when it is released at start_at, not from booking.
+**message:** `*string` — With answer: a note for the agent with the answer.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**model:** `*string` — With answer, for an agent-mode run: the model its next steps call, one of GET /models (default the run's). It becomes the run's model, and its current turn's, once the run resumes; each step keeps the model that answered it.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**output:** `any` — With complete: the run's result, which must satisfy the run's output schema. At most 64 KiB.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**response:** `any` — With answer: the answer, which must satisfy the input request's response_schema. At most 64 KiB.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**resultText:** `*string` — With complete: a short account of the result.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Runs.SendMessage(RunID, request) -> *platformgo.RunResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Sends a person's message to an agent-mode run. To a run that is running or paused, the run's model reads it before its next step, as a turn from the person running the task, and the run's stream carries it as a user_message event, its body the message, once the run's phone has it. A message never resumes a paused run: answer the pause with :resume. A run holds at most 20 unread messages, and the edge refuses one past that, or one that arrives as the run finishes, which may then never be read or shown. To a run that ended (completed, failed or cancelled) while it still holds its phone (keep_alive_expires_at is in the future), the message starts the run's next turn on the same phone, and the run goes back to queued. Returns the run as it is. A code run, a queued or scheduled run, a run whose hold has ended, or a run whose phone cannot take messages yet is 409; an empty message, or one over 64 KiB, is 400.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentRunSendMessageRequest{
+        RunID: "run_id",
+        Message: "message",
+    }
+client.Runs.SendMessage(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**runID:** `string` — The run's id.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**message:** `string` — What the person says to the run's model. Required, at most 64 KiB.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**model:** `*string` — The next turn's model, one of GET /models, for a message to a completed or failed run (default the run's). Not taken while the run works.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Runs.BatchCreate(request) -> *platformgo.AgentRunBatchCreateResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Starts up to 1000 runs, each as POST /runs would. All are created or none is; an error names the request it is for. A batch may not name the same dedicated phone twice. The batch is refused with 409 while your organization is at its concurrency limit; its runs beyond the limit wait in the queue for a free slot.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.AgentRunBatchCreateRequest{}
+client.Runs.BatchCreate(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**requests:** `[]*platformgo.AgentRunCreateRequest` — The runs to start.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+## Sessions
+<details><summary><code>client.Sessions.GetMetrics() -> *platformgo.PhoneSessionMetricsResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Returns your organization's ended phone sessions over a window as points: one per hour or day in time_zone (and per group with group_by), each with the sessions, their phone time in seconds and what it cost. A session counts in the bucket it was billed in, as it ended, dedicated phones' at no cost; sessions still going are not counted. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &platformgo.SessionsGetMetricsRequest{}
+client.Sessions.GetMetrics(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**periodStartAt:** `*time.Time` — Start of the window (RFC 3339). Defaults to 7 days before period_end_at, and may be at most a year before now.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**periodEndAt:** `*time.Time` — End of the window (RFC 3339). Defaults to now, and a later time is read as now.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**granularity:** `*platformgo.SessionsGetMetricsRequestGranularity` — Bucket size: hour or day. hour is allowed for windows of 7 days or less.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**timeZone:** `*string` — IANA time zone the buckets follow, such as America/Los_Angeles: a day starts at local midnight and an hour on the local hour. An unknown name is an error.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**groupBy:** `*platformgo.SessionsGetMetricsRequestGroupBy` — Split each bucket by allocated_by, device_class or platform. Omit for one point per bucket.
     
 </dd>
 </dl>
@@ -4491,7 +6827,7 @@ client.Skill.GetSkill(
 <dl>
 <dd>
 
-Paginated, filterable list of inference calls (detect, locate and element_locate) the caller's user was billed for over a required time window (created_after/created_before). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
+Paginated, filterable list of inference calls (detect, locate, element_locate, and agent_chat for an agent run's model steps) the caller's user was billed for over a required time window (created_after/created_before). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
 </dd>
 </dl>
 </dd>
@@ -4565,7 +6901,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-**endpoint:** `[]*platformgo.UsageListInferencesRequestEndpointItem` — Only inferences of one of these operations; repeatable.
+**endpoint:** `[]*platformgo.UsageListInferencesRequestEndpointItem` — Only inferences of one of these operations; repeatable. agent_chat is an agent run's model step.
     
 </dd>
 </dl>
@@ -4621,7 +6957,7 @@ client.Usage.ListInferences(
 <dl>
 <dd>
 
-Returns your organization's usage spend over a window as points: one per hour or day in time_zone (and per product with group_by=product), each with the total, phone-session and inference spend in microdollars, zero when nothing was billed. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
+Returns your organization's usage spend over a window as points: one per hour or day in time_zone (and per group with group_by: product, agent, model, api_key, schedule or device_class), each with the total, phone-session and inference spend in microdollars, the phone seconds and tokens it bought, zero when nothing was billed. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
 </dd>
 </dl>
 </dd>
@@ -4688,7 +7024,7 @@ client.Usage.GetMetrics(
 <dl>
 <dd>
 
-**groupBy:** `*platformgo.UsageGetMetricsRequestGroupBy` — Split each bucket by product (session or inference). Omit for one point per bucket.
+**groupBy:** `*platformgo.UsageGetMetricsRequestGroupBy` — Split each bucket by product (session or inference), agent, model, api_key, schedule or device_class. Omit for one point per bucket.
     
 </dd>
 </dl>
@@ -4712,7 +7048,7 @@ client.Usage.GetMetrics(
 <dl>
 <dd>
 
-Paginated, filterable list of the caller's phone sessions over a required time window (allocated_after/allocated_before), each row carrying billing detail: phone-time cost, inference cost, and combined total in microdollars, billing processing status, and allocation source. Filters: session status, billing processing status, workflow, allocation source, free-text search. Order with order_by ('<field> <asc|desc>').
+Paginated, filterable list of the caller's phone sessions over a required time window (allocated_after/allocated_before), each row carrying billing detail: phone-time cost, inference cost, and combined total in microdollars, billing processing status, and allocation source. Filters: session status, billing processing status, agent, allocation source, free-text search. Order with order_by ('<field> <asc|desc>').
 </dd>
 </dl>
 </dd>
@@ -4802,7 +7138,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-**workflowID:** `*string` — Restrict results to sessions of a single workflow.
+**agentID:** `*string` — Restrict results to sessions of a single agent's runs.
     
 </dd>
 </dl>
@@ -4818,7 +7154,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-**search:** `*string` — Filter by session, workflow, or phone id substring.
+**search:** `*string` — Filter by session, agent, or phone id substring.
     
 </dd>
 </dl>
@@ -4826,7 +7162,7 @@ client.Usage.ListSessions(
 <dl>
 <dd>
 
-**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is allocated_at, deallocated_at, duration_seconds, cost_microdollars, session_status, processed_status, allocated_by, session_id or workflow_id. Defaults to allocated_at desc.
+**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is allocated_at, deallocated_at, duration_seconds, cost_microdollars, session_status, processed_status, allocated_by, session_id or agent_id. Defaults to allocated_at desc.
     
 </dd>
 </dl>
@@ -5768,927 +8104,6 @@ client.Webhooks.GetMetrics(
 <dd>
 
 **endpointID:** `*string` — Only this destination's attempts.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-## Workflows
-<details><summary><code>client.Workflows.List() -> *platformgo.WorkflowListResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Paginated list of workflows in the caller's org, with optional search, status, platform, and created/last-run date filters via query params. Order with order_by ('<field> <asc|desc>'), field a path into the listed item such as workflow.name.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowsListRequest{}
-client.Workflows.List(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**limit:** `*int64` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `*int64` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**search:** `*string` — free-text search across workflow name or ID substring
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**status:** `[]*platformgo.WorkflowsListRequestStatusItem` — only workflows at one of these statuses; repeatable
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**platform:** `[]*platformgo.WorkflowsListRequestPlatformItem` — only workflows for one of these platforms; repeatable
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**createdAfter:** `*time.Time` — only workflows created at/after this time (RFC 3339)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**createdBefore:** `*time.Time` — only workflows created at/before this time (RFC 3339)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**lastRunAfter:** `*time.Time` — only workflows last run at/after this time (RFC 3339)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**lastRunBefore:** `*time.Time` — only workflows last run at/before this time (RFC 3339)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**orderBy:** `*string` — Sort expression '<field> [asc|desc]', direction defaulting to desc; field is workflow.id, workflow.name, workflow.platform, workflow.status, workflow.last_run_at, workflow.created_at or workflow.updated_at. Defaults to workflow.created_at desc.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.Create(request) -> *platformgo.WorkflowCreateResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Creates a workflow in the caller's org. Name must match ^[A-Za-z0-9_-]+$ and be unique within the org. Pass code to save the workflow's first code revision atomically with it; omit it to create an empty workflow and add code later. Returns the workflow_id (plus revision_id and revision when code was provided).
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowCreateRequest{
-        Name: "name",
-    }
-client.Workflows.Create(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**accessibility:** `*bool` — Accessibility mode for this workflow's runs (default false). true requires a phone that supports it for every run dispatched through the scheduler, and your organization's access to accessibility mode: without it the save is refused with a 403 whose message starts with accessibility_unavailable.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**capture:** `*bool` — Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**code:** `*string` — Optional Python source for the workflow's first revision, saved atomically with the workflow when provided.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**name:** `string` — Human-readable workflow name.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**ocrEngine:** `*platformgo.WorkflowCreateRequestOcrEngine` — OCR backend to use.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**platform:** `*platformgo.WorkflowCreateRequestPlatform` — Target OS platform.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**recording:** `*bool` — Record the screen of this workflow's runs (default false). true stores a video of every run dispatched through the scheduler.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**telemetry:** `*bool` — Emit telemetry for this workflow's runs (default true). false suppresses both live frames and durable trace storage.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.Get(WorkflowID) -> *platformgo.WorkflowResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns a single workflow, scoped to the caller's org (workflows in other orgs return 404).
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowsGetRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.Get(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.Delete(WorkflowID) -> *platformgo.MessageOutputBody</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Deletes a workflow. Org-scoped — workflows in other orgs return 404.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowsDeleteRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.Delete(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.Update(WorkflowID, request) -> *platformgo.WorkflowResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Applies a partial update (name, platform, status, ocr_engine). Org-scoped — workflows in other orgs return 404.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowUpdateRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.Update(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**accessibility:** `*bool` — Accessibility mode for this workflow's runs. true requires a phone that supports it for every run dispatched through the scheduler, and your organization's access to accessibility mode: without it the update is refused with a 403 whose message starts with accessibility_unavailable. false turns it off. Omit to leave it unchanged.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**capture:** `*bool` — Capture media this workflow's runs produce on the phone into the org's file library (default true). false disables capture for every run dispatched through the scheduler.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**name:** `*string` — Updated workflow name.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**ocrEngine:** `*platformgo.WorkflowUpdateRequestOcrEngine` — Updated OCR backend selection.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**platform:** `*platformgo.WorkflowUpdateRequestPlatform` — Updated target platform.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**recording:** `*bool` — Record the screen of this workflow's runs. true stores a video of every run dispatched through the scheduler; false stops recording. Omit to leave it unchanged. New workflows default to false.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**status:** `*platformgo.WorkflowUpdateRequestStatus` — Updated lifecycle status.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**telemetry:** `*bool` — Emit telemetry for this workflow's runs (default true). false suppresses both live frames and durable trace storage.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.GetCode(WorkflowID) -> *platformgo.WorkflowGetCodeResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns the source code of the workflow's current revision, or of revision_id when given, scoped to the caller's org. A revision_id that is not one of this workflow's revisions reads as not found.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowsGetCodeRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.GetCode(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**revisionID:** `*string` — Revision whose source to return. Defaults to the workflow's current revision.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.ListRevisions(WorkflowID) -> *platformgo.WorkflowListRevisionsResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns revision metadata (id, number, author, message, bytes, sha256, created_at) for the workflow, in reverse-chronological order. Use the `before` cursor to paginate older revisions.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowsListRevisionsRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.ListRevisions(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `*int64` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**before:** `*int64` — cursor: return revisions older than this revision number
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.CreateRevision(WorkflowID, request) -> *platformgo.WorkflowCreateRevisionResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Saves source as the workflow's new current revision. Hash-deduplicates against the current revision (no_op is true and nothing changes when the source is unchanged). Source is capped at 256KB.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowCreateRevisionRequest{
-        WorkflowID: "workflow_id",
-        Source: "source",
-    }
-client.Workflows.CreateRevision(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**message:** `*string` — Optional commit-style note.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**source:** `string` — Python source the user typed.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.GetRevision(WorkflowID, RevisionID) -> *platformgo.WorkflowRevisionDetail</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns a single revision including its full source. Defense-in-depth: the revision must belong to the named workflow or it's treated as missing.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowsGetRevisionRequest{
-        WorkflowID: "workflow_id",
-        RevisionID: "revision_id",
-    }
-client.Workflows.GetRevision(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**revisionID:** `string` — revision identifier
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.RestoreRevision(WorkflowID, RevisionID) -> *platformgo.WorkflowCreateRevisionResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Creates a new revision with the source of the named revision. Does NOT dedup against the current revision so the action is auditable in the revision history.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowsRestoreRevisionRequest{
-        WorkflowID: "workflow_id",
-        RevisionID: "revision_id",
-    }
-client.Workflows.RestoreRevision(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**revisionID:** `string` — revision to restore
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.Workflows.GetRunStats(WorkflowID) -> *platformgo.RunStatsResponse</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Returns the total run count and success rate of the caller's own runs of the given workflow. A workflow outside the caller's organization reads as not found.
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```go
-request := &platformgo.WorkflowsGetRunStatsRequest{
-        WorkflowID: "workflow_id",
-    }
-client.Workflows.GetRunStats(
-        context.TODO(),
-        request,
-    )
-}
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**workflowID:** `string` — workflow identifier
     
 </dd>
 </dl>

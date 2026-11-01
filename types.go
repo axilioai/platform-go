@@ -1301,6 +1301,2247 @@ func (p PhoneMessageStatus) Ptr() *PhoneMessageStatus {
 	return &p
 }
 
+// What a paused run asks a person: answer it by id to resume the run.
+var (
+	runInputRequestFieldCreatedAt      = big.NewInt(1 << 0)
+	runInputRequestFieldExpiresAt      = big.NewInt(1 << 1)
+	runInputRequestFieldID             = big.NewInt(1 << 2)
+	runInputRequestFieldMessage        = big.NewInt(1 << 3)
+	runInputRequestFieldReason         = big.NewInt(1 << 4)
+	runInputRequestFieldRequestedBy    = big.NewInt(1 << 5)
+	runInputRequestFieldResponseSchema = big.NewInt(1 << 6)
+)
+
+type RunInputRequest struct {
+	// When the run paused.
+	CreatedAt time.Time `json:"created_at" url:"created_at"`
+	// When the run stops waiting and fails with input_timeout: the earliest of its pause timeout, its time limit and the end of its session.
+	ExpiresAt time.Time `json:"expires_at" url:"expires_at"`
+	// The input request's id, which a resume names.
+	ID string `json:"id" url:"id"`
+	// The question, for the person answering.
+	Message *string `json:"message,omitempty" url:"message,omitempty"`
+	// Why the run paused.
+	Reason RunInputRequestReason `json:"reason" url:"reason"`
+	// agent: the agent asked. code: the script asked, or failed with on_failure ask. caller: the run was paused through the API.
+	RequestedBy RunInputRequestRequestedBy `json:"requested_by" url:"requested_by"`
+	// The JSON Schema the answer must satisfy. Absent takes any answer.
+	ResponseSchema map[string]any `json:"response_schema,omitempty" url:"response_schema,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunInputRequest) GetCreatedAt() time.Time {
+	if r == nil {
+		return time.Time{}
+	}
+	return r.CreatedAt
+}
+
+func (r *RunInputRequest) GetExpiresAt() time.Time {
+	if r == nil {
+		return time.Time{}
+	}
+	return r.ExpiresAt
+}
+
+func (r *RunInputRequest) GetID() string {
+	if r == nil {
+		return ""
+	}
+	return r.ID
+}
+
+func (r *RunInputRequest) GetMessage() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Message
+}
+
+func (r *RunInputRequest) GetReason() RunInputRequestReason {
+	if r == nil {
+		return ""
+	}
+	return r.Reason
+}
+
+func (r *RunInputRequest) GetRequestedBy() RunInputRequestRequestedBy {
+	if r == nil {
+		return ""
+	}
+	return r.RequestedBy
+}
+
+func (r *RunInputRequest) GetResponseSchema() map[string]any {
+	if r == nil {
+		return nil
+	}
+	return r.ResponseSchema
+}
+
+func (r *RunInputRequest) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunInputRequest) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetCreatedAt sets the CreatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunInputRequest) SetCreatedAt(createdAt time.Time) {
+	r.CreatedAt = createdAt
+	r.require(runInputRequestFieldCreatedAt)
+}
+
+// SetExpiresAt sets the ExpiresAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunInputRequest) SetExpiresAt(expiresAt time.Time) {
+	r.ExpiresAt = expiresAt
+	r.require(runInputRequestFieldExpiresAt)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunInputRequest) SetID(id string) {
+	r.ID = id
+	r.require(runInputRequestFieldID)
+}
+
+// SetMessage sets the Message field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunInputRequest) SetMessage(message *string) {
+	r.Message = message
+	r.require(runInputRequestFieldMessage)
+}
+
+// SetReason sets the Reason field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunInputRequest) SetReason(reason RunInputRequestReason) {
+	r.Reason = reason
+	r.require(runInputRequestFieldReason)
+}
+
+// SetRequestedBy sets the RequestedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunInputRequest) SetRequestedBy(requestedBy RunInputRequestRequestedBy) {
+	r.RequestedBy = requestedBy
+	r.require(runInputRequestFieldRequestedBy)
+}
+
+// SetResponseSchema sets the ResponseSchema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunInputRequest) SetResponseSchema(responseSchema map[string]any) {
+	r.ResponseSchema = responseSchema
+	r.require(runInputRequestFieldResponseSchema)
+}
+
+func (r *RunInputRequest) UnmarshalJSON(data []byte) error {
+	type embed RunInputRequest
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"created_at"`
+		ExpiresAt *internal.DateTime `json:"expires_at"`
+	}{
+		embed: embed(*r),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*r = RunInputRequest(unmarshaler.embed)
+	r.CreatedAt = unmarshaler.CreatedAt.Time()
+	r.ExpiresAt = unmarshaler.ExpiresAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunInputRequest) MarshalJSON() ([]byte, error) {
+	type embed RunInputRequest
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"created_at"`
+		ExpiresAt *internal.DateTime `json:"expires_at"`
+	}{
+		embed:     embed(*r),
+		CreatedAt: internal.NewDateTime(r.CreatedAt),
+		ExpiresAt: internal.NewDateTime(r.ExpiresAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunInputRequest) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// Why the run paused.
+type RunInputRequestReason string
+
+const (
+	RunInputRequestReasonOneTimeCodeRequired RunInputRequestReason = "one_time_code_required"
+	RunInputRequestReasonApprovalRequired    RunInputRequestReason = "approval_required"
+	RunInputRequestReasonChoiceRequired      RunInputRequestReason = "choice_required"
+	RunInputRequestReasonChallengeBlocked    RunInputRequestReason = "challenge_blocked"
+	RunInputRequestReasonStepCheckFailed     RunInputRequestReason = "step_check_failed"
+	RunInputRequestReasonCallerRequested     RunInputRequestReason = "caller_requested"
+)
+
+func NewRunInputRequestReasonFromString(s string) (RunInputRequestReason, error) {
+	switch s {
+	case "one_time_code_required":
+		return RunInputRequestReasonOneTimeCodeRequired, nil
+	case "approval_required":
+		return RunInputRequestReasonApprovalRequired, nil
+	case "choice_required":
+		return RunInputRequestReasonChoiceRequired, nil
+	case "challenge_blocked":
+		return RunInputRequestReasonChallengeBlocked, nil
+	case "step_check_failed":
+		return RunInputRequestReasonStepCheckFailed, nil
+	case "caller_requested":
+		return RunInputRequestReasonCallerRequested, nil
+	}
+	var t RunInputRequestReason
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunInputRequestReason) Ptr() *RunInputRequestReason {
+	return &r
+}
+
+// agent: the agent asked. code: the script asked, or failed with on_failure ask. caller: the run was paused through the API.
+type RunInputRequestRequestedBy string
+
+const (
+	RunInputRequestRequestedByAgent  RunInputRequestRequestedBy = "agent"
+	RunInputRequestRequestedByCode   RunInputRequestRequestedBy = "code"
+	RunInputRequestRequestedByCaller RunInputRequestRequestedBy = "caller"
+)
+
+func NewRunInputRequestRequestedByFromString(s string) (RunInputRequestRequestedBy, error) {
+	switch s {
+	case "agent":
+		return RunInputRequestRequestedByAgent, nil
+	case "code":
+		return RunInputRequestRequestedByCode, nil
+	case "caller":
+		return RunInputRequestRequestedByCaller, nil
+	}
+	var t RunInputRequestRequestedBy
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunInputRequestRequestedBy) Ptr() *RunInputRequestRequestedBy {
+	return &r
+}
+
+// A code run's repair: the agent took over after the script failed and finished the task from the live screen.
+var (
+	runRepairFieldProposedRevisionID = big.NewInt(1 << 0)
+	runRepairFieldRepaired           = big.NewInt(1 << 1)
+)
+
+type RunRepair struct {
+	// The fixed revision the repair proposed, waiting to be promoted. Absent when a fix for the revision was already waiting.
+	ProposedRevisionID *string `json:"proposed_revision_id,omitempty" url:"proposed_revision_id,omitempty"`
+	// The script failed and the agent took over.
+	Repaired bool `json:"repaired" url:"repaired"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunRepair) GetProposedRevisionID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.ProposedRevisionID
+}
+
+func (r *RunRepair) GetRepaired() bool {
+	if r == nil {
+		return false
+	}
+	return r.Repaired
+}
+
+func (r *RunRepair) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunRepair) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetProposedRevisionID sets the ProposedRevisionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunRepair) SetProposedRevisionID(proposedRevisionID *string) {
+	r.ProposedRevisionID = proposedRevisionID
+	r.require(runRepairFieldProposedRevisionID)
+}
+
+// SetRepaired sets the Repaired field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunRepair) SetRepaired(repaired bool) {
+	r.Repaired = repaired
+	r.require(runRepairFieldRepaired)
+}
+
+func (r *RunRepair) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunRepair
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunRepair(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunRepair) MarshalJSON() ([]byte, error) {
+	type embed RunRepair
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunRepair) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// A run: of a saved agent, or of an ad hoc task.
+var (
+	runResponseFieldSchema              = big.NewInt(1 << 0)
+	runResponseFieldAgentID             = big.NewInt(1 << 1)
+	runResponseFieldAgentName           = big.NewInt(1 << 2)
+	runResponseFieldCancelledAt         = big.NewInt(1 << 3)
+	runResponseFieldCompletedAt         = big.NewInt(1 << 4)
+	runResponseFieldCreatedAt           = big.NewInt(1 << 5)
+	runResponseFieldError               = big.NewInt(1 << 6)
+	runResponseFieldID                  = big.NewInt(1 << 7)
+	runResponseFieldInputRequest        = big.NewInt(1 << 8)
+	runResponseFieldKeepAliveExpiresAt  = big.NewInt(1 << 9)
+	runResponseFieldMaxCostMicrodollars = big.NewInt(1 << 10)
+	runResponseFieldMaxSteps            = big.NewInt(1 << 11)
+	runResponseFieldMode                = big.NewInt(1 << 12)
+	runResponseFieldModel               = big.NewInt(1 << 13)
+	runResponseFieldNetwork             = big.NewInt(1 << 14)
+	runResponseFieldOutput              = big.NewInt(1 << 15)
+	runResponseFieldOutputSchema        = big.NewInt(1 << 16)
+	runResponseFieldPauseTimeoutSeconds = big.NewInt(1 << 17)
+	runResponseFieldPhoneID             = big.NewInt(1 << 18)
+	runResponseFieldRecordingEnabled    = big.NewInt(1 << 19)
+	runResponseFieldRepair              = big.NewInt(1 << 20)
+	runResponseFieldResultText          = big.NewInt(1 << 21)
+	runResponseFieldRevisionID          = big.NewInt(1 << 22)
+	runResponseFieldRunMetadata         = big.NewInt(1 << 23)
+	runResponseFieldScheduleID          = big.NewInt(1 << 24)
+	runResponseFieldSessionID           = big.NewInt(1 << 25)
+	runResponseFieldStartAt             = big.NewInt(1 << 26)
+	runResponseFieldStartTimeoutSeconds = big.NewInt(1 << 27)
+	runResponseFieldStartedAt           = big.NewInt(1 << 28)
+	runResponseFieldStatus              = big.NewInt(1 << 29)
+	runResponseFieldStreamURL           = big.NewInt(1 << 30)
+	runResponseFieldSuccess             = big.NewInt(1 << 31)
+	runResponseFieldTargets             = big.NewInt(1 << 32)
+	runResponseFieldTask                = big.NewInt(1 << 33)
+	runResponseFieldTelemetryEnabled    = big.NewInt(1 << 34)
+	runResponseFieldTimeoutSeconds      = big.NewInt(1 << 35)
+	runResponseFieldTraceExpiredAt      = big.NewInt(1 << 36)
+	runResponseFieldTrigger             = big.NewInt(1 << 37)
+	runResponseFieldTurn                = big.NewInt(1 << 38)
+	runResponseFieldTurns               = big.NewInt(1 << 39)
+	runResponseFieldUpdatedAt           = big.NewInt(1 << 40)
+	runResponseFieldUsage               = big.NewInt(1 << 41)
+	runResponseFieldUserID              = big.NewInt(1 << 42)
+	runResponseFieldVariables           = big.NewInt(1 << 43)
+	runResponseFieldVideoURL            = big.NewInt(1 << 44)
+)
+
+type RunResponse struct {
+	// A URL to the JSON Schema for this object.
+	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// The agent the run is of; absent on an ad hoc run.
+	AgentID *string `json:"agent_id,omitempty" url:"agent_id,omitempty"`
+	// The agent's name, on the run lists; absent on an ad hoc run.
+	AgentName *string `json:"agent_name,omitempty" url:"agent_name,omitempty"`
+	// Timestamp when the run was cancelled.
+	CancelledAt *time.Time `json:"cancelled_at,omitempty" url:"cancelled_at,omitempty"`
+	// Timestamp when the run finished.
+	CompletedAt *time.Time `json:"completed_at,omitempty" url:"completed_at,omitempty"`
+	// Timestamp when the run record was created.
+	CreatedAt time.Time `json:"created_at" url:"created_at"`
+	// Why the run failed.
+	Error *string `json:"error,omitempty" url:"error,omitempty"`
+	// Run identifier.
+	ID string `json:"id" url:"id"`
+	// What a paused run asks a person; answer it with :resume.
+	InputRequest *RunInputRequest `json:"input_request,omitempty" url:"input_request,omitempty"`
+	// Until when an ended agent-mode run holds its phone: :sendMessage before then continues the run there; after it, start a new run.
+	KeepAliveExpiresAt *time.Time `json:"keep_alive_expires_at,omitempty" url:"keep_alive_expires_at,omitempty"`
+	// Most the run's model steps may cost, in microdollars.
+	MaxCostMicrodollars *int64 `json:"max_cost_microdollars,omitempty" url:"max_cost_microdollars,omitempty"`
+	// Most model steps the run may take.
+	MaxSteps *int64 `json:"max_steps,omitempty" url:"max_steps,omitempty"`
+	// agent: an agent works the task through a model. code: the agent's script runs.
+	Mode RunResponseMode `json:"mode" url:"mode"`
+	// The model the run's steps call, one of GET /models.
+	Model *string `json:"model,omitempty" url:"model,omitempty"`
+	// The sandbox's network: restricted reaches the phone only; internet adds the public internet.
+	Network *RunResponseNetwork `json:"network,omitempty" url:"network,omitempty"`
+	// The run's result, which satisfies its output_schema.
+	Output any `json:"output,omitempty" url:"output,omitempty"`
+	// The JSON Schema the run's result must satisfy.
+	OutputSchema any `json:"output_schema,omitempty" url:"output_schema,omitempty"`
+	// Longest the run waits paused for an answer, in seconds.
+	PauseTimeoutSeconds *int64 `json:"pause_timeout_seconds,omitempty" url:"pause_timeout_seconds,omitempty"`
+	// Phone executing the run.
+	PhoneID *string `json:"phone_id,omitempty" url:"phone_id,omitempty"`
+	// An ad hoc run's own recording choice; absent takes the default (off), and a saved agent's run takes the agent's.
+	RecordingEnabled *bool `json:"recording_enabled,omitempty" url:"recording_enabled,omitempty"`
+	// On a code run: whether the agent took over after the script failed, and the fix it proposed.
+	Repair *RunRepair `json:"repair,omitempty" url:"repair,omitempty"`
+	// A short account of the run's result.
+	ResultText *string `json:"result_text,omitempty" url:"result_text,omitempty"`
+	// The agent's revision the run was pinned to when it was made.
+	RevisionID *string `json:"revision_id,omitempty" url:"revision_id,omitempty"`
+	// Arbitrary metadata attached to the run.
+	RunMetadata map[string]any `json:"run_metadata,omitempty" url:"run_metadata,omitempty"`
+	// The schedule that started the run, if one did.
+	ScheduleID *string `json:"schedule_id,omitempty" url:"schedule_id,omitempty"`
+	// Session associated with this run.
+	SessionID *string `json:"session_id,omitempty" url:"session_id,omitempty"`
+	// When the run was booked to start; absent for a run started on request.
+	StartAt *time.Time `json:"start_at,omitempty" url:"start_at,omitempty"`
+	// How long the queued run may wait for a phone before auto-cancel.
+	StartTimeoutSeconds *int64 `json:"start_timeout_seconds,omitempty" url:"start_timeout_seconds,omitempty"`
+	// Timestamp when the run began executing.
+	StartedAt *time.Time `json:"started_at,omitempty" url:"started_at,omitempty"`
+	// Current lifecycle state of the run. paused: the run waits on a person; see input_request.
+	Status RunResponseStatus `json:"status" url:"status"`
+	// The run's live event stream (Server-Sent Events), with a short-lived read-only token. Server clients can send the API key header instead.
+	StreamURL *string `json:"stream_url,omitempty" url:"stream_url,omitempty"`
+	// Whether the run completed without error.
+	Success *bool `json:"success,omitempty" url:"success,omitempty"`
+	// The device the run drives.
+	Targets []*RunTarget `json:"targets,omitempty" url:"targets,omitempty"`
+	// An agent-mode run's task: the ad hoc task, or the agent's instructions.
+	Task *string `json:"task,omitempty" url:"task,omitempty"`
+	// An ad hoc run's own telemetry choice; absent takes the default (on), and a saved agent's run takes the agent's.
+	TelemetryEnabled *bool `json:"telemetry_enabled,omitempty" url:"telemetry_enabled,omitempty"`
+	// Longest the run may take, in seconds.
+	TimeoutSeconds *int64 `json:"timeout_seconds,omitempty" url:"timeout_seconds,omitempty"`
+	// When the trace recording was deleted.
+	TraceExpiredAt *time.Time `json:"trace_expired_at,omitempty" url:"trace_expired_at,omitempty"`
+	// Trigger identifies how the run was initiated.
+	Trigger RunResponseTrigger `json:"trigger" url:"trigger"`
+	// An agent-mode run's current turn, from 1.
+	Turn *int64 `json:"turn,omitempty" url:"turn,omitempty"`
+	// Every turn of an agent-mode run, oldest first: the task, then each follow-up sent with :sendMessage.
+	Turns []*RunTurn `json:"turns,omitempty" url:"turns,omitempty"`
+	// Timestamp of the last update to the run record.
+	UpdatedAt time.Time `json:"updated_at" url:"updated_at"`
+	// What the run's model steps used, across its turns.
+	Usage *RunUsage `json:"usage,omitempty" url:"usage,omitempty"`
+	// User who initiated the run.
+	UserID string `json:"user_id" url:"user_id"`
+	// The run's inputs. Deleted once the finished run is older than the plan's run data retention window (30 days by default).
+	Variables map[string]any `json:"variables,omitempty" url:"variables,omitempty"`
+	// URL for the run recording video.
+	VideoURL *string `json:"video_url,omitempty" url:"video_url,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunResponse) GetSchema() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Schema
+}
+
+func (r *RunResponse) GetAgentID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.AgentID
+}
+
+func (r *RunResponse) GetAgentName() *string {
+	if r == nil {
+		return nil
+	}
+	return r.AgentName
+}
+
+func (r *RunResponse) GetCancelledAt() *time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.CancelledAt
+}
+
+func (r *RunResponse) GetCompletedAt() *time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.CompletedAt
+}
+
+func (r *RunResponse) GetCreatedAt() time.Time {
+	if r == nil {
+		return time.Time{}
+	}
+	return r.CreatedAt
+}
+
+func (r *RunResponse) GetError() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Error
+}
+
+func (r *RunResponse) GetID() string {
+	if r == nil {
+		return ""
+	}
+	return r.ID
+}
+
+func (r *RunResponse) GetInputRequest() *RunInputRequest {
+	if r == nil {
+		return nil
+	}
+	return r.InputRequest
+}
+
+func (r *RunResponse) GetKeepAliveExpiresAt() *time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.KeepAliveExpiresAt
+}
+
+func (r *RunResponse) GetMaxCostMicrodollars() *int64 {
+	if r == nil {
+		return nil
+	}
+	return r.MaxCostMicrodollars
+}
+
+func (r *RunResponse) GetMaxSteps() *int64 {
+	if r == nil {
+		return nil
+	}
+	return r.MaxSteps
+}
+
+func (r *RunResponse) GetMode() RunResponseMode {
+	if r == nil {
+		return ""
+	}
+	return r.Mode
+}
+
+func (r *RunResponse) GetModel() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Model
+}
+
+func (r *RunResponse) GetNetwork() *RunResponseNetwork {
+	if r == nil {
+		return nil
+	}
+	return r.Network
+}
+
+func (r *RunResponse) GetOutput() any {
+	if r == nil {
+		return nil
+	}
+	return r.Output
+}
+
+func (r *RunResponse) GetOutputSchema() any {
+	if r == nil {
+		return nil
+	}
+	return r.OutputSchema
+}
+
+func (r *RunResponse) GetPauseTimeoutSeconds() *int64 {
+	if r == nil {
+		return nil
+	}
+	return r.PauseTimeoutSeconds
+}
+
+func (r *RunResponse) GetPhoneID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.PhoneID
+}
+
+func (r *RunResponse) GetRecordingEnabled() *bool {
+	if r == nil {
+		return nil
+	}
+	return r.RecordingEnabled
+}
+
+func (r *RunResponse) GetRepair() *RunRepair {
+	if r == nil {
+		return nil
+	}
+	return r.Repair
+}
+
+func (r *RunResponse) GetResultText() *string {
+	if r == nil {
+		return nil
+	}
+	return r.ResultText
+}
+
+func (r *RunResponse) GetRevisionID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.RevisionID
+}
+
+func (r *RunResponse) GetRunMetadata() map[string]any {
+	if r == nil {
+		return nil
+	}
+	return r.RunMetadata
+}
+
+func (r *RunResponse) GetScheduleID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.ScheduleID
+}
+
+func (r *RunResponse) GetSessionID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.SessionID
+}
+
+func (r *RunResponse) GetStartAt() *time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.StartAt
+}
+
+func (r *RunResponse) GetStartTimeoutSeconds() *int64 {
+	if r == nil {
+		return nil
+	}
+	return r.StartTimeoutSeconds
+}
+
+func (r *RunResponse) GetStartedAt() *time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.StartedAt
+}
+
+func (r *RunResponse) GetStatus() RunResponseStatus {
+	if r == nil {
+		return ""
+	}
+	return r.Status
+}
+
+func (r *RunResponse) GetStreamURL() *string {
+	if r == nil {
+		return nil
+	}
+	return r.StreamURL
+}
+
+func (r *RunResponse) GetSuccess() *bool {
+	if r == nil {
+		return nil
+	}
+	return r.Success
+}
+
+func (r *RunResponse) GetTargets() []*RunTarget {
+	if r == nil {
+		return nil
+	}
+	return r.Targets
+}
+
+func (r *RunResponse) GetTask() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Task
+}
+
+func (r *RunResponse) GetTelemetryEnabled() *bool {
+	if r == nil {
+		return nil
+	}
+	return r.TelemetryEnabled
+}
+
+func (r *RunResponse) GetTimeoutSeconds() *int64 {
+	if r == nil {
+		return nil
+	}
+	return r.TimeoutSeconds
+}
+
+func (r *RunResponse) GetTraceExpiredAt() *time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.TraceExpiredAt
+}
+
+func (r *RunResponse) GetTrigger() RunResponseTrigger {
+	if r == nil {
+		return ""
+	}
+	return r.Trigger
+}
+
+func (r *RunResponse) GetTurn() *int64 {
+	if r == nil {
+		return nil
+	}
+	return r.Turn
+}
+
+func (r *RunResponse) GetTurns() []*RunTurn {
+	if r == nil {
+		return nil
+	}
+	return r.Turns
+}
+
+func (r *RunResponse) GetUpdatedAt() time.Time {
+	if r == nil {
+		return time.Time{}
+	}
+	return r.UpdatedAt
+}
+
+func (r *RunResponse) GetUsage() *RunUsage {
+	if r == nil {
+		return nil
+	}
+	return r.Usage
+}
+
+func (r *RunResponse) GetUserID() string {
+	if r == nil {
+		return ""
+	}
+	return r.UserID
+}
+
+func (r *RunResponse) GetVariables() map[string]any {
+	if r == nil {
+		return nil
+	}
+	return r.Variables
+}
+
+func (r *RunResponse) GetVideoURL() *string {
+	if r == nil {
+		return nil
+	}
+	return r.VideoURL
+}
+
+func (r *RunResponse) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunResponse) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetSchema(schema *string) {
+	r.Schema = schema
+	r.require(runResponseFieldSchema)
+}
+
+// SetAgentID sets the AgentID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetAgentID(agentID *string) {
+	r.AgentID = agentID
+	r.require(runResponseFieldAgentID)
+}
+
+// SetAgentName sets the AgentName field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetAgentName(agentName *string) {
+	r.AgentName = agentName
+	r.require(runResponseFieldAgentName)
+}
+
+// SetCancelledAt sets the CancelledAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetCancelledAt(cancelledAt *time.Time) {
+	r.CancelledAt = cancelledAt
+	r.require(runResponseFieldCancelledAt)
+}
+
+// SetCompletedAt sets the CompletedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetCompletedAt(completedAt *time.Time) {
+	r.CompletedAt = completedAt
+	r.require(runResponseFieldCompletedAt)
+}
+
+// SetCreatedAt sets the CreatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetCreatedAt(createdAt time.Time) {
+	r.CreatedAt = createdAt
+	r.require(runResponseFieldCreatedAt)
+}
+
+// SetError sets the Error field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetError(error_ *string) {
+	r.Error = error_
+	r.require(runResponseFieldError)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetID(id string) {
+	r.ID = id
+	r.require(runResponseFieldID)
+}
+
+// SetInputRequest sets the InputRequest field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetInputRequest(inputRequest *RunInputRequest) {
+	r.InputRequest = inputRequest
+	r.require(runResponseFieldInputRequest)
+}
+
+// SetKeepAliveExpiresAt sets the KeepAliveExpiresAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetKeepAliveExpiresAt(keepAliveExpiresAt *time.Time) {
+	r.KeepAliveExpiresAt = keepAliveExpiresAt
+	r.require(runResponseFieldKeepAliveExpiresAt)
+}
+
+// SetMaxCostMicrodollars sets the MaxCostMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetMaxCostMicrodollars(maxCostMicrodollars *int64) {
+	r.MaxCostMicrodollars = maxCostMicrodollars
+	r.require(runResponseFieldMaxCostMicrodollars)
+}
+
+// SetMaxSteps sets the MaxSteps field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetMaxSteps(maxSteps *int64) {
+	r.MaxSteps = maxSteps
+	r.require(runResponseFieldMaxSteps)
+}
+
+// SetMode sets the Mode field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetMode(mode RunResponseMode) {
+	r.Mode = mode
+	r.require(runResponseFieldMode)
+}
+
+// SetModel sets the Model field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetModel(model *string) {
+	r.Model = model
+	r.require(runResponseFieldModel)
+}
+
+// SetNetwork sets the Network field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetNetwork(network *RunResponseNetwork) {
+	r.Network = network
+	r.require(runResponseFieldNetwork)
+}
+
+// SetOutput sets the Output field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetOutput(output any) {
+	r.Output = output
+	r.require(runResponseFieldOutput)
+}
+
+// SetOutputSchema sets the OutputSchema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetOutputSchema(outputSchema any) {
+	r.OutputSchema = outputSchema
+	r.require(runResponseFieldOutputSchema)
+}
+
+// SetPauseTimeoutSeconds sets the PauseTimeoutSeconds field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetPauseTimeoutSeconds(pauseTimeoutSeconds *int64) {
+	r.PauseTimeoutSeconds = pauseTimeoutSeconds
+	r.require(runResponseFieldPauseTimeoutSeconds)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetPhoneID(phoneID *string) {
+	r.PhoneID = phoneID
+	r.require(runResponseFieldPhoneID)
+}
+
+// SetRecordingEnabled sets the RecordingEnabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetRecordingEnabled(recordingEnabled *bool) {
+	r.RecordingEnabled = recordingEnabled
+	r.require(runResponseFieldRecordingEnabled)
+}
+
+// SetRepair sets the Repair field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetRepair(repair *RunRepair) {
+	r.Repair = repair
+	r.require(runResponseFieldRepair)
+}
+
+// SetResultText sets the ResultText field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetResultText(resultText *string) {
+	r.ResultText = resultText
+	r.require(runResponseFieldResultText)
+}
+
+// SetRevisionID sets the RevisionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetRevisionID(revisionID *string) {
+	r.RevisionID = revisionID
+	r.require(runResponseFieldRevisionID)
+}
+
+// SetRunMetadata sets the RunMetadata field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetRunMetadata(runMetadata map[string]any) {
+	r.RunMetadata = runMetadata
+	r.require(runResponseFieldRunMetadata)
+}
+
+// SetScheduleID sets the ScheduleID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetScheduleID(scheduleID *string) {
+	r.ScheduleID = scheduleID
+	r.require(runResponseFieldScheduleID)
+}
+
+// SetSessionID sets the SessionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetSessionID(sessionID *string) {
+	r.SessionID = sessionID
+	r.require(runResponseFieldSessionID)
+}
+
+// SetStartAt sets the StartAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetStartAt(startAt *time.Time) {
+	r.StartAt = startAt
+	r.require(runResponseFieldStartAt)
+}
+
+// SetStartTimeoutSeconds sets the StartTimeoutSeconds field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetStartTimeoutSeconds(startTimeoutSeconds *int64) {
+	r.StartTimeoutSeconds = startTimeoutSeconds
+	r.require(runResponseFieldStartTimeoutSeconds)
+}
+
+// SetStartedAt sets the StartedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetStartedAt(startedAt *time.Time) {
+	r.StartedAt = startedAt
+	r.require(runResponseFieldStartedAt)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetStatus(status RunResponseStatus) {
+	r.Status = status
+	r.require(runResponseFieldStatus)
+}
+
+// SetStreamURL sets the StreamURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetStreamURL(streamURL *string) {
+	r.StreamURL = streamURL
+	r.require(runResponseFieldStreamURL)
+}
+
+// SetSuccess sets the Success field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetSuccess(success *bool) {
+	r.Success = success
+	r.require(runResponseFieldSuccess)
+}
+
+// SetTargets sets the Targets field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetTargets(targets []*RunTarget) {
+	r.Targets = targets
+	r.require(runResponseFieldTargets)
+}
+
+// SetTask sets the Task field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetTask(task *string) {
+	r.Task = task
+	r.require(runResponseFieldTask)
+}
+
+// SetTelemetryEnabled sets the TelemetryEnabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetTelemetryEnabled(telemetryEnabled *bool) {
+	r.TelemetryEnabled = telemetryEnabled
+	r.require(runResponseFieldTelemetryEnabled)
+}
+
+// SetTimeoutSeconds sets the TimeoutSeconds field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetTimeoutSeconds(timeoutSeconds *int64) {
+	r.TimeoutSeconds = timeoutSeconds
+	r.require(runResponseFieldTimeoutSeconds)
+}
+
+// SetTraceExpiredAt sets the TraceExpiredAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetTraceExpiredAt(traceExpiredAt *time.Time) {
+	r.TraceExpiredAt = traceExpiredAt
+	r.require(runResponseFieldTraceExpiredAt)
+}
+
+// SetTrigger sets the Trigger field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetTrigger(trigger RunResponseTrigger) {
+	r.Trigger = trigger
+	r.require(runResponseFieldTrigger)
+}
+
+// SetTurn sets the Turn field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetTurn(turn *int64) {
+	r.Turn = turn
+	r.require(runResponseFieldTurn)
+}
+
+// SetTurns sets the Turns field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetTurns(turns []*RunTurn) {
+	r.Turns = turns
+	r.require(runResponseFieldTurns)
+}
+
+// SetUpdatedAt sets the UpdatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetUpdatedAt(updatedAt time.Time) {
+	r.UpdatedAt = updatedAt
+	r.require(runResponseFieldUpdatedAt)
+}
+
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetUsage(usage *RunUsage) {
+	r.Usage = usage
+	r.require(runResponseFieldUsage)
+}
+
+// SetUserID sets the UserID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetUserID(userID string) {
+	r.UserID = userID
+	r.require(runResponseFieldUserID)
+}
+
+// SetVariables sets the Variables field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetVariables(variables map[string]any) {
+	r.Variables = variables
+	r.require(runResponseFieldVariables)
+}
+
+// SetVideoURL sets the VideoURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunResponse) SetVideoURL(videoURL *string) {
+	r.VideoURL = videoURL
+	r.require(runResponseFieldVideoURL)
+}
+
+func (r *RunResponse) UnmarshalJSON(data []byte) error {
+	type embed RunResponse
+	var unmarshaler = struct {
+		embed
+		CancelledAt        *internal.DateTime `json:"cancelled_at,omitempty"`
+		CompletedAt        *internal.DateTime `json:"completed_at,omitempty"`
+		CreatedAt          *internal.DateTime `json:"created_at"`
+		KeepAliveExpiresAt *internal.DateTime `json:"keep_alive_expires_at,omitempty"`
+		StartAt            *internal.DateTime `json:"start_at,omitempty"`
+		StartedAt          *internal.DateTime `json:"started_at,omitempty"`
+		TraceExpiredAt     *internal.DateTime `json:"trace_expired_at,omitempty"`
+		UpdatedAt          *internal.DateTime `json:"updated_at"`
+	}{
+		embed: embed(*r),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*r = RunResponse(unmarshaler.embed)
+	r.CancelledAt = unmarshaler.CancelledAt.TimePtr()
+	r.CompletedAt = unmarshaler.CompletedAt.TimePtr()
+	r.CreatedAt = unmarshaler.CreatedAt.Time()
+	r.KeepAliveExpiresAt = unmarshaler.KeepAliveExpiresAt.TimePtr()
+	r.StartAt = unmarshaler.StartAt.TimePtr()
+	r.StartedAt = unmarshaler.StartedAt.TimePtr()
+	r.TraceExpiredAt = unmarshaler.TraceExpiredAt.TimePtr()
+	r.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunResponse) MarshalJSON() ([]byte, error) {
+	type embed RunResponse
+	var marshaler = struct {
+		embed
+		CancelledAt        *internal.DateTime `json:"cancelled_at,omitempty"`
+		CompletedAt        *internal.DateTime `json:"completed_at,omitempty"`
+		CreatedAt          *internal.DateTime `json:"created_at"`
+		KeepAliveExpiresAt *internal.DateTime `json:"keep_alive_expires_at,omitempty"`
+		StartAt            *internal.DateTime `json:"start_at,omitempty"`
+		StartedAt          *internal.DateTime `json:"started_at,omitempty"`
+		TraceExpiredAt     *internal.DateTime `json:"trace_expired_at,omitempty"`
+		UpdatedAt          *internal.DateTime `json:"updated_at"`
+	}{
+		embed:              embed(*r),
+		CancelledAt:        internal.NewOptionalDateTime(r.CancelledAt),
+		CompletedAt:        internal.NewOptionalDateTime(r.CompletedAt),
+		CreatedAt:          internal.NewDateTime(r.CreatedAt),
+		KeepAliveExpiresAt: internal.NewOptionalDateTime(r.KeepAliveExpiresAt),
+		StartAt:            internal.NewOptionalDateTime(r.StartAt),
+		StartedAt:          internal.NewOptionalDateTime(r.StartedAt),
+		TraceExpiredAt:     internal.NewOptionalDateTime(r.TraceExpiredAt),
+		UpdatedAt:          internal.NewDateTime(r.UpdatedAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunResponse) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// agent: an agent works the task through a model. code: the agent's script runs.
+type RunResponseMode string
+
+const (
+	RunResponseModeAgent RunResponseMode = "agent"
+	RunResponseModeCode  RunResponseMode = "code"
+)
+
+func NewRunResponseModeFromString(s string) (RunResponseMode, error) {
+	switch s {
+	case "agent":
+		return RunResponseModeAgent, nil
+	case "code":
+		return RunResponseModeCode, nil
+	}
+	var t RunResponseMode
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunResponseMode) Ptr() *RunResponseMode {
+	return &r
+}
+
+// The sandbox's network: restricted reaches the phone only; internet adds the public internet.
+type RunResponseNetwork string
+
+const (
+	RunResponseNetworkRestricted RunResponseNetwork = "restricted"
+	RunResponseNetworkInternet   RunResponseNetwork = "internet"
+)
+
+func NewRunResponseNetworkFromString(s string) (RunResponseNetwork, error) {
+	switch s {
+	case "restricted":
+		return RunResponseNetworkRestricted, nil
+	case "internet":
+		return RunResponseNetworkInternet, nil
+	}
+	var t RunResponseNetwork
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunResponseNetwork) Ptr() *RunResponseNetwork {
+	return &r
+}
+
+// Current lifecycle state of the run. paused: the run waits on a person; see input_request.
+type RunResponseStatus string
+
+const (
+	RunResponseStatusScheduled RunResponseStatus = "scheduled"
+	RunResponseStatusQueued    RunResponseStatus = "queued"
+	RunResponseStatusRunning   RunResponseStatus = "running"
+	RunResponseStatusPaused    RunResponseStatus = "paused"
+	RunResponseStatusCompleted RunResponseStatus = "completed"
+	RunResponseStatusFailed    RunResponseStatus = "failed"
+	RunResponseStatusCancelled RunResponseStatus = "cancelled"
+)
+
+func NewRunResponseStatusFromString(s string) (RunResponseStatus, error) {
+	switch s {
+	case "scheduled":
+		return RunResponseStatusScheduled, nil
+	case "queued":
+		return RunResponseStatusQueued, nil
+	case "running":
+		return RunResponseStatusRunning, nil
+	case "paused":
+		return RunResponseStatusPaused, nil
+	case "completed":
+		return RunResponseStatusCompleted, nil
+	case "failed":
+		return RunResponseStatusFailed, nil
+	case "cancelled":
+		return RunResponseStatusCancelled, nil
+	}
+	var t RunResponseStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunResponseStatus) Ptr() *RunResponseStatus {
+	return &r
+}
+
+// Trigger identifies how the run was initiated.
+type RunResponseTrigger string
+
+const (
+	RunResponseTriggerManual    RunResponseTrigger = "manual"
+	RunResponseTriggerScheduled RunResponseTrigger = "scheduled"
+	RunResponseTriggerAPI       RunResponseTrigger = "api"
+)
+
+func NewRunResponseTriggerFromString(s string) (RunResponseTrigger, error) {
+	switch s {
+	case "manual":
+		return RunResponseTriggerManual, nil
+	case "scheduled":
+		return RunResponseTriggerScheduled, nil
+	case "api":
+		return RunResponseTriggerAPI, nil
+	}
+	var t RunResponseTrigger
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunResponseTrigger) Ptr() *RunResponseTrigger {
+	return &r
+}
+
+// The device a run drives. Phones only for now, Android only.
+var (
+	runTargetFieldCapabilities = big.NewInt(1 << 0)
+	runTargetFieldDeviceClass  = big.NewInt(1 << 1)
+	runTargetFieldOwnership    = big.NewInt(1 << 2)
+	runTargetFieldPhoneID      = big.NewInt(1 << 3)
+	runTargetFieldPlatform     = big.NewInt(1 << 4)
+)
+
+type RunTarget struct {
+	// What the run needs of the phone.
+	Capabilities *RunTargetCapabilities `json:"capabilities,omitempty" url:"capabilities,omitempty"`
+	// The kind of device.
+	DeviceClass RunTargetDeviceClass `json:"device_class" url:"device_class"`
+	// dedicated: one of your organization's phones, the one phone_id names or any free one. shared: a phone from the shared fleet. Defaults to dedicated when phone_id is set, else shared.
+	Ownership *RunTargetOwnership `json:"ownership,omitempty" url:"ownership,omitempty"`
+	// A dedicated phone of your organization to run on. Leave out for any of yours (ownership dedicated) or a shared phone.
+	PhoneID *string `json:"phone_id,omitempty" url:"phone_id,omitempty"`
+	// The device's platform (default android).
+	Platform *RunTargetPlatform `json:"platform,omitempty" url:"platform,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunTarget) GetCapabilities() *RunTargetCapabilities {
+	if r == nil {
+		return nil
+	}
+	return r.Capabilities
+}
+
+func (r *RunTarget) GetDeviceClass() RunTargetDeviceClass {
+	if r == nil {
+		return ""
+	}
+	return r.DeviceClass
+}
+
+func (r *RunTarget) GetOwnership() *RunTargetOwnership {
+	if r == nil {
+		return nil
+	}
+	return r.Ownership
+}
+
+func (r *RunTarget) GetPhoneID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.PhoneID
+}
+
+func (r *RunTarget) GetPlatform() *RunTargetPlatform {
+	if r == nil {
+		return nil
+	}
+	return r.Platform
+}
+
+func (r *RunTarget) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunTarget) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetCapabilities sets the Capabilities field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTarget) SetCapabilities(capabilities *RunTargetCapabilities) {
+	r.Capabilities = capabilities
+	r.require(runTargetFieldCapabilities)
+}
+
+// SetDeviceClass sets the DeviceClass field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTarget) SetDeviceClass(deviceClass RunTargetDeviceClass) {
+	r.DeviceClass = deviceClass
+	r.require(runTargetFieldDeviceClass)
+}
+
+// SetOwnership sets the Ownership field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTarget) SetOwnership(ownership *RunTargetOwnership) {
+	r.Ownership = ownership
+	r.require(runTargetFieldOwnership)
+}
+
+// SetPhoneID sets the PhoneID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTarget) SetPhoneID(phoneID *string) {
+	r.PhoneID = phoneID
+	r.require(runTargetFieldPhoneID)
+}
+
+// SetPlatform sets the Platform field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTarget) SetPlatform(platform *RunTargetPlatform) {
+	r.Platform = platform
+	r.require(runTargetFieldPlatform)
+}
+
+func (r *RunTarget) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunTarget
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunTarget(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunTarget) MarshalJSON() ([]byte, error) {
+	type embed RunTarget
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunTarget) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// What a run needs of its device.
+var (
+	runTargetCapabilitiesFieldAccessibility = big.NewInt(1 << 0)
+)
+
+type RunTargetCapabilities struct {
+	// Run in accessibility mode, which needs a phone that supports it and your organization's access to accessibility mode.
+	Accessibility *bool `json:"accessibility,omitempty" url:"accessibility,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunTargetCapabilities) GetAccessibility() *bool {
+	if r == nil {
+		return nil
+	}
+	return r.Accessibility
+}
+
+func (r *RunTargetCapabilities) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunTargetCapabilities) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetAccessibility sets the Accessibility field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTargetCapabilities) SetAccessibility(accessibility *bool) {
+	r.Accessibility = accessibility
+	r.require(runTargetCapabilitiesFieldAccessibility)
+}
+
+func (r *RunTargetCapabilities) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunTargetCapabilities
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunTargetCapabilities(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunTargetCapabilities) MarshalJSON() ([]byte, error) {
+	type embed RunTargetCapabilities
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunTargetCapabilities) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// The kind of device.
+type RunTargetDeviceClass string
+
+const (
+	RunTargetDeviceClassPhone RunTargetDeviceClass = "phone"
+)
+
+func NewRunTargetDeviceClassFromString(s string) (RunTargetDeviceClass, error) {
+	switch s {
+	case "phone":
+		return RunTargetDeviceClassPhone, nil
+	}
+	var t RunTargetDeviceClass
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunTargetDeviceClass) Ptr() *RunTargetDeviceClass {
+	return &r
+}
+
+// dedicated: one of your organization's phones, the one phone_id names or any free one. shared: a phone from the shared fleet. Defaults to dedicated when phone_id is set, else shared.
+type RunTargetOwnership string
+
+const (
+	RunTargetOwnershipDedicated RunTargetOwnership = "dedicated"
+	RunTargetOwnershipShared    RunTargetOwnership = "shared"
+)
+
+func NewRunTargetOwnershipFromString(s string) (RunTargetOwnership, error) {
+	switch s {
+	case "dedicated":
+		return RunTargetOwnershipDedicated, nil
+	case "shared":
+		return RunTargetOwnershipShared, nil
+	}
+	var t RunTargetOwnership
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunTargetOwnership) Ptr() *RunTargetOwnership {
+	return &r
+}
+
+// The device's platform (default android).
+type RunTargetPlatform string
+
+const (
+	RunTargetPlatformAndroid RunTargetPlatform = "android"
+)
+
+func NewRunTargetPlatformFromString(s string) (RunTargetPlatform, error) {
+	switch s {
+	case "android":
+		return RunTargetPlatformAndroid, nil
+	}
+	var t RunTargetPlatform
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunTargetPlatform) Ptr() *RunTargetPlatform {
+	return &r
+}
+
+// One turn of an agent-mode run: what opened it, how it ended, and what it used.
+var (
+	runTurnFieldCompletedAt = big.NewInt(1 << 0)
+	runTurnFieldError       = big.NewInt(1 << 1)
+	runTurnFieldMessage     = big.NewInt(1 << 2)
+	runTurnFieldModel       = big.NewInt(1 << 3)
+	runTurnFieldOutput      = big.NewInt(1 << 4)
+	runTurnFieldResultText  = big.NewInt(1 << 5)
+	runTurnFieldSessionID   = big.NewInt(1 << 6)
+	runTurnFieldStartedAt   = big.NewInt(1 << 7)
+	runTurnFieldStatus      = big.NewInt(1 << 8)
+	runTurnFieldTurn        = big.NewInt(1 << 9)
+	runTurnFieldUsage       = big.NewInt(1 << 10)
+)
+
+type RunTurn struct {
+	// When the turn ended.
+	CompletedAt *time.Time `json:"completed_at,omitempty" url:"completed_at,omitempty"`
+	// Why the turn failed.
+	Error *string `json:"error,omitempty" url:"error,omitempty"`
+	// The message that opened the turn. Absent on turn 1, which works through the run's task.
+	Message *string `json:"message,omitempty" url:"message,omitempty"`
+	// The model the turn's steps called.
+	Model *string `json:"model,omitempty" url:"model,omitempty"`
+	// The turn's result, matching the run's output_schema.
+	Output any `json:"output,omitempty" url:"output,omitempty"`
+	// The turn's result in a sentence.
+	ResultText *string `json:"result_text,omitempty" url:"result_text,omitempty"`
+	// The phone session the turn ran in.
+	SessionID *string `json:"session_id,omitempty" url:"session_id,omitempty"`
+	// When the turn started.
+	StartedAt *time.Time `json:"started_at,omitempty" url:"started_at,omitempty"`
+	// The turn's status.
+	Status RunTurnStatus `json:"status" url:"status"`
+	// The turn's number, from 1.
+	Turn int64 `json:"turn" url:"turn"`
+	// What the turn's model steps used.
+	Usage *RunTurnUsage `json:"usage,omitempty" url:"usage,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunTurn) GetCompletedAt() *time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.CompletedAt
+}
+
+func (r *RunTurn) GetError() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Error
+}
+
+func (r *RunTurn) GetMessage() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Message
+}
+
+func (r *RunTurn) GetModel() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Model
+}
+
+func (r *RunTurn) GetOutput() any {
+	if r == nil {
+		return nil
+	}
+	return r.Output
+}
+
+func (r *RunTurn) GetResultText() *string {
+	if r == nil {
+		return nil
+	}
+	return r.ResultText
+}
+
+func (r *RunTurn) GetSessionID() *string {
+	if r == nil {
+		return nil
+	}
+	return r.SessionID
+}
+
+func (r *RunTurn) GetStartedAt() *time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.StartedAt
+}
+
+func (r *RunTurn) GetStatus() RunTurnStatus {
+	if r == nil {
+		return ""
+	}
+	return r.Status
+}
+
+func (r *RunTurn) GetTurn() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.Turn
+}
+
+func (r *RunTurn) GetUsage() *RunTurnUsage {
+	if r == nil {
+		return nil
+	}
+	return r.Usage
+}
+
+func (r *RunTurn) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunTurn) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetCompletedAt sets the CompletedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetCompletedAt(completedAt *time.Time) {
+	r.CompletedAt = completedAt
+	r.require(runTurnFieldCompletedAt)
+}
+
+// SetError sets the Error field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetError(error_ *string) {
+	r.Error = error_
+	r.require(runTurnFieldError)
+}
+
+// SetMessage sets the Message field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetMessage(message *string) {
+	r.Message = message
+	r.require(runTurnFieldMessage)
+}
+
+// SetModel sets the Model field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetModel(model *string) {
+	r.Model = model
+	r.require(runTurnFieldModel)
+}
+
+// SetOutput sets the Output field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetOutput(output any) {
+	r.Output = output
+	r.require(runTurnFieldOutput)
+}
+
+// SetResultText sets the ResultText field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetResultText(resultText *string) {
+	r.ResultText = resultText
+	r.require(runTurnFieldResultText)
+}
+
+// SetSessionID sets the SessionID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetSessionID(sessionID *string) {
+	r.SessionID = sessionID
+	r.require(runTurnFieldSessionID)
+}
+
+// SetStartedAt sets the StartedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetStartedAt(startedAt *time.Time) {
+	r.StartedAt = startedAt
+	r.require(runTurnFieldStartedAt)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetStatus(status RunTurnStatus) {
+	r.Status = status
+	r.require(runTurnFieldStatus)
+}
+
+// SetTurn sets the Turn field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetTurn(turn int64) {
+	r.Turn = turn
+	r.require(runTurnFieldTurn)
+}
+
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurn) SetUsage(usage *RunTurnUsage) {
+	r.Usage = usage
+	r.require(runTurnFieldUsage)
+}
+
+func (r *RunTurn) UnmarshalJSON(data []byte) error {
+	type embed RunTurn
+	var unmarshaler = struct {
+		embed
+		CompletedAt *internal.DateTime `json:"completed_at,omitempty"`
+		StartedAt   *internal.DateTime `json:"started_at,omitempty"`
+	}{
+		embed: embed(*r),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*r = RunTurn(unmarshaler.embed)
+	r.CompletedAt = unmarshaler.CompletedAt.TimePtr()
+	r.StartedAt = unmarshaler.StartedAt.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunTurn) MarshalJSON() ([]byte, error) {
+	type embed RunTurn
+	var marshaler = struct {
+		embed
+		CompletedAt *internal.DateTime `json:"completed_at,omitempty"`
+		StartedAt   *internal.DateTime `json:"started_at,omitempty"`
+	}{
+		embed:       embed(*r),
+		CompletedAt: internal.NewOptionalDateTime(r.CompletedAt),
+		StartedAt:   internal.NewOptionalDateTime(r.StartedAt),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunTurn) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// The turn's status.
+type RunTurnStatus string
+
+const (
+	RunTurnStatusQueued    RunTurnStatus = "queued"
+	RunTurnStatusRunning   RunTurnStatus = "running"
+	RunTurnStatusPaused    RunTurnStatus = "paused"
+	RunTurnStatusCompleted RunTurnStatus = "completed"
+	RunTurnStatusFailed    RunTurnStatus = "failed"
+	RunTurnStatusCancelled RunTurnStatus = "cancelled"
+)
+
+func NewRunTurnStatusFromString(s string) (RunTurnStatus, error) {
+	switch s {
+	case "queued":
+		return RunTurnStatusQueued, nil
+	case "running":
+		return RunTurnStatusRunning, nil
+	case "paused":
+		return RunTurnStatusPaused, nil
+	case "completed":
+		return RunTurnStatusCompleted, nil
+	case "failed":
+		return RunTurnStatusFailed, nil
+	case "cancelled":
+		return RunTurnStatusCancelled, nil
+	}
+	var t RunTurnStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunTurnStatus) Ptr() *RunTurnStatus {
+	return &r
+}
+
+// What one turn's model steps used.
+var (
+	runTurnUsageFieldCompletionTokens = big.NewInt(1 << 0)
+	runTurnUsageFieldCostMicrodollars = big.NewInt(1 << 1)
+	runTurnUsageFieldLastStep         = big.NewInt(1 << 2)
+	runTurnUsageFieldModelSteps       = big.NewInt(1 << 3)
+	runTurnUsageFieldPromptTokens     = big.NewInt(1 << 4)
+)
+
+type RunTurnUsage struct {
+	// Completion tokens across those steps.
+	CompletionTokens int64 `json:"completion_tokens" url:"completion_tokens"`
+	// What those steps cost, in microdollars.
+	CostMicrodollars int64 `json:"cost_microdollars" url:"cost_microdollars"`
+	// The number of the turn's last step, answered or not: GET /runs/{run_id}/steps reads the turn from the step after the turn before's.
+	LastStep *int64 `json:"last_step,omitempty" url:"last_step,omitempty"`
+	// Model steps that got an answer.
+	ModelSteps int64 `json:"model_steps" url:"model_steps"`
+	// Prompt tokens across those steps.
+	PromptTokens int64 `json:"prompt_tokens" url:"prompt_tokens"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunTurnUsage) GetCompletionTokens() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.CompletionTokens
+}
+
+func (r *RunTurnUsage) GetCostMicrodollars() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.CostMicrodollars
+}
+
+func (r *RunTurnUsage) GetLastStep() *int64 {
+	if r == nil {
+		return nil
+	}
+	return r.LastStep
+}
+
+func (r *RunTurnUsage) GetModelSteps() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.ModelSteps
+}
+
+func (r *RunTurnUsage) GetPromptTokens() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.PromptTokens
+}
+
+func (r *RunTurnUsage) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunTurnUsage) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetCompletionTokens sets the CompletionTokens field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurnUsage) SetCompletionTokens(completionTokens int64) {
+	r.CompletionTokens = completionTokens
+	r.require(runTurnUsageFieldCompletionTokens)
+}
+
+// SetCostMicrodollars sets the CostMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurnUsage) SetCostMicrodollars(costMicrodollars int64) {
+	r.CostMicrodollars = costMicrodollars
+	r.require(runTurnUsageFieldCostMicrodollars)
+}
+
+// SetLastStep sets the LastStep field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurnUsage) SetLastStep(lastStep *int64) {
+	r.LastStep = lastStep
+	r.require(runTurnUsageFieldLastStep)
+}
+
+// SetModelSteps sets the ModelSteps field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurnUsage) SetModelSteps(modelSteps int64) {
+	r.ModelSteps = modelSteps
+	r.require(runTurnUsageFieldModelSteps)
+}
+
+// SetPromptTokens sets the PromptTokens field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunTurnUsage) SetPromptTokens(promptTokens int64) {
+	r.PromptTokens = promptTokens
+	r.require(runTurnUsageFieldPromptTokens)
+}
+
+func (r *RunTurnUsage) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunTurnUsage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunTurnUsage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunTurnUsage) MarshalJSON() ([]byte, error) {
+	type embed RunTurnUsage
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunTurnUsage) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// What a run's model steps used.
+var (
+	runUsageFieldCompletionTokens = big.NewInt(1 << 0)
+	runUsageFieldCostMicrodollars = big.NewInt(1 << 1)
+	runUsageFieldModelSteps       = big.NewInt(1 << 2)
+	runUsageFieldPromptTokens     = big.NewInt(1 << 3)
+)
+
+type RunUsage struct {
+	// Completion tokens across those steps.
+	CompletionTokens int64 `json:"completion_tokens" url:"completion_tokens"`
+	// What those steps cost, in microdollars.
+	CostMicrodollars int64 `json:"cost_microdollars" url:"cost_microdollars"`
+	// Model steps that got an answer.
+	ModelSteps int64 `json:"model_steps" url:"model_steps"`
+	// Prompt tokens across those steps.
+	PromptTokens int64 `json:"prompt_tokens" url:"prompt_tokens"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunUsage) GetCompletionTokens() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.CompletionTokens
+}
+
+func (r *RunUsage) GetCostMicrodollars() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.CostMicrodollars
+}
+
+func (r *RunUsage) GetModelSteps() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.ModelSteps
+}
+
+func (r *RunUsage) GetPromptTokens() int64 {
+	if r == nil {
+		return 0
+	}
+	return r.PromptTokens
+}
+
+func (r *RunUsage) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunUsage) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetCompletionTokens sets the CompletionTokens field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsage) SetCompletionTokens(completionTokens int64) {
+	r.CompletionTokens = completionTokens
+	r.require(runUsageFieldCompletionTokens)
+}
+
+// SetCostMicrodollars sets the CostMicrodollars field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsage) SetCostMicrodollars(costMicrodollars int64) {
+	r.CostMicrodollars = costMicrodollars
+	r.require(runUsageFieldCostMicrodollars)
+}
+
+// SetModelSteps sets the ModelSteps field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsage) SetModelSteps(modelSteps int64) {
+	r.ModelSteps = modelSteps
+	r.require(runUsageFieldModelSteps)
+}
+
+// SetPromptTokens sets the PromptTokens field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsage) SetPromptTokens(promptTokens int64) {
+	r.PromptTokens = promptTokens
+	r.require(runUsageFieldPromptTokens)
+}
+
+func (r *RunUsage) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunUsage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunUsage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunUsage) MarshalJSON() ([]byte, error) {
+	type embed RunUsage
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunUsage) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
 // One specific problem within an error response, locating the offending part of the request.
 var (
 	v2ErrorDetailFieldLocation = big.NewInt(1 << 0)
