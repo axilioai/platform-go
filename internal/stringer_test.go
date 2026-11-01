@@ -40,3 +40,10 @@ func TestStringifyJSONUnchangedWithoutSecrets(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, string(want), printed)
 }
+
+func TestStringifyJSONRedactsRunStreamURL(t *testing.T) {
+	out, err := StringifyJSON(json.RawMessage(`{"id":"run_1","stream_url":"https://connect.test/events?token=tok_stream"}`))
+	require.NoError(t, err)
+	assert.NotContains(t, out, "tok_stream")
+	assert.Contains(t, out, "[redacted]")
+}

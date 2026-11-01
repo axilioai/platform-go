@@ -3,7 +3,7 @@
 [![fern shield](https://img.shields.io/badge/%F0%9F%8C%BF-Built%20with%20Fern-brightgreen)](https://buildwithfern.com?utm_source=github&utm_medium=github&utm_campaign=readme&utm_source=Axilio%2FGo)
 
 The Axilio Go library provides convenient access to the Axilio APIs from Go: a
-typed REST client for phones, workflows, runs, files, usage and billing, plus a
+typed REST client for phones, agents, runs, files, usage and billing, plus a
 hand-written mobile driver (`drivers/mobile`) that drives an allocated phone over
 its device control channel.
 
@@ -185,9 +185,9 @@ if platformgo.IsAccessibilityUnavailable(err) {
 }
 ```
 
-Workflows take the same setting: `WorkflowCreateRequest.Accessibility`
+Agents take the same setting: `AgentCreateRequest.AccessibilityEnabled`
 defaults to false (set `platformgo.Bool(true)` to turn it on for the
-workflow's runs), and `WorkflowUpdateRequest.Accessibility` leaves the
+agent's runs), and `AgentUpdateRequest.AccessibilityEnabled` leaves the
 current value unchanged when nil.
 
 With the tree on, literal selectors resolve against it on the device:
