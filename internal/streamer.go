@@ -1,5 +1,8 @@
 package internal
 
+// Repo-owned: regen.sh keeps this file out of every regen, because Fern's version
+// ends a stream on any frame containing "[DONE]". See generated_runtime_test.go.
+
 import (
 	"context"
 	"io"
@@ -13,8 +16,10 @@ const (
 	// DefaultDataPrefix is the default prefix used for SSE streaming.
 	DefaultSSEDataPrefix = "data: "
 
-	// DefaultTerminator is the default terminator used for SSE streaming.
-	DefaultSSETerminator = "[DONE]"
+	// DefaultSSETerminator is empty: the API's streams end by closing, and a
+	// terminator is matched anywhere in a frame, so "[DONE]" in a message or in
+	// model text ended the stream and lost the frames after it.
+	DefaultSSETerminator = ""
 )
 
 // Streamer calls APIs and streams responses using a *Stream.
