@@ -8,6 +8,9 @@ package api_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -135,4 +138,31 @@ func TestStringRedactsSecrets(t *testing.T) {
 			assert.Contains(t, printed, tc.kept, "the rest of the value still prints")
 		})
 	}
+}
+
+func TestRunStreamKeepsFramesAfterDoneInText(t *testing.T) {
+	frame := func(id int, body string) string {
+		return fmt.Sprintf("id: %d\nevent: log\ndata: {\"kind\":\"log\",\"body\":%q,\"log_type\":\"model_delta\",\"severity\":\"INFO\",\"time_unix_nano\":1,\"trace_id\":\"t\"}\n\n", id, body)
+	}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		_, _ = w.Write([]byte(frame(1, "the marker is [DONE] in this text") + frame(2, "second")))
+	}))
+	t.Cleanup(server.Close)
+	c := client.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("ax_test"))
+
+	stream, err := c.Runs.StreamEvents(context.Background(), &api.RunsStreamEventsRequest{RunID: "run_1"})
+	require.NoError(t, err)
+	defer stream.Close()
+
+	var bodies []string
+	for {
+		event, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		require.NoError(t, err)
+		bodies = append(bodies, event.Log.Body)
+	}
+	assert.Equal(t, []string{"the marker is [DONE] in this text", "second"}, bodies)
 }
