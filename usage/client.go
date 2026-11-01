@@ -34,7 +34,7 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
-// Paginated, filterable list of inference calls (detect, locate and element_locate) the caller's user was billed for over a required time window (created_after/created_before). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
+// Paginated, filterable list of inference calls (detect, locate, element_locate, and agent_chat for an agent run's model steps) the caller's user was billed for over a required time window (created_after/created_before). Filters: endpoint, model, session, free-text search. Order with order_by ('<field> <asc|desc>').
 func (c *Client) ListInferences(
 	ctx context.Context,
 	request *platformgo.UsageListInferencesRequest,
@@ -51,7 +51,7 @@ func (c *Client) ListInferences(
 	return response.Body, nil
 }
 
-// Returns your organization's usage spend over a window as points: one per hour or day in time_zone (and per product with group_by=product), each with the total, phone-session and inference spend in microdollars, zero when nothing was billed. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
+// Returns your organization's usage spend over a window as points: one per hour or day in time_zone (and per group with group_by: product, agent, model, api_key, schedule or device_class), each with the total, phone-session and inference spend in microdollars, the phone seconds and tokens it bought, zero when nothing was billed. The window defaults to the last 7 days and may start at most a year back; hour buckets need a window of 7 days or less.
 func (c *Client) GetMetrics(
 	ctx context.Context,
 	request *platformgo.UsageGetMetricsRequest,
@@ -68,7 +68,7 @@ func (c *Client) GetMetrics(
 	return response.Body, nil
 }
 
-// Paginated, filterable list of the caller's phone sessions over a required time window (allocated_after/allocated_before), each row carrying billing detail: phone-time cost, inference cost, and combined total in microdollars, billing processing status, and allocation source. Filters: session status, billing processing status, workflow, allocation source, free-text search. Order with order_by ('<field> <asc|desc>').
+// Paginated, filterable list of the caller's phone sessions over a required time window (allocated_after/allocated_before), each row carrying billing detail: phone-time cost, inference cost, and combined total in microdollars, billing processing status, and allocation source. Filters: session status, billing processing status, agent, allocation source, free-text search. Order with order_by ('<field> <asc|desc>').
 func (c *Client) ListSessions(
 	ctx context.Context,
 	request *platformgo.UsageListSessionsRequest,

@@ -68,7 +68,7 @@ func (c *Client) Availability(
 	return response.Body, nil
 }
 
-// Returns one page of the org's phone sessions for the Session Inspector table: active/unbilled sessions pinned on top, terminal history paginated beneath. Covers workflow runs and workflow-less interactive leases; each row links to a session. Filters: search, workflow_id, status.
+// Returns one page of the org's phone sessions for the Session Inspector table: active/unbilled sessions pinned on top, terminal history paginated beneath. Covers agents' runs and interactive leases; each row links to a session. Filters: search, agent_id, status.
 func (c *Client) ListSessions(
 	ctx context.Context,
 	request *platformgo.PhonesListSessionsRequest,
@@ -85,7 +85,7 @@ func (c *Client) ListSessions(
 	return response.Body, nil
 }
 
-// Returns one session for the Session Inspector: session lifecycle + phone display fields + workflow name (when tied to one) + an inlined presigned recording URL. Works for active and terminal sessions, and for workflow runs and workflow-less interactive leases. Org-scoped: another org's session reads as not found.
+// Returns one session for the Session Inspector: session lifecycle, phone display fields, the agent's name (for an agent's run) and an inlined presigned recording URL. Works for active and terminal sessions, and for agents' runs and interactive leases. Org-scoped: another org's session reads as not found.
 func (c *Client) GetSession(
 	ctx context.Context,
 	request *platformgo.PhonesGetSessionRequest,
@@ -102,7 +102,7 @@ func (c *Client) GetSession(
 	return response.Body, nil
 }
 
-// Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for workflow runs and workflow-less interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet, and "off" when the session was not recorded. Org-scoped: another org's session reads as not found.
+// Returns a short-lived URL for the session's screen recording, keyed on session_id — so it works for agents' runs and interactive leases alike. Status is "pending" (no URL) when the recording hasn't finished uploading yet, and "off" when the session was not recorded. Org-scoped: another org's session reads as not found.
 func (c *Client) SessionRecording(
 	ctx context.Context,
 	request *platformgo.PhonesSessionRecordingRequest,
@@ -272,7 +272,7 @@ func (c *Client) Deallocate(
 	return response.Body, nil
 }
 
-// Requests an on-demand factory reset of a private phone the caller's org owns. Requires the phone to be ACTIVE and not currently allocated. Sets the phone to MAINTENANCE while the wipe is carried out.
+// Not available right now: always answers 409 and leaves the phone unchanged.
 func (c *Client) Wipe(
 	ctx context.Context,
 	request *platformgo.PhonesWipeRequest,
@@ -289,7 +289,7 @@ func (c *Client) Wipe(
 	return response.Body, nil
 }
 
-// Allocates an Android phone and opens a session. Omit workflow_id for an interactive lease (drive the phone directly); set it to allocate for a workflow. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
+// Allocates an Android phone and opens a session you drive directly. Pass phone_id to pin a specific dedicated phone. If allocation setup fails the claim is rolled back, so you are never billed for a session that never starts.
 func (c *Client) Allocate(
 	ctx context.Context,
 	request *platformgo.PhoneAllocateRequest,

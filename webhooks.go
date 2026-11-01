@@ -2943,13 +2943,14 @@ func (w *WebhookEventTypeDescriptor) String() string {
 type WebhookEventTypeDescriptorDomain string
 
 const (
-	WebhookEventTypeDescriptorDomainPlatform WebhookEventTypeDescriptorDomain = "platform"
-	WebhookEventTypeDescriptorDomainRuns     WebhookEventTypeDescriptorDomain = "runs"
-	WebhookEventTypeDescriptorDomainSessions WebhookEventTypeDescriptorDomain = "sessions"
-	WebhookEventTypeDescriptorDomainBilling  WebhookEventTypeDescriptorDomain = "billing"
-	WebhookEventTypeDescriptorDomainFiles    WebhookEventTypeDescriptorDomain = "files"
-	WebhookEventTypeDescriptorDomainPhones   WebhookEventTypeDescriptorDomain = "phones"
-	WebhookEventTypeDescriptorDomainMessages WebhookEventTypeDescriptorDomain = "messages"
+	WebhookEventTypeDescriptorDomainPlatform  WebhookEventTypeDescriptorDomain = "platform"
+	WebhookEventTypeDescriptorDomainRuns      WebhookEventTypeDescriptorDomain = "runs"
+	WebhookEventTypeDescriptorDomainSessions  WebhookEventTypeDescriptorDomain = "sessions"
+	WebhookEventTypeDescriptorDomainBilling   WebhookEventTypeDescriptorDomain = "billing"
+	WebhookEventTypeDescriptorDomainFiles     WebhookEventTypeDescriptorDomain = "files"
+	WebhookEventTypeDescriptorDomainPhones    WebhookEventTypeDescriptorDomain = "phones"
+	WebhookEventTypeDescriptorDomainMessages  WebhookEventTypeDescriptorDomain = "messages"
+	WebhookEventTypeDescriptorDomainSchedules WebhookEventTypeDescriptorDomain = "schedules"
 )
 
 func NewWebhookEventTypeDescriptorDomainFromString(s string) (WebhookEventTypeDescriptorDomain, error) {
@@ -2968,6 +2969,8 @@ func NewWebhookEventTypeDescriptorDomainFromString(s string) (WebhookEventTypeDe
 		return WebhookEventTypeDescriptorDomainPhones, nil
 	case "messages":
 		return WebhookEventTypeDescriptorDomainMessages, nil
+	case "schedules":
+		return WebhookEventTypeDescriptorDomainSchedules, nil
 	}
 	var t WebhookEventTypeDescriptorDomain
 	return "", fmt.Errorf("%s is not a valid %T", s, t)

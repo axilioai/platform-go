@@ -22,7 +22,6 @@ var (
 	phoneAllocateRequestFieldTags          = big.NewInt(1 << 8)
 	phoneAllocateRequestFieldTelemetry     = big.NewInt(1 << 9)
 	phoneAllocateRequestFieldTTL           = big.NewInt(1 << 10)
-	phoneAllocateRequestFieldWorkflowID    = big.NewInt(1 << 11)
 )
 
 type PhoneAllocateRequest struct {
@@ -48,8 +47,6 @@ type PhoneAllocateRequest struct {
 	Telemetry *bool `json:"telemetry,omitempty" url:"-"`
 	// Idle timeout for this session. Omit for no idle timeout: the session runs until the 1-hour max-session cap.
 	TTL *PhoneSessionTTLOptions `json:"ttl,omitempty" url:"-"`
-	// Workflow requesting allocation; nil for an interactive lease.
-	WorkflowID *string `json:"workflow_id,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -137,13 +134,6 @@ func (p *PhoneAllocateRequest) SetTelemetry(telemetry *bool) {
 func (p *PhoneAllocateRequest) SetTTL(ttl *PhoneSessionTTLOptions) {
 	p.TTL = ttl
 	p.require(phoneAllocateRequestFieldTTL)
-}
-
-// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneAllocateRequest) SetWorkflowID(workflowID *string) {
-	p.WorkflowID = workflowID
-	p.require(phoneAllocateRequestFieldWorkflowID)
 }
 
 func (p *PhoneAllocateRequest) UnmarshalJSON(data []byte) error {
@@ -599,7 +589,7 @@ var (
 	phonesListSessionsRequestFieldLimit             = big.NewInt(1 << 0)
 	phonesListSessionsRequestFieldOffset            = big.NewInt(1 << 1)
 	phonesListSessionsRequestFieldSearch            = big.NewInt(1 << 2)
-	phonesListSessionsRequestFieldWorkflowID        = big.NewInt(1 << 3)
+	phonesListSessionsRequestFieldAgentID           = big.NewInt(1 << 3)
 	phonesListSessionsRequestFieldStatus            = big.NewInt(1 << 4)
 	phonesListSessionsRequestFieldSource            = big.NewInt(1 << 5)
 	phonesListSessionsRequestFieldDedicated         = big.NewInt(1 << 6)
@@ -615,10 +605,10 @@ type PhonesListSessionsRequest struct {
 	Limit *int64 `json:"-" url:"limit,omitempty"`
 	// rows to skip for pagination
 	Offset *int64 `json:"-" url:"offset,omitempty"`
-	// case-insensitive match on phone/session/workflow
+	// case-insensitive match on phone/session/agent
 	Search *string `json:"-" url:"search,omitempty"`
-	// only sessions for this workflow
-	WorkflowID *string `json:"-" url:"workflow_id,omitempty"`
+	// only sessions of this agent's runs
+	AgentID *string `json:"-" url:"agent_id,omitempty"`
 	// only sessions at one of these statuses; repeatable
 	Status []PhonesListSessionsRequestStatusItem `json:"-" url:"status,omitempty"`
 	// only sessions from one of these sources; repeatable
@@ -668,11 +658,11 @@ func (p *PhonesListSessionsRequest) SetSearch(search *string) {
 	p.require(phonesListSessionsRequestFieldSearch)
 }
 
-// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
+// SetAgentID sets the AgentID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhonesListSessionsRequest) SetWorkflowID(workflowID *string) {
-	p.WorkflowID = workflowID
-	p.require(phonesListSessionsRequestFieldWorkflowID)
+func (p *PhonesListSessionsRequest) SetAgentID(agentID *string) {
+	p.AgentID = agentID
+	p.require(phonesListSessionsRequestFieldAgentID)
 }
 
 // SetStatus sets the Status field and marks it as non-optional;
@@ -1363,15 +1353,15 @@ func (f *FilePushResponse) String() string {
 
 // Returned when a device has been successfully allocated.
 var (
-	phoneAllocateResponseFieldSchema            = big.NewInt(1 << 0)
-	phoneAllocateResponseFieldAccessibility     = big.NewInt(1 << 1)
-	phoneAllocateResponseFieldControlURL        = big.NewInt(1 << 2)
-	phoneAllocateResponseFieldLiveViewURL       = big.NewInt(1 << 3)
-	phoneAllocateResponseFieldPhoneID           = big.NewInt(1 << 4)
-	phoneAllocateResponseFieldRegion            = big.NewInt(1 << 5)
-	phoneAllocateResponseFieldSessionID         = big.NewInt(1 << 6)
-	phoneAllocateResponseFieldTelemetryURL      = big.NewInt(1 << 7)
-	phoneAllocateResponseFieldWorkflowStartedAt = big.NewInt(1 << 8)
+	phoneAllocateResponseFieldSchema        = big.NewInt(1 << 0)
+	phoneAllocateResponseFieldAccessibility = big.NewInt(1 << 1)
+	phoneAllocateResponseFieldAllocatedAt   = big.NewInt(1 << 2)
+	phoneAllocateResponseFieldControlURL    = big.NewInt(1 << 3)
+	phoneAllocateResponseFieldLiveViewURL   = big.NewInt(1 << 4)
+	phoneAllocateResponseFieldPhoneID       = big.NewInt(1 << 5)
+	phoneAllocateResponseFieldRegion        = big.NewInt(1 << 6)
+	phoneAllocateResponseFieldSessionID     = big.NewInt(1 << 7)
+	phoneAllocateResponseFieldTelemetryURL  = big.NewInt(1 << 8)
 )
 
 type PhoneAllocateResponse struct {
@@ -1379,6 +1369,8 @@ type PhoneAllocateResponse struct {
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	// Whether accessibility mode is on for this session, as requested. The phone confirms the state before the session goes live; if it cannot, the session ends with reason accessibility_unavailable.
 	Accessibility bool `json:"accessibility" url:"accessibility"`
+	// When the session started.
+	AllocatedAt time.Time `json:"allocated_at" url:"allocated_at"`
 	// WebSocket URL for driving the phone over the device control protocol.
 	ControlURL *string `json:"control_url,omitempty" url:"control_url,omitempty"`
 	// Hosted live-view page URL (live screen + interaction, iframe-embeddable). Contains a session-scoped capability token; treat as a secret. Dies with the session.
@@ -1391,8 +1383,6 @@ type PhoneAllocateResponse struct {
 	SessionID string `json:"session_id" url:"session_id"`
 	// URL of the session's telemetry event stream (Server-Sent Events; see GET /realtime/sessions/{session_id}/events), carrying a read-only token for this one session. Live while the session runs; afterwards it replays the trace and closes. Omitted when telemetry is off.
 	TelemetryURL *string `json:"telemetry_url,omitempty" url:"telemetry_url,omitempty"`
-	// Timestamp when the session started.
-	WorkflowStartedAt time.Time `json:"workflow_started_at" url:"workflow_started_at"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -1413,6 +1403,13 @@ func (p *PhoneAllocateResponse) GetAccessibility() bool {
 		return false
 	}
 	return p.Accessibility
+}
+
+func (p *PhoneAllocateResponse) GetAllocatedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.AllocatedAt
 }
 
 func (p *PhoneAllocateResponse) GetControlURL() *string {
@@ -1457,13 +1454,6 @@ func (p *PhoneAllocateResponse) GetTelemetryURL() *string {
 	return p.TelemetryURL
 }
 
-func (p *PhoneAllocateResponse) GetWorkflowStartedAt() time.Time {
-	if p == nil {
-		return time.Time{}
-	}
-	return p.WorkflowStartedAt
-}
-
 func (p *PhoneAllocateResponse) GetExtraProperties() map[string]interface{} {
 	if p == nil {
 		return nil
@@ -1490,6 +1480,13 @@ func (p *PhoneAllocateResponse) SetSchema(schema *string) {
 func (p *PhoneAllocateResponse) SetAccessibility(accessibility bool) {
 	p.Accessibility = accessibility
 	p.require(phoneAllocateResponseFieldAccessibility)
+}
+
+// SetAllocatedAt sets the AllocatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneAllocateResponse) SetAllocatedAt(allocatedAt time.Time) {
+	p.AllocatedAt = allocatedAt
+	p.require(phoneAllocateResponseFieldAllocatedAt)
 }
 
 // SetControlURL sets the ControlURL field and marks it as non-optional;
@@ -1534,18 +1531,11 @@ func (p *PhoneAllocateResponse) SetTelemetryURL(telemetryURL *string) {
 	p.require(phoneAllocateResponseFieldTelemetryURL)
 }
 
-// SetWorkflowStartedAt sets the WorkflowStartedAt field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneAllocateResponse) SetWorkflowStartedAt(workflowStartedAt time.Time) {
-	p.WorkflowStartedAt = workflowStartedAt
-	p.require(phoneAllocateResponseFieldWorkflowStartedAt)
-}
-
 func (p *PhoneAllocateResponse) UnmarshalJSON(data []byte) error {
 	type embed PhoneAllocateResponse
 	var unmarshaler = struct {
 		embed
-		WorkflowStartedAt *internal.DateTime `json:"workflow_started_at"`
+		AllocatedAt *internal.DateTime `json:"allocated_at"`
 	}{
 		embed: embed(*p),
 	}
@@ -1553,7 +1543,7 @@ func (p *PhoneAllocateResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*p = PhoneAllocateResponse(unmarshaler.embed)
-	p.WorkflowStartedAt = unmarshaler.WorkflowStartedAt.Time()
+	p.AllocatedAt = unmarshaler.AllocatedAt.Time()
 	extraProperties, err := internal.ExtractExtraProperties(data, *p)
 	if err != nil {
 		return err
@@ -1567,10 +1557,10 @@ func (p *PhoneAllocateResponse) MarshalJSON() ([]byte, error) {
 	type embed PhoneAllocateResponse
 	var marshaler = struct {
 		embed
-		WorkflowStartedAt *internal.DateTime `json:"workflow_started_at"`
+		AllocatedAt *internal.DateTime `json:"allocated_at"`
 	}{
-		embed:             embed(*p),
-		WorkflowStartedAt: internal.NewDateTime(p.WorkflowStartedAt),
+		embed:       embed(*p),
+		AllocatedAt: internal.NewDateTime(p.AllocatedAt),
 	}
 	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
 	return json.Marshal(explicitMarshaler)
@@ -2187,23 +2177,23 @@ func (p *PhoneAvailabilityResponse) String() string {
 // Returned after a device has been successfully deallocated.
 var (
 	phoneDeallocateResponseFieldSchema        = big.NewInt(1 << 0)
-	phoneDeallocateResponseFieldDeallocatedAt = big.NewInt(1 << 1)
-	phoneDeallocateResponseFieldPhoneID       = big.NewInt(1 << 2)
-	phoneDeallocateResponseFieldSessionID     = big.NewInt(1 << 3)
-	phoneDeallocateResponseFieldWorkflowID    = big.NewInt(1 << 4)
+	phoneDeallocateResponseFieldAgentID       = big.NewInt(1 << 1)
+	phoneDeallocateResponseFieldDeallocatedAt = big.NewInt(1 << 2)
+	phoneDeallocateResponseFieldPhoneID       = big.NewInt(1 << 3)
+	phoneDeallocateResponseFieldSessionID     = big.NewInt(1 << 4)
 )
 
 type PhoneDeallocateResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// The agent whose run the released session ran; absent for an interactive session.
+	AgentID *string `json:"agent_id,omitempty" url:"agent_id,omitempty"`
 	// Timestamp when the device was released.
 	DeallocatedAt *time.Time `json:"deallocated_at,omitempty" url:"deallocated_at,omitempty"`
 	// Released device's identifier.
 	PhoneID string `json:"phone_id" url:"phone_id"`
 	// Session that was closed.
 	SessionID string `json:"session_id" url:"session_id"`
-	// Workflow that was deallocated.
-	WorkflowID string `json:"workflow_id" url:"workflow_id"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -2217,6 +2207,13 @@ func (p *PhoneDeallocateResponse) GetSchema() *string {
 		return nil
 	}
 	return p.Schema
+}
+
+func (p *PhoneDeallocateResponse) GetAgentID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.AgentID
 }
 
 func (p *PhoneDeallocateResponse) GetDeallocatedAt() *time.Time {
@@ -2240,13 +2237,6 @@ func (p *PhoneDeallocateResponse) GetSessionID() string {
 	return p.SessionID
 }
 
-func (p *PhoneDeallocateResponse) GetWorkflowID() string {
-	if p == nil {
-		return ""
-	}
-	return p.WorkflowID
-}
-
 func (p *PhoneDeallocateResponse) GetExtraProperties() map[string]interface{} {
 	if p == nil {
 		return nil
@@ -2268,6 +2258,13 @@ func (p *PhoneDeallocateResponse) SetSchema(schema *string) {
 	p.require(phoneDeallocateResponseFieldSchema)
 }
 
+// SetAgentID sets the AgentID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneDeallocateResponse) SetAgentID(agentID *string) {
+	p.AgentID = agentID
+	p.require(phoneDeallocateResponseFieldAgentID)
+}
+
 // SetDeallocatedAt sets the DeallocatedAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (p *PhoneDeallocateResponse) SetDeallocatedAt(deallocatedAt *time.Time) {
@@ -2287,13 +2284,6 @@ func (p *PhoneDeallocateResponse) SetPhoneID(phoneID string) {
 func (p *PhoneDeallocateResponse) SetSessionID(sessionID string) {
 	p.SessionID = sessionID
 	p.require(phoneDeallocateResponseFieldSessionID)
-}
-
-// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneDeallocateResponse) SetWorkflowID(workflowID string) {
-	p.WorkflowID = workflowID
-	p.require(phoneDeallocateResponseFieldWorkflowID)
 }
 
 func (p *PhoneDeallocateResponse) UnmarshalJSON(data []byte) error {
@@ -3627,29 +3617,30 @@ func (p *PhonePrivateListResponse) String() string {
 var (
 	phoneSessionDetailResponseFieldSchema            = big.NewInt(1 << 0)
 	phoneSessionDetailResponseFieldAccessibility     = big.NewInt(1 << 1)
-	phoneSessionDetailResponseFieldAllocatedAt       = big.NewInt(1 << 2)
-	phoneSessionDetailResponseFieldAllocatedBy       = big.NewInt(1 << 3)
-	phoneSessionDetailResponseFieldCaptureEnabled    = big.NewInt(1 << 4)
-	phoneSessionDetailResponseFieldDeallocatedAt     = big.NewInt(1 << 5)
-	phoneSessionDetailResponseFieldIsDedicatedPhone  = big.NewInt(1 << 6)
-	phoneSessionDetailResponseFieldLocation          = big.NewInt(1 << 7)
-	phoneSessionDetailResponseFieldModelName         = big.NewInt(1 << 8)
-	phoneSessionDetailResponseFieldName              = big.NewInt(1 << 9)
-	phoneSessionDetailResponseFieldPhoneID           = big.NewInt(1 << 10)
-	phoneSessionDetailResponseFieldPhoneName         = big.NewInt(1 << 11)
-	phoneSessionDetailResponseFieldPhoneNickname     = big.NewInt(1 << 12)
-	phoneSessionDetailResponseFieldPhoneStatus       = big.NewInt(1 << 13)
-	phoneSessionDetailResponseFieldPhoneType         = big.NewInt(1 << 14)
-	phoneSessionDetailResponseFieldRecordingStatus   = big.NewInt(1 << 15)
-	phoneSessionDetailResponseFieldRecordingURL      = big.NewInt(1 << 16)
-	phoneSessionDetailResponseFieldSessionID         = big.NewInt(1 << 17)
-	phoneSessionDetailResponseFieldSource            = big.NewInt(1 << 18)
-	phoneSessionDetailResponseFieldStatus            = big.NewInt(1 << 19)
-	phoneSessionDetailResponseFieldTags              = big.NewInt(1 << 20)
-	phoneSessionDetailResponseFieldTelemetryDisabled = big.NewInt(1 << 21)
-	phoneSessionDetailResponseFieldTelemetryURL      = big.NewInt(1 << 22)
-	phoneSessionDetailResponseFieldWorkflowID        = big.NewInt(1 << 23)
-	phoneSessionDetailResponseFieldWorkflowName      = big.NewInt(1 << 24)
+	phoneSessionDetailResponseFieldAgentID           = big.NewInt(1 << 2)
+	phoneSessionDetailResponseFieldAgentName         = big.NewInt(1 << 3)
+	phoneSessionDetailResponseFieldAllocatedAt       = big.NewInt(1 << 4)
+	phoneSessionDetailResponseFieldAllocatedBy       = big.NewInt(1 << 5)
+	phoneSessionDetailResponseFieldCaptureEnabled    = big.NewInt(1 << 6)
+	phoneSessionDetailResponseFieldDeallocatedAt     = big.NewInt(1 << 7)
+	phoneSessionDetailResponseFieldEndReason         = big.NewInt(1 << 8)
+	phoneSessionDetailResponseFieldIsDedicatedPhone  = big.NewInt(1 << 9)
+	phoneSessionDetailResponseFieldLocation          = big.NewInt(1 << 10)
+	phoneSessionDetailResponseFieldModelName         = big.NewInt(1 << 11)
+	phoneSessionDetailResponseFieldName              = big.NewInt(1 << 12)
+	phoneSessionDetailResponseFieldPhoneID           = big.NewInt(1 << 13)
+	phoneSessionDetailResponseFieldPhoneName         = big.NewInt(1 << 14)
+	phoneSessionDetailResponseFieldPhoneNickname     = big.NewInt(1 << 15)
+	phoneSessionDetailResponseFieldPhoneStatus       = big.NewInt(1 << 16)
+	phoneSessionDetailResponseFieldPhoneType         = big.NewInt(1 << 17)
+	phoneSessionDetailResponseFieldRecordingStatus   = big.NewInt(1 << 18)
+	phoneSessionDetailResponseFieldRecordingURL      = big.NewInt(1 << 19)
+	phoneSessionDetailResponseFieldSessionID         = big.NewInt(1 << 20)
+	phoneSessionDetailResponseFieldSource            = big.NewInt(1 << 21)
+	phoneSessionDetailResponseFieldStatus            = big.NewInt(1 << 22)
+	phoneSessionDetailResponseFieldTags              = big.NewInt(1 << 23)
+	phoneSessionDetailResponseFieldTelemetryDisabled = big.NewInt(1 << 24)
+	phoneSessionDetailResponseFieldTelemetryURL      = big.NewInt(1 << 25)
 )
 
 type PhoneSessionDetailResponse struct {
@@ -3657,6 +3648,10 @@ type PhoneSessionDetailResponse struct {
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
 	// Whether accessibility mode was on for this session at allocation. A mid-session enable or disable is recorded here too.
 	Accessibility bool `json:"accessibility" url:"accessibility"`
+	// The agent whose run the session executed, when source is 'agent'.
+	AgentID *string `json:"agent_id,omitempty" url:"agent_id,omitempty"`
+	// Name of the agent whose run the session executed.
+	AgentName *string `json:"agent_name,omitempty" url:"agent_name,omitempty"`
 	// When the session claimed the phone.
 	AllocatedAt time.Time `json:"allocated_at" url:"allocated_at"`
 	// How the session was started.
@@ -3665,6 +3660,8 @@ type PhoneSessionDetailResponse struct {
 	CaptureEnabled bool `json:"capture_enabled" url:"capture_enabled"`
 	// When the session released the phone; absent while active.
 	DeallocatedAt *time.Time `json:"deallocated_at,omitempty" url:"deallocated_at,omitempty"`
+	// Why the session ended: released, idle_timeout, max_duration, run_finished, device_lost, accessibility_unavailable or phone_maintenance. Absent while it is live, and for sessions ended before this was recorded.
+	EndReason *string `json:"end_reason,omitempty" url:"end_reason,omitempty"`
 	// Whether the phone is a dedicated (rented) phone.
 	IsDedicatedPhone bool `json:"is_dedicated_phone" url:"is_dedicated_phone"`
 	// Physical hosting location of the phone.
@@ -3683,13 +3680,13 @@ type PhoneSessionDetailResponse struct {
 	PhoneStatus PhoneSessionDetailResponsePhoneStatus `json:"phone_status" url:"phone_status"`
 	// Platform of the phone.
 	PhoneType *PhoneSessionDetailResponsePhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
-	// 'ready' when the recording URL is present, 'pending' while the recording is still being processed, 'expired' when it is past the plan's recording retention window, or 'off' when the session was not recorded (recording is off unless requested at allocation, or on the workflow for a run).
+	// 'unavailable' when it never arrived, for example a failed upload. 'ready' when the recording URL is present, 'pending' while the recording is still being processed, 'expired' when it is past the plan's recording retention window, or 'off' when the session was not recorded (recording is off unless requested at allocation, or on the agent for its runs).
 	RecordingStatus PhoneSessionDetailResponseRecordingStatus `json:"recording_status" url:"recording_status"`
 	// Playback URL for the session recording, set only when ready.
 	RecordingURL *string `json:"recording_url,omitempty" url:"recording_url,omitempty"`
 	// Session identifier.
 	SessionID string `json:"session_id" url:"session_id"`
-	// 'workflow' when tied to a workflow, else 'interactive'.
+	// 'agent' when the session ran an agent's run, else 'interactive'.
 	Source PhoneSessionDetailResponseSource `json:"source" url:"source"`
 	// Session lifecycle status.
 	Status PhoneSessionDetailResponseStatus `json:"status" url:"status"`
@@ -3699,10 +3696,6 @@ type PhoneSessionDetailResponse struct {
 	TelemetryDisabled bool `json:"telemetry_disabled" url:"telemetry_disabled"`
 	// URL of the session's telemetry event stream (Server-Sent Events; see GET /realtime/sessions/{session_id}/events), carrying a read-only token for this one session. Live while the session runs; afterwards it replays the trace and closes. Omitted when telemetry is off.
 	TelemetryURL *string `json:"telemetry_url,omitempty" url:"telemetry_url,omitempty"`
-	// Workflow the session executed, when source is 'workflow'.
-	WorkflowID *string `json:"workflow_id,omitempty" url:"workflow_id,omitempty"`
-	// Name of the workflow the session executed.
-	WorkflowName *string `json:"workflow_name,omitempty" url:"workflow_name,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -3723,6 +3716,20 @@ func (p *PhoneSessionDetailResponse) GetAccessibility() bool {
 		return false
 	}
 	return p.Accessibility
+}
+
+func (p *PhoneSessionDetailResponse) GetAgentID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.AgentID
+}
+
+func (p *PhoneSessionDetailResponse) GetAgentName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.AgentName
 }
 
 func (p *PhoneSessionDetailResponse) GetAllocatedAt() time.Time {
@@ -3751,6 +3758,13 @@ func (p *PhoneSessionDetailResponse) GetDeallocatedAt() *time.Time {
 		return nil
 	}
 	return p.DeallocatedAt
+}
+
+func (p *PhoneSessionDetailResponse) GetEndReason() *string {
+	if p == nil {
+		return nil
+	}
+	return p.EndReason
 }
 
 func (p *PhoneSessionDetailResponse) GetIsDedicatedPhone() bool {
@@ -3872,20 +3886,6 @@ func (p *PhoneSessionDetailResponse) GetTelemetryURL() *string {
 	return p.TelemetryURL
 }
 
-func (p *PhoneSessionDetailResponse) GetWorkflowID() *string {
-	if p == nil {
-		return nil
-	}
-	return p.WorkflowID
-}
-
-func (p *PhoneSessionDetailResponse) GetWorkflowName() *string {
-	if p == nil {
-		return nil
-	}
-	return p.WorkflowName
-}
-
 func (p *PhoneSessionDetailResponse) GetExtraProperties() map[string]interface{} {
 	if p == nil {
 		return nil
@@ -3914,6 +3914,20 @@ func (p *PhoneSessionDetailResponse) SetAccessibility(accessibility bool) {
 	p.require(phoneSessionDetailResponseFieldAccessibility)
 }
 
+// SetAgentID sets the AgentID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionDetailResponse) SetAgentID(agentID *string) {
+	p.AgentID = agentID
+	p.require(phoneSessionDetailResponseFieldAgentID)
+}
+
+// SetAgentName sets the AgentName field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionDetailResponse) SetAgentName(agentName *string) {
+	p.AgentName = agentName
+	p.require(phoneSessionDetailResponseFieldAgentName)
+}
+
 // SetAllocatedAt sets the AllocatedAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (p *PhoneSessionDetailResponse) SetAllocatedAt(allocatedAt time.Time) {
@@ -3940,6 +3954,13 @@ func (p *PhoneSessionDetailResponse) SetCaptureEnabled(captureEnabled bool) {
 func (p *PhoneSessionDetailResponse) SetDeallocatedAt(deallocatedAt *time.Time) {
 	p.DeallocatedAt = deallocatedAt
 	p.require(phoneSessionDetailResponseFieldDeallocatedAt)
+}
+
+// SetEndReason sets the EndReason field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionDetailResponse) SetEndReason(endReason *string) {
+	p.EndReason = endReason
+	p.require(phoneSessionDetailResponseFieldEndReason)
 }
 
 // SetIsDedicatedPhone sets the IsDedicatedPhone field and marks it as non-optional;
@@ -4061,20 +4082,6 @@ func (p *PhoneSessionDetailResponse) SetTelemetryURL(telemetryURL *string) {
 	p.require(phoneSessionDetailResponseFieldTelemetryURL)
 }
 
-// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneSessionDetailResponse) SetWorkflowID(workflowID *string) {
-	p.WorkflowID = workflowID
-	p.require(phoneSessionDetailResponseFieldWorkflowID)
-}
-
-// SetWorkflowName sets the WorkflowName field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneSessionDetailResponse) SetWorkflowName(workflowName *string) {
-	p.WorkflowName = workflowName
-	p.require(phoneSessionDetailResponseFieldWorkflowName)
-}
-
 func (p *PhoneSessionDetailResponse) UnmarshalJSON(data []byte) error {
 	type embed PhoneSessionDetailResponse
 	var unmarshaler = struct {
@@ -4133,16 +4140,13 @@ func (p *PhoneSessionDetailResponse) String() string {
 type PhoneSessionDetailResponseAllocatedBy string
 
 const (
-	PhoneSessionDetailResponseAllocatedByWorkflowEditor PhoneSessionDetailResponseAllocatedBy = "workflow_editor"
-	PhoneSessionDetailResponseAllocatedByDashboardRun   PhoneSessionDetailResponseAllocatedBy = "dashboard_run"
-	PhoneSessionDetailResponseAllocatedByAPIRun         PhoneSessionDetailResponseAllocatedBy = "api_run"
-	PhoneSessionDetailResponseAllocatedByInteractive    PhoneSessionDetailResponseAllocatedBy = "interactive"
+	PhoneSessionDetailResponseAllocatedByDashboardRun PhoneSessionDetailResponseAllocatedBy = "dashboard_run"
+	PhoneSessionDetailResponseAllocatedByAPIRun       PhoneSessionDetailResponseAllocatedBy = "api_run"
+	PhoneSessionDetailResponseAllocatedByInteractive  PhoneSessionDetailResponseAllocatedBy = "interactive"
 )
 
 func NewPhoneSessionDetailResponseAllocatedByFromString(s string) (PhoneSessionDetailResponseAllocatedBy, error) {
 	switch s {
-	case "workflow_editor":
-		return PhoneSessionDetailResponseAllocatedByWorkflowEditor, nil
 	case "dashboard_run":
 		return PhoneSessionDetailResponseAllocatedByDashboardRun, nil
 	case "api_run":
@@ -4219,14 +4223,15 @@ func (p PhoneSessionDetailResponsePhoneType) Ptr() *PhoneSessionDetailResponsePh
 	return &p
 }
 
-// 'ready' when the recording URL is present, 'pending' while the recording is still being processed, 'expired' when it is past the plan's recording retention window, or 'off' when the session was not recorded (recording is off unless requested at allocation, or on the workflow for a run).
+// 'unavailable' when it never arrived, for example a failed upload. 'ready' when the recording URL is present, 'pending' while the recording is still being processed, 'expired' when it is past the plan's recording retention window, or 'off' when the session was not recorded (recording is off unless requested at allocation, or on the agent for its runs).
 type PhoneSessionDetailResponseRecordingStatus string
 
 const (
-	PhoneSessionDetailResponseRecordingStatusReady   PhoneSessionDetailResponseRecordingStatus = "ready"
-	PhoneSessionDetailResponseRecordingStatusPending PhoneSessionDetailResponseRecordingStatus = "pending"
-	PhoneSessionDetailResponseRecordingStatusExpired PhoneSessionDetailResponseRecordingStatus = "expired"
-	PhoneSessionDetailResponseRecordingStatusOff     PhoneSessionDetailResponseRecordingStatus = "off"
+	PhoneSessionDetailResponseRecordingStatusReady       PhoneSessionDetailResponseRecordingStatus = "ready"
+	PhoneSessionDetailResponseRecordingStatusPending     PhoneSessionDetailResponseRecordingStatus = "pending"
+	PhoneSessionDetailResponseRecordingStatusExpired     PhoneSessionDetailResponseRecordingStatus = "expired"
+	PhoneSessionDetailResponseRecordingStatusOff         PhoneSessionDetailResponseRecordingStatus = "off"
+	PhoneSessionDetailResponseRecordingStatusUnavailable PhoneSessionDetailResponseRecordingStatus = "unavailable"
 )
 
 func NewPhoneSessionDetailResponseRecordingStatusFromString(s string) (PhoneSessionDetailResponseRecordingStatus, error) {
@@ -4239,6 +4244,8 @@ func NewPhoneSessionDetailResponseRecordingStatusFromString(s string) (PhoneSess
 		return PhoneSessionDetailResponseRecordingStatusExpired, nil
 	case "off":
 		return PhoneSessionDetailResponseRecordingStatusOff, nil
+	case "unavailable":
+		return PhoneSessionDetailResponseRecordingStatusUnavailable, nil
 	}
 	var t PhoneSessionDetailResponseRecordingStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -4248,18 +4255,18 @@ func (p PhoneSessionDetailResponseRecordingStatus) Ptr() *PhoneSessionDetailResp
 	return &p
 }
 
-// 'workflow' when tied to a workflow, else 'interactive'.
+// 'agent' when the session ran an agent's run, else 'interactive'.
 type PhoneSessionDetailResponseSource string
 
 const (
-	PhoneSessionDetailResponseSourceWorkflow    PhoneSessionDetailResponseSource = "workflow"
+	PhoneSessionDetailResponseSourceAgent       PhoneSessionDetailResponseSource = "agent"
 	PhoneSessionDetailResponseSourceInteractive PhoneSessionDetailResponseSource = "interactive"
 )
 
 func NewPhoneSessionDetailResponseSourceFromString(s string) (PhoneSessionDetailResponseSource, error) {
 	switch s {
-	case "workflow":
-		return PhoneSessionDetailResponseSourceWorkflow, nil
+	case "agent":
+		return PhoneSessionDetailResponseSourceAgent, nil
 	case "interactive":
 		return PhoneSessionDetailResponseSourceInteractive, nil
 	}
@@ -4302,27 +4309,32 @@ func (p PhoneSessionDetailResponseStatus) Ptr() *PhoneSessionDetailResponseStatu
 
 // One session summary row in the sessions list.
 var (
-	phoneSessionListItemFieldAllocatedAt      = big.NewInt(1 << 0)
-	phoneSessionListItemFieldAllocatedBy      = big.NewInt(1 << 1)
-	phoneSessionListItemFieldDeallocatedAt    = big.NewInt(1 << 2)
-	phoneSessionListItemFieldDurationSeconds  = big.NewInt(1 << 3)
-	phoneSessionListItemFieldIsDedicatedPhone = big.NewInt(1 << 4)
-	phoneSessionListItemFieldLocation         = big.NewInt(1 << 5)
-	phoneSessionListItemFieldModelName        = big.NewInt(1 << 6)
-	phoneSessionListItemFieldName             = big.NewInt(1 << 7)
-	phoneSessionListItemFieldPhoneID          = big.NewInt(1 << 8)
-	phoneSessionListItemFieldPhoneName        = big.NewInt(1 << 9)
-	phoneSessionListItemFieldPhoneNickname    = big.NewInt(1 << 10)
-	phoneSessionListItemFieldPhoneType        = big.NewInt(1 << 11)
-	phoneSessionListItemFieldSessionID        = big.NewInt(1 << 12)
-	phoneSessionListItemFieldSource           = big.NewInt(1 << 13)
-	phoneSessionListItemFieldStatus           = big.NewInt(1 << 14)
-	phoneSessionListItemFieldTags             = big.NewInt(1 << 15)
-	phoneSessionListItemFieldWorkflowID       = big.NewInt(1 << 16)
-	phoneSessionListItemFieldWorkflowName     = big.NewInt(1 << 17)
+	phoneSessionListItemFieldAgentID          = big.NewInt(1 << 0)
+	phoneSessionListItemFieldAgentName        = big.NewInt(1 << 1)
+	phoneSessionListItemFieldAllocatedAt      = big.NewInt(1 << 2)
+	phoneSessionListItemFieldAllocatedBy      = big.NewInt(1 << 3)
+	phoneSessionListItemFieldDeallocatedAt    = big.NewInt(1 << 4)
+	phoneSessionListItemFieldDurationSeconds  = big.NewInt(1 << 5)
+	phoneSessionListItemFieldEndReason        = big.NewInt(1 << 6)
+	phoneSessionListItemFieldIsDedicatedPhone = big.NewInt(1 << 7)
+	phoneSessionListItemFieldLocation         = big.NewInt(1 << 8)
+	phoneSessionListItemFieldModelName        = big.NewInt(1 << 9)
+	phoneSessionListItemFieldName             = big.NewInt(1 << 10)
+	phoneSessionListItemFieldPhoneID          = big.NewInt(1 << 11)
+	phoneSessionListItemFieldPhoneName        = big.NewInt(1 << 12)
+	phoneSessionListItemFieldPhoneNickname    = big.NewInt(1 << 13)
+	phoneSessionListItemFieldPhoneType        = big.NewInt(1 << 14)
+	phoneSessionListItemFieldSessionID        = big.NewInt(1 << 15)
+	phoneSessionListItemFieldSource           = big.NewInt(1 << 16)
+	phoneSessionListItemFieldStatus           = big.NewInt(1 << 17)
+	phoneSessionListItemFieldTags             = big.NewInt(1 << 18)
 )
 
 type PhoneSessionListItem struct {
+	// The agent whose run the session executed, when source is 'agent'.
+	AgentID *string `json:"agent_id,omitempty" url:"agent_id,omitempty"`
+	// Name of the agent whose run the session executed.
+	AgentName *string `json:"agent_name,omitempty" url:"agent_name,omitempty"`
 	// When the session claimed the phone.
 	AllocatedAt time.Time `json:"allocated_at" url:"allocated_at"`
 	// How the session was started.
@@ -4331,6 +4343,8 @@ type PhoneSessionListItem struct {
 	DeallocatedAt *time.Time `json:"deallocated_at,omitempty" url:"deallocated_at,omitempty"`
 	// Session length in seconds; absent while active.
 	DurationSeconds *int64 `json:"duration_seconds,omitempty" url:"duration_seconds,omitempty"`
+	// Why the session ended: released, idle_timeout, max_duration, run_finished, device_lost, accessibility_unavailable or phone_maintenance. Absent while it is live, and for sessions ended before this was recorded.
+	EndReason *string `json:"end_reason,omitempty" url:"end_reason,omitempty"`
 	// Whether the phone is a dedicated (rented) phone.
 	IsDedicatedPhone bool `json:"is_dedicated_phone" url:"is_dedicated_phone"`
 	// Physical hosting location of the phone.
@@ -4349,22 +4363,32 @@ type PhoneSessionListItem struct {
 	PhoneType *PhoneSessionListItemPhoneType `json:"phone_type,omitempty" url:"phone_type,omitempty"`
 	// Session identifier.
 	SessionID string `json:"session_id" url:"session_id"`
-	// 'workflow' when tied to a workflow, else 'interactive'.
+	// 'agent' when the session ran an agent's run, else 'interactive'.
 	Source PhoneSessionListItemSource `json:"source" url:"source"`
 	// Session lifecycle status.
 	Status PhoneSessionListItemStatus `json:"status" url:"status"`
 	// Optional key->value labels attached to the session.
 	Tags map[string]string `json:"tags,omitempty" url:"tags,omitempty"`
-	// Workflow the session executed, when source is 'workflow'.
-	WorkflowID *string `json:"workflow_id,omitempty" url:"workflow_id,omitempty"`
-	// Name of the workflow the session executed.
-	WorkflowName *string `json:"workflow_name,omitempty" url:"workflow_name,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (p *PhoneSessionListItem) GetAgentID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.AgentID
+}
+
+func (p *PhoneSessionListItem) GetAgentName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.AgentName
 }
 
 func (p *PhoneSessionListItem) GetAllocatedAt() time.Time {
@@ -4393,6 +4417,13 @@ func (p *PhoneSessionListItem) GetDurationSeconds() *int64 {
 		return nil
 	}
 	return p.DurationSeconds
+}
+
+func (p *PhoneSessionListItem) GetEndReason() *string {
+	if p == nil {
+		return nil
+	}
+	return p.EndReason
 }
 
 func (p *PhoneSessionListItem) GetIsDedicatedPhone() bool {
@@ -4479,20 +4510,6 @@ func (p *PhoneSessionListItem) GetTags() map[string]string {
 	return p.Tags
 }
 
-func (p *PhoneSessionListItem) GetWorkflowID() *string {
-	if p == nil {
-		return nil
-	}
-	return p.WorkflowID
-}
-
-func (p *PhoneSessionListItem) GetWorkflowName() *string {
-	if p == nil {
-		return nil
-	}
-	return p.WorkflowName
-}
-
 func (p *PhoneSessionListItem) GetExtraProperties() map[string]interface{} {
 	if p == nil {
 		return nil
@@ -4505,6 +4522,20 @@ func (p *PhoneSessionListItem) require(field *big.Int) {
 		p.explicitFields = big.NewInt(0)
 	}
 	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetAgentID sets the AgentID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionListItem) SetAgentID(agentID *string) {
+	p.AgentID = agentID
+	p.require(phoneSessionListItemFieldAgentID)
+}
+
+// SetAgentName sets the AgentName field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionListItem) SetAgentName(agentName *string) {
+	p.AgentName = agentName
+	p.require(phoneSessionListItemFieldAgentName)
 }
 
 // SetAllocatedAt sets the AllocatedAt field and marks it as non-optional;
@@ -4533,6 +4564,13 @@ func (p *PhoneSessionListItem) SetDeallocatedAt(deallocatedAt *time.Time) {
 func (p *PhoneSessionListItem) SetDurationSeconds(durationSeconds *int64) {
 	p.DurationSeconds = durationSeconds
 	p.require(phoneSessionListItemFieldDurationSeconds)
+}
+
+// SetEndReason sets the EndReason field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionListItem) SetEndReason(endReason *string) {
+	p.EndReason = endReason
+	p.require(phoneSessionListItemFieldEndReason)
 }
 
 // SetIsDedicatedPhone sets the IsDedicatedPhone field and marks it as non-optional;
@@ -4619,20 +4657,6 @@ func (p *PhoneSessionListItem) SetTags(tags map[string]string) {
 	p.require(phoneSessionListItemFieldTags)
 }
 
-// SetWorkflowID sets the WorkflowID field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneSessionListItem) SetWorkflowID(workflowID *string) {
-	p.WorkflowID = workflowID
-	p.require(phoneSessionListItemFieldWorkflowID)
-}
-
-// SetWorkflowName sets the WorkflowName field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (p *PhoneSessionListItem) SetWorkflowName(workflowName *string) {
-	p.WorkflowName = workflowName
-	p.require(phoneSessionListItemFieldWorkflowName)
-}
-
 func (p *PhoneSessionListItem) UnmarshalJSON(data []byte) error {
 	type embed PhoneSessionListItem
 	var unmarshaler = struct {
@@ -4691,16 +4715,13 @@ func (p *PhoneSessionListItem) String() string {
 type PhoneSessionListItemAllocatedBy string
 
 const (
-	PhoneSessionListItemAllocatedByWorkflowEditor PhoneSessionListItemAllocatedBy = "workflow_editor"
-	PhoneSessionListItemAllocatedByDashboardRun   PhoneSessionListItemAllocatedBy = "dashboard_run"
-	PhoneSessionListItemAllocatedByAPIRun         PhoneSessionListItemAllocatedBy = "api_run"
-	PhoneSessionListItemAllocatedByInteractive    PhoneSessionListItemAllocatedBy = "interactive"
+	PhoneSessionListItemAllocatedByDashboardRun PhoneSessionListItemAllocatedBy = "dashboard_run"
+	PhoneSessionListItemAllocatedByAPIRun       PhoneSessionListItemAllocatedBy = "api_run"
+	PhoneSessionListItemAllocatedByInteractive  PhoneSessionListItemAllocatedBy = "interactive"
 )
 
 func NewPhoneSessionListItemAllocatedByFromString(s string) (PhoneSessionListItemAllocatedBy, error) {
 	switch s {
-	case "workflow_editor":
-		return PhoneSessionListItemAllocatedByWorkflowEditor, nil
 	case "dashboard_run":
 		return PhoneSessionListItemAllocatedByDashboardRun, nil
 	case "api_run":
@@ -4742,18 +4763,18 @@ func (p PhoneSessionListItemPhoneType) Ptr() *PhoneSessionListItemPhoneType {
 	return &p
 }
 
-// 'workflow' when tied to a workflow, else 'interactive'.
+// 'agent' when the session ran an agent's run, else 'interactive'.
 type PhoneSessionListItemSource string
 
 const (
-	PhoneSessionListItemSourceWorkflow    PhoneSessionListItemSource = "workflow"
+	PhoneSessionListItemSourceAgent       PhoneSessionListItemSource = "agent"
 	PhoneSessionListItemSourceInteractive PhoneSessionListItemSource = "interactive"
 )
 
 func NewPhoneSessionListItemSourceFromString(s string) (PhoneSessionListItemSource, error) {
 	switch s {
-	case "workflow":
-		return PhoneSessionListItemSourceWorkflow, nil
+	case "agent":
+		return PhoneSessionListItemSourceAgent, nil
 	case "interactive":
 		return PhoneSessionListItemSourceInteractive, nil
 	}
@@ -4796,16 +4817,19 @@ func (p PhoneSessionListItemStatus) Ptr() *PhoneSessionListItemStatus {
 
 // One page of the sessions list: active and queued sessions pinned on top, completed history paginated beneath.
 var (
-	phoneSessionListResponseFieldSchema   = big.NewInt(1 << 0)
-	phoneSessionListResponseFieldLimit    = big.NewInt(1 << 1)
-	phoneSessionListResponseFieldOffset   = big.NewInt(1 << 2)
-	phoneSessionListResponseFieldSessions = big.NewInt(1 << 3)
-	phoneSessionListResponseFieldTotal    = big.NewInt(1 << 4)
+	phoneSessionListResponseFieldSchema             = big.NewInt(1 << 0)
+	phoneSessionListResponseFieldHistoryUnavailable = big.NewInt(1 << 1)
+	phoneSessionListResponseFieldLimit              = big.NewInt(1 << 2)
+	phoneSessionListResponseFieldOffset             = big.NewInt(1 << 3)
+	phoneSessionListResponseFieldSessions           = big.NewInt(1 << 4)
+	phoneSessionListResponseFieldTotal              = big.NewInt(1 << 5)
 )
 
 type PhoneSessionListResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
+	// True when older sessions could not be read in time: this page holds only live and recently ended sessions, and total counts only those. Retry shortly.
+	HistoryUnavailable *bool `json:"history_unavailable,omitempty" url:"history_unavailable,omitempty"`
 	// Page size used for this response.
 	Limit int64 `json:"limit" url:"limit"`
 	// Pagination offset used for this response.
@@ -4827,6 +4851,13 @@ func (p *PhoneSessionListResponse) GetSchema() *string {
 		return nil
 	}
 	return p.Schema
+}
+
+func (p *PhoneSessionListResponse) GetHistoryUnavailable() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.HistoryUnavailable
 }
 
 func (p *PhoneSessionListResponse) GetLimit() int64 {
@@ -4876,6 +4907,13 @@ func (p *PhoneSessionListResponse) require(field *big.Int) {
 func (p *PhoneSessionListResponse) SetSchema(schema *string) {
 	p.Schema = schema
 	p.require(phoneSessionListResponseFieldSchema)
+}
+
+// SetHistoryUnavailable sets the HistoryUnavailable field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *PhoneSessionListResponse) SetHistoryUnavailable(historyUnavailable *bool) {
+	p.HistoryUnavailable = historyUnavailable
+	p.require(phoneSessionListResponseFieldHistoryUnavailable)
 }
 
 // SetLimit sets the Limit field and marks it as non-optional;
@@ -4958,7 +4996,7 @@ var (
 type PhoneSessionRecordingResponse struct {
 	// A URL to the JSON Schema for this object.
 	Schema *string `json:"$schema,omitempty" url:"$schema,omitempty"`
-	// 'ready' when a recording URL is returned, 'pending' while the recording is still being processed, 'expired' when it is past the plan's recording retention window, or 'off' when the session was not recorded (recording is off unless requested at allocation, or on the workflow for a run).
+	// 'unavailable' when it never arrived, for example a failed upload. 'ready' when a recording URL is returned, 'pending' while the recording is still being processed, 'expired' when it is past the plan's recording retention window, or 'off' when the session was not recorded (recording is off unless requested at allocation, or on the agent for its runs).
 	Status PhoneSessionRecordingResponseStatus `json:"status" url:"status"`
 	// Playback URL for the recording MP4, set only when status is 'ready'. The URL is time-limited.
 	URL *string `json:"url,omitempty" url:"url,omitempty"`
@@ -5068,14 +5106,15 @@ func (p *PhoneSessionRecordingResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// 'ready' when a recording URL is returned, 'pending' while the recording is still being processed, 'expired' when it is past the plan's recording retention window, or 'off' when the session was not recorded (recording is off unless requested at allocation, or on the workflow for a run).
+// 'unavailable' when it never arrived, for example a failed upload. 'ready' when a recording URL is returned, 'pending' while the recording is still being processed, 'expired' when it is past the plan's recording retention window, or 'off' when the session was not recorded (recording is off unless requested at allocation, or on the agent for its runs).
 type PhoneSessionRecordingResponseStatus string
 
 const (
-	PhoneSessionRecordingResponseStatusReady   PhoneSessionRecordingResponseStatus = "ready"
-	PhoneSessionRecordingResponseStatusPending PhoneSessionRecordingResponseStatus = "pending"
-	PhoneSessionRecordingResponseStatusExpired PhoneSessionRecordingResponseStatus = "expired"
-	PhoneSessionRecordingResponseStatusOff     PhoneSessionRecordingResponseStatus = "off"
+	PhoneSessionRecordingResponseStatusReady       PhoneSessionRecordingResponseStatus = "ready"
+	PhoneSessionRecordingResponseStatusPending     PhoneSessionRecordingResponseStatus = "pending"
+	PhoneSessionRecordingResponseStatusExpired     PhoneSessionRecordingResponseStatus = "expired"
+	PhoneSessionRecordingResponseStatusOff         PhoneSessionRecordingResponseStatus = "off"
+	PhoneSessionRecordingResponseStatusUnavailable PhoneSessionRecordingResponseStatus = "unavailable"
 )
 
 func NewPhoneSessionRecordingResponseStatusFromString(s string) (PhoneSessionRecordingResponseStatus, error) {
@@ -5088,6 +5127,8 @@ func NewPhoneSessionRecordingResponseStatusFromString(s string) (PhoneSessionRec
 		return PhoneSessionRecordingResponseStatusExpired, nil
 	case "off":
 		return PhoneSessionRecordingResponseStatusOff, nil
+	case "unavailable":
+		return PhoneSessionRecordingResponseStatusUnavailable, nil
 	}
 	var t PhoneSessionRecordingResponseStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -6385,14 +6426,14 @@ func (p PhonesListSessionsRequestDedicatedItem) Ptr() *PhonesListSessionsRequest
 type PhonesListSessionsRequestSourceItem string
 
 const (
-	PhonesListSessionsRequestSourceItemWorkflow    PhonesListSessionsRequestSourceItem = "workflow"
+	PhonesListSessionsRequestSourceItemAgent       PhonesListSessionsRequestSourceItem = "agent"
 	PhonesListSessionsRequestSourceItemInteractive PhonesListSessionsRequestSourceItem = "interactive"
 )
 
 func NewPhonesListSessionsRequestSourceItemFromString(s string) (PhonesListSessionsRequestSourceItem, error) {
 	switch s {
-	case "workflow":
-		return PhonesListSessionsRequestSourceItemWorkflow, nil
+	case "agent":
+		return PhonesListSessionsRequestSourceItemAgent, nil
 	case "interactive":
 		return PhonesListSessionsRequestSourceItemInteractive, nil
 	}

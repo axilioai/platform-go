@@ -8086,6 +8086,13 @@ func TestEnumWebhookEventTypeDescriptorDomain(t *testing.T) {
 		assert.Equal(t, WebhookEventTypeDescriptorDomain("messages"), val, "enum value should match expected wire value")
 	})
 
+	t.Run("NewFromString_schedules", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWebhookEventTypeDescriptorDomainFromString("schedules")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WebhookEventTypeDescriptorDomain("schedules"), val, "enum value should match expected wire value")
+	})
+
 	t.Run("NewFromString_Invalid", func(t *testing.T) {
 		_, err := NewWebhookEventTypeDescriptorDomainFromString("invalid_value_that_does_not_exist")
 		assert.Error(t, err)
