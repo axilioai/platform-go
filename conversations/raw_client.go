@@ -41,7 +41,7 @@ func (r *RawClient) List(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/conversations"
 	queryParams, err := internal.QueryValues(request)
@@ -90,7 +90,7 @@ func (r *RawClient) Get(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/conversations/%v",
@@ -135,7 +135,7 @@ func (r *RawClient) Delete(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/conversations/%v",
@@ -180,7 +180,7 @@ func (r *RawClient) ListMessages(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/conversations/%v/messages",
@@ -232,7 +232,7 @@ func (r *RawClient) CreateMessage(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/conversations/%v/messages",

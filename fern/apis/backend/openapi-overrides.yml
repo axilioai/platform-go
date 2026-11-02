@@ -6,6 +6,12 @@
 # generated core.Stream does none of that, so it is not generated: one
 # supported reader per stream. The operation stays in the public spec and the
 # API reference.
+#
+# The spec's server is the relative /api/v1, which suits the docs and the API's
+# own clients but gives this SDK a default base URL with no host, so a client
+# made with only an API key can't connect. See generated_runtime_test.go.
+servers:
+  - url: https://api.axilio.ai/api/v1
 paths:
   /realtime/sessions/{session_id}/events:
     get:

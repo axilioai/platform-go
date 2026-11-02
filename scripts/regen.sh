@@ -50,6 +50,7 @@ rsync -a --delete \
   --exclude='.github' \
   --exclude='VERSION' \
   --exclude='.gitignore' \
+  --exclude='.gitattributes' \
   --exclude='CONTRIBUTING.md' \
   --exclude='README.md' \
   --exclude='frames_tolerantreader_test.go' \

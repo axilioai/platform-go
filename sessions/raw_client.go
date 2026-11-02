@@ -41,7 +41,7 @@ func (r *RawClient) GetMetrics(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/sessions/metrics"
 	queryParams, err := internal.QueryValues(request)

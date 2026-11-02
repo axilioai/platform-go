@@ -9,5 +9,5 @@ package api
 var Environments = struct {
 	Default string
 }{
-	Default: "/api/v1",
+	Default: "https://api.axilio.ai/api/v1",
 }
