@@ -13,6 +13,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -166,3 +168,34 @@ func TestRunStreamKeepsFramesAfterDoneInText(t *testing.T) {
 	}
 	assert.Equal(t, []string{"the marker is [DONE] in this text", "second"}, bodies)
 }
+
+// A client made with only an API key must reach the production API. The spec's
+// relative /api/v1 server left it with no host; the regen override fixes that.
+func TestDefaultBaseURLIsAbsolute(t *testing.T) {
+	parsed, err := url.Parse(api.Environments.Default)
+	require.NoError(t, err)
+	assert.Equal(t, "https", parsed.Scheme)
+	assert.Equal(t, "api.axilio.ai", parsed.Host)
+	assert.Equal(t, "/api/v1", parsed.Path)
+
+	var seen string
+	c := client.NewClient(
+		option.WithAPIKey("ax_test"),
+		option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+			seen = r.URL.String()
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": {"application/json"}},
+				Body:       io.NopCloser(strings.NewReader(`{"agents":[],"total":0,"limit":50,"offset":0}`)),
+				Request:    r,
+			}, nil
+		})}),
+	)
+	_, err = c.Agents.List(context.Background(), &api.AgentsListRequest{})
+	require.NoError(t, err)
+	assert.True(t, strings.HasPrefix(seen, "https://api.axilio.ai/api/v1/agents"), seen)
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }

@@ -62,7 +62,7 @@ func (c *Client) StreamEvents(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		c.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/realtime/runs/%v/events",

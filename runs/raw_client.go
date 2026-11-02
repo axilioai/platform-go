@@ -41,7 +41,7 @@ func (r *RawClient) SessionsListFrames(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/phones/sessions/%v/frames",
@@ -93,7 +93,7 @@ func (r *RawClient) List(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/runs"
 	queryParams, err := internal.QueryValues(request)
@@ -142,7 +142,7 @@ func (r *RawClient) Start(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/runs"
 	headers := internal.MergeHeaders(
@@ -185,7 +185,7 @@ func (r *RawClient) GetMetrics(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/runs/metrics"
 	queryParams, err := internal.QueryValues(request)
@@ -234,7 +234,7 @@ func (r *RawClient) Get(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/runs/%v",
@@ -279,7 +279,7 @@ func (r *RawClient) ListEvents(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/runs/%v/events",
@@ -331,7 +331,7 @@ func (r *RawClient) GetScript(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/runs/%v/script",
@@ -376,7 +376,7 @@ func (r *RawClient) ListSteps(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/runs/%v/steps",
@@ -428,7 +428,7 @@ func (r *RawClient) Cancel(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/runs/%v:cancel",
@@ -473,7 +473,7 @@ func (r *RawClient) Pause(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/runs/%v:pause",
@@ -518,7 +518,7 @@ func (r *RawClient) Resume(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/runs/%v:resume",
@@ -565,7 +565,7 @@ func (r *RawClient) SendMessage(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/runs/%v:sendMessage",
@@ -612,7 +612,7 @@ func (r *RawClient) BatchCreate(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/runs:batchCreate"
 	headers := internal.MergeHeaders(

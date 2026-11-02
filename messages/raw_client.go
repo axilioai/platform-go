@@ -41,7 +41,7 @@ func (r *RawClient) List(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/messages"
 	queryParams, err := internal.QueryValues(request)
@@ -90,7 +90,7 @@ func (r *RawClient) Create(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/messages"
 	headers := internal.MergeHeaders(
@@ -134,7 +134,7 @@ func (r *RawClient) GetMetrics(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/messages/metrics"
 	queryParams, err := internal.QueryValues(request)
@@ -183,7 +183,7 @@ func (r *RawClient) Get(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/messages/%v",
@@ -228,7 +228,7 @@ func (r *RawClient) Delete(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/messages/%v",

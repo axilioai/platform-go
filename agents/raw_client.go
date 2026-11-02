@@ -41,7 +41,7 @@ func (r *RawClient) List(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/agents"
 	queryParams, err := internal.QueryValues(request)
@@ -90,7 +90,7 @@ func (r *RawClient) Create(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/agents"
 	headers := internal.MergeHeaders(
@@ -134,7 +134,7 @@ func (r *RawClient) Get(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v",
@@ -179,7 +179,7 @@ func (r *RawClient) Delete(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v",
@@ -222,7 +222,7 @@ func (r *RawClient) Update(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v",
@@ -269,7 +269,7 @@ func (r *RawClient) ListRevisions(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/revisions",
@@ -321,7 +321,7 @@ func (r *RawClient) CreateRevision(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/revisions",
@@ -368,7 +368,7 @@ func (r *RawClient) GetRevision(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/revisions/%v",
@@ -414,7 +414,7 @@ func (r *RawClient) PromoteRevision(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/revisions/%v:promote",
@@ -460,7 +460,7 @@ func (r *RawClient) ListSchedules(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/schedules",
@@ -512,7 +512,7 @@ func (r *RawClient) CreateSchedule(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/schedules",
@@ -559,7 +559,7 @@ func (r *RawClient) GetSchedule(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/schedules/%v",
@@ -605,7 +605,7 @@ func (r *RawClient) DeleteSchedule(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/schedules/%v",
@@ -649,7 +649,7 @@ func (r *RawClient) UpdateSchedule(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/schedules/%v",
@@ -697,7 +697,7 @@ func (r *RawClient) PauseSchedule(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/schedules/%v:pause",
@@ -743,7 +743,7 @@ func (r *RawClient) ResumeSchedule(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/schedules/%v:resume",
@@ -789,7 +789,7 @@ func (r *RawClient) RunSchedule(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v/schedules/%v:run",
@@ -835,7 +835,7 @@ func (r *RawClient) Rollback(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := internal.EncodeURL(
 		baseURL+"/agents/%v:rollback",

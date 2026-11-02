@@ -40,7 +40,7 @@ func (r *RawClient) List(
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		r.baseURL,
-		"/api/v1",
+		"https://api.axilio.ai/api/v1",
 	)
 	endpointURL := baseURL + "/models"
 	headers := internal.MergeHeaders(
