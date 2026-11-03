@@ -164,15 +164,22 @@ func (r *Retrier) run(
 	return response, nil
 }
 
-// shouldRetry reports whether to send the request again. A 429 or 408 means
-// the server turned the request away before acting on it, so any request is
-// resent. A 5xx can come after the request took effect, so only a method that
-// is safe to repeat (RFC 9110 §9.2.2) is resent; a POST or PATCH returns the
-// error to the caller, who knows whether a second attempt is safe.
+// shouldRetry reports whether to send the request again. A 408, or a 429
+// with a wait this client will sleep, means the server turned the request away before acting on
+// it, so any request is resent. A 429 without Retry-After is a quota that
+// waiting doesn't clear, such as a full file library, so resending it only
+// delays the error. A 5xx can come after the request took effect, so only a
+// method that is safe to repeat (RFC 9110 §9.2.2) is resent; a POST or PATCH
+// returns the error to the caller, who knows whether a second attempt is safe.
 func (r *Retrier) shouldRetry(request *http.Request, response *http.Response) bool {
-	if response.StatusCode == http.StatusTooManyRequests ||
-		response.StatusCode == http.StatusRequestTimeout {
+	if response.StatusCode == http.StatusRequestTimeout {
 		return true
+	}
+	if response.StatusCode == http.StatusTooManyRequests {
+		// A wait past the most retryDelay sleeps (an hourly message limit) would
+		// come back refused, so the error returns now with the wait in its header.
+		wait, ok := serverWait(response)
+		return ok && wait <= maxRetryDelay
 	}
 	return response.StatusCode >= http.StatusInternalServerError && isIdempotent(request.Method)
 }
@@ -183,6 +190,25 @@ func isIdempotent(method string) bool {
 		return true
 	}
 	return false
+}
+
+// serverWait is how long the response asks the client to wait, from the
+// headers retryDelay reads, and whether it asks at all.
+func serverWait(response *http.Response) (time.Duration, bool) {
+	if retryAfter := response.Header.Get("Retry-After"); retryAfter != "" {
+		if seconds, err := strconv.Atoi(retryAfter); err == nil {
+			return time.Duration(seconds) * time.Second, true
+		}
+		if at, err := time.Parse(time.RFC1123, retryAfter); err == nil {
+			return time.Until(at), true
+		}
+	}
+	if reset := response.Header.Get("X-RateLimit-Reset"); reset != "" {
+		if ts, err := strconv.ParseInt(reset, 10, 64); err == nil {
+			return time.Until(time.Unix(ts, 0)), true
+		}
+	}
+	return 0, false
 }
 
 // retryDelay calculates the delay time based on response headers,

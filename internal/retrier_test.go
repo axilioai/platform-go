@@ -75,9 +75,12 @@ func TestRetrier(t *testing.T) {
 			},
 		},
 		{
-			description:     "retries occur on status code 429",
+			description:     "retry does not occur on a 429 without Retry-After",
 			giveAttempts:    2,
 			giveStatusCodes: []int{http.StatusTooManyRequests, http.StatusOK},
+			wantError: &core.APIError{
+				StatusCode: http.StatusTooManyRequests,
+			},
 		},
 		{
 			description:     "retries occur on status code 408",
@@ -354,24 +357,30 @@ func TestRetryDelayTiming(t *testing.T) {
 
 func TestShouldRetry(t *testing.T) {
 	tests := []struct {
-		method string
-		status int
-		want   bool
+		method     string
+		status     int
+		retryAfter string
+		want       bool
 	}{
-		{http.MethodGet, http.StatusInternalServerError, true},
-		{http.MethodPut, http.StatusServiceUnavailable, true},
-		{http.MethodDelete, http.StatusBadGateway, true},
-		{http.MethodPost, http.StatusInternalServerError, false},
-		{http.MethodPatch, http.StatusServiceUnavailable, false},
-		{http.MethodPost, http.StatusTooManyRequests, true},
-		{http.MethodPost, http.StatusRequestTimeout, true},
-		{http.MethodGet, http.StatusBadRequest, false},
-		{http.MethodGet, http.StatusOK, false},
+		{http.MethodGet, http.StatusInternalServerError, "", true},
+		{http.MethodPut, http.StatusServiceUnavailable, "", true},
+		{http.MethodDelete, http.StatusBadGateway, "", true},
+		{http.MethodPost, http.StatusInternalServerError, "", false},
+		{http.MethodPatch, http.StatusServiceUnavailable, "", false},
+		{http.MethodPost, http.StatusTooManyRequests, "30", true},
+		{http.MethodPost, http.StatusTooManyRequests, "", false},
+		{http.MethodPost, http.StatusTooManyRequests, "1500", false},
+		{http.MethodPost, http.StatusRequestTimeout, "", true},
+		{http.MethodGet, http.StatusBadRequest, "", false},
+		{http.MethodGet, http.StatusOK, "", false},
 	}
 	retrier := NewRetrier()
 	for _, tt := range tests {
 		request := httptest.NewRequest(tt.method, "/", nil)
-		response := &http.Response{StatusCode: tt.status}
+		response := &http.Response{StatusCode: tt.status, Header: http.Header{}}
+		if tt.retryAfter != "" {
+			response.Header.Set("Retry-After", tt.retryAfter)
+		}
 		assert.Equal(t, tt.want, retrier.shouldRetry(request, response), "%s answered %d", tt.method, tt.status)
 	}
 }
