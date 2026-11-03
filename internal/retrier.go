@@ -164,15 +164,20 @@ func (r *Retrier) run(
 	return response, nil
 }
 
-// shouldRetry reports whether to send the request again. A 429 or 408 means
-// the server turned the request away before acting on it, so any request is
-// resent. A 5xx can come after the request took effect, so only a method that
-// is safe to repeat (RFC 9110 §9.2.2) is resent; a POST or PATCH returns the
-// error to the caller, who knows whether a second attempt is safe.
+// shouldRetry reports whether to send the request again. A 408, or a 429
+// with Retry-After, means the server turned the request away before acting on
+// it, so any request is resent. A 429 without Retry-After is a quota that
+// waiting doesn't clear, such as a full file library, so resending it only
+// delays the error. A 5xx can come after the request took effect, so only a
+// method that is safe to repeat (RFC 9110 §9.2.2) is resent; a POST or PATCH
+// returns the error to the caller, who knows whether a second attempt is safe.
 func (r *Retrier) shouldRetry(request *http.Request, response *http.Response) bool {
-	if response.StatusCode == http.StatusTooManyRequests ||
-		response.StatusCode == http.StatusRequestTimeout {
+	if response.StatusCode == http.StatusRequestTimeout {
 		return true
+	}
+	if response.StatusCode == http.StatusTooManyRequests {
+		// The headers retryDelay reads a wait from.
+		return response.Header.Get("Retry-After") != "" || response.Header.Get("X-RateLimit-Reset") != ""
 	}
 	return response.StatusCode >= http.StatusInternalServerError && isIdempotent(request.Method)
 }
