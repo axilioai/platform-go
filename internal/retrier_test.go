@@ -369,6 +369,7 @@ func TestShouldRetry(t *testing.T) {
 		{http.MethodPatch, http.StatusServiceUnavailable, "", false},
 		{http.MethodPost, http.StatusTooManyRequests, "30", true},
 		{http.MethodPost, http.StatusTooManyRequests, "", false},
+		{http.MethodPost, http.StatusTooManyRequests, "1500", false},
 		{http.MethodPost, http.StatusRequestTimeout, "", true},
 		{http.MethodGet, http.StatusBadRequest, "", false},
 		{http.MethodGet, http.StatusOK, "", false},
