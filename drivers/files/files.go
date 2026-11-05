@@ -306,7 +306,7 @@ func Send(ctx context.Context, c *client.Client, phoneID, path string, opts ...O
 		return nil, fmt.Errorf("stat %s: %w", path, err)
 	}
 	if info.Size() > MaxDeliveryBytes {
-		return nil, fmt.Errorf("%s is %d bytes: %w (%d bytes); files over 100 MiB can't be stored or sent today",
+		return nil, fmt.Errorf("%s is %d bytes: %w (%d bytes); files over 100 MiB can't be stored or sent",
 			filepath.Base(path), info.Size(), ErrTooLargeForDelivery, MaxDeliveryBytes)
 	}
 	f, err := Upload(ctx, c, path, opts...)
