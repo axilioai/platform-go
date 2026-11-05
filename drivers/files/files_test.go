@@ -203,7 +203,7 @@ func TestDetectMIME(t *testing.T) {
 	}
 }
 
-// TestUploadStreamsAndPinsHeaders is the regression guard for the 1 GB limit:
+// TestUploadStreamsAndPinsHeaders is the regression guard for streaming:
 // Upload used to os.ReadFile the whole payload into memory. It also pins the
 // two headers the presigned PUT signature covers — a mismatch there is
 // rejected by storage with an opaque error.
