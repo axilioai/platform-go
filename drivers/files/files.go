@@ -37,21 +37,18 @@ import (
 	client "github.com/axilioai/platform-go/client"
 )
 
-// MaxDeliveryBytes mirrors the server's per-delivery ceiling (100 MiB): the
-// phone downloads over its own cellular link, so the bound belongs to that
-// transport — the library itself stores files up to 1 GiB, including files
-// no phone can receive. Mirrored rather than fetched, and the server stays
-// authoritative (it rejects an oversize push regardless); this constant only
-// lets Send refuse BEFORE uploading a file that could never be delivered,
-// which would otherwise be retained in the library by a failed one-shot
-// call. The number is pinned by a backend regression test (AXI-1581), so a
-// server-side change shows up as a failing test there, not a silent drift.
+// MaxDeliveryBytes mirrors the server's per-file ceiling (100 MiB). It is both
+// the largest file a phone can receive, since the phone downloads over its own
+// cellular link, and the largest file the library stores. Mirrored rather
+// than fetched, and the server stays authoritative (it refuses an oversize
+// upload or push regardless); this constant only lets Send refuse BEFORE any
+// request goes out.
 const MaxDeliveryBytes int64 = 100 << 20 // 100 MiB
 
 // ErrTooLargeForDelivery marks a Send refused before upload because the local
 // file exceeds MaxDeliveryBytes. Match with errors.Is; the wrapped message
-// carries the sizes. Upload deliberately does NOT apply this bound — the
-// library accepts what phones cannot receive, and Upload is the library door.
+// carries the sizes. Upload applies no local check: the server refuses a file
+// over 100 MiB.
 var ErrTooLargeForDelivery = errors.New("file exceeds the 100 MiB phone-delivery limit")
 
 // defaultMIME is sent when the extension maps to nothing known; the backend
@@ -184,9 +181,8 @@ func resolve(opts ...Option) config {
 func Upload(ctx context.Context, c *client.Client, path string, opts ...Option) (*platformgo.FileSummary, error) {
 	cfg := resolve(opts...)
 
-	// Stream the file rather than reading it into memory. The library accepts
-	// up to 1 GB per file, so os.ReadFile would allocate the whole payload —
-	// tolerable under the old 5 MiB cap, not under this one. Passing the open
+	// Stream the file rather than reading it into memory: at up to 100 MiB
+	// per file, os.ReadFile would allocate the whole payload. Passing the open
 	// *os.File as the request body lets net/http copy it through in chunks.
 	fh, err := os.Open(path)
 	if err != nil {
@@ -301,18 +297,16 @@ func Push(ctx context.Context, c *client.Client, phoneID, fileID string, opts ..
 // Push, with every option forwarded to both. Returns whatever Push returns, so
 // WithWait behaves identically here and on a bare Push. Reads all options.
 //
-// Send preflights MaxDeliveryBytes before any request goes out (AXI-1581):
-// a file the delivery endpoint would refuse must not be uploaded first, or
-// the failed one-shot call leaves it retained in the library, consuming
-// quota. The check lives on Send and not Upload because only Send promises
-// delivery; Upload keeps the library's own 1 GiB contract.
+// Send preflights MaxDeliveryBytes before any request goes out, so a file the
+// server would refuse fails fast with a clear error instead of after a
+// network round trip.
 func Send(ctx context.Context, c *client.Client, phoneID, path string, opts ...Option) (*platformgo.FileDeliverySummary, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, fmt.Errorf("stat %s: %w", path, err)
 	}
 	if info.Size() > MaxDeliveryBytes {
-		return nil, fmt.Errorf("%s is %d bytes: %w (%d bytes); the library itself stores up to 1 GiB — use Upload and Push separately if you only need it stored",
+		return nil, fmt.Errorf("%s is %d bytes: %w (%d bytes); files over 100 MiB can't be stored or sent today",
 			filepath.Base(path), info.Size(), ErrTooLargeForDelivery, MaxDeliveryBytes)
 	}
 	f, err := Upload(ctx, c, path, opts...)
